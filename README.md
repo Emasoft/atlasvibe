@@ -1,43 +1,37 @@
-[![main: CI](https://github.com/flojoy-ai/studio/actions/workflows/electron-test.yml/badge.svg?branch=main)](https://github.com/flojoy-ai/studio/actions/workflows/electron-test.yml) [![codecov](https://codecov.io/gh/flojoy-ai/studio/graph/badge.svg?token=BIB703MANI)](https://codecov.io/gh/flojoy-ai/studio)
+# atlasvibe
 
-# Flojoy Studio
+**🚧 Work in Progress: This project is currently under active development and is not yet ready for use. 🚧**
 
-_Open-source test sequencer for hardware validation_ 🟢 🟡 🔴 
+atlasvibe is an upcoming open-source, general-purpose visual programming IDE for Python. It aims to provide a flexible environment for creating Python-based workflows, with a future-forward approach towards AI-assisted node/agent development.
 
-Use to validate mission critical components such as PCBs, wire harnesses, and battery packs.
+## Vision
 
-### Features
-- Automate pytest, Python, and/or Robot Framework scripts as saveable test sequences
-- No-code GUI to run test sequences - clearly report pass 🟢 / fail 🔴 status to operator
-- No-code, visual scripting interface for common test & measure automation routines
-- Optionally sync test runs with [Flojoy Cloud](https://github.com/flojoy-ai/cloud/)
+The goal is to create an intuitive visual IDE where users can construct complex Python applications by connecting nodes (or "agents"). Each node will represent a Python script, and a core design principle is to eventually empower these nodes with AI capabilities to self-generate or modify their underlying code based on user intent.
+
+## Current Status
+
+atlasvibe is in the early stages of development. The immediate focus is on:
+1.  Refactoring the codebase from its origins (see Acknowledgments).
+2.  Implementing a new project and block management system where users create project-specific, customizable blocks from a set of blueprints.
+
+## Acknowledgments and Origins
+
+atlasvibe is forked from **Flojoy Studio**, an open-source test sequencer for hardware validation. We are immensely grateful to the original developers of Flojoy Studio for their foundational work and for making it available under the MIT license.
+
+atlasvibe is being developed by **Emasoft** (repository: [Emasoft/atlasvibe](https://github.com/Emasoft/atlasvibe)) and aims to build upon this foundation for a different set of goals, while respecting all original licensing obligations.
+
+## Quickstart
+
+Installation and usage instructions will be provided once the project reaches a more stable state. Currently, it is not recommended for general use.
+
+## License and Copyright
+
+This project is MIT licensed. See the `LICENSE` file for full details.
+Copyright (c) 2024 Emasoft (for modifications and derivative work "atlasvibe").
+Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software).
+
+Portions of the codebase are derived from Flojoy Studio, also licensed under MIT.
 
 ---
 
-# Quickstart
-
-Please find installer downloads for Mac, Windows, and Linux at https://docs.flojoy.ai/studio/installation/
-
-🆘 Need help installing? Please ask on [Flojoy's Discord](https://discord.com/invite/7HEBr7yG8c)
-
-# License and Copyright
-
-MIT licensed. This is free software - please use and modify however you wish.
-
-# Screenshots
-
-## Test sequencer
-
-To use the test sequencer, simply import existing pytest, Python, and/or Robot Framework scripts. For pytest, the test sequencer will automatically atomize your tests as rows.
-
-![image](https://github.com/flojoy-ai/studio/assets/1865834/9cfcfb86-24bc-46fd-82de-e9fd9db2ef3b)
-
-## No-code script builder
-
-Quickly build test & measure automation apps by wiring together premade "blocks." Custom blocks can also be written in Python.
-
-![image](https://github.com/flojoy-ai/studio/assets/1865834/b1efa4f7-a58a-4406-9b37-2311611fb1bd)
-
-# Architecture
-
-![backend-architecture](https://github.com/flojoy-ai/studio/assets/69379081/ed72cea2-17bb-4aa3-a26d-7eec19b24685)
+_Further details on features, architecture, and contribution guidelines will be added as the project progresses._
