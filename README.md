@@ -24,14 +24,12 @@ atlasvibe is being developed by **Emasoft** (repository: [Emasoft/atlasvibe](htt
 
 Installation and usage instructions will be provided once the project reaches a more stable state. Currently, it is not recommended for general use.
 
-## License and Copyright
+## Running Tests
 
-This project is MIT licensed. See the `LICENSE` file for full details.
-Copyright (c) 2024 Emasoft (for modifications and derivative work "atlasvibe").
-Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software).
+The project includes both backend (Python) and frontend (TypeScript/Playwright) tests.
 
-Portions of the codebase are derived from Flojoy Studio, also licensed under MIT.
+### Python Tests (Backend)
 
----
+Python tests are managed using `pytest`. Ensure you have the development dependencies installed (e.g., via `poetry install --with dev`).
 
-_Further details on features, architecture, and contribution guidelines will be added as the project progresses._
+To run the Python tests:

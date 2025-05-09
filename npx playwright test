@@ -1,0 +1,1 @@
+You might need to build the application first if the tests rely on a packaged version. Specific test files or suites can also be targeted:

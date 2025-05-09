@@ -1,0 +1,6 @@
+
+### Playwright Tests (Frontend/E2E)
+
+Playwright tests are used for end-to-end testing of the application's UI. Ensure Node.js and npm/yarn are installed, and install project dependencies (e.g., `npm install` or `yarn install`).
+
+To run the Playwright tests:
