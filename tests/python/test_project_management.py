@@ -116,9 +116,9 @@ class MockBlockService:
         # In reality, you'd copy from mock_blueprint_path/blueprint_key.py
         with open(os.path.join(new_block_folder_path, py_file_name), "w") as f:
             f.write(f"# Original blueprint: {blueprint_key}\n")
-            f.write(f"@atlasvibe_node\n")
+            f.write("@atlasvibe_node\n")
             f.write(f"def {final_block_name}(param1):\n") # Requirement 4 & 5
-            f.write(f"    pass\n")
+            f.write("    pass\n")
         
         with open(os.path.join(new_block_folder_path, METADATA_APP_JSON), "w") as f:
             f.write(f'{{"name": "{final_block_name}", "key": "{final_block_name}"}}') # Requirement 3 & 4

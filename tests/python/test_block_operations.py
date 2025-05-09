@@ -211,7 +211,7 @@ def test_add_block_creates_custom_block_folder_and_files(block_service_instance,
     with open(expected_py_file, "r") as f:
         content = f.read()
         assert f"def {expected_custom_block_name}(" in content # Requirement 4
-        assert f"@atlasvibe_node" in content
+        assert "@atlasvibe_node" in content
 
     # Check metadata (e.g., app.json)
     app_json_file = os.path.join(custom_block_folder, METADATA_APP_JSON)
