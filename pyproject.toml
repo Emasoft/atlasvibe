@@ -11,10 +11,10 @@ description = "General-purpose visual programming IDE for Python with an Agent n
 authors = ["Emasoft <your-email@example.com>"] # Please update with your actual email
 readme = "README.md"
 license = "MIT"
-packages = [{include = "atlasvibe_engine"}] # Adjust if your main Python package is named differently
+packages = [{include = "atlasvibe_engine"}] # Package is at the root level
 
 [tool.poetry.dependencies]
-python = "^3.11" # Changed from ~3.11 to ^3.11 to allow Python 3.11, 3.12, etc.
+python = "^3.11" 
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 fastapi = "^0.104.1"
 pyyaml = "^6.0.1"
@@ -33,7 +33,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
-pytest-mock = "^3.11.0" # Added for mocking
+pytest-mock = "^3.11.0" 
 ruff = "^0.3.0"
 typer = { extras = ["all"], version = "^0.9.0" }
 python-frontmatter = "^1.0.1"
@@ -49,15 +49,15 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-rsxX -l --tb=short --strict-markers" # Restored common pytest options
+addopts = "-rsxX -l --tb=short --strict-markers" 
 testpaths = [
-    "tests", # For new top-level tests
-    "PYTHON/tests", # Example of an original test path
-    "blocks",       # Example of an original test path (if tests are directly in block folders)
-    "atlasvibe_engine/tests", # Updated from captain/tests and pkgs/flojoy/tests
-    "cli",          # Example of an original test path
+    "tests", 
+    "PYTHON/tests", # This path might need review if PYTHON dir is no longer primary source root
+    "blocks",       
+    "atlasvibe_engine/tests", # Assuming tests for the engine will be here
+    "cli",          
 ]
-python_files = "test_*.py *_test_.py" # Covers both new and old naming conventions
+python_files = "test_*.py *_test_.py" 
 python_classes = "Test*"
 python_functions = "test_*"
 markers = [
