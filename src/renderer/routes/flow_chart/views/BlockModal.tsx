@@ -21,6 +21,7 @@ import { Button } from "@/renderer/components/ui/button";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { env } from "@/env";
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
+import { toast } from "sonner";
 
 const jsonTheme = {
   scheme: "atlasvibe",
@@ -73,12 +74,31 @@ const BlockModal = ({
   const link =
     path.startsWith("/") || path.includes(":")
       ? null
-      : `${env.VITE_STUDIO_REPO}/blocks/${path}`;
+      : `${env.VITE_STUDIO_REPO}/blocks/${path}`; // VITE_STUDIO_REPO should be updated to atlasvibe repo
 
-  const docsLink = `${env.VITE_DOCS_LINK}/blocks/${path
+  const docsLink = `${env.VITE_DOCS_LINK}/blocks/${path // VITE_DOCS_LINK should be updated for atlasvibe
     .split("/")
     .slice(0, -1)
     .join("/")}`.toLowerCase();
+
+  const handleEditCode = async () => {
+    // Task 2.5: In-IDE Block Code Editing and Synchronization
+    // When window.api.openEditorWindow is called, it opens a separate editor window.
+    // If the code is saved in that editor window, an IPC event should be sent from
+    // the editor window's renderer process to the main process.
+    // The main process then needs to:
+    // 1. Save the file to disk (if not already done by the editor window itself).
+    // 2. Trigger metadata regeneration for the modified block. This typically involves
+    //    an IPC call to the Python backend (e.g., captain) to re-parse the block's
+    //    Python file and update its associated metadata (app.json, block_data.json).
+    // 3. After metadata regeneration, the main application's manifest should be updated/refreshed
+    //    so that changes (e.g., to inputs, outputs, parameters) are reflected in the UI.
+    //    This might involve setting `manifestChanged = true` in the manifest store.
+    await window.api.openEditorWindow(blockFullPath);
+    toast.info(
+      "If you edit and save the block code, you may need to manually trigger a manifest refresh or restart the application for changes to fully reflect, depending on current backend capabilities.",
+    );
+  };
 
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalOpen}>
@@ -125,13 +145,13 @@ const BlockModal = ({
 
         <div className="flex gap-2">
           <Button
-            onClick={withPermissionCheck(
-              async () => await window.api.openEditorWindow(blockFullPath),
-            )}
+            onClick={withPermissionCheck(handleEditCode)}
             data-testid="btn-edit-python"
             variant="secondary"
+            disabled={!selectedNode.data.isCustom && !env.DEV} // Only allow editing custom blocks, or all in DEV
           >
             Edit Python Code
+            {selectedNode.data.isCustom || env.DEV ? "" : " (Read-only)"}
           </Button>
           <Button
             onClick={withPermissionCheck(

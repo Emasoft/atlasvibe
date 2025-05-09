@@ -5,6 +5,7 @@ import {
   nativeImage,
   dialog,
   nativeTheme,
+  ipcMain, // Added for handling custom events
 } from "electron";
 import { update } from "./update";
 import log from "electron-log/main";
@@ -135,8 +136,10 @@ export async function createEditorWindow(filepath: string) {
     },
     icon: getIcon(),
     webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
+      preload: join(__dirname, "../preload/index.js"), // Ensure preload script is correctly path-ed
       sandbox: false,
+      // Pass filepath to renderer process of editor window
+      additionalArguments: [`--filepath=${filepath}`],
     },
   });
 
@@ -162,6 +165,30 @@ export async function createEditorWindow(filepath: string) {
       hash: "editor/" + btoa(filepath),
     });
   }
+
+  // Task 2.5: In-IDE Block Code Editing and Synchronization
+  // The editor window (if it's a custom editor implemented within Electron/Web tech)
+  // would need to:
+  // 1. Load the content of `filepath`.
+  // 2. Provide editing capabilities.
+  // 3. On save, use an IPC mechanism (e.g., `ipcRenderer.send('save-block-code', filepath, newContent)`)
+  //    to send the new content to the main process.
+
+  // Main process would handle 'save-block-code':
+  // ipcMain.on('save-block-code', async (event, blockFilepath, content) => {
+  //   try {
+  //     await fs.promises.writeFile(blockFilepath, content);
+  //     // After successful save, notify the backend to regenerate metadata for this block.
+  //     // This requires another IPC call to the Python backend, possibly via the main window's renderer process
+  //     // or a direct Python shell execution if the backend is structured to allow this.
+  //     // Example: global.mainWindow.webContents.send('trigger-metadata-regeneration', blockFilepath);
+  //     log.info(`Saved block code for: ${blockFilepath}`);
+  //   } catch (error) {
+  //     log.error(`Failed to save block code for ${blockFilepath}:`, error);
+  //     // Optionally, send error back to editor window
+  //   }
+  // });
+  // Note: Actual implementation of fs and IPC handlers requires more setup.
 
   app.on("before-quit", () => {
     if (editorWindow) {

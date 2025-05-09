@@ -135,7 +135,7 @@ type Actions = {
 
 const defaultProjectData =
   resolveProjectReference(resolveDefaultProjectReference()) ??
-  RECIPES.NOISY_SINE;
+  RECIPES.NOISY_SINE; // NOISY_SINE is likely an old project reference
 const initialNodes: Node<BlockData>[] = defaultProjectData.nodes;
 const initialEdges: Edge[] = defaultProjectData.edges;
 
@@ -209,7 +209,7 @@ export const useProjectStore = create<State & Actions>()(
         return err(e as Error);
       }
 
-      // sendEventToMix("Control Input Data Updated", {
+      // sendEventToMix("Control Input Data Updated", { // Original comment
       //   blockId,
       //   paramName,
       //   value,
@@ -241,7 +241,7 @@ export const useProjectStore = create<State & Actions>()(
         return err(e as Error);
       }
 
-      // sendEventToMix("Control Input Data Updated", {
+      // sendEventToMix("Control Input Data Updated", { // Original comment
       //   blockId,
       //   paramName,
       //   value,
@@ -283,7 +283,7 @@ export const useProjectStore = create<State & Actions>()(
         return err(e as Error);
       }
 
-      // sendEventToMix("Block Name Changed", { blockId, name });
+      // sendEventToMix("Block Name Changed", { blockId, name }); // Original comment
       setHasUnsavedChanges(true);
 
       return ok(undefined);
@@ -316,7 +316,7 @@ export const useProjectStore = create<State & Actions>()(
       } catch (e) {
         return err(e as Error);
       }
-      // sendEventToMix("Text Node Updated", { id, text });
+      // sendEventToMix("Text Node Updated", { id, text }); // Original comment
       setHasUnsavedChanges(true);
       return ok(undefined);
     },
@@ -353,7 +353,7 @@ export const useProjectStore = create<State & Actions>()(
       } catch (e) {
         return err(e as Error);
       }
-      // sendEventToMix("Text Node Updated", { id, text });
+      // sendEventToMix("Text Node Updated", { id, text }); // Original comment
       setHasUnsavedChanges(true);
       return ok(undefined);
     },
@@ -483,6 +483,9 @@ export const useProjectStore = create<State & Actions>()(
     },
 
     saveProject: async () => {
+      // Ensure project path is used for saving. Custom block paths within node.data.path
+      // should be relative to the project root (e.g., "atlasvibe_blocks/MyBlock/MyBlock.py")
+      // if they are project-specific. This relies on the manifest and metadata providing correct paths.
       const project: Project = {
         name: get().name,
         rfInstance: {
@@ -500,7 +503,7 @@ export const useProjectStore = create<State & Actions>()(
 
       const projectPath = get().path;
       if (projectPath) {
-        // sendEventToMix("Saving Project");
+        // sendEventToMix("Saving Project"); // Original comment
         const save = fromThrowable(
           () => window.api.saveFile(projectPath, fileContent),
           (e) => e as Error,
@@ -517,7 +520,7 @@ export const useProjectStore = create<State & Actions>()(
           .map((s) => s.toLowerCase().trim())
           .filter((s) => s !== "")
           .join("-") ?? "app";
-      const defaultFilename = `${basename}.json`;
+      const defaultFilename = `${basename}.json`; // Should be .atlasvibe or similar project extension
 
       return fromPromise(
         window.api.saveFileAs(defaultFilename, fileContent),
@@ -554,6 +557,9 @@ export const useLoadProject = () => {
         );
       }
 
+      // When loading a project, ensure paths for custom blocks are correctly resolved
+      // relative to the project's path. This depends on how paths are stored in the project file
+      // and how the manifest/metadata system handles project-specific blocks.
       const {
         name,
         rfInstance: { nodes, edges },
@@ -577,13 +583,13 @@ export const useLoadProject = () => {
         controlVisualizationNodes: controlVisualizationNodes ?? [],
         controlTextNodes: controlTextNodes ?? [],
         name,
-        path,
+        path, // Store the project's path
       });
 
       setHasUnsavedChanges(false);
       wipeBlockResults();
 
-      // sendEventToMix("Project Loaded");
+      // sendEventToMix("Project Loaded"); // Original comment
 
       return ok(undefined);
     },
@@ -593,58 +599,118 @@ export const useLoadProject = () => {
 
 export const useAddBlock = () => {
   const setNodes = useProtectedSetter("nodes");
+  const projectPath = useProjectStore(useShallow((state) => state.path));
+  const currentManifest = useManifest();
+  const setManifestChanged = useManifestStore(
+    useShallow((state) => state.setManifestChanged),
+  );
 
   const center = useFlowchartStore(useShallow((state) => state.centerPosition));
   const hardwareDevices: DeviceInfo | undefined = useHardwareStore(
     useShallow((state) => state.devices),
   );
-  const metadata = useMetadata();
+  const metadata = useMetadata(); // Metadata for existing blueprints
 
   return useCallback(
-    (node: BlockDefinition) => {
+    async (blueprintDefinition: BlockDefinition) => {
+      // Task 2.3: Custom Block Creation on-the-fly
+      // 1. Prompt user for a new name for the custom block.
+      //    (This would typically be a UI interaction before calling this function,
+      //     or this function would invoke a prompt.)
+      const newCustomBlockName = window.prompt(
+        `Enter a name for your new custom block (based on ${blueprintDefinition.key}):`,
+      );
+
+      if (!newCustomBlockName || newCustomBlockName.trim() === "") {
+        toast.error("Custom block name cannot be empty.");
+        return;
+      }
+
+      if (!projectPath) {
+        toast.error(
+          "Project must be saved first to create a custom block within it.",
+        );
+        // Alternatively, allow creating in a temporary location or handle unsaved projects.
+        // For now, require a saved project path.
+        return;
+      }
+
+      let newBlockDefinition: BlockDefinition | undefined;
+      try {
+        // 2. Call backend to duplicate blueprint, rename, modify code, update metadata.
+        //    This hypothetical IPC call handles all backend operations.
+        //    It should return the BlockDefinition of the newly created custom block.
+        toast.info(
+          `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
+        );
+        newBlockDefinition = await window.api.createCustomBlockFromBlueprint(
+          blueprintDefinition.key, // Key of the blueprint
+          newCustomBlockName.trim(),
+          projectPath, // Path of the current project
+        );
+
+        if (!newBlockDefinition) {
+          throw new Error("Backend failed to create custom block details.");
+        }
+
+        // 3. Signal that the manifest may have changed so it gets reloaded/updated.
+        //    The backend, after creating the block and its metadata, should ensure
+        //    the manifest system can pick it up.
+        setManifestChanged(true);
+        // It might be necessary to wait for the manifest to actually update here,
+        // or for `createCustomBlockFromBlueprint` to only return after manifest is ready.
+        // For simplicity, we assume the newBlockDefinition is immediately usable or
+        // the manifest will update before the next render cycle that needs it.
+        toast.success(
+          `Custom block "${newBlockDefinition.key}" created successfully.`,
+        );
+      } catch (e: any) {
+        console.error("Failed to create custom block:", e);
+        toast.error(`Failed to create custom block: ${e.message}`);
+        return;
+      }
+
+      // 4. Add the new custom block to the canvas using its definition.
       const previousBlockPos = localStorage.getItem("prev_node_pos");
-
       const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
-
       const nodePosition = addRandomPositionOffset(pos, 300);
+
+      // Use the definition of the newly created custom block
       const {
-        key: funcName,
+        key: funcName, // This should be the newCustomBlockName or a key derived from it
         type,
         parameters: params,
         init_parameters: initParams,
         inputs,
         outputs,
         pip_dependencies,
-      } = node;
+        path: newBlockPath, // Path to the new custom block's Python file
+      } = newBlockDefinition;
 
-      const path =
-        metadata && `${funcName}.py` in metadata
-          ? metadata[`${funcName}.py`].path
-          : "";
-
-      const nodeId = createBlockId(node.key);
+      const nodeId = createBlockId(funcName); // funcName is the key of the new custom block
       const nodeLabel =
-        funcName === "CONSTANT"
+        funcName === "CONSTANT" // This logic might need adjustment for custom constants
           ? params!["constant"].default?.toString()
-          : createBlockLabel(node.key, getTakenNodeLabels(funcName));
+          : createBlockLabel(funcName, getTakenNodeLabels(funcName));
 
       const nodeCtrls = ctrlsFromParams(params, funcName, hardwareDevices);
       const initCtrls = ctrlsFromParams(initParams, funcName);
 
       const newNode: Node<BlockData> = {
         id: nodeId,
-        type,
+        type, // Should come from newBlockDefinition.type
         data: {
           id: nodeId,
-          label: nodeLabel ?? "New Block",
-          func: funcName,
+          label: nodeLabel ?? newCustomBlockName,
+          func: funcName, // Key of the new custom block
           type,
           ctrls: nodeCtrls,
           initCtrls: initCtrls,
           inputs,
           outputs,
           pip_dependencies,
-          path,
+          path: newBlockPath, // Path to the custom block's main .py file
+          isCustom: true, // Flag to identify custom blocks
         },
         position: nodePosition,
       };
@@ -654,9 +720,17 @@ export const useAddBlock = () => {
       });
 
       localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
-      // sendEventToMix("Node Added", { nodeTitle: newNode.data?.label ?? "" });
+      // sendEventToMix("Node Added", { nodeTitle: newNode.data?.label ?? "" }); // Original comment
+      setHasUnsavedChanges(true);
     },
-    [setNodes, center, metadata, hardwareDevices],
+    [
+      setNodes,
+      center,
+      hardwareDevices,
+      projectPath,
+      currentManifest,
+      setManifestChanged,
+    ],
   );
 };
 
@@ -671,6 +745,9 @@ export const useDeleteBlock = () => {
   return useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (nodeId: string) => {
+      // TODO: If it's a custom block, consider if its files should be deleted from
+      // the project's `atlasvibe_blocks` directory. This would require an IPC call.
+      // For now, it only removes it from the canvas.
       setNodes((prev) => prev.filter((node) => node.id !== nodeId));
       setEdges((prev) =>
         prev.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
@@ -681,7 +758,7 @@ export const useDeleteBlock = () => {
       setControlVisualizationNodes((prev) =>
         prev.filter((viz) => viz.data.blockId !== nodeId),
       );
-      // sendEventToMix(MixPanelEvents.nodeDeleted, { nodeTitle: nodeLabel });
+      // sendEventToMix(MixPanelEvents.nodeDeleted, { nodeTitle: nodeLabel }); // Original comment
     },
     [setNodes, setEdges, setControlWidgetNodes, setControlVisualizationNodes],
   );
@@ -692,15 +769,19 @@ export const useDuplicateBlock = () => {
 
   return useCallback(
     (node: Node<BlockData>): Result<void, Error> => {
+      // Duplicating a custom block should create another instance on the canvas,
+      // but it should still refer to the *same underlying custom block code*.
+      // If the intent is to fork the custom block into a new custom block,
+      // that would be a different operation (e.g., "Duplicate and Make Editable Copy").
       const funcName = node.data.func;
-      const id = createBlockId(funcName);
+      const id = createBlockId(funcName); // Create a new unique ID for the canvas node
 
       const newNode: Node<BlockData> = {
-        ...node,
-        id,
+        ...node, // Copy properties like position, ctrls (potentially)
+        id, // New unique ID for this canvas instance
         data: {
-          ...node.data,
-          id,
+          ...node.data, // Copy data like func, type, path, isCustom
+          id, // Update data.id to match new node ID
           label:
             node.data.func === "CONSTANT"
               ? node.data.ctrls["constant"].value!.toString()
@@ -821,7 +902,7 @@ export const useAddTextNode = () => {
   return useCallback(() => {
     const pos = center ?? { x: 0, y: 0 };
     addTextNode(pos);
-    // sendEventToMix("Text Node Added");
+    // sendEventToMix("Text Node Added"); // Original comment
   }, [addTextNode, center]);
 };
 
@@ -894,6 +975,9 @@ function resolveProjectReference(project: string | null | undefined) {
     return null;
   }
 
+  // These RECIPES, galleryItems, ExampleProjects might refer to old "Flojoy" examples.
+  // They should be reviewed or replaced with "atlasvibe" specific examples or a
+  // clear migration/acknowledgment strategy if old examples are kept.
   if (RECIPES[project]) {
     return RECIPES[project];
   } else if (galleryItems[project]) {
