@@ -80,9 +80,9 @@ const BlockModal = ({
   const link =
     path.startsWith("/") || path.includes(":")
       ? null
-      : `${env.VITE_ATLASVIBE_REPO}/blocks/${path}`; // VITE_ATLASVIBE_REPO should be updated to atlasvibe repo
+      : `${env.VITE_ATLASVIBE_REPO}/blocks/${path}`; 
 
-  const docsLink = `${env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path // VITE_ATLASVIBE_DOCS_LINK should be updated for atlasvibe
+  const docsLink = `${env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path 
     .split("/")
     .slice(0, -1)
     .join("/")}`.toLowerCase();
@@ -105,6 +105,8 @@ const BlockModal = ({
       "If you edit and save the block code, you may need to manually trigger a manifest refresh or restart the application for changes to fully reflect, depending on current backend capabilities.",
     );
   };
+
+  const isDevMode = import.meta.env.DEV; // Vite's way to check for development mode
 
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalOpen}>
@@ -154,10 +156,10 @@ const BlockModal = ({
             onClick={withPermissionCheck(handleEditCode)}
             data-testid="btn-edit-python"
             variant="secondary"
-            disabled={!selectedNode.data.isCustom && !env.DEV} // Only allow editing custom blocks, or all in DEV
+            disabled={!selectedNode.data.isCustom && !isDevMode} // Only allow editing custom blocks, or all in DEV
           >
             Edit Python Code
-            {selectedNode.data.isCustom || env.DEV ? "" : " (Read-only)"}
+            {selectedNode.data.isCustom || isDevMode ? "" : " (Read-only)"}
           </Button>
           <Button
             onClick={withPermissionCheck(

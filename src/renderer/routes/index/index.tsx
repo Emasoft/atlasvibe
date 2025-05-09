@@ -23,6 +23,14 @@ import { ServerStatus } from "@/renderer/types/socket";
 import StatusBar from "@/renderer/routes/common/StatusBar";
 import { InterpretersList } from "src/main/python/interpreter";
 import { useSocketStore } from "@/renderer/stores/socket";
+import { ExtendedWindowApi } from "@/preload"; // Import the extended type
+
+declare global {
+  interface Window {
+    api: ExtendedWindowApi; // Use the extended type for window.api
+  }
+}
+
 
 export const Index = (): JSX.Element => {
   const serverStatus = useSocketStore((state) => state.serverStatus);
@@ -177,7 +185,7 @@ export const Index = (): JSX.Element => {
       }
       case "check-blocks-resource": {
         if (window.api.isPackaged()) {
-          window.api.restartAtlasVibe();
+          window.api.restartAtlasVibe(); // Use the extended API
         } else {
           alert(
             "Restart is not supported for dev build, please relaunch atlasvibe manually!",
@@ -338,7 +346,7 @@ export const Index = (): JSX.Element => {
         {setupStatuses.find((status) => status.status === "error") && (
           <Button
             onClick={async (): Promise<void> =>
-              await window.api.restartAtlasVibe()
+              await window.api.restartAtlasVibe() // Use the extended API
             }
           >
             Retry

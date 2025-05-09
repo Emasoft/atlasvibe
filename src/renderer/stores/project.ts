@@ -9,7 +9,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import {
   TextData,
-  BlockData,
+  BlockData as OriginalBlockData, // Rename original to avoid conflict
   positionSchema,
   EdgeData,
 } from "@/renderer/types/block";
@@ -58,6 +58,20 @@ import {
   WidgetType,
 } from "@/renderer/types/control";
 import { EdgeVariant } from "@/renderer/types/edge";
+import { ExtendedWindowApi } from "@/preload"; // Import the extended type
+
+declare global {
+  interface Window {
+    api: ExtendedWindowApi; // Use the extended type for window.api
+  }
+}
+
+// Extend BlockData locally for this store if the global type isn't updated yet
+interface BlockData extends OriginalBlockData {
+  isCustom?: boolean;
+  path?: string; // Assuming path should be part of BlockData for custom blocks
+}
+
 
 type State = {
   name: string | undefined;
@@ -141,7 +155,7 @@ type Actions = {
 
 const defaultProjectData =
   resolveProjectReference(resolveDefaultProjectReference()) ??
-  RECIPES.NOISY_SINE; // NOISY_SINE is likely an old project reference
+  RECIPES.NOISY_SINE; 
 const initialNodes: Node<BlockData>[] = defaultProjectData.nodes;
 const initialEdges: Edge[] = defaultProjectData.edges;
 
@@ -475,9 +489,6 @@ export const useProjectStore = create<State & Actions>()(
     },
 
     saveProject: async () => {
-      // Ensure project path is used for saving. Custom block paths within node.data.path
-      // should be relative to the project root (e.g., "atlasvibe_blocks/MyBlock/MyBlock.py")
-      // if they are project-specific. This relies on the manifest and metadata providing correct paths.
       const project: Project = {
         name: get().name,
         rfInstance: {
@@ -511,7 +522,7 @@ export const useProjectStore = create<State & Actions>()(
           .map((s) => s.toLowerCase().trim())
           .filter((s) => s !== "")
           .join("-") ?? "app";
-      const defaultFilename = `${basename}.atlasvibe`; // Using .atlasvibe extension
+      const defaultFilename = `${basename}.atlasvibe`; 
 
       return fromPromise(
         window.api.saveFileAs(defaultFilename, fileContent),
@@ -547,10 +558,6 @@ export const useLoadProject = () => {
           ),
         );
       }
-
-      // When loading a project, ensure paths for custom blocks are correctly resolved
-      // relative to the project's path. This depends on how paths are stored in the project file
-      // and how the manifest/metadata system handles project-specific blocks.
       const {
         name,
         rfInstance: { nodes, edges },
@@ -574,7 +581,7 @@ export const useLoadProject = () => {
         controlVisualizationNodes: controlVisualizationNodes ?? [],
         controlTextNodes: controlTextNodes ?? [],
         name,
-        path, // Store the project's path
+        path, 
       });
 
       setHasUnsavedChanges(false);
@@ -589,7 +596,6 @@ export const useLoadProject = () => {
 export const useAddBlock = () => {
   const setNodes = useProtectedSetter("nodes");
   const projectPath = useProjectStore(useShallow((state) => state.path));
-  const currentManifest = useManifest();
   const setManifestChanged = useManifestStore(
     useShallow((state) => state.setManifestChanged),
   );
@@ -598,14 +604,9 @@ export const useAddBlock = () => {
   const hardwareDevices: DeviceInfo | undefined = useHardwareStore(
     useShallow((state) => state.devices),
   );
-  const metadata = useMetadata(); // Metadata for existing blueprints
 
   return useCallback(
     async (blueprintDefinition: BlockDefinition) => {
-      // Task 2.3: Custom Block Creation on-the-fly
-      // 1. Prompt user for a new name for the custom block.
-      //    (This would typically be a UI interaction before calling this function,
-      //     or this function would invoke a prompt.)
       const newCustomBlockName = window.prompt(
         `Enter a name for your new custom block (based on ${blueprintDefinition.key}):`,
       );
@@ -619,37 +620,29 @@ export const useAddBlock = () => {
         toast.error(
           "Project must be saved first to create a custom block within it.",
         );
-        // Alternatively, allow creating in a temporary location or handle unsaved projects.
-        // For now, require a saved project path.
         return;
       }
 
       let newBlockDefinition: BlockDefinition | undefined;
       try {
-        // 2. Call backend to duplicate blueprint, rename, modify code, update metadata.
-        //    This hypothetical IPC call handles all backend operations.
-        //    It should return the BlockDefinition of the newly created custom block.
         toast.info(
           `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
         );
-        newBlockDefinition = await window.api.createCustomBlockFromBlueprint(
-          blueprintDefinition.key, // Key of the blueprint
+        // Assuming window.api.createCustomBlockFromBlueprint is defined in preload and main
+        const result = await window.api.createCustomBlockFromBlueprint(
+          blueprintDefinition.key, 
           newCustomBlockName.trim(),
-          projectPath, // Path of the current project
+          projectPath, 
         );
+        // Assuming the result is the BlockDefinition of the new block
+        // This part needs to align with the actual return type of createCustomBlockFromBlueprint
+        newBlockDefinition = result as BlockDefinition; // Cast might be needed if type is 'any'
 
-        if (!newBlockDefinition) {
-          throw new Error("Backend failed to create custom block details.");
+        if (!newBlockDefinition || !newBlockDefinition.key || !newBlockDefinition.path) { // Check for path
+          throw new Error("Backend failed to create custom block details or path is missing.");
         }
-
-        // 3. Signal that the manifest may have changed so it gets reloaded/updated.
-        //    The backend, after creating the block and its metadata, should ensure
-        //    the manifest system can pick it up.
+        
         setManifestChanged(true);
-        // It might be necessary to wait for the manifest to actually update here,
-        // or for `createCustomBlockFromBlueprint` to only return after manifest is ready.
-        // For simplicity, we assume the newBlockDefinition is immediately usable or
-        // the manifest will update before the next render cycle that needs it.
         toast.success(
           `Custom block "${newBlockDefinition.key}" created successfully.`,
         );
@@ -659,26 +652,24 @@ export const useAddBlock = () => {
         return;
       }
 
-      // 4. Add the new custom block to the canvas using its definition.
       const previousBlockPos = localStorage.getItem("prev_node_pos");
       const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
       const nodePosition = addRandomPositionOffset(pos, 300);
 
-      // Use the definition of the newly created custom block
       const {
-        key: funcName, // This should be the newCustomBlockName or a key derived from it
+        key: funcName, 
         type,
         parameters: params,
         init_parameters: initParams,
         inputs,
         outputs,
         pip_dependencies,
-        path: newBlockPath, // Path to the new custom block's Python file
+        path: newBlockPath, 
       } = newBlockDefinition;
 
-      const nodeId = createBlockId(funcName); // funcName is the key of the new custom block
+      const nodeId = createBlockId(funcName); 
       const nodeLabel =
-        funcName === "CONSTANT" // This logic might need adjustment for custom constants
+        funcName === "CONSTANT" 
           ? params!["constant"].default?.toString()
           : createBlockLabel(funcName, getTakenNodeLabels(funcName));
 
@@ -687,19 +678,19 @@ export const useAddBlock = () => {
 
       const newNode: Node<BlockData> = {
         id: nodeId,
-        type, // Should come from newBlockDefinition.type
+        type, 
         data: {
           id: nodeId,
           label: nodeLabel ?? newCustomBlockName,
-          func: funcName, // Key of the new custom block
+          func: funcName, 
           type,
           ctrls: nodeCtrls,
           initCtrls: initCtrls,
           inputs,
           outputs,
           pip_dependencies,
-          path: newBlockPath, // Path to the custom block's main .py file
-          isCustom: true, // Flag to identify custom blocks
+          path: newBlockPath, 
+          isCustom: true, 
         },
         position: nodePosition,
       };
@@ -716,7 +707,6 @@ export const useAddBlock = () => {
       center,
       hardwareDevices,
       projectPath,
-      currentManifest,
       setManifestChanged,
     ],
   );
@@ -731,11 +721,7 @@ export const useDeleteBlock = () => {
   );
 
   return useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (nodeId: string) => {
-      // TODO: If it's a custom block, consider if its files should be deleted from
-      // the project's `atlasvibe_blocks` directory. This would require an IPC call.
-      // For now, it only removes it from the canvas.
       setNodes((prev) => prev.filter((node) => node.id !== nodeId));
       setEdges((prev) =>
         prev.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
@@ -756,19 +742,15 @@ export const useDuplicateBlock = () => {
 
   return useCallback(
     (node: Node<BlockData>): Result<void, Error> => {
-      // Duplicating a custom block should create another instance on the canvas,
-      // but it should still refer to the *same underlying custom block code*.
-      // If the intent is to fork the custom block into a new custom block,
-      // that would be a different operation (e.g., "Duplicate and Make Editable Copy").
       const funcName = node.data.func;
-      const id = createBlockId(funcName); // Create a new unique ID for the canvas node
+      const id = createBlockId(funcName); 
 
       const newNode: Node<BlockData> = {
-        ...node, // Copy properties like position, ctrls (potentially)
-        id, // New unique ID for this canvas instance
+        ...node, 
+        id, 
         data: {
-          ...node.data, // Copy data like func, type, path, isCustom
-          id, // Update data.id to match new node ID
+          ...node.data, 
+          id, 
           label:
             node.data.func === "CONSTANT"
               ? node.data.ctrls["constant"].value!.toString()
@@ -951,7 +933,7 @@ const getTakenNodeLabels = (func: string) => {
 function resolveDefaultProjectReference() {
   if (typeof window !== "undefined") {
     const query = new URLSearchParams(window.location.search);
-    return query.get("project"); // TODO: set these env through electron API as process is not accessible at this level
+    return query.get("project"); 
   }
   return undefined;
 }
@@ -960,10 +942,6 @@ function resolveProjectReference(project: string | null | undefined) {
   if (!project) {
     return null;
   }
-
-  // These RECIPES, galleryItems, ExampleProjects might refer to old "Flojoy" examples.
-  // They should be reviewed or replaced with "atlasvibe" specific examples or a
-  // clear migration/acknowledgment strategy if old examples are kept.
   if (RECIPES[project]) {
     return RECIPES[project];
   } else if (galleryItems[project]) {

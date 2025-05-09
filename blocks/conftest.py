@@ -4,13 +4,13 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 from functools import wraps
-from flojoy.utils import FLOJOY_CACHE_DIR
+from atlasvibe_engine.utils.cache_utils import ATLASVIBE_CACHE_DIR # Assuming cache dir constant is rebranded
 from unittest.mock import patch
 
 
 @pytest.fixture
-def mock_flojoy_decorator(deps=None):
-    """A fixture that mocks the flojoy decorator to a no-op decorator that does not create a Flojoy node"""
+def mock_atlasvibe_decorator(deps=None): # Renamed from mock_flojoy_decorator
+    """A fixture that mocks the atlasvibe_node decorator to a no-op decorator."""
     # TODO: Add support for mocking dependencies
 
     def no_op_decorator(func=None, **kwargs):
@@ -26,24 +26,24 @@ def mock_flojoy_decorator(deps=None):
 
         return decorator
 
-    with patch("flojoy.flojoy") as mock_flojoy:
-        mock_flojoy.side_effect = no_op_decorator
-        yield mock_flojoy
+    with patch("atlasvibe_engine.node.atlasvibe_node") as mock_atlasvibe: # Assuming decorator is in atlasvibe_engine.node
+        mock_atlasvibe.side_effect = no_op_decorator
+        yield mock_atlasvibe
 
 
 @pytest.fixture
-def mock_flojoy_venv_cache_directory():
-    """A fixture that mocks the flojoy venv cache directory to a temporary directory"""
+def mock_atlasvibe_venv_cache_directory(): # Renamed
+    """A fixture that mocks the atlasvibe venv cache directory to a temporary directory"""
     with tempfile.TemporaryDirectory() as tempdir:
         with patch(
-            "flojoy.flojoy_node_venv._get_venv_cache_dir", return_value=tempdir
+            "atlasvibe_engine.node_venv._get_venv_cache_dir", return_value=tempdir # Assuming path
         ) as mock_venv_cache_dir:
             yield mock_venv_cache_dir
 
 
 @pytest.fixture
-def cleanup_flojoy_cache_fixture():
-    """A fixture that watches for additions to the flojoy cache directory and deletes them.
+def cleanup_atlasvibe_cache_fixture(): # Renamed
+    """A fixture that watches for additions to the atlasvibe cache directory and deletes them.
     NOTE: This fixture is not thread-safe. DO NOT run tests in parallel if using this.
     """
 
@@ -87,5 +87,5 @@ def cleanup_flojoy_cache_fixture():
                     # Does not exist
                     pass
 
-    with watch_directory(FLOJOY_CACHE_DIR):
+    with watch_directory(ATLASVIBE_CACHE_DIR): # Use rebranded cache dir constant
         yield
