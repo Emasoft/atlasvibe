@@ -1,6 +1,12 @@
+# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
 from typing import TypedDict
 
-from flojoy import OrderedPair, OrderedTriple, flojoy
+from flojoy import OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
 
 
 class DocstringMultiReturnOutput(TypedDict):
@@ -8,7 +14,7 @@ class DocstringMultiReturnOutput(TypedDict):
     output2: OrderedTriple
 
 
-@flojoy(node_type="TEST_TYPE")
+@atlasvibe_node(node_type="TEST_TYPE") # CHANGED
 def DOCSTRING_MULTI_RETURN(
     a: OrderedPair, b: OrderedPair
 ) -> DocstringMultiReturnOutput:

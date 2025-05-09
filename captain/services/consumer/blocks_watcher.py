@@ -1,3 +1,9 @@
+# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
 from captain.internal.wsmanager import ConnectionManager
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.logger import logger
@@ -14,7 +20,7 @@ class BlocksWatcher:
         paths_to_watch: list[str] = []
         blocks_path = get_blocks_path()
         paths_to_watch.append(blocks_path)
-        custom_path_file = Path.home() / ".flojoy" / "custom_blocks_path.txt"
+        custom_path_file = Path.home() / ".atlasvibe" / "custom_blocks_path.txt" # CHANGED .flojoy to .atlasvibe
         if Path.exists(custom_path_file):
             with open(custom_path_file) as f:
                 paths_to_watch.append(f.read())

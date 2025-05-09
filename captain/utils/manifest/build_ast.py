@@ -1,20 +1,26 @@
+# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
 import ast
 from typing import Any, Callable, Literal, Optional, Tuple, cast
 
-SELECTED_IMPORTS = ["flojoy", "typing"]
+SELECTED_IMPORTS = ["flojoy", "typing"] # Assuming 'flojoy' is still the package name for DataContainer etc.
 NO_OUTPUT_NODES = ["GOTO", "END"]
 
 
-class FlojoyNodeTransformer(ast.NodeTransformer):
-    def get_flojoy_decorator(self, node: ast.FunctionDef):
+class FlojoyNodeTransformer(ast.NodeTransformer): # Consider renaming this class to AtlasVibeNodeTransformer if it becomes confusing
+    def get_flojoy_decorator(self, node: ast.FunctionDef): # Name implies old decorator
         return [
             decorator
             for decorator in node.decorator_list
             if isinstance(decorator, ast.Name)
-            and decorator.id == "flojoy"
+            and decorator.id == "atlasvibe_node" # CHANGED
             or isinstance(decorator, ast.Call)
             and isinstance(decorator.func, ast.Name)
-            and decorator.func.id == "flojoy"
+            and decorator.func.id == "atlasvibe_node" # CHANGED
         ]
 
     def get_display_decorator(self, node: ast.FunctionDef):
@@ -29,7 +35,7 @@ class FlojoyNodeTransformer(ast.NodeTransformer):
         ]
 
     def get_decorator(
-        self, node: ast.FunctionDef, decorator_name: Literal["display", "flojoy"]
+        self, node: ast.FunctionDef, decorator_name: Literal["display", "atlasvibe_node"] # CHANGED "flojoy" to "atlasvibe_node"
     ):
         return [
             decorator
@@ -64,20 +70,20 @@ class FlojoyNodeTransformer(ast.NodeTransformer):
             node.decorator_list = cast(
                 list[ast.expr], self.get_decorator(node, "display")
             )
-        elif not has_decorator(node, "flojoy") and not has_decorator(
+        elif not has_decorator(node, "atlasvibe_node") and not has_decorator( # CHANGED "flojoy"
             node, "node_initialization"
         ):
             return None
 
         # TODO: make an error comment when a display decorator have another decorator
-        # Keep only the '@flojoy' if there are multiple decorators.
+        # Keep only the '@atlasvibe_node' if there are multiple decorators.
 
-        if has_decorator(node, "flojoy") and len(node.decorator_list) > 1:
-            # Keep only the '@flojoy' decorator if there are multiple decorators.
+        if has_decorator(node, "atlasvibe_node") and len(node.decorator_list) > 1: # CHANGED "flojoy"
+            # Keep only the '@atlasvibe_node' decorator if there are multiple decorators.
             # Some decorators, like '@run_in_venv', create virtual environments, which we
             # don't want to generate when creating the manifest.
             node.decorator_list = cast(
-                list[ast.expr], self.get_decorator(node, "flojoy")
+                list[ast.expr], self.get_decorator(node, "atlasvibe_node") # CHANGED "flojoy"
             )
 
         if node.body:
@@ -108,8 +114,8 @@ def make_manifest_ast(
         tree = ast.parse(f.read())
 
     # Do an initial pass to remove everything that isn't an
-    # import, dataclass or flojoy node
-    transformer = FlojoyNodeTransformer()
+    # import, dataclass or atlasvibe_node node
+    transformer = FlojoyNodeTransformer() # Name of class can remain for now, or be changed too
     tree: ast.Module = transformer.visit(tree)
 
     overload: dict[Any] | None = dict()
@@ -121,10 +127,10 @@ def make_manifest_ast(
     if not overload:
         overload = None
 
-    flojoy_node = find(
+    flojoy_node = find( # Variable name can remain for now
         tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
-        and has_decorator(node, "flojoy"),
+        and has_decorator(node, "atlasvibe_node"), # CHANGED "flojoy"
     )
 
     init_func = find(
@@ -134,7 +140,7 @@ def make_manifest_ast(
     )
 
     if not flojoy_node:
-        raise ValueError("No flojoy node found in file")
+        raise ValueError("No atlasvibe_node node found in file") # CHANGED "flojoy"
 
     node_name = flojoy_node.name
     init_func_name = init_func.name if init_func else None
@@ -158,7 +164,7 @@ def make_manifest_ast(
             return_type = flojoy_node.returns.id
 
     # Then get rid of all the other classes
-    # that aren't the return type of the flojoy node
+    # that aren't the return type of the atlasvibe_node node
     # This also filters out all of the None values
 
     tree.body = [
@@ -170,25 +176,25 @@ def make_manifest_ast(
     return (node_name, init_func_name, tree, overload)
 
 
-def get_flojoy_decorator(tree: ast.Module) -> Optional[ast.Call]:
-    flojoy_node = find(
+def get_flojoy_decorator(tree: ast.Module) -> Optional[ast.Call]: # Name implies old decorator
+    flojoy_node = find( # Variable name can remain for now
         tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
-        and has_decorator(node, "flojoy"),
+        and has_decorator(node, "atlasvibe_node"), # CHANGED "flojoy"
     )
     if not flojoy_node:
-        raise ValueError("No flojoy node found in file")
+        raise ValueError("No atlasvibe_node node found in file") # CHANGED "flojoy"
 
-    # Differentiates between @flojoy and @flojoy(deps={...})
+    # Differentiates between @atlasvibe_node and @atlasvibe_node(deps={...})
     return find(
         flojoy_node.decorator_list,
         lambda d: isinstance(d, ast.Call)
         and isinstance(d.func, ast.Name)
-        and d.func.id == "flojoy",
+        and d.func.id == "atlasvibe_node", # CHANGED "flojoy"
     )
 
 
-def get_flojoy_decorator_param(tree: ast.Module, name: str) -> Optional[ast.keyword]:
+def get_flojoy_decorator_param(tree: ast.Module, name: str) -> Optional[ast.keyword]: # Name implies old decorator
     decorator = get_flojoy_decorator(tree)
 
     if not decorator:

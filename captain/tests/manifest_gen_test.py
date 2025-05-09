@@ -1,3 +1,9 @@
+# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
 import os
 import unittest
 
@@ -12,7 +18,7 @@ def get_manifest(filename: str):
     return create_manifest(os.path.join(TEST_NODES_PATH, filename))
 
 
-@pytest.mark.usefixtures("reload_flojoy")
+@pytest.mark.usefixtures("reload_atlasvibe_node_module") # CHANGED fixture name
 class ManifestGenerationTest(unittest.TestCase):
     def test_basic_node_manifest(self):
         manifest = get_manifest("basic.py")
