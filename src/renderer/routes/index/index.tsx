@@ -1,3 +1,9 @@
+// Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+// Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+//
+// This software is licensed under the MIT License.
+// Refer to the LICENSE file for more details.
+
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { SetupStatus } from "@/renderer/types/status";
 import SetupStep from "@/renderer/components/index/SetupStep";

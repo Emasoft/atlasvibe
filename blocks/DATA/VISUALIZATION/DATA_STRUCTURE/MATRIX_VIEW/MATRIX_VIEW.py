@@ -1,3 +1,9 @@
+# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
+# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
 import numpy as np
 import plotly.graph_objects as go
 from flojoy import DCNpArrayType, Matrix, OrderedPair, Plotly, Vector, atlasvibe_node
