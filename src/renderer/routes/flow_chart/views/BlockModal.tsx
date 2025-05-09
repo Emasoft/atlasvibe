@@ -25,7 +25,7 @@ import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Button } from "@/renderer/components/ui/button";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
-import { env } from "@/env"; // Corrected: Use the env import
+import { env } from "@/env"; 
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
 import { toast } from "sonner";
 
@@ -60,7 +60,7 @@ export type BlockModalProps = {
   pythonString: string;
   blockFilePath: string;
   blockFullPath: string;
-  selectedNode: Node<BlockData>; // Assuming BlockData might include isCustom
+  selectedNode: Node<BlockData>; 
 };
 
 const BlockModal = ({
@@ -95,9 +95,6 @@ const BlockModal = ({
   };
 
   const isDevMode = import.meta.env.DEV; 
-  // Assuming selectedNode.data might have an isCustom property.
-  // If BlockData type globally doesn't have it, this might still show a TS error
-  // unless the type used for selectedNode.data is more specific here.
   const isCustomBlock = !!selectedNode.data.isCustom;
 
 
@@ -200,7 +197,7 @@ const BlockModal = ({
 
 type NodeModalDataVizProps = {
   result: BlockResult;
-  selectedNode: Node<BlockData>; // Assuming BlockData might include isCustom
+  selectedNode: Node<BlockData>; 
   theme: "light" | "dark";
 };
 

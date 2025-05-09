@@ -1,4 +1,4 @@
-import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasVibeTheme"; // Changed import
+import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasVibeTheme"; 
 import { Dialog, DialogContent } from "@/renderer/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { Test } from "@/renderer/types/test-sequencer";
@@ -39,7 +39,7 @@ const PythonTestFileModal = ({ isModalOpen, handleModalOpen, test }: Props) => {
         <ScrollArea className="h-full w-full rounded-lg">
           <ScrollBar orientation="vertical" />
           <ScrollBar orientation="horizontal" />
-          <SyntaxHighlighter language="python" style={atlasvibeSyntaxTheme}> {/* Changed theme */}
+          <SyntaxHighlighter language="python" style={atlasvibeSyntaxTheme}> 
             {sourceCode}
           </SyntaxHighlighter>
         </ScrollArea>

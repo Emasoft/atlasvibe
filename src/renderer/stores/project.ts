@@ -625,7 +625,7 @@ export const useAddBlock = () => {
         return;
       }
 
-      let newBlockDefinitionResult: any; // Use 'any' for now, refine with actual type
+      let newBlockDefinitionResult: any; 
       try {
         toast.info(
           `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
@@ -637,9 +637,7 @@ export const useAddBlock = () => {
           projectPath, 
         );
         
-        // Assuming the result is the BlockDefinition of the new block
-        // This part needs to align with the actual return type of createCustomBlockFromBlueprint
-        const newBlockDefinitionTyped = newBlockDefinitionResult as BlockDefinition; 
+        const newBlockDefinitionTyped = newBlockDefinitionResult as BlockDefinition & { path?: string }; 
 
         if (!newBlockDefinitionTyped || !newBlockDefinitionTyped.key || !newBlockDefinitionTyped.path) { 
           throw new Error("Backend failed to create custom block details or path is missing.");
@@ -650,7 +648,6 @@ export const useAddBlock = () => {
           `Custom block "${newBlockDefinitionTyped.key}" created successfully.`,
         );
         
-        // Use newBlockDefinitionTyped from here on
         const previousBlockPos = localStorage.getItem("prev_node_pos");
         const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
         const nodePosition = addRandomPositionOffset(pos, 300);
@@ -664,7 +661,7 @@ export const useAddBlock = () => {
           outputs,
           pip_dependencies,
           path: newBlockPath, 
-        } = newBlockDefinitionTyped; // Use the typed definition
+        } = newBlockDefinitionTyped; 
 
         const nodeId = createBlockId(funcName); 
         const nodeLabel =

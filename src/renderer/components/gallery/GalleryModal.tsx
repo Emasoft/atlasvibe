@@ -19,7 +19,7 @@ import { GalleryElement } from "./GalleryElement";
 import { Input } from "@/renderer/components/ui/input";
 import { useEffect, useState } from "react";
 import { Button } from "@/renderer/components/ui/button";
-import { env } from "@/env"; // Corrected: Use the env import
+import { env } from "@/env"; 
 
 type AppGalleryModalProps = {
   isGalleryOpen: boolean;

@@ -51,7 +51,7 @@ export const Index = (): JSX.Element => {
     },
     {
       status: "pending",
-      stage: "spawn-captain",
+      stage: "spawn-captain", // This stage name might need to be "spawn-atlasvibe-engine"
       message: "Start the atlasvibe backend.",
     },
   ]);
@@ -127,17 +127,17 @@ export const Index = (): JSX.Element => {
     }
   }, []);
 
-  const spawnCaptain = useCallback(async (): Promise<void> => { // Should be spawnAtlasVibeEngine
+  const spawnBackendEngine = useCallback(async (): Promise<void> => { 
     try {
-      await window.api.spawnCaptain(); // This should be window.api.spawnAtlasVibeEngine()
+      await window.api.spawnCaptain(); // This should be window.api.spawnAtlasVibeEngine() or similar
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       updateSetupStatus({
-        stage: "spawn-captain", // Stage name might also need update if backend name changes
+        stage: "spawn-captain", 
         status: "error",
         message: "Something went wrong when starting atlasvibe...",
       });
-      setErrorTitle("Failed to spawn atlasvibe engine!"); // Updated title
+      setErrorTitle("Failed to spawn atlasvibe engine!"); 
       setErrorDesc(
         "Sorry about that! Please open the log folder and send the log to us on Discord!",
       );
@@ -179,7 +179,7 @@ export const Index = (): JSX.Element => {
         await window.api.openLogFolder();
         break;
       }
-      case "spawn-captain": { // Stage name might also need update
+      case "spawn-captain": { 
         await window.api.openLogFolder();
         break;
       }
@@ -253,13 +253,13 @@ export const Index = (): JSX.Element => {
         installDependencies();
         break;
       }
-      case "spawn-captain": { // Stage name might also need update
+      case "spawn-captain": { 
         updateSetupStatus({
           stage: "spawn-captain",
           status: "running",
           message: "Almost there, starting atlasvibe...",
         });
-        spawnCaptain();
+        spawnBackendEngine(); // Changed to spawnBackendEngine
         break;
       }
     }
@@ -267,7 +267,7 @@ export const Index = (): JSX.Element => {
     checkPythonInstallation,
     installDependencies,
     setupStatuses,
-    spawnCaptain,
+    spawnBackendEngine, // Changed to spawnBackendEngine
   ]);
 
   useEffect(() => {
