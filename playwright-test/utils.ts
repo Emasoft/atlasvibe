@@ -7,7 +7,7 @@
 import { execSync } from "child_process";
 import { join } from "path";
 import fs from "fs";
-import { ElectronApplication, Page, _electron as electron } from "playwright";
+import { ElectronApplication, Page, _electron as electron, expect } from "playwright"; // Added expect
 import { Selectors } from "./selectors"; // Assuming Selectors enum is in selectors.ts
 
 export const STARTUP_TIMEOUT = 300000; // 5 mins
@@ -140,6 +140,8 @@ export const newProject = async (page: Page, projectName: string): Promise<void>
   // Add a small wait or an assertion to ensure the project is created and UI is ready
   // For example, wait for the project name to appear in the title bar or a specific UI element.
   // This depends on your app's behavior after project creation.
-  // await page.waitForTimeout(500); // Simple delay, prefer explicit waits on UI elements.
-  // Example: await expect(page.locator(`div[data-testid='app-title']`)).toHaveText(projectName, { timeout: 10000 });
+  // Example: Ensure the canvas is clear or a specific project title element is updated.
+  // await expect(page.locator(Selectors.flowchartCanvas)).toBeEmpty({ timeout: 5000 }); // If canvas should be empty
+  // await expect(page.locator(Selectors.appTitle)).toHaveText(projectName, { timeout: 5000 }); // If app title shows project name
+  await page.waitForTimeout(500); // A small delay to allow UI to settle, prefer explicit waits on elements.
 };

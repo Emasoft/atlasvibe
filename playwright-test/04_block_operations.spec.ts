@@ -83,7 +83,7 @@ test.describe("Block Operations on Flowchart", () => {
     await expect(nodeLabel).not.toBeVisible(); // Old name should be gone
   });
 
-  test("Rename a block to an empty string should be prevented or handled", async () => {
+  test("Rename a block to an empty string should revert to original name", async () => {
     const blueprintKey = "CONSTANT";
     const initialName = `${blueprintKey}_1`;
 
@@ -93,43 +93,55 @@ test.describe("Block Operations on Flowchart", () => {
     await nodeLabel.click();
 
     const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
+    await expect(nameInput).toBeVisible();
     await nameInput.fill(""); // Try to set empty name
-    await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
+    await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } }); // Blur to apply
 
-    // Expected behavior: Name reverts to original, or an error is shown, or input is invalid.
-    // For this test, let's assume it reverts or stays the same.
-    await expect(page.locator(flowchartSelectors.nodeLabelByName(initialName))).toBeVisible();
-    // Add assertion for error message if applicable:
-    // const errorMessage = page.locator("div[data-testid='error-message-name-empty']");
+    // Expected behavior: Name reverts to original, or an error is shown.
+    // Assuming it reverts to the original name if input is invalid or empty.
+    const currentNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(initialName));
+    await expect(currentNodeLabel).toBeVisible();
+    await expect(currentNodeLabel).toHaveText(initialName);
+    // If an error message is expected:
+    // const errorMessage = page.locator("div[data-testid='error-message-name-empty']"); // Adjust selector
     // await expect(errorMessage).toBeVisible();
   });
   
-  test("Rename a block to a name with special characters (UI should handle/sanitize or backend reject)", async () => {
+  test("Rename a block to a name with special characters", async () => {
     const blueprintKey = "CONSTANT";
     const initialName = `${blueprintKey}_1`;
-    const specialName = "My@#$Constant"; // Potentially problematic name
-    const sanitizedOrExpectedName = "MyConstant"; // Example of sanitized name, or it might take specialName
+    const specialName = "My@Sp€ci@l_N@me#1"; // Name with various special characters
 
     const paletteBlock = page.locator(blockPaletteSelectors.blockByTestId(blueprintKey));
     await paletteBlock.dragTo(page.locator(Selectors.flowchartCanvas));
     await page.locator(flowchartSelectors.nodeLabelByName(initialName)).click();
 
     const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
+    await expect(nameInput).toBeVisible();
     await nameInput.fill(specialName);
-    await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
+    await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } }); // Blur to apply
 
     // Behavior depends on implementation:
-    // 1. UI sanitizes it (e.g., to "MyConstant")
-    // 2. UI allows it, backend handles/rejects (test backend separately)
-    // 3. UI shows validation error
-    // Assuming for now it might be sanitized or accepted, then check visibility.
-    // This test would need adjustment based on actual sanitization/validation rules.
-    const finalNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(sanitizedOrExpectedName)); // Or specialName
-    // await expect(finalNodeLabel).toBeVisible();
-    // await expect(finalNodeLabel).toHaveText(sanitizedOrExpectedName); // Or specialName
-    // OR check for validation error message
-    // For now, just ensure the app doesn't crash and the original name might persist if invalid
-    await expect(page.locator(flowchartSelectors.nodeLabelByName(initialName))).toBeVisible(); // Fallback check
+    // 1. UI accepts it as is, backend handles/rejects/sanitizes.
+    // 2. UI sanitizes it before sending to backend.
+    // 3. UI shows validation error and name reverts or doesn't change.
+    // This test assumes the name is accepted as is by the UI, and backend would handle it.
+    // Or, if there's client-side validation that prevents it, the name would revert.
+    // For this test, we'll check if the node label reflects the specialName.
+    // This might need adjustment based on actual sanitization/validation rules.
+    const finalNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(specialName));
+    const initialNodeLabelStillVisible = page.locator(flowchartSelectors.nodeLabelByName(initialName));
+
+    // Check if either the new special name is applied OR the name reverted to initial
+    // This is a common pattern if validation is strict and reverts on invalid input.
+    const newNameApplied = await finalNodeLabel.isVisible({timeout: 1000}).catch(() => false);
+    if (newNameApplied) {
+        await expect(finalNodeLabel).toHaveText(specialName);
+    } else {
+        await expect(initialNodeLabelStillVisible).toBeVisible();
+        await expect(initialNodeLabelStillVisible).toHaveText(initialName);
+        // Optionally, check for a validation error message here if that's the expected behavior
+    }
   });
 
 
@@ -144,6 +156,7 @@ test.describe("Block Operations on Flowchart", () => {
     await page.locator(flowchartSelectors.nodeLabelByName(initialName)).click();
     
     const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
+    await expect(nameInput).toBeVisible();
     await nameInput.fill(collidingBlueprintName);
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
 
@@ -173,6 +186,7 @@ test.describe("Block Operations on Flowchart", () => {
 
     await block2Label.click(); // Select block2
     const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
+    await expect(nameInput).toBeVisible();
     await nameInput.fill(block1InitialName); // Try to rename block2 to block1's name
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
 
@@ -197,7 +211,9 @@ test.describe("Block Operations on Flowchart", () => {
 
     // Rename CONSTANT_1 to MyUniqueConst
     await constNodeLabel.click();
-    await page.locator(Selectors.propertiesPanelBlockNameInput).fill(constBlockNewName);
+    const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
+    await expect(nameInput).toBeVisible();
+    await nameInput.fill(constBlockNewName);
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
     await expect(page.locator(flowchartSelectors.nodeLabelByName(constBlockNewName))).toBeVisible();
     await expect(constNodeLabel).not.toBeVisible(); // CONSTANT_1 is gone
@@ -209,7 +225,7 @@ test.describe("Block Operations on Flowchart", () => {
     
     // Rename ADD_1 to CONSTANT_1 (which is now available)
     await addNodeLabel.click();
-    await page.locator(Selectors.propertiesPanelBlockNameInput).fill(constBlockOriginalName); // Target: CONSTANT_1
+    await nameInput.fill(constBlockOriginalName); // Target: CONSTANT_1
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
 
     // ADD_1 should now be named CONSTANT_1

@@ -182,30 +182,30 @@ def test_rename_block_to_its_current_name(block_service_instance: MockBlockServi
 
 
 def test_rename_block_to_its_base_name_when_available(block_service_instance: MockBlockService, temp_project_dir: Path):
-    """Test renaming 'BLOCK_1' to 'BLOCK' when 'BLOCK' is available."""
+    """Test renaming 'BLOCK_1' to 'BLOCK' when 'BLOCK' is available or a blueprint."""
     project_path_str = str(temp_project_dir)
-    # Add ANOTHER_NODE, it becomes ANOTHER_NODE_1
-    initial_block_info = block_service_instance.add_block_to_project(project_path_str, "ANOTHER_NODE")
-    old_name = initial_block_info["name"] # ANOTHER_NODE_1
-    new_base_name = "ANOTHER_NODE" # This is a blueprint key, so it should be suffixed.
-
-    rename_info = block_service_instance.rename_custom_block(project_path_str, old_name, new_base_name)
-    # Since ANOTHER_NODE is a blueprint, renaming to it should result in ANOTHER_NODE_1 (if old_name was different)
-    # or ANOTHER_NODE_2 if ANOTHER_NODE_1 was the old name and we are trying to make it _1 again.
-    # The mock logic: if new_name_proposal is a blueprint, it gets suffixed.
-    # If old_name was "ANOTHER_NODE_1", and new_name_proposal is "ANOTHER_NODE" (a blueprint)
-    # it will become "ANOTHER_NODE_1" (if available, which it is, because we are renaming it from itself effectively)
-    # or "ANOTHER_NODE_2" if "ANOTHER_NODE_1" was taken by something else.
-    # This test is tricky. Let's test renaming to a NEW base name that is NOT a blueprint.
     
-    initial_block_info_2 = block_service_instance.add_block_to_project(project_path_str, constants.BLUEPRINT_CONSTANT) # CONSTANT_1
+    # Case 1: Renaming "ANOTHER_NODE_1" to "ANOTHER_NODE" (which is a blueprint key)
+    initial_block_info_1 = block_service_instance.add_block_to_project(project_path_str, "ANOTHER_NODE") # Creates ANOTHER_NODE_1
+    old_name_1 = initial_block_info_1["name"] # ANOTHER_NODE_1
+    new_base_name_1 = "ANOTHER_NODE" 
+
+    rename_info_1 = block_service_instance.rename_custom_block(project_path_str, old_name_1, new_base_name_1)
+    # Expected: Since "ANOTHER_NODE" is a blueprint, it should be suffixed.
+    # As "ANOTHER_NODE_1" is being renamed (so it's available), the result should be "ANOTHER_NODE_1".
+    assert rename_info_1["new_name"] == "ANOTHER_NODE_1"
+    new_folder_path_1 = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, "ANOTHER_NODE_1")
+    assert os.path.isdir(new_folder_path_1)
+
+    # Case 2: Renaming "CONSTANT_1" to "MyUniqueBase" (which is not a blueprint and available)
+    initial_block_info_2 = block_service_instance.add_block_to_project(project_path_str, constants.BLUEPRINT_CONSTANT) # Creates CONSTANT_1
     old_name_2 = initial_block_info_2["name"] # CONSTANT_1
     new_available_base_name = "MyUniqueBase"
 
     rename_info_2 = block_service_instance.rename_custom_block(project_path_str, old_name_2, new_available_base_name)
     assert rename_info_2["new_name"] == new_available_base_name
-    new_folder_path = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, new_available_base_name)
-    assert os.path.isdir(new_folder_path)
+    new_folder_path_2 = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, new_available_base_name)
+    assert os.path.isdir(new_folder_path_2)
 
 
 def test_rename_block_handles_collision_with_blueprint_name(block_service_instance: MockBlockService, temp_project_dir: Path):
@@ -213,10 +213,14 @@ def test_rename_block_handles_collision_with_blueprint_name(block_service_instan
     project_path_str = str(temp_project_dir)
     initial_block = block_service_instance.add_block_to_project(project_path_str, constants.BLUEPRINT_CONSTANT) # CONSTANT_1
     
+    # Add MATRIX_VIEW_1 to make MATRIX_VIEW_1 taken
+    block_service_instance.add_block_to_project(project_path_str, constants.BLUEPRINT_MATRIX_VIEW)
+
+
     rename_info = block_service_instance.rename_custom_block(project_path_str, initial_block["name"], constants.BLUEPRINT_MATRIX_VIEW)
     
-    assert rename_info["new_name"].startswith(f"{constants.BLUEPRINT_MATRIX_VIEW}_") # e.g. MATRIX_VIEW_1
-    assert rename_info["new_name"] != constants.BLUEPRINT_MATRIX_VIEW 
+    # Expect MATRIX_VIEW_2 because MATRIX_VIEW is a blueprint and MATRIX_VIEW_1 is already taken
+    assert rename_info["new_name"] == f"{constants.BLUEPRINT_MATRIX_VIEW}_2" 
     
     new_folder_path = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, rename_info["new_name"])
     assert os.path.isdir(new_folder_path)
@@ -261,13 +265,6 @@ def test_rename_block_handles_python_symbol_collision_simplified(block_service_i
     new_folder_path = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, rename_info["new_name"])
     assert os.path.isdir(new_folder_path)
 
-def test_rename_block_to_name_that_becomes_blueprint_after_suffixing(block_service_instance: MockBlockService, temp_project_dir: Path):
-    """Test renaming to 'FOO' when 'FOO_1' is a blueprint (edge case, less likely)."""
-    # This scenario is less about direct blueprint collision and more about how suffixing interacts.
-    # The current mock would suffix 'FOO' to 'FOO_1'. If 'FOO_1' is also a blueprint, it's a double collision.
-    # The mock's _get_next_available_name_in_project doesn't check if the suffixed name is a blueprint.
-    # This is an advanced case, for now, the primary collision checks are sufficient for the mock.
-    pass
 
 def test_add_block_with_target_name_collision(block_service_instance: MockBlockService, temp_project_dir: Path):
     """Test add_block_to_project with target_custom_block_name that already exists."""
