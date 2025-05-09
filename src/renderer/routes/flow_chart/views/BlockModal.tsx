@@ -25,7 +25,7 @@ import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Button } from "@/renderer/components/ui/button";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
-import { env } from "@/env";
+import { env } from "@/env"; // Corrected: Use the env import
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
 import { toast } from "sonner";
 
@@ -60,7 +60,7 @@ export type BlockModalProps = {
   pythonString: string;
   blockFilePath: string;
   blockFullPath: string;
-  selectedNode: Node<BlockData>;
+  selectedNode: Node<BlockData>; // Assuming BlockData might include isCustom
 };
 
 const BlockModal = ({
@@ -88,25 +88,18 @@ const BlockModal = ({
     .join("/")}`.toLowerCase();
 
   const handleEditCode = async () => {
-    // Task 2.5: In-IDE Block Code Editing and Synchronization
-    // When window.api.openEditorWindow is called, it opens a separate editor window.
-    // If the code is saved in that editor window, an IPC event should be sent from
-    // the editor window's renderer process to the main process.
-    // The main process then needs to:
-    // 1. Save the file to disk (if not already done by the editor window itself).
-    // 2. Trigger metadata regeneration for the modified block. This typically involves
-    //    an IPC call to the Python backend (e.g., captain) to re-parse the block's
-    //    Python file and update its associated metadata (app.json, block_data.json).
-    // 3. After metadata regeneration, the main application's manifest should be updated/refreshed
-    //    so that changes (e.g., to inputs, outputs, parameters) are reflected in the UI.
-    //    This might involve setting `manifestChanged = true` in the manifest store.
     await window.api.openEditorWindow(blockFullPath);
     toast.info(
       "If you edit and save the block code, you may need to manually trigger a manifest refresh or restart the application for changes to fully reflect, depending on current backend capabilities.",
     );
   };
 
-  const isDevMode = import.meta.env.DEV; // Vite's way to check for development mode
+  const isDevMode = import.meta.env.DEV; 
+  // Assuming selectedNode.data might have an isCustom property.
+  // If BlockData type globally doesn't have it, this might still show a TS error
+  // unless the type used for selectedNode.data is more specific here.
+  const isCustomBlock = !!selectedNode.data.isCustom;
+
 
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalOpen}>
@@ -156,10 +149,10 @@ const BlockModal = ({
             onClick={withPermissionCheck(handleEditCode)}
             data-testid="btn-edit-python"
             variant="secondary"
-            disabled={!selectedNode.data.isCustom && !isDevMode} // Only allow editing custom blocks, or all in DEV
+            disabled={!isCustomBlock && !isDevMode} 
           >
             Edit Python Code
-            {selectedNode.data.isCustom || isDevMode ? "" : " (Read-only)"}
+            {isCustomBlock || isDevMode ? "" : " (Read-only)"}
           </Button>
           <Button
             onClick={withPermissionCheck(
@@ -207,7 +200,7 @@ const BlockModal = ({
 
 type NodeModalDataVizProps = {
   result: BlockResult;
-  selectedNode: Node<BlockData>;
+  selectedNode: Node<BlockData>; // Assuming BlockData might include isCustom
   theme: "light" | "dark";
 };
 

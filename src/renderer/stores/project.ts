@@ -9,7 +9,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import {
   TextData,
-  BlockData as OriginalBlockData, // Rename original to avoid conflict
+  BlockData as OriginalBlockData, 
   positionSchema,
   EdgeData,
 } from "@/renderer/types/block";
@@ -58,18 +58,20 @@ import {
   WidgetType,
 } from "@/renderer/types/control";
 import { EdgeVariant } from "@/renderer/types/edge";
-import { ExtendedWindowApi } from "@/preload"; // Import the extended type
+import { ExtendedWindowApi } from "@/preload"; 
 
 declare global {
   interface Window {
-    api: ExtendedWindowApi; // Use the extended type for window.api
+    api: ExtendedWindowApi; 
   }
 }
 
 // Extend BlockData locally for this store if the global type isn't updated yet
-interface BlockData extends OriginalBlockData {
+// This is a common pattern if you can't modify the global type immediately
+// or if the property is specific to the store's representation.
+export interface BlockData extends OriginalBlockData {
   isCustom?: boolean;
-  path?: string; // Assuming path should be part of BlockData for custom blocks
+  path?: string; 
 }
 
 
@@ -78,7 +80,7 @@ type State = {
   path: string | undefined;
   hasUnsavedChanges: boolean;
 
-  nodes: Node<BlockData>[]; // TODO: Turn this into a record for fast lookup
+  nodes: Node<BlockData>[]; 
   edges: Edge<EdgeData>[];
   textNodes: Node<TextData>[];
 
@@ -623,84 +625,87 @@ export const useAddBlock = () => {
         return;
       }
 
-      let newBlockDefinition: BlockDefinition | undefined;
+      let newBlockDefinitionResult: any; // Use 'any' for now, refine with actual type
       try {
         toast.info(
           `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
         );
-        // Assuming window.api.createCustomBlockFromBlueprint is defined in preload and main
-        const result = await window.api.createCustomBlockFromBlueprint(
+        
+        newBlockDefinitionResult = await window.api.createCustomBlockFromBlueprint(
           blueprintDefinition.key, 
           newCustomBlockName.trim(),
           projectPath, 
         );
+        
         // Assuming the result is the BlockDefinition of the new block
         // This part needs to align with the actual return type of createCustomBlockFromBlueprint
-        newBlockDefinition = result as BlockDefinition; // Cast might be needed if type is 'any'
+        const newBlockDefinitionTyped = newBlockDefinitionResult as BlockDefinition; 
 
-        if (!newBlockDefinition || !newBlockDefinition.key || !newBlockDefinition.path) { // Check for path
+        if (!newBlockDefinitionTyped || !newBlockDefinitionTyped.key || !newBlockDefinitionTyped.path) { 
           throw new Error("Backend failed to create custom block details or path is missing.");
         }
         
         setManifestChanged(true);
         toast.success(
-          `Custom block "${newBlockDefinition.key}" created successfully.`,
+          `Custom block "${newBlockDefinitionTyped.key}" created successfully.`,
         );
+        
+        // Use newBlockDefinitionTyped from here on
+        const previousBlockPos = localStorage.getItem("prev_node_pos");
+        const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
+        const nodePosition = addRandomPositionOffset(pos, 300);
+
+        const {
+          key: funcName, 
+          type,
+          parameters: params,
+          init_parameters: initParams,
+          inputs,
+          outputs,
+          pip_dependencies,
+          path: newBlockPath, 
+        } = newBlockDefinitionTyped; // Use the typed definition
+
+        const nodeId = createBlockId(funcName); 
+        const nodeLabel =
+          funcName === "CONSTANT" 
+            ? params!["constant"].default?.toString()
+            : createBlockLabel(funcName, getTakenNodeLabels(funcName));
+
+        const nodeCtrls = ctrlsFromParams(params, funcName, hardwareDevices);
+        const initCtrls = ctrlsFromParams(initParams, funcName);
+
+        const newNode: Node<BlockData> = {
+          id: nodeId,
+          type, 
+          data: {
+            id: nodeId,
+            label: nodeLabel ?? newCustomBlockName,
+            func: funcName, 
+            type,
+            ctrls: nodeCtrls,
+            initCtrls: initCtrls,
+            inputs,
+            outputs,
+            pip_dependencies,
+            path: newBlockPath, 
+            isCustom: true, 
+          },
+          position: nodePosition,
+        };
+
+        setNodes((nodes) => {
+          nodes.push(newNode);
+        });
+
+        localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
+        setHasUnsavedChanges(true);
+
       } catch (e: any) {
         console.error("Failed to create custom block:", e);
         toast.error(`Failed to create custom block: ${e.message}`);
         return;
       }
-
-      const previousBlockPos = localStorage.getItem("prev_node_pos");
-      const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
-      const nodePosition = addRandomPositionOffset(pos, 300);
-
-      const {
-        key: funcName, 
-        type,
-        parameters: params,
-        init_parameters: initParams,
-        inputs,
-        outputs,
-        pip_dependencies,
-        path: newBlockPath, 
-      } = newBlockDefinition;
-
-      const nodeId = createBlockId(funcName); 
-      const nodeLabel =
-        funcName === "CONSTANT" 
-          ? params!["constant"].default?.toString()
-          : createBlockLabel(funcName, getTakenNodeLabels(funcName));
-
-      const nodeCtrls = ctrlsFromParams(params, funcName, hardwareDevices);
-      const initCtrls = ctrlsFromParams(initParams, funcName);
-
-      const newNode: Node<BlockData> = {
-        id: nodeId,
-        type, 
-        data: {
-          id: nodeId,
-          label: nodeLabel ?? newCustomBlockName,
-          func: funcName, 
-          type,
-          ctrls: nodeCtrls,
-          initCtrls: initCtrls,
-          inputs,
-          outputs,
-          pip_dependencies,
-          path: newBlockPath, 
-          isCustom: true, 
-        },
-        position: nodePosition,
-      };
-
-      setNodes((nodes) => {
-        nodes.push(newNode);
-      });
-
-      localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
-      setHasUnsavedChanges(true);
     },
     [
       setNodes,
