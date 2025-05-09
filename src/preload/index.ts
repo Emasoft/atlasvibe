@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron"; 
 import api from "../api/index";
 import { InterpretersList } from "src/main/python/interpreter"; // Ensure this path is correct
+import { BlockDefinition } from "@/renderer/types/manifest"; // Assuming BlockDefinition is the return type
 
 // Define a type for the extended API
 // This should match the handlers you set up in your main process
@@ -10,14 +11,14 @@ export interface ExtendedWindowApi extends Window["api"] {
     blueprintKey: string,
     newCustomBlockName: string,
     projectPath: string,
-  ) => Promise<any>; // Adjust 'any' to the actual return type (e.g., BlockDefinition from your types)
+  ) => Promise<BlockDefinition | undefined>; // Updated return type
   // Add other new IPC functions here as they are implemented in main
   checkPythonInstallation: (force?: boolean) => Promise<InterpretersList>;
   setPythonInterpreter: (path: string) => Promise<void>;
   installPipx: () => Promise<void>;
   pipxEnsurepath: () => Promise<void>;
   installPoetry: () => Promise<void>;
-  installDependencies: () => Promise<void>; // Assuming this is for Python deps via Poetry
+  installDependencies: () => Promise<void>; 
   spawnCaptain: () => Promise<void>; // Should be spawnAtlasVibeEngine or similar
   browsePyInterpreter: () => Promise<string | undefined>;
   openLogFolder: () => Promise<void>;
@@ -29,24 +30,22 @@ export interface ExtendedWindowApi extends Window["api"] {
 const extendedApi: ExtendedWindowApi = {
   ...api,
   // Ensure all functions used in renderer are defined here and map to IPC calls
-  // For example, if `api.checkPythonInstallation` was part of the original `api` from `../api/index`
-  // and it's already an IPC call, it might not need re-definition here unless its signature changed.
-  // The TS errors suggest some of these might be missing or their signatures are incompatible.
-
-  // Placeholder implementations for functions that were causing TS errors,
-  // assuming they will be implemented via IPC.
-  // You need to ensure these have corresponding handlers in your Electron main process.
   checkPythonInstallation: (force?: boolean) => ipcRenderer.invoke("check-python-installation", force),
   setPythonInterpreter: (path: string) => ipcRenderer.invoke("set-python-interpreter", path),
   installPipx: () => ipcRenderer.invoke("install-pipx"),
   pipxEnsurepath: () => ipcRenderer.invoke("pipx-ensurepath"),
   installPoetry: () => ipcRenderer.invoke("install-poetry"),
   installDependencies: () => ipcRenderer.invoke("install-dependencies"),
-  spawnCaptain: () => ipcRenderer.invoke("spawn-atlasvibe-engine"), // Renamed to reflect new backend
+  spawnCaptain: () => ipcRenderer.invoke("spawn-atlasvibe-engine"), 
   browsePyInterpreter: () => ipcRenderer.invoke("browse-py-interpreter"),
   openLogFolder: () => ipcRenderer.send("open-log-folder"),
-  isPackaged: () => ipcRenderer.sendSync("is-packaged"), // Example of sync call if needed
+  isPackaged: () => ipcRenderer.sendSync("is-packaged"), 
   openEditorWindow: (filePath: string) => ipcRenderer.send("open-editor-window", filePath),
+  openLink: (url: string) => ipcRenderer.send("open-link", url), // Added missing openLink
+  getFileContent: (filePath: string) => ipcRenderer.invoke("get-file-content", filePath), // Added missing getFileContent
+  saveFile: (filePath: string, content: string) => ipcRenderer.invoke("save-file", filePath, content), // Added missing saveFile
+  saveFileAs: (defaultFilename: string, content: string, allowedExtensions?: string[]) => ipcRenderer.invoke("save-file-as", defaultFilename, content, allowedExtensions), // Added missing saveFileAs
+  setUnsavedChanges: (hasChanges: boolean) => ipcRenderer.send("set-unsaved-changes", hasChanges), // Added missing setUnsavedChanges
 
 
   restartAtlasVibe: () => ipcRenderer.send("restart-app"), 

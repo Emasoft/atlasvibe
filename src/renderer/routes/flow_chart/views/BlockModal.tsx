@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from "@/renderer/components/ui/dialog";
 import { BlockResult } from "@/renderer/types/block-result";
-import { BlockData } from "@/renderer/types/block";
+import { BlockData } from "@/renderer/stores/project"; // Use BlockData from project store
 import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Button } from "@/renderer/components/ui/button";
