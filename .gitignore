@@ -69,3 +69,4 @@ bin
 out
 test-results
 docs/pnpm-lock.yml
+.aider*
