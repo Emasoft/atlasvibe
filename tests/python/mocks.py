@@ -6,6 +6,7 @@
 
 import os
 import json
+import shutil # Added import
 from . import constants
 
 class MockProjectService:
