@@ -4,7 +4,7 @@ type SyntaxTheme = {
   [key: string]: CSSProperties;
 };
 
-export const flojoySyntaxTheme: SyntaxTheme = {
+export const atlasvibeSyntaxTheme: SyntaxTheme = {
   hljs: {
     display: "block",
     padding: "20px",

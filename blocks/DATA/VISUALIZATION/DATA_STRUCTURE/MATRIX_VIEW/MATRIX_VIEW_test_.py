@@ -1,4 +1,4 @@
-def test_MATRIX_VIEW(mock_flojoy_decorator):
+def test_MATRIX_VIEW(mock_atlasvibe_node_decorator):
     import MATRIX_VIEW
     from blocks.DATA.GENERATION.SIMULATIONS.MATRIX.MATRIX import MATRIX
 
