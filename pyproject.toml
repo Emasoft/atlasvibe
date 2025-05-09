@@ -61,3 +61,6 @@ testpaths = [
 python_files = "test_*.py *_test_.py" # Covers both new and old naming conventions
 python_classes = "Test*"
 python_functions = "test_*"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
