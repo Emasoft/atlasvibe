@@ -1,11 +1,11 @@
 {
-  "name": "flojoy-studio",
-  "productName": "Flojoy Studio",
-  "description": "Joyful visual programming for Python",
-  "version": "0.4.3",
+  "name": "atlasvibe",
+  "productName": "atlasvibe",
+  "description": "General-purpose visual programming IDE for Python with an Agent node flow approach.",
+  "version": "0.1.0",
   "private": true,
   "homepage": "./",
-  "author": "Jack Parmer <jp@flojoy.io>",
+  "author": "Emasoft <your-email@example.com>",
   "main": "out/main/index.js",
   "scripts": {
     "start": "electron-vite preview",

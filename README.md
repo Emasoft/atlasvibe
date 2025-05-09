@@ -27,9 +27,4 @@ Installation and usage instructions will be provided once the project reaches a 
 ## Running Tests
 
 The project includes both backend (Python) and frontend (TypeScript/Playwright) tests.
-
-### Python Tests (Backend)
-
-Python tests are managed using `pytest`. Ensure you have the development dependencies installed (e.g., via `poetry install --with dev`).
-
-To run the Python tests:
+You can run all tests using the `runtests.sh` script in the project root:

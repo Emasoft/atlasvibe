@@ -54,8 +54,7 @@ testpaths = [
     "tests", # For new top-level tests
     "PYTHON/tests", # Example of an original test path
     "blocks",       # Example of an original test path (if tests are directly in block folders)
-    "captain/tests",# Example of an original test path
-    "pkgs/flojoy/tests", # This path might need to change if pkgs/flojoy is refactored/renamed
+    "atlasvibe_engine/tests", # Updated from captain/tests and pkgs/flojoy/tests
     "cli",          # Example of an original test path
 ]
 python_files = "test_*.py *_test_.py" # Covers both new and old naming conventions
