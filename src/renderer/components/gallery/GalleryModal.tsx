@@ -19,6 +19,7 @@ import { GalleryElement } from "./GalleryElement";
 import { Input } from "@/renderer/components/ui/input";
 import { useEffect, useState } from "react";
 import { Button } from "@/renderer/components/ui/button";
+import { env } from "@/env";
 
 type AppGalleryModalProps = {
   isGalleryOpen: boolean;
@@ -115,11 +116,12 @@ export const GalleryModal = ({
               <br /> Would you like to search for an example app containing{" "}
               <span className="font-bold">{searchQuery}</span> on{" "}
               <a
-                href={"https://docs.emasoft.com/atlasvibe"}
+                href={env.VITE_ATLASVIBE_DOCS_LINK}
                 target="_blank"
                 className="text-accent1"
               >
-                docs.emasoft.com/atlasvibe
+                {env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ??
+                  "atlasvibe documentation"}
               </a>{" "}
               instead?
             </div>
