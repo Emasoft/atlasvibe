@@ -14,7 +14,7 @@ license = "MIT"
 packages = [{include = "atlasvibe_engine"}] # Adjust if your main Python package is named differently
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = "^3.11" # Changed from ~3.11 to ^3.11 to allow Python 3.11, 3.12, etc.
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 fastapi = "^0.104.1"
 pyyaml = "^6.0.1"
