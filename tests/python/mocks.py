@@ -81,8 +81,25 @@ class MockBlockService:
         os.makedirs(project_custom_blocks_path, exist_ok=True)
 
         if target_custom_block_name:
-            final_block_name = target_custom_block_name
-        else:
+            # This path is taken if a specific name is suggested (e.g. during rename, though rename has its own logic)
+            # For add_block_to_project, target_custom_block_name is usually None, relying on suffixing.
+            # If it IS provided, we assume it's pre-validated or the caller wants this exact name.
+            # However, for consistency with typical "add" behavior, we should ensure it doesn't overwrite.
+            # The original mock for project_service.create_project_from_template didn't pass target_custom_block_name.
+            # Let's stick to the primary use case: generating a suffixed name if target_custom_block_name is None.
+            # If target_custom_block_name is provided, we should check for collision.
+            if os.path.exists(os.path.join(project_custom_blocks_path, target_custom_block_name)):
+                # If the target name already exists, revert to suffixed naming based on blueprint_key
+                # This might not be ideal, as the caller might have intended a specific rename.
+                # For `add_block_to_project`, this case is less common.
+                # Let's assume if target_custom_block_name is given, it should be used, or fail if it exists.
+                # For now, to keep `add_block_to_project` simple for its main purpose (adding NEW blocks from blueprints):
+                final_block_name = self._get_next_available_name_in_project(project_custom_blocks_path, blueprint_key)
+
+            else:
+                final_block_name = target_custom_block_name
+
+        else: # Default behavior: generate suffixed name from blueprint_key
             final_block_name = self._get_next_available_name_in_project(project_custom_blocks_path, blueprint_key)
         
         custom_block_folder_path = os.path.join(project_custom_blocks_path, final_block_name)
@@ -99,8 +116,6 @@ class MockBlockService:
                 blueprint_content = bp_f.read()
         
         modified_content = blueprint_content.replace(f"def {blueprint_key}", f"def {final_block_name}")
-        # A more robust replacement would use AST parsing or regex to handle various function signatures.
-        # For example, replacing the first occurrence of "def blueprint_key(" or "def blueprint_key ("
         
         with open(new_py_filepath, "w") as f:
             f.write(modified_content)
@@ -118,12 +133,10 @@ class MockBlockService:
         with open(app_json_path, "w") as f:
             json.dump(app_data_to_write, f)
         
-        # Simulate test file renaming (content update is more complex)
         original_test_filename = blueprint_key + constants.TEST_FILE_SUFFIX
         new_test_filename = final_block_name + constants.TEST_FILE_SUFFIX
         blueprint_test_file_path = os.path.join(self.available_blueprints[blueprint_key]['path'], original_test_filename)
         if os.path.exists(blueprint_test_file_path):
-            # Just copy for now, actual renaming and content update is complex
             shutil.copy(blueprint_test_file_path, os.path.join(custom_block_folder_path, new_test_filename))
 
 
@@ -134,60 +147,79 @@ class MockBlockService:
             "decorated_function_name": final_block_name
         }
 
-    def rename_custom_block(self, project_path, old_custom_block_name, new_potential_name_base):
+    def rename_custom_block(self, project_path, old_custom_block_name, new_name_proposal):
         project_custom_blocks_path = os.path.join(str(project_path), constants.CUSTOM_BLOCKS_DIR_NAME)
         old_block_folder_path = os.path.join(project_custom_blocks_path, old_custom_block_name)
 
         if not os.path.exists(old_block_folder_path):
-            raise FileNotFoundError(f"Custom block '{old_custom_block_name}' not found in project.")
+            raise FileNotFoundError(f"Custom block '{old_custom_block_name}' not found in project at {old_block_folder_path}.")
 
-        # Re-discover blueprints in case they changed or for collision check
-        self.available_blueprints = self._discover_blueprints()
+        self.available_blueprints = self._discover_blueprints() # Refresh blueprint list
 
-        if new_potential_name_base in self.available_blueprints:
-            final_new_name = self._get_next_available_name_in_project(project_custom_blocks_path, new_potential_name_base)
-        elif os.path.exists(os.path.join(project_custom_blocks_path, new_potential_name_base)) and \
-             new_potential_name_base != old_custom_block_name:
-            final_new_name = self._get_next_available_name_in_project(project_custom_blocks_path, new_potential_name_base)
+        # Determine the final new name based on collision rules
+        if new_name_proposal == old_custom_block_name:
+            # Renaming to itself, no change needed.
+            final_new_name = old_custom_block_name
+        elif new_name_proposal in self.available_blueprints:
+            # New name collides with a blueprint key, suffix it.
+            final_new_name = self._get_next_available_name_in_project(project_custom_blocks_path, new_name_proposal)
+        elif os.path.exists(os.path.join(project_custom_blocks_path, new_name_proposal)):
+            # New name collides with an existing folder (another custom block or unrelated folder).
+            # Ensure it's not the old block's folder if old_custom_block_name was already suffixed and new_name_proposal is its base.
+            # This case means new_name_proposal is an existing folder, and it's NOT old_custom_block_name.
+            final_new_name = self._get_next_available_name_in_project(project_custom_blocks_path, new_name_proposal)
         else:
-            if os.path.exists(os.path.join(project_custom_blocks_path, new_potential_name_base)): # Handles case where new_potential_name_base is same as old_custom_block_name but needs suffixing due to other rules
-                 final_new_name = self._get_next_available_name_in_project(project_custom_blocks_path, new_potential_name_base)
-            else:
-                 final_new_name = new_potential_name_base
+            # New name is available as is.
+            final_new_name = new_name_proposal
+        
+        # If no change in name, no further action needed.
+        if final_new_name == old_custom_block_name:
+            return {"old_name": old_custom_block_name, "new_name": final_new_name, "path": old_block_folder_path}
 
         new_block_folder_path = os.path.join(project_custom_blocks_path, final_new_name)
         
+        # Rename folder
         os.rename(old_block_folder_path, new_block_folder_path)
         
-        old_py_filename = old_custom_block_name + constants.PYTHON_FILE_EXT
+        # Rename .py file
+        # Original Python file might have been named after old_custom_block_name or its base if it was complex.
+        # For simplicity, assume it was named old_custom_block_name.py
+        old_py_filename_in_new_folder = old_custom_block_name + constants.PYTHON_FILE_EXT
         new_py_filename = final_new_name + constants.PYTHON_FILE_EXT
-        if os.path.exists(os.path.join(new_block_folder_path, old_py_filename)):
-            os.rename(os.path.join(new_block_folder_path, old_py_filename), 
-                      os.path.join(new_block_folder_path, new_py_filename))
         
-        py_filepath = os.path.join(new_block_folder_path, new_py_filename)
+        path_to_old_py_in_new_folder = os.path.join(new_block_folder_path, old_py_filename_in_new_folder)
+        path_to_new_py_in_new_folder = os.path.join(new_block_folder_path, new_py_filename)
+
+        if os.path.exists(path_to_old_py_in_new_folder):
+            os.rename(path_to_old_py_in_new_folder, path_to_new_py_in_new_folder)
+        
+        # Update Python code (decorated function name)
+        py_filepath = path_to_new_py_in_new_folder
         if os.path.exists(py_filepath):
             with open(py_filepath, "r") as f:
                 content = f.read()
+            # This replacement needs to be robust. If old_custom_block_name had special regex characters, this could fail.
+            # Assuming simple names for mock.
             modified_content = content.replace(f"def {old_custom_block_name}", f"def {final_new_name}")
             with open(py_filepath, "w") as f:
                 f.write(modified_content)
             
+        # Update metadata files (app.json, etc.)
         app_json_path = os.path.join(new_block_folder_path, constants.METADATA_APP_JSON)
-        if os.path.exists(app_json_path):
+        if os.path.exists(app_json_path): 
             with open(app_json_path, "r") as f:
                 app_data = json.load(f)
             app_data["name"] = final_new_name
-            app_data["key"] = final_new_name
+            app_data["key"] = final_new_name # Assuming key should also change
             with open(app_json_path, "w") as f:
                 json.dump(app_data, f)
         
-        old_test_filename = old_custom_block_name + constants.TEST_FILE_SUFFIX
+        # Rename test file
+        old_test_filename_in_new_folder = old_custom_block_name + constants.TEST_FILE_SUFFIX
         new_test_filename = final_new_name + constants.TEST_FILE_SUFFIX
-        old_test_filepath = os.path.join(new_block_folder_path, old_test_filename)
-        if os.path.exists(old_test_filepath):
-            os.rename(old_test_filepath, os.path.join(new_block_folder_path, new_test_filename))
-            # Content update of test file is complex and not mocked here
+        path_to_old_test_in_new_folder = os.path.join(new_block_folder_path, old_test_filename_in_new_folder)
+        if os.path.exists(path_to_old_test_in_new_folder):
+            os.rename(path_to_old_test_in_new_folder, os.path.join(new_block_folder_path, new_test_filename))
 
         return {"old_name": old_custom_block_name, "new_name": final_new_name, "path": new_block_folder_path}
 
