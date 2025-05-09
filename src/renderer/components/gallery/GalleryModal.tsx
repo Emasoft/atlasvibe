@@ -109,11 +109,11 @@ export const GalleryModal = ({
               <br /> Would you like to search for an example app containing{" "}
               <span className="font-bold">{searchQuery}</span> on{" "}
               <a
-                href={"https://docs.flojoy.ai"}
+                href={"https://docs.emasoft.com/atlasvibe"}
                 target="_blank"
                 className="text-accent1"
               >
-                docs.flojoy.ai
+                docs.emasoft.com/atlasvibe
               </a>{" "}
               instead?
             </div>

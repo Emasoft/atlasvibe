@@ -28,7 +28,7 @@ const App = () => {
       <Toaster theme={resolvedTheme} richColors closeButton />
       <SocketReceiver />
       <div className="titlebar flex h-8 items-center justify-center bg-background font-bold">
-        Flojoy Studio
+        atlasvibe
       </div>
       <Routes>
         <Route path="/" element={<Index />} />

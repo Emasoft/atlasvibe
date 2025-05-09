@@ -1,6 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
-from flojoy import DCNpArrayType, Matrix, OrderedPair, Plotly, Vector, flojoy
+from flojoy import DCNpArrayType, Matrix, OrderedPair, Plotly, Vector, atlasvibe_node
 
 CELL_SIZE = 50
 FONT_SIZE = 10
@@ -62,7 +62,7 @@ def numpy_array_as_table(arr: DCNpArrayType):
     return cell_values
 
 
-@flojoy
+@atlasvibe_node
 def MATRIX_VIEW(default: OrderedPair | Matrix) -> Plotly:
     """Take a Matrix or OrderedPair DataContainer object as input, then visualize it in a Plotly table.
 

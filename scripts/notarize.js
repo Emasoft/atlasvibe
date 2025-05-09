@@ -16,14 +16,14 @@ module.exports = async function (params) {
     return;
   }
 
-  let appId = "ai.flojoy.studio";
+  let appId = "com.emasoft.atlasvibe";
 
   let appPath = path.join(
     params.appOutDir,
     `${params.packager.appInfo.productFilename}.app`,
   );
   if (!fs.existsSync(appPath)) {
-    console.log(`skipping notarizing as ${appPath} doens't exist`);
+    console.log(`skipping notarizing as ${appPath} doensn't exist`);
     return;
   }
 

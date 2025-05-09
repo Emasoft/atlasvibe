@@ -33,12 +33,12 @@ export const Index = (): JSX.Element => {
     {
       status: "pending",
       stage: "install-dependencies",
-      message: "Configure all the magic behind Flojoy Studio.",
+      message: "Configure all the magic behind atlasvibe.",
     },
     {
       status: "pending",
       stage: "spawn-captain",
-      message: "Start the Flojoy Studio backend.",
+      message: "Start the atlasvibe backend.",
     },
   ]);
 
@@ -96,7 +96,7 @@ export const Index = (): JSX.Element => {
       updateSetupStatus({
         stage: "install-dependencies",
         status: "completed",
-        message: "Finished setting up all the magic behind Flojoy Studio.",
+        message: "Finished setting up all the magic behind atlasvibe.",
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -127,7 +127,7 @@ export const Index = (): JSX.Element => {
       updateSetupStatus({
         stage: "spawn-captain",
         status: "error",
-        message: "Something went wrong when starting Flojoy Studio...",
+        message: "Something went wrong when starting atlasvibe...",
       });
       setErrorTitle("Failed to spawn captain!");
       // sendEventToMix(MixPanelEvents.setupError, {
@@ -183,10 +183,10 @@ export const Index = (): JSX.Element => {
       }
       case "check-blocks-resource": {
         if (window.api.isPackaged()) {
-          window.api.restartFlojoyStudio();
+          window.api.restartAtlasVibe();
         } else {
           alert(
-            "Restart is not supported for dev build, please relaunch Flojoy Studio manually!",
+            "Restart is not supported for dev build, please relaunch atlasvibe manually!",
           );
         }
         break;
@@ -257,7 +257,7 @@ export const Index = (): JSX.Element => {
         updateSetupStatus({
           stage: "spawn-captain",
           status: "running",
-          message: "Almost there, starting Flojoy Studio...",
+          message: "Almost there, starting atlasvibe...",
         });
         spawnCaptain();
         break;
@@ -282,7 +282,7 @@ export const Index = (): JSX.Element => {
     <div className="flex h-screen flex-col bg-muted">
       <div className="flex grow flex-col items-center p-4">
         <div className="py-4"></div>
-        <div className="text-4xl font-bold">Welcome to Flojoy Studio!</div>
+        <div className="text-4xl font-bold">Welcome to atlasvibe!</div>
         <div className="py-1"></div>
         <div className="">
           We are excited to have you here, please give us some time to get
@@ -346,7 +346,7 @@ export const Index = (): JSX.Element => {
         {setupStatuses.find((status) => status.status === "error") && (
           <Button
             onClick={async (): Promise<void> =>
-              await window.api.restartFlojoyStudio()
+              await window.api.restartAtlasVibe()
             }
           >
             Retry

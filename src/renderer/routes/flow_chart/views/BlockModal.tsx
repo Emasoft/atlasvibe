@@ -3,7 +3,7 @@ import python from "react-syntax-highlighter/dist/cjs/languages/hljs/python";
 import json from "react-syntax-highlighter/dist/cjs/languages/hljs/json";
 import { JSONTree } from "react-json-tree";
 import { Node } from "reactflow";
-import { flojoySyntaxTheme } from "@/renderer/assets/FlojoyTheme";
+import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasVibeTheme";
 import PlotlyComponent from "@/renderer/components/plotly/PlotlyComponent";
 import { makePlotlyData } from "@/renderer/components/plotly/formatPlotlyData";
 import MarkDownText from "@/renderer/components/common/MarkDownText";
@@ -23,7 +23,7 @@ import { env } from "@/env";
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
 
 const jsonTheme = {
-  scheme: "flojoy",
+  scheme: "atlasvibe",
   author: "Jack",
   base00: "rgb(var(--color-modal))",
   base01: "rgb(var(--color-accent3))",
@@ -148,7 +148,7 @@ const BlockModal = ({
         <ScrollArea className="h-full w-full rounded-lg">
           <ScrollBar orientation="vertical" />
           <ScrollBar orientation="horizontal" />
-          <SyntaxHighlighter language="python" style={flojoySyntaxTheme}>
+          <SyntaxHighlighter language="python" style={atlasvibeSyntaxTheme}>
             {pythonString}
           </SyntaxHighlighter>
         </ScrollArea>

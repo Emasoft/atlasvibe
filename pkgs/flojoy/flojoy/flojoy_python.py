@@ -17,7 +17,7 @@ from .node_init import NodeInitService
 from .parameter_types import format_param_value
 from .utils import get_hf_hub_cache_path
 
-__all__ = ["flojoy", "DefaultParams", "display"]
+__all__ = ["atlasvibe_node", "DefaultParams", "display"]
 
 
 def fetch_inputs(previous_jobs: list[dict[str, str]]):
@@ -85,7 +85,7 @@ class DefaultParams:
         self.node_type = node_type
 
 
-class cache_huggingface_to_flojoy(ContextDecorator):
+class cache_huggingface_to_atlasvibe(ContextDecorator):
     """Context manager to override the HF_HOME env var"""
 
     def __enter__(self):
@@ -107,7 +107,7 @@ def display(
     return original_function
 
 
-def flojoy(
+def atlasvibe_node(
     original_function: Callable[..., Optional[DataContainer | dict[str, Any]]]
     | None = None,
     *,
@@ -118,12 +118,12 @@ def flojoy(
 ):
     """
     Decorator to turn Python functions with numerical return
-    values into Flojoy nodes.
+    values into atlasvibe nodes.
 
-    @flojoy is intended to eliminate boilerplate in connecting
+    @atlasvibe_node is intended to eliminate boilerplate in connecting
     Python scripts as visual nodes
 
-    Into whatever function it wraps, @flojoy injects
+    Into whatever function it wraps, @atlasvibe_node injects
     1. the last node's input as list of DataContainer object
     2. parameters for that function (either set by the user or default)
 
@@ -138,7 +138,7 @@ def flojoy(
     Usage Example
     -------------
     ```
-    @flojoy
+    @atlasvibe_node
     def SINE(dc_inputs:list[DataContainer], params:dict[str, Any]):
 
         logger.debug('params passed to SINE', params)
@@ -152,7 +152,7 @@ def flojoy(
         return output
     ```
 
-    ## equivalent to: decorated_sine = flojoy(SINE)
+    ## equivalent to: decorated_sine = atlasvibe_node(SINE)
     ```
     pj_ids = [123, 456]
     logger.debug(SINE(previous_job_ids = pj_ids, mock = True))
@@ -161,7 +161,7 @@ def flojoy(
 
     def decorator(func: Callable[..., Optional[DataContainer | dict[str, Any]]]):
         # Wrap func here to override the HF_HOME env var
-        func = cache_huggingface_to_flojoy()(func)
+        func = cache_huggingface_to_atlasvibe()(func)
 
         @wraps(func)
         def wrapper(

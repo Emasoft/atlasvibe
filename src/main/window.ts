@@ -34,7 +34,7 @@ const indexHtml = join(DIST_ELECTRON, "renderer", "index.html");
 
 export async function createWindow() {
   const mainWindow = new BrowserWindow({
-    title: "Flojoy Studio",
+    title: "atlasvibe",
     icon: getIcon(),
     autoHideMenuBar: true,
     titleBarStyle: process.platform === "darwin" ? "hidden" : "default",
@@ -68,7 +68,7 @@ export async function createWindow() {
       buttons: ["Exit", "Kill Process"],
       title: "Existing Server Detected",
       message:
-        "Seems like there is already a Flojoy server running! Do you want to kill it?",
+        "Seems like there is already an atlasvibe server running! Do you want to kill it?",
       icon: getIcon(),
     });
     if (choice == 0) {
@@ -94,7 +94,7 @@ export async function createWindow() {
       buttons: ["Yes", "No, go back"],
       title: "Quit?",
       message:
-        "You have unsaved changes. Are you sure you want to quit Flojoy Studio?",
+        "You have unsaved changes. Are you sure you want to quit atlasvibe?",
     });
     if (choice > 0) e.preventDefault();
   });
