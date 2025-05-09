@@ -51,9 +51,9 @@ def mock_blueprint_base_path(tmp_path: Path) -> Path:
     another_bp = bp_dir / "ANOTHER_NODE"
     another_bp.mkdir()
     (another_bp / ("ANOTHER_NODE" + constants.PYTHON_FILE_EXT)).write_text(
-        f"@atlasvibe_node\ndef ANOTHER_NODE():\n  return 'another'"
+        "@atlasvibe_node\ndef ANOTHER_NODE():\n  return 'another'"
     )
-    (another_bp / constants.METADATA_APP_JSON).write_text(f'{{"name": "ANOTHER_NODE", "key": "ANOTHER_NODE"}}')
+    (another_bp / constants.METADATA_APP_JSON).write_text('{"name": "ANOTHER_NODE", "key": "ANOTHER_NODE"}')
 
 
     return bp_dir
