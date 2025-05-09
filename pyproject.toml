@@ -49,9 +49,15 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
+addopts = "-rsxX -l --tb=short --strict-markers" # Restored common pytest options
 testpaths = [
-    "tests",
+    "tests", # For new top-level tests
+    "PYTHON/tests", # Example of an original test path
+    "blocks",       # Example of an original test path (if tests are directly in block folders)
+    "captain/tests",# Example of an original test path
+    "pkgs/flojoy/tests", # This path might need to change if pkgs/flojoy is refactored/renamed
+    "cli",          # Example of an original test path
 ]
-python_files = "test_*.py *_test_.py"
+python_files = "test_*.py *_test_.py" # Covers both new and old naming conventions
 python_classes = "Test*"
 python_functions = "test_*"
