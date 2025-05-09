@@ -215,11 +215,6 @@ export const useProjectStore = create<State & Actions>()(
         return err(e as Error);
       }
 
-      // sendEventToMix("Control Input Data Updated", { // Original comment
-      //   blockId,
-      //   paramName,
-      //   value,
-      // });
       setHasUnsavedChanges(true);
 
       return ok(undefined);
@@ -246,12 +241,6 @@ export const useProjectStore = create<State & Actions>()(
       } catch (e) {
         return err(e as Error);
       }
-
-      // sendEventToMix("Control Input Data Updated", { // Original comment
-      //   blockId,
-      //   paramName,
-      //   value,
-      // });
 
       setHasUnsavedChanges(true);
 
@@ -289,7 +278,6 @@ export const useProjectStore = create<State & Actions>()(
         return err(e as Error);
       }
 
-      // sendEventToMix("Block Name Changed", { blockId, name }); // Original comment
       setHasUnsavedChanges(true);
 
       return ok(undefined);
@@ -322,7 +310,6 @@ export const useProjectStore = create<State & Actions>()(
       } catch (e) {
         return err(e as Error);
       }
-      // sendEventToMix("Text Node Updated", { id, text }); // Original comment
       setHasUnsavedChanges(true);
       return ok(undefined);
     },
@@ -359,7 +346,6 @@ export const useProjectStore = create<State & Actions>()(
       } catch (e) {
         return err(e as Error);
       }
-      // sendEventToMix("Text Node Updated", { id, text }); // Original comment
       setHasUnsavedChanges(true);
       return ok(undefined);
     },
@@ -509,7 +495,6 @@ export const useProjectStore = create<State & Actions>()(
 
       const projectPath = get().path;
       if (projectPath) {
-        // sendEventToMix("Saving Project"); // Original comment
         const save = fromThrowable(
           () => window.api.saveFile(projectPath, fileContent),
           (e) => e as Error,
@@ -594,8 +579,6 @@ export const useLoadProject = () => {
 
       setHasUnsavedChanges(false);
       wipeBlockResults();
-
-      // sendEventToMix("Project Loaded"); // Original comment
 
       return ok(undefined);
     },
@@ -726,7 +709,6 @@ export const useAddBlock = () => {
       });
 
       localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
-      // sendEventToMix("Node Added", { nodeTitle: newNode.data?.label ?? "" }); // Original comment
       setHasUnsavedChanges(true);
     },
     [
@@ -764,7 +746,6 @@ export const useDeleteBlock = () => {
       setControlVisualizationNodes((prev) =>
         prev.filter((viz) => viz.data.blockId !== nodeId),
       );
-      // sendEventToMix(MixPanelEvents.nodeDeleted, { nodeTitle: nodeLabel }); // Original comment
     },
     [setNodes, setEdges, setControlWidgetNodes, setControlVisualizationNodes],
   );
@@ -908,7 +889,6 @@ export const useAddTextNode = () => {
   return useCallback(() => {
     const pos = center ?? { x: 0, y: 0 };
     addTextNode(pos);
-    // sendEventToMix("Text Node Added"); // Original comment
   }, [addTextNode, center]);
 };
 

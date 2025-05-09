@@ -112,12 +112,6 @@ export const Index = (): JSX.Element => {
         message: "Something went wrong when installing dependencies...",
       });
       setErrorTitle("Something went wrong :(");
-      // sendEventToMix(MixPanelEvents.setupError, {
-      //   stage: "install-dependencies",
-      //   message: err.message,
-      //   error: String(err),
-      //   logs: await window.api.getAllLogs(),
-      // });
       setErrorDesc(
         "Sorry about that! Please open the log folder and send the log to us on Discord!",
       );
@@ -136,12 +130,6 @@ export const Index = (): JSX.Element => {
         message: "Something went wrong when starting atlasvibe...",
       });
       setErrorTitle("Failed to spawn captain!");
-      // sendEventToMix(MixPanelEvents.setupError, {
-      //   stage: "spawn-captain",
-      //   message: err.message,
-      //   error: String(err),
-      //   logs: await window.api.getAllLogs(),
-      // });
       setErrorDesc(
         "Sorry about that! Please open the log folder and send the log to us on Discord!",
       );
@@ -214,8 +202,6 @@ export const Index = (): JSX.Element => {
   };
 
   useEffect(() => {
-    // Kick off the setup process with this useEffect
-    // sendEventToMix(MixPanelEvents.setupStarted);
     checkPythonInstallation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
