@@ -520,7 +520,7 @@ export const useProjectStore = create<State & Actions>()(
           .map((s) => s.toLowerCase().trim())
           .filter((s) => s !== "")
           .join("-") ?? "app";
-      const defaultFilename = `${basename}.json`; // Should be .atlasvibe or similar project extension
+      const defaultFilename = `${basename}.atlasvibe`; // Using .atlasvibe extension
 
       return fromPromise(
         window.api.saveFileAs(defaultFilename, fileContent),

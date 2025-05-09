@@ -74,9 +74,9 @@ const BlockModal = ({
   const link =
     path.startsWith("/") || path.includes(":")
       ? null
-      : `${env.VITE_STUDIO_REPO}/blocks/${path}`; // VITE_STUDIO_REPO should be updated to atlasvibe repo
+      : `${env.VITE_ATLASVIBE_REPO}/blocks/${path}`; // VITE_ATLASVIBE_REPO should be updated to atlasvibe repo
 
-  const docsLink = `${env.VITE_DOCS_LINK}/blocks/${path // VITE_DOCS_LINK should be updated for atlasvibe
+  const docsLink = `${env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path // VITE_ATLASVIBE_DOCS_LINK should be updated for atlasvibe
     .split("/")
     .slice(0, -1)
     .join("/")}`.toLowerCase();
