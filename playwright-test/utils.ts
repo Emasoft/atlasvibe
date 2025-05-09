@@ -142,6 +142,6 @@ export const newProject = async (page: Page, projectName: string): Promise<void>
   // This depends on your app's behavior after project creation.
   // Example: Ensure the canvas is clear or a specific project title element is updated.
   // await expect(page.locator(Selectors.flowchartCanvas)).toBeEmpty({ timeout: 5000 }); // If canvas should be empty
-  // await expect(page.locator(Selectors.appTitle)).toHaveText(projectName, { timeout: 5000 }); // If app title shows project name
+  // await expect(page.locator(`[data-testid='${Selectors.appTitle}']`)).toHaveText(projectName, { timeout: 5000 }); // If app title shows project name
   await page.waitForTimeout(500); // A small delay to allow UI to settle, prefer explicit waits on elements.
 };

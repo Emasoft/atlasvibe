@@ -97,12 +97,11 @@ test.describe("Block Operations on Flowchart", () => {
     await nameInput.fill(""); // Try to set empty name
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } }); // Blur to apply
 
-    // Expected behavior: Name reverts to original, or an error is shown.
-    // Assuming it reverts to the original name if input is invalid or empty.
+    // Expected behavior: Name reverts to original if input is invalid or empty.
     const currentNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(initialName));
     await expect(currentNodeLabel).toBeVisible();
     await expect(currentNodeLabel).toHaveText(initialName);
-    // If an error message is expected:
+    // If an error message is expected due to empty input, add assertion for it:
     // const errorMessage = page.locator("div[data-testid='error-message-name-empty']"); // Adjust selector
     // await expect(errorMessage).toBeVisible();
   });
@@ -121,27 +120,11 @@ test.describe("Block Operations on Flowchart", () => {
     await nameInput.fill(specialName);
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } }); // Blur to apply
 
-    // Behavior depends on implementation:
-    // 1. UI accepts it as is, backend handles/rejects/sanitizes.
-    // 2. UI sanitizes it before sending to backend.
-    // 3. UI shows validation error and name reverts or doesn't change.
-    // This test assumes the name is accepted as is by the UI, and backend would handle it.
-    // Or, if there's client-side validation that prevents it, the name would revert.
-    // For this test, we'll check if the node label reflects the specialName.
-    // This might need adjustment based on actual sanitization/validation rules.
+    // This test assumes the UI allows setting the special name, and the backend would handle/sanitize it.
+    // If client-side validation prevents special characters and reverts, this test would need to expect initialName.
     const finalNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(specialName));
-    const initialNodeLabelStillVisible = page.locator(flowchartSelectors.nodeLabelByName(initialName));
-
-    // Check if either the new special name is applied OR the name reverted to initial
-    // This is a common pattern if validation is strict and reverts on invalid input.
-    const newNameApplied = await finalNodeLabel.isVisible({timeout: 1000}).catch(() => false);
-    if (newNameApplied) {
-        await expect(finalNodeLabel).toHaveText(specialName);
-    } else {
-        await expect(initialNodeLabelStillVisible).toBeVisible();
-        await expect(initialNodeLabelStillVisible).toHaveText(initialName);
-        // Optionally, check for a validation error message here if that's the expected behavior
-    }
+    await expect(finalNodeLabel).toBeVisible();
+    await expect(finalNodeLabel).toHaveText(specialName);
   });
 
 
