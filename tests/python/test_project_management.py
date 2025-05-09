@@ -48,12 +48,7 @@ def test_create_new_project_creates_folder_structure(project_service_instance, t
     assert os.path.isdir(expected_custom_blocks_path), f"'{constants.CUSTOM_BLOCKS_DIR_NAME}' subdirectory was not created."
 
 
-@patch('os.path.exists') # May need to be more selective or remove if using real file checks with tmp_path
-@patch('os.makedirs')   # May need to be more selective or remove
-@patch('shutil.copytree') 
-@patch('builtins.open', new_callable=MagicMock) 
 def test_project_template_creates_custom_blocks(
-    mock_open, mock_copytree, mock_makedirs, mock_path_exists, # These mocks might interfere with MockBlockService's own file ops
     project_service_instance: MockProjectService, 
     block_service_instance: MockBlockService, # This is now the shared mock
     temp_project_base_dir: Path, 
@@ -68,16 +63,8 @@ def test_project_template_creates_custom_blocks(
     new_project_name = "ProjectFromBasicTemplate"
     base_path_str = str(temp_project_base_dir)
 
-    # Unpatch os.makedirs for the actual service calls if they are to create dirs
-    # This test becomes more of an integration test if mocks for os are removed.
-    # For now, assume the mocks are for external dependencies not part of the service's direct logic.
-    # The MockBlockService itself performs os.makedirs, os.path.exists.
-    # If we are testing the MockProjectService's interaction with MockBlockService,
-    # we might not need to mock os.path.exists and os.makedirs globally here.
-    # Let's assume the mocks are for other things, and let MockBlockService do its work.
-    # This test might need refinement based on what exactly is being unit-tested vs integrated.
-
     # Spy on the add_block_to_project method of the already instantiated mock service
+    # to verify it's called correctly, while still executing its actual (mocked) logic.
     block_service_instance.add_block_to_project = MagicMock(
         wraps=block_service_instance.add_block_to_project
     )
@@ -89,6 +76,7 @@ def test_project_template_creates_custom_blocks(
 
     expected_project_path = os.path.join(base_path_str, new_project_name)
     # These assertions rely on the MockProjectService and MockBlockService actually creating directories
+    # within the tmp_path provided by pytest fixtures.
     assert os.path.isdir(expected_project_path) 
     assert os.path.isdir(os.path.join(expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME))
 
