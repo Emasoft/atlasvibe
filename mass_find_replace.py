@@ -17,49 +17,23 @@ import filecmp # For comparing JSON files
 from pathlib import Path
 from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
 import types # For ModuleType
+import sys # For sys.exit
 
 # Prefect integration
-task_real = None
-flow_real = None
-task_dummy = None
-flow_dummy = None
-
 try:
-    from prefect import task as _task_real_import, flow as _flow_real_import
-
-    # Canary test for the @flow decorator
-    @_flow_real_import
-    def _canary_flow_for_init():
-        pass
-    # If the above definition didn't raise an error, assign the real ones
-    task = _task_real_import
-    flow = _flow_real_import
-except (ImportError, TypeError):
-    def _task_dummy_impl(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    def _flow_dummy_impl(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-        return decorator
-    task = _task_dummy_impl
-    flow = _flow_dummy_impl
-
-# Ensure task and flow are always defined, even if try-except had an issue.
-if task is None:
-    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    task = _task_final_fallback
-if flow is None:
-    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-        return decorator
-    flow = _flow_final_fallback
-
+    from prefect import task, flow
+except ImportError:
+    print("ERROR: Prefect library not found or core components missing. This script requires Prefect to be installed.")
+    print("Please install it by running: pip install prefect")
+    sys.exit(1)
 
 # Chardet integration for encoding detection
-CHARDET_AVAILABLE = False
 try:
-    import chardet
-    CHARDET_AVAILABLE = True 
+    import chardet 
 except ImportError:
-    chardet: Optional[types.ModuleType] = None
+    print("ERROR: chardet library not found. This script requires chardet for robust encoding detection.")
+    print("Please install it by running: pip install chardet")
+    sys.exit(1)
 
 
 # --- Constants ---
@@ -73,19 +47,19 @@ STATUS_PENDING = "PENDING"
 STATUS_COMPLETED = "COMPLETED"
 STATUS_FAILED = "FAILED"
 STATUS_SKIPPED = "SKIPPED" 
-DEFAULT_ENCODING_FALLBACK = 'utf-8' 
+DEFAULT_ENCODING_FALLBACK = 'utf-8' # Should ideally not be used if chardet is mandatory
 
 # --- Core Helper Functions (Shared Logic) ---
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
-    """Detects file encoding using chardet, with fallback."""
-    if not CHARDET_AVAILABLE or not chardet: # Check both module-level flag and imported name
-        return DEFAULT_ENCODING_FALLBACK
-
+    """Detects file encoding using chardet."""
+    # Assumes chardet is available due to check at script start
     try:
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size) 
         if not raw_data:
+            # Fallback for empty files, though chardet might handle this.
+            # Consider if empty files should have a specific encoding or be skipped.
             return DEFAULT_ENCODING_FALLBACK 
         
         detected = chardet.detect(raw_data)
@@ -99,17 +73,23 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
             if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: 
                 return 'utf-8'
             try:
+                # Validate if Python can actually use this encoding
                 b"test".decode(encoding) 
                 return encoding 
             except LookupError:
+                # If chardet suggests an encoding Python doesn't know, fallback or error
+                # For now, falling back to UTF-8 as a last resort before None
                 return DEFAULT_ENCODING_FALLBACK 
         else:
+            # Low confidence or no encoding detected, try UTF-8 as a common default
             try:
                 raw_data.decode('utf-8') 
                 return 'utf-8'
             except UnicodeDecodeError:
+                # If UTF-8 fails, we can't reliably determine encoding
                 return None 
     except Exception:
+        # Broad exception for any file I/O or chardet internal errors
         return None 
 
 def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
@@ -716,57 +696,35 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
         check(False, "", "Renamed cp1252 file MISSING.")
 
     # CJK file checks are now conditional on CHARDET_AVAILABLE
-    if CHARDET_AVAILABLE:
-        sjis_file = temp_dir / "sjis_atlasvibe_content.txt"
-        if sjis_file.is_file():
-            try:
-                content = sjis_file.read_text(encoding='shift_jis', errors='replace')
+    sjis_file_renamed = temp_dir / "sjis_atlasvibe_content.txt"
+    if sjis_file_renamed.is_file():
+        try:
+            content = sjis_file_renamed.read_text(encoding='shift_jis', errors='replace')
+            if CHARDET_AVAILABLE:
                 expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
                 check(content == expected_sjis_text, "Shift-JIS file content correct (chardet available).", f"Shift-JIS file content INCORRECT (chardet available). Got: {content!r}")
-            except Exception as e: 
-                check(False, "", f"Could not read/verify Shift-JIS file (chardet available): {e}")
-        else: 
-            check(False, "", "Renamed Shift-JIS file MISSING (chardet available).")
-
-        gb18030_file = temp_dir / "gb18030_atlasvibe_content.txt"
-        if gb18030_file.is_file():
-            try:
-                content = gb18030_file.read_text(encoding='gb18030', errors='replace')
-                expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
-                check(content == expected_gb18030_text, "GB18030 file content correct (chardet available).", f"GB18030 file content INCORRECT (chardet available). Got: {content!r}")
-            except Exception as e: 
-                check(False, "", f"Could not read/verify GB18030 file (chardet available): {e}")
-        else: 
-            check(False, "", "Renamed GB18030 file MISSING (chardet available).")
-    else:
-        print("WARN: chardet library not available. CJK encoding tests will expect no content changes.")
-        sjis_file_renamed = temp_dir / "sjis_atlasvibe_content.txt"
-        sjis_file_original = temp_dir / "sjis_flojoy_content.txt"
-        if sjis_file_renamed.is_file(): # Should have been renamed
-            try:
-                content = sjis_file_renamed.read_text(encoding='shift_jis', errors='replace')
+            else: # chardet not available, expect original content
                 expected_sjis_text_no_chardet = "これはflojoyのテストです。\n次の行もFlojoyです。"
                 check(content == expected_sjis_text_no_chardet, "Shift-JIS file content unchanged as expected (chardet unavailable).", f"Shift-JIS file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
-            except Exception as e:
-                check(False, "", f"Could not read/verify renamed Shift-JIS file (chardet unavailable): {e}")
-        elif sjis_file_original.is_file():
-             check(False, "", "Shift-JIS file was not renamed to sjis_atlasvibe_content.txt (chardet unavailable).")
-        else:
-            check(False, "", "Shift-JIS file (neither original nor renamed) MISSING (chardet unavailable).")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify Shift-JIS file: {e}")
+    else: 
+        check(False, "", "Renamed Shift-JIS file MISSING.")
 
-        gb18030_file_renamed = temp_dir / "gb18030_atlasvibe_content.txt"
-        gb18030_file_original = temp_dir / "gb18030_flojoy_content.txt"
-        if gb18030_file_renamed.is_file(): # Should have been renamed
-            try:
-                content = gb18030_file_renamed.read_text(encoding='gb18030', errors='replace')
+    gb18030_file_renamed = temp_dir / "gb18030_atlasvibe_content.txt"
+    if gb18030_file_renamed.is_file():
+        try:
+            content = gb18030_file_renamed.read_text(encoding='gb18030', errors='replace')
+            if CHARDET_AVAILABLE:
+                expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
+                check(content == expected_gb18030_text, "GB18030 file content correct (chardet available).", f"GB18030 file content INCORRECT (chardet available). Got: {content!r}")
+            else: # chardet not available, expect original content
                 expected_gb18030_text_no_chardet = "你好 flojoy 世界\n这是 Flojoy 的一个例子"
                 check(content == expected_gb18030_text_no_chardet, "GB18030 file content unchanged as expected (chardet unavailable).", f"GB18030 file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
-            except Exception as e:
-                check(False, "", f"Could not read/verify renamed GB18030 file (chardet unavailable): {e}")
-        elif gb18030_file_original.is_file():
-            check(False, "", "GB18030 file was not renamed to gb18030_atlasvibe_content.txt (chardet unavailable).")
-        else:
-            check(False, "", "GB18030 file (neither original nor renamed) MISSING (chardet unavailable).")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify GB18030 file: {e}")
+    else: 
+        check(False, "", "Renamed GB18030 file MISSING.")
     
     invalid_utf8_file = temp_dir / "invalid_utf8_atlasvibe_file.txt" 
     if invalid_utf8_file.is_file():
