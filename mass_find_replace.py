@@ -1137,4 +1137,3 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
 
 if __name__ == "__main__":
     main()
-```
