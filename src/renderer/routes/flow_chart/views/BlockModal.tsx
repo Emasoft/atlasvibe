@@ -20,12 +20,12 @@ import {
   DialogTitle,
 } from "@/renderer/components/ui/dialog";
 import { BlockResult } from "@/renderer/types/block-result";
-import { BlockData } from "@/renderer/stores/project"; // Use BlockData from project store
+import { BlockData } from "@/renderer/stores/project"; 
 import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Button } from "@/renderer/components/ui/button";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
-import { env } from "@/env"; 
+// import { env } from "@/env"; // Vite handles env vars via import.meta.env
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
 import { toast } from "sonner";
 
@@ -80,9 +80,9 @@ const BlockModal = ({
   const link =
     path.startsWith("/") || path.includes(":")
       ? null
-      : `${env.VITE_ATLASVIBE_REPO}/blocks/${path}`; 
+      : `${import.meta.env.VITE_ATLASVIBE_REPO}/blocks/${path}`; 
 
-  const docsLink = `${env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path 
+  const docsLink = `${import.meta.env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path 
     .split("/")
     .slice(0, -1)
     .join("/")}`.toLowerCase();

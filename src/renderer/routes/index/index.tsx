@@ -23,13 +23,7 @@ import { ServerStatus } from "@/renderer/types/socket";
 import StatusBar from "@/renderer/routes/common/StatusBar";
 import { InterpretersList } from "src/main/python/interpreter";
 import { useSocketStore } from "@/renderer/stores/socket";
-import { ExtendedWindowApi } from "@/preload"; 
-
-declare global {
-  interface Window {
-    api: ExtendedWindowApi; 
-  }
-}
+// Global window.api type is now handled by src/window.d.ts
 
 
 export const Index = (): JSX.Element => {
@@ -51,7 +45,7 @@ export const Index = (): JSX.Element => {
     },
     {
       status: "pending",
-      stage: "spawn-captain", // This stage name might need to be "spawn-atlasvibe-engine"
+      stage: "spawn-captain", // This stage name should be "spawn-atlasvibe-engine"
       message: "Start the atlasvibe backend.",
     },
   ]);
@@ -129,7 +123,7 @@ export const Index = (): JSX.Element => {
 
   const spawnBackendEngine = useCallback(async (): Promise<void> => { 
     try {
-      await window.api.spawnCaptain(); // This should be window.api.spawnAtlasVibeEngine() or similar
+      await window.api.spawnCaptain(); // This should be window.api.spawnAtlasVibeEngine()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       updateSetupStatus({
@@ -255,11 +249,11 @@ export const Index = (): JSX.Element => {
       }
       case "spawn-captain": { 
         updateSetupStatus({
-          stage: "spawn-captain",
+          stage: "spawn-captain", // Consider renaming this stage to "spawn-atlasvibe-engine"
           status: "running",
           message: "Almost there, starting atlasvibe...",
         });
-        spawnBackendEngine(); // Changed to spawnBackendEngine
+        spawnBackendEngine(); 
         break;
       }
     }
@@ -267,7 +261,7 @@ export const Index = (): JSX.Element => {
     checkPythonInstallation,
     installDependencies,
     setupStatuses,
-    spawnBackendEngine, // Changed to spawnBackendEngine
+    spawnBackendEngine, 
   ]);
 
   useEffect(() => {

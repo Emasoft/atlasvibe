@@ -19,7 +19,8 @@ import { GalleryElement } from "./GalleryElement";
 import { Input } from "@/renderer/components/ui/input";
 import { useEffect, useState } from "react";
 import { Button } from "@/renderer/components/ui/button";
-import { env } from "@/env"; 
+// Use Vite's import.meta.env for environment variables
+// Ensure your .env files and src/env.d.ts are set up for these variables
 
 type AppGalleryModalProps = {
   isGalleryOpen: boolean;
@@ -116,11 +117,11 @@ export const GalleryModal = ({
               <br /> Would you like to search for an example app containing{" "}
               <span className="font-bold">{searchQuery}</span> on{" "}
               <a
-                href={env.VITE_ATLASVIBE_DOCS_LINK} 
+                href={import.meta.env.VITE_ATLASVIBE_DOCS_LINK} 
                 target="_blank"
                 className="text-accent1"
               >
-                {env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ?? 
+                {import.meta.env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ?? 
                   "atlasvibe documentation"}
               </a>{" "}
               instead?

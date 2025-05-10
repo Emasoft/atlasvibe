@@ -1,35 +1,44 @@
 import { contextBridge, ipcRenderer } from "electron"; 
-import api from "../api/index";
-import { InterpretersList } from "src/main/python/interpreter"; // Ensure this path is correct
-import { BlockDefinition } from "@/renderer/types/manifest"; // Assuming BlockDefinition is the return type
+// import api from "../api/index"; // Base api object, if it exists and has pre-defined non-IPC functions
+import { InterpretersList } from "src/main/python/interpreter"; 
+import { BlockDefinition } from "@/renderer/types/manifest"; 
 
 // Define a type for the extended API
 // This should match the handlers you set up in your main process
-export interface ExtendedWindowApi extends Window["api"] {
+export interface ExtendedWindowApi {
+  // Functions from original api (if any, otherwise remove this spread)
+  // This assumes `api` from `../api/index` has its own type that Window["api"] would match
+  // For a cleaner approach, explicitly list all expected functions.
+  // [key: string]: any; // Fallback for existing api properties not explicitly typed here
+
   restartAtlasVibe: () => void;
   createCustomBlockFromBlueprint: (
     blueprintKey: string,
     newCustomBlockName: string,
     projectPath: string,
-  ) => Promise<BlockDefinition | undefined>; // Updated return type
-  // Add other new IPC functions here as they are implemented in main
+  ) => Promise<BlockDefinition | undefined>; 
+  
   checkPythonInstallation: (force?: boolean) => Promise<InterpretersList>;
   setPythonInterpreter: (path: string) => Promise<void>;
   installPipx: () => Promise<void>;
   pipxEnsurepath: () => Promise<void>;
   installPoetry: () => Promise<void>;
   installDependencies: () => Promise<void>; 
-  spawnCaptain: () => Promise<void>; // Should be spawnAtlasVibeEngine or similar
+  spawnCaptain: () => Promise<void>; // Should be spawnAtlasVibeEngine
   browsePyInterpreter: () => Promise<string | undefined>;
-  openLogFolder: () => Promise<void>;
+  openLogFolder: () => void; // Changed to void to match ipcRenderer.send
   isPackaged: () => boolean;
-  openEditorWindow: (filePath: string) => Promise<void>;
-  // Potentially more functions based on your API needs
+  openEditorWindow: (filePath: string) => void; // Changed to void
+  openLink: (url: string) => void;
+  getFileContent: (filePath: string) => Promise<string>;
+  saveFile: (filePath: string, content: string) => Promise<void>;
+  saveFileAs: (defaultFilename: string, content: string, allowedExtensions?: string[]) => Promise<{ filePath?: string; canceled: boolean }>;
+  setUnsavedChanges: (hasChanges: boolean) => void;
 }
 
 const extendedApi: ExtendedWindowApi = {
-  ...api,
-  // Ensure all functions used in renderer are defined here and map to IPC calls
+  // ...(api as any), // If you have a base api object, spread it here. Otherwise, remove.
+  
   checkPythonInstallation: (force?: boolean) => ipcRenderer.invoke("check-python-installation", force),
   setPythonInterpreter: (path: string) => ipcRenderer.invoke("set-python-interpreter", path),
   installPipx: () => ipcRenderer.invoke("install-pipx"),
@@ -38,25 +47,20 @@ const extendedApi: ExtendedWindowApi = {
   installDependencies: () => ipcRenderer.invoke("install-dependencies"),
   spawnCaptain: () => ipcRenderer.invoke("spawn-atlasvibe-engine"), 
   browsePyInterpreter: () => ipcRenderer.invoke("browse-py-interpreter"),
-  openLogFolder: () => ipcRenderer.send("open-log-folder"),
+  openLogFolder: () => ipcRenderer.send("open-log-folder"), 
   isPackaged: () => ipcRenderer.sendSync("is-packaged"), 
-  openEditorWindow: (filePath: string) => ipcRenderer.send("open-editor-window", filePath),
-  openLink: (url: string) => ipcRenderer.send("open-link", url), // Added missing openLink
-  getFileContent: (filePath: string) => ipcRenderer.invoke("get-file-content", filePath), // Added missing getFileContent
-  saveFile: (filePath: string, content: string) => ipcRenderer.invoke("save-file", filePath, content), // Added missing saveFile
-  saveFileAs: (defaultFilename: string, content: string, allowedExtensions?: string[]) => ipcRenderer.invoke("save-file-as", defaultFilename, content, allowedExtensions), // Added missing saveFileAs
-  setUnsavedChanges: (hasChanges: boolean) => ipcRenderer.send("set-unsaved-changes", hasChanges), // Added missing setUnsavedChanges
-
+  openEditorWindow: (filePath: string) => ipcRenderer.send("open-editor-window", filePath), 
+  openLink: (url: string) => ipcRenderer.send("open-link", url),
+  getFileContent: (filePath: string) => ipcRenderer.invoke("get-file-content", filePath),
+  saveFile: (filePath: string, content: string) => ipcRenderer.invoke("save-file", filePath, content),
+  saveFileAs: (defaultFilename: string, content: string, allowedExtensions?: string[]) => ipcRenderer.invoke("save-file-as", defaultFilename, content, allowedExtensions),
+  setUnsavedChanges: (hasChanges: boolean) => ipcRenderer.send("set-unsaved-changes", hasChanges),
 
   restartAtlasVibe: () => ipcRenderer.send("restart-app"), 
   createCustomBlockFromBlueprint: (blueprintKey, newCustomBlockName, projectPath) =>
     ipcRenderer.invoke("create-custom-block", blueprintKey, newCustomBlockName, projectPath),
 };
 
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld("api", extendedApi);

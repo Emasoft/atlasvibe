@@ -58,13 +58,8 @@ import {
   WidgetType,
 } from "@/renderer/types/control";
 import { EdgeVariant } from "@/renderer/types/edge";
-import { ExtendedWindowApi } from "@/preload"; 
+// Global window.api type is now handled by src/window.d.ts
 
-declare global {
-  interface Window {
-    api: ExtendedWindowApi; 
-  }
-}
 
 // Extend BlockData locally for this store if the global type isn't updated yet
 // This is a common pattern if you can't modify the global type immediately
