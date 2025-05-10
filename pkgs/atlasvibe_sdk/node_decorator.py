@@ -323,7 +323,7 @@ def atlasvibe_node(
                     for key, value in dc_obj_or_dict.items():
                         if isinstance(value, DataContainer) and not isinstance(value, Stateful):
                             value.validate()
-                elif dc_obj_or_dict is None and sig.return_annotation is not None and sig.return_annotation != type(None):
+                elif dc_obj_or_dict is None and sig.return_annotation is not None and sig.return_annotation is not type(None): # Corrected comparison
                     pass
 
                 JobService().post_job_result(job_id, dc_obj_or_dict)

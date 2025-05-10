@@ -10,7 +10,7 @@ import numpy as np
 from pandas import DataFrame as PandasDataFrame
 from box import Box, box_list
 import plotly.graph_objects as go  # type:ignore
-from typing import Union, Literal, get_args, Any, cast
+from typing import Union, Literal, get_args, Any, cast, Optional # Added Optional
 
 
 def find_closest_match(given_str: str, available_str: list[str]):
