@@ -24,7 +24,38 @@ atlasvibe is being developed by **Emasoft** (repository: [Emasoft/atlasvibe](htt
 
 Installation and usage instructions will be provided once the project reaches a more stable state. Currently, it is not recommended for general use.
 
+To set up the Python environment using `uv`:
+1.  Ensure you have `uv` installed. See [uv installation guide](https://github.com/astral-sh/uv#installation).
+2.  Create and activate a virtual environment:
+    ```bash
+    uv venv
+    source .venv/bin/activate  # On Linux/macOS
+    # .venv\Scripts\activate    # On Windows
+    ```
+3.  Install dependencies:
+    ```bash
+    uv sync
+    ```
+    For development dependencies:
+    ```bash
+    uv sync --all-extras # Or specify extras like 'dev'
+    ```
+
 ## Running Tests
 
 The project includes both backend (Python) and frontend (TypeScript/Playwright) tests.
 You can run all tests using the `runtests.sh` script in the project root:
+```bash
+bash runtests.sh
+```
+This script will set up the `uv` environment, install dependencies, and then execute both Python (`pytest`) and Playwright tests.
+
+To run Python tests manually (after setting up the environment and installing dev dependencies):
+```bash
+uv run pytest .
+```
+
+To run Playwright E2E tests manually:
+```bash
+npx playwright test
+```

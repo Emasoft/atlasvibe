@@ -4,60 +4,54 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-[tool.poetry]
+[project]
 name = "atlasvibe"
 version = "0.1.0"
 description = "General-purpose visual programming IDE for Python with an Agent node flow approach."
-authors = ["Emasoft <your-email@example.com>"] # Please update with your actual email
+authors = [
+    {name = "Emasoft", email = "your-email@example.com"}, # Please update with your actual email
+]
 readme = "README.md"
-license = "MIT"
-packages = [{include = "atlasvibe_engine"}] # Package is at the root level
+license = {text = "MIT"}
+requires-python = "^3.11"
+dependencies = [
+    "uvicorn[standard]>=0.23.2,<0.24.0",
+    "fastapi>=0.104.1,<0.105.0",
+    "pyyaml>=6.0.1,<7.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "requests>=2.31.0,<3.0.0",
+    "debugpy>=1.8.0,<2.0.0",
+    "watchfiles>=0.21.0,<0.22.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11" 
-uvicorn = { extras = ["standard"], version = "^0.23.2" }
-fastapi = "^0.104.1"
-pyyaml = "^6.0.1"
-python-dotenv = "^1.0.0"
-requests = "^2.31.0"
-debugpy = "^1.8.0"
-watchfiles = "^0.21.0"
-# pytest, pytest-json-report, httpx are more for testing/dev, moved or covered by dev group
-# For core app:
-# Consider if nidaqmx, nidmm, nimodinst, bcrypt, tinymovr, robotframework are needed for core atlasvibe
-# For now, keeping a minimal set. Add back if essential for the general purpose core.
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.2"
-pytest-cov = "^4.1.0"
-pytest-mock = "^3.11.0" 
-ruff = "^0.3.0"
-typer = { extras = ["all"], version = "^0.9.0" }
-python-frontmatter = "^1.0.1"
-# httpx can be useful for testing API integrations if your app has them
-httpx = "^0.26.0" 
-# pytest-json-report if needed for CI or specific reporting formats
-pytest-json-report = "^1.5.0"
-
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.2,<8.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+    "pytest-mock>=3.11.0,<4.0.0",
+    "ruff>=0.3.0,<0.4.0",
+    "typer[all]>=0.9.0,<0.10.0",
+    "python-frontmatter>=1.0.1,<2.0.0",
+    "httpx>=0.26.0,<0.27.0",
+    "pytest-json-report>=1.5.0,<2.0.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-rsxX -l --tb=short --strict-markers" 
+addopts = "-rsxX -l --tb=short --strict-markers"
 testpaths = [
-    "tests", 
-    "PYTHON/tests", # This path might need review if PYTHON dir is no longer primary source root
-    "blocks",       
-    "atlasvibe_engine/tests", # Assuming tests for the engine will be here
-    "cli",          
+    "tests",
+    "PYTHON/tests",
+    "blocks",
+    "atlasvibe_engine/tests",
+    "cli",
+    "playwright-test/fixtures/custom-sequences",
 ]
-python_files = "test_*.py *_test_.py" 
+python_files = "test_*.py *_test_.py"
 python_classes = "Test*"
 python_functions = "test_*"
 markers = [
