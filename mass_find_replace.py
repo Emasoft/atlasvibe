@@ -63,8 +63,10 @@ def get_file_encoding(file_path: Path, logger, sample_size=10240) -> Optional[st
         if encoding and confidence and confidence > 0.7: 
             logger.debug(f"Detected encoding for {file_path}: {encoding} (confidence: {confidence:.2f})")
             norm_encoding = encoding.lower()
-            if norm_encoding == 'ascii': return 'ascii'
-            if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: return 'utf-8'
+            if norm_encoding == 'ascii': 
+                return 'ascii'
+            if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: 
+                return 'utf-8'
             try:
                 b"test".decode(encoding) 
                 return encoding
@@ -89,8 +91,10 @@ def is_likely_binary_file(file_path: Path, logger, sample_size=1024) -> bool:
     try:
         with open(file_path, 'rb') as f:
             sample = f.read(sample_size)
-        if not sample: return False
-        if b'\x00' in sample: return True 
+        if not sample: 
+            return False
+        if b'\x00' in sample: 
+            return True 
         
         text_chars = set(range(32, 127)) | {ord('\n'), ord('\r'), ord('\t')}
         non_text_count = sum(1 for byte in sample if byte not in text_chars)
@@ -99,27 +103,39 @@ def is_likely_binary_file(file_path: Path, logger, sample_size=1024) -> bool:
             return True
         return False
     except Exception as e:
-        if logger: logger.error(f"Could not read sample from {file_path} for binary check: {e}")
-        else: print(f"Error: Could not read sample from {file_path} for binary check: {e}")
+        if logger: 
+            logger.error(f"Could not read sample from {file_path} for binary check: {e}")
+        else: 
+            print(f"Error: Could not read sample from {file_path} for binary check: {e}")
         return False 
 
 def _get_case_preserved_replacement(matched_text: str, base_find: str, base_replace: str) -> str:
     """Handles case-preserving replacement, with special logic for flojoy->atlasvibe."""
     if base_find.lower() == 'flojoy' and base_replace.lower() == 'atlasvibe':
-        if matched_text == 'flojoy': return 'atlasvibe'
-        if matched_text == 'Flojoy': return 'Atlasvibe'
-        if matched_text == 'FLOJOY': return 'ATLASVIBE'
-        if matched_text == 'FloJoy': return 'AtlasVibe' 
-        if matched_text == 'floJoy': return 'atlasVibe' 
+        if matched_text == 'flojoy': 
+            return 'atlasvibe'
+        if matched_text == 'Flojoy': 
+            return 'Atlasvibe'
+        if matched_text == 'FLOJOY': 
+            return 'ATLASVIBE'
+        if matched_text == 'FloJoy': 
+            return 'AtlasVibe' 
+        if matched_text == 'floJoy': 
+            return 'atlasVibe' 
         try: 
             logger = get_run_logger()
-            if logger: logger.debug(f"Applying default '{base_replace.lower()}' casing for unmatched variant: '{matched_text}'")
-        except: pass
+            if logger: 
+                logger.debug(f"Applying default '{base_replace.lower()}' casing for unmatched variant: '{matched_text}'")
+        except: 
+            pass
         return base_replace.lower() 
     
-    if matched_text.islower(): return base_replace.lower()
-    if matched_text.isupper(): return base_replace.upper()
-    if matched_text.istitle(): return base_replace.title()
+    if matched_text.islower(): 
+        return base_replace.lower()
+    if matched_text.isupper(): 
+        return base_replace.upper()
+    if matched_text.istitle(): 
+        return base_replace.title()
     if matched_text and base_replace: 
         if matched_text[0].isupper() and not base_replace[0].isupper():
             return base_replace[0].upper() + base_replace[1:]
@@ -187,7 +203,8 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
     
     for i in range(len(temp_original_rel_path.parts), -1, -1):
         ancestor_original_rel_str = str(Path(*temp_original_rel_path.parts[:i])) if i > 0 else ""
-        if ancestor_original_rel_str == ".": ancestor_original_rel_str = ""
+        if ancestor_original_rel_str == ".": 
+            ancestor_original_rel_str = ""
 
         if ancestor_original_rel_str in path_translation_map:
             translated_ancestor_rel_str = path_translation_map[ancestor_original_rel_str]
@@ -249,7 +266,8 @@ def scan_and_collect_occurrences_task(
                 })
 
     for item_path in _walk_for_scan(root_dir, excluded_dirs):
-        if not item_path.is_file(): continue
+        if not item_path.is_file(): 
+            continue
         
         try:
             relative_path_str = str(item_path.relative_to(root_dir))
@@ -417,11 +435,16 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
             for t_item in data:
                 if t_item['id'] == transaction_id:
                     t_item['STATUS'] = new_status
-                    if error_message: t_item['ERROR_MESSAGE'] = error_message
-                    else: t_item.pop('ERROR_MESSAGE', None) 
-                    updated = True; break
+                    if error_message: 
+                        t_item['ERROR_MESSAGE'] = error_message
+                    else: 
+                        t_item.pop('ERROR_MESSAGE', None) 
+                    updated = True
+                    break
             if updated:
-                f.seek(0); json.dump(data, f, indent=4); f.truncate()
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                f.truncate()
                 logger.debug(f"Updated status for tx_id {transaction_id} to {new_status} in {json_file_path.name}")
             else:
                 logger.warning(f"Transaction ID {transaction_id} not found in {json_file_path.name} for status update.")
@@ -450,9 +473,11 @@ def execute_rename_transactions_task(
     validation_tx_map_by_id: Dict[str, Dict[str, Any]] = {}
     if validation_json_path and validation_json_path.exists():
         try:
-            with open(validation_json_path, 'r', encoding='utf-8') as vf: validation_data = json.load(vf)
+            with open(validation_json_path, 'r', encoding='utf-8') as vf: 
+                validation_data = json.load(vf)
             validation_tx_map_by_id = {tx_val['id']: tx_val for tx_val in validation_data}
-        except Exception as e: logger.warning(f"Could not load validation transaction file {validation_json_path}: {e}")
+        except Exception as e: 
+            logger.warning(f"Could not load validation transaction file {validation_json_path}: {e}")
 
     rename_txs = [t for t in transactions if t["OCCURRENCE_TYPE"] in ["FOLDERNAME", "FILENAME"] and t["STATUS"] == STATUS_PENDING]
     completed_count, failed_count, skipped_count = 0, 0, 0
@@ -464,15 +489,20 @@ def execute_rename_transactions_task(
         if not all(k in tx_from_primary for k in ["PATH", "NEW_PATH_COMPONENT"]) and tx_id and validation_tx_map_by_id:
             logger.warning(f"Transaction {tx_id} from primary JSON seems incomplete. Trying to use validation data.")
             pristine_tx = validation_tx_map_by_id.get(tx_id)
-            if pristine_tx and all(k in pristine_tx for k in ["PATH", "NEW_PATH_COMPONENT"]): tx = pristine_tx
+            if pristine_tx and all(k in pristine_tx for k in ["PATH", "NEW_PATH_COMPONENT"]): 
+                tx = pristine_tx
             else:
                 logger.error(f"Cannot process transaction {tx_id}: incomplete in primary and not found/incomplete in validation JSON.")
-                if tx_id: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
-                failed_count += 1; continue
+                if tx_id: 
+                    _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
+                failed_count += 1
+                continue
         elif not all(k in tx_from_primary for k in ["PATH", "NEW_PATH_COMPONENT"]):
              logger.error(f"Cannot process transaction (ID: {tx_id if tx_id else 'Unknown'}): critical keys missing.")
-             if tx_id: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
-             failed_count += 1; continue
+             if tx_id: 
+                 _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
+             failed_count += 1
+             continue
 
         original_relative_path_str = tx["PATH"]
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
@@ -480,7 +510,8 @@ def execute_rename_transactions_task(
         if not current_abs_path.exists():
             logger.warning(f"Skipping rename: Path {current_abs_path} (derived from {original_relative_path_str}) does not exist.")
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_SKIPPED, "Original path not found")
-            skipped_count += 1; continue
+            skipped_count += 1
+            continue
 
         proposed_new_name_component = tx["NEW_PATH_COMPONENT"]
         new_abs_path = current_abs_path.with_name(proposed_new_name_component)
@@ -489,15 +520,18 @@ def execute_rename_transactions_task(
             logger.info(f"[DRY RUN] Would rename: {current_abs_path} -> {new_abs_path}")
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_COMPLETED + " (DRY_RUN)")
-            completed_count += 1; continue
+            completed_count += 1
+            continue
 
         if new_abs_path.exists() and current_abs_path.resolve(strict=False) != new_abs_path.resolve(strict=False):
             logger.warning(f"Target path '{new_abs_path}' already exists. Skipping rename of '{current_abs_path}'.")
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_SKIPPED, "Target path already exists")
-            skipped_count += 1; continue
+            skipped_count += 1
+            continue
         
         try:
-            if not new_abs_path.parent.exists(): os.makedirs(new_abs_path.parent, exist_ok=True)
+            if not new_abs_path.parent.exists(): 
+                os.makedirs(new_abs_path.parent, exist_ok=True)
             os.rename(current_abs_path, new_abs_path)
             logger.info(f"Renamed: {current_abs_path} -> {new_abs_path}")
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
@@ -529,9 +563,11 @@ def execute_content_transactions_task(
     validation_tx_map_by_id: Dict[str, Dict[str, Any]] = {}
     if validation_json_path and validation_json_path.exists():
         try:
-            with open(validation_json_path, 'r', encoding='utf-8') as vf: validation_data = json.load(vf)
+            with open(validation_json_path, 'r', encoding='utf-8') as vf: 
+                validation_data = json.load(vf)
             validation_tx_map_by_id = {tx_val['id']: tx_val for tx_val in validation_data}
-        except Exception as e: logger.warning(f"Could not load validation transaction file {validation_json_path} for content task: {e}")
+        except Exception as e: 
+            logger.warning(f"Could not load validation transaction file {validation_json_path} for content task: {e}")
             
     file_to_process_details: Dict[str, Dict[str, Any]] = {} 
 
@@ -542,14 +578,17 @@ def execute_content_transactions_task(
             if not all(k in tx_from_primary for k in ["PATH"]) and tx_id and validation_tx_map_by_id: 
                 logger.warning(f"Content transaction {tx_id} from primary JSON seems incomplete. Using validation data.")
                 pristine_tx = validation_tx_map_by_id.get(tx_id)
-                if pristine_tx and all(k in pristine_tx for k in ["PATH"]): tx_data_to_use = pristine_tx
+                if pristine_tx and all(k in pristine_tx for k in ["PATH"]): 
+                    tx_data_to_use = pristine_tx
                 else:
                     logger.error(f"Cannot process content transaction {tx_id}: incomplete in primary and validation JSON.")
-                    if tx_id: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
+                    if tx_id: 
+                        _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
                     continue 
             elif not all(k in tx_from_primary for k in ["PATH"]):
                  logger.error(f"Cannot process content transaction (ID: {tx_id if tx_id else 'Unknown'}): critical keys missing.")
-                 if tx_id: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
+                 if tx_id: 
+                     _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
                  continue
 
             original_rel_path = tx_data_to_use["PATH"]
@@ -565,24 +604,29 @@ def execute_content_transactions_task(
         tx_ids_for_file = details["tx_ids"]
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
 
-
         if not current_abs_path.is_file(): 
             logger.warning(f"Skipping content change for {len(tx_ids_for_file)} occurrences: Path {current_abs_path} (derived from {original_relative_path_str}) not a file or not found.")
-            for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "File path not found or not a file after renames")
-            skipped_count += len(tx_ids_for_file); continue
+            for tx_id in tx_ids_for_file: 
+                _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "File path not found or not a file after renames")
+            skipped_count += len(tx_ids_for_file)
+            continue
 
         if not process_binary_files and is_likely_binary_file(current_abs_path, logger):
             logger.info(f"Skipping likely binary file for content change: {current_abs_path}")
-            for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "Skipped binary file")
-            skipped_count += len(tx_ids_for_file); continue
+            for tx_id in tx_ids_for_file: 
+                _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "Skipped binary file")
+            skipped_count += len(tx_ids_for_file)
+            continue
             
         original_encoding = details["encoding"]
         current_encoding_to_try = original_encoding or DEFAULT_ENCODING_FALLBACK
 
         if dry_run:
             logger.info(f"[DRY RUN] Would process content of {current_abs_path} for {len(tx_ids_for_file)} occurrences.")
-            for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED + " (DRY_RUN)")
-            completed_count += len(tx_ids_for_file); continue
+            for tx_id in tx_ids_for_file: 
+                _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED + " (DRY_RUN)")
+            completed_count += len(tx_ids_for_file)
+            continue
 
         try:
             original_full_content = current_abs_path.read_text(encoding=current_encoding_to_try, errors='surrogateescape')
@@ -593,15 +637,18 @@ def execute_content_transactions_task(
             if modified_full_content != original_full_content:
                 current_abs_path.write_text(modified_full_content, encoding=current_encoding_to_try, errors='surrogateescape', newline=None) 
                 logger.info(f"Modified content of {current_abs_path} (encoding: {current_encoding_to_try}) for {len(tx_ids_for_file)} occurrences.")
-                for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED)
+                for tx_id in tx_ids_for_file: 
+                    _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED)
                 completed_count += len(tx_ids_for_file)
             else: 
                 logger.info(f"Content of {current_abs_path} did not change after replacement. Marking {len(tx_ids_for_file)} transactions as skipped.")
-                for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "No change to file content")
+                for tx_id in tx_ids_for_file: 
+                    _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "No change to file content")
                 skipped_count += len(tx_ids_for_file)
         except Exception as e: 
             logger.error(f"Error modifying content of {current_abs_path} (encoding: {current_encoding_to_try}): {e}")
-            for tx_id in tx_ids_for_file: _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, str(e))
+            for tx_id in tx_ids_for_file: 
+                _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, str(e))
             failed_count += len(tx_ids_for_file)
             
     logger.info(f"Phase 3b: Content execution. Completed: {completed_count}, Failed: {failed_count}, Skipped: {skipped_count}")
@@ -647,8 +694,12 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
 
     def check(condition, pass_msg, fail_msg):
         nonlocal passed_checks, failed_checks
-        if condition: logger.info(f"PASS: {pass_msg}"); passed_checks += 1
-        else: logger.error(f"FAIL: {fail_msg}"); failed_checks += 1
+        if condition: 
+            logger.info(f"PASS: {pass_msg}")
+            passed_checks += 1
+        else: 
+            logger.error(f"FAIL: {fail_msg}")
+            failed_checks += 1
         return condition
 
     exp_paths = [
@@ -664,13 +715,17 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
         temp_dir / "ATLASVIBE_is_the_name_folder" / "file_in_ATLASVIBE_folder.txt",
         temp_dir / "multiple_on_line_atlasvibe.txt"
     ]
-    for p in exp_paths: check(p.exists(), f"Path '{p.relative_to(temp_dir)}' exists.", f"Path '{p.relative_to(temp_dir)}' MISSING.")
+    for p in exp_paths: 
+        check(p.exists(), f"Path '{p.relative_to(temp_dir)}' exists.", f"Path '{p.relative_to(temp_dir)}' MISSING.")
     check(not (temp_dir / "flojoy_root").exists(), "Old 'flojoy_root' removed.", "Old 'flojoy_root' STILL EXISTS.")
 
     deep_file = temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file_mixed_eol.txt"
     if deep_file.is_file():
         raw_content_bytes = deep_file.read_bytes() 
         expected_text_content = "atlasvibe line 1\r\nATLASVIBE line 2\nAtlasvibe line 3\r\nAtlasVibe line 4\natlasVibe line 5\nmyatlasvibe_project details"
+        # The file was written using original encoding (UTF-8 in this case) and newline=None
+        # which should preserve the mixed EOLs if the read_text and write_text cycle works as expected.
+        # For verification, we compare against bytes encoded from a string with those EOLs.
         expected_raw_bytes = expected_text_content.encode('utf-8') 
         check(raw_content_bytes == expected_raw_bytes, "Mixed EOL file content and EOLs preserved.", 
               f"Mixed EOL file content/EOLs NOT preserved. Expected: {expected_raw_bytes!r}, Got: {raw_content_bytes!r}")
@@ -701,16 +756,20 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
             check("café atlasvibe here" in content and "Another Atlasvibe line with accent aigu: é" in content, 
                   "Latin-1 file content correct and encoding preserved.", 
                   f"Latin-1 file content/encoding INCORRECT. Content: {content[:100]}...")
-        except Exception as e: check(False, "", f"Could not read/verify latin-1 file: {e}")
-    else: check(False, "", "Renamed latin-1 file MISSING.")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify latin-1 file: {e}")
+    else: 
+        check(False, "", "Renamed latin-1 file MISSING.")
     
     cp1252_file = temp_dir / "cp1252_atlasvibe_content.txt"
     if cp1252_file.is_file():
         try:
             content = cp1252_file.read_text(encoding='cp1252')
             check("Euro € symbol with atlasvibe." in content, "CP1252 file content correct and encoding preserved.", f"CP1252 file content/encoding INCORRECT: {content}")
-        except Exception as e: check(False, "", f"Could not read/verify cp1252 file: {e}")
-    else: check(False, "", "Renamed cp1252 file MISSING.")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify cp1252 file: {e}")
+    else: 
+        check(False, "", "Renamed cp1252 file MISSING.")
 
     sjis_file = temp_dir / "sjis_atlasvibe_content.txt"
     if sjis_file.is_file():
@@ -718,8 +777,10 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
             content = sjis_file.read_text(encoding='shift_jis', errors='replace')
             expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
             check(content == expected_sjis_text, "Shift-JIS file content correct and encoding preserved.", f"Shift-JIS file content/encoding INCORRECT. Got: {content!r}")
-        except Exception as e: check(False, "", f"Could not read/verify Shift-JIS file: {e}")
-    else: check(False, "", "Renamed Shift-JIS file MISSING.")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify Shift-JIS file: {e}")
+    else: 
+        check(False, "", "Renamed Shift-JIS file MISSING.")
 
     gb18030_file = temp_dir / "gb18030_atlasvibe_content.txt"
     if gb18030_file.is_file():
@@ -727,8 +788,10 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
             content = gb18030_file.read_text(encoding='gb18030', errors='replace')
             expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
             check(content == expected_gb18030_text, "GB18030 file content correct and encoding preserved.", f"GB18030 file content/encoding INCORRECT. Got: {content!r}")
-        except Exception as e: check(False, "", f"Could not read/verify GB18030 file: {e}")
-    else: check(False, "", "Renamed GB18030 file MISSING.")
+        except Exception as e: 
+            check(False, "", f"Could not read/verify GB18030 file: {e}")
+    else: 
+        check(False, "", "Renamed GB18030 file MISSING.")
     
     invalid_utf8_file = temp_dir / "invalid_utf8_atlasvibe_file.txt" 
     if invalid_utf8_file.is_file():
@@ -797,7 +860,9 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     compare_transaction_files_task(transaction_json_path_test, validation_json_path_test)
 
-    if not transaction_json_path_test.exists(): logger.error("Self-test failed: JSON not created."); return
+    if not transaction_json_path_test.exists(): 
+        logger.error("Self-test failed: JSON not created.")
+        return
     logger.info(f"Self-test plan: {transaction_json_path_test}. Review for planned changes.")
     
     rename_res = execute_rename_transactions_task.with_options(name="SelfTest-Renames")(
@@ -818,7 +883,8 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
         _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test)
 
     logger.info(f"--- Self-Test Completed (in {temp_dir_str}) ---")
-    if dry_run_for_test: logger.info("Self-Test was DRY RUN.")
+    if dry_run_for_test: 
+        logger.info("Self-Test was DRY RUN.")
 
 
 # --- Main Prefect Flow ---
@@ -837,14 +903,19 @@ def find_and_replace_phased_flow(
 
     logger.info(f"Starting flow for: {root_dir}. Find: '{find_pattern}', Replace: '{replace_pattern}'. Log: {transaction_json_path}")
 
-    if dry_run: logger.info("DRY RUN MODE ENABLED.")
+    if dry_run: 
+        logger.info("DRY RUN MODE ENABLED.")
     elif not force_execution:
         logger.warning("!!! POTENTIALLY DESTRUCTIVE OPERATION !!!")
         confirm = input(f"Modifying '{root_dir}'. Find '{find_pattern}', Replace '{replace_pattern}'. Backup? Continue? (yes/no): ")
-        if confirm.lower() != 'yes': logger.info("Operation cancelled."); return
+        if confirm.lower() != 'yes': 
+            logger.info("Operation cancelled.")
+            return
         logger.info("User confirmed. Proceeding...")
-    else: logger.warning(f"Executing with --force for '{root_dir}'.")
-    if not dry_run: logger.warning("CRITICAL: Ensure backup before running without --dry-run.")
+    else: 
+        logger.warning(f"Executing with --force for '{root_dir}'.")
+    if not dry_run: 
+        logger.warning("CRITICAL: Ensure backup before running without --dry-run.")
 
     if not skip_scan:
         if not root_dir.is_dir(): 
@@ -880,7 +951,9 @@ def find_and_replace_phased_flow(
         logger.error(f"Skip scan requested, but one or both transaction files ({transaction_json_path.name}, {validation_json_path.name}) not found. Cannot proceed.")
         return
 
-    if not transaction_json_path.exists(): logger.error(f"Cannot execute: Primary transaction file {transaction_json_path} not found."); return
+    if not transaction_json_path.exists(): 
+        logger.error(f"Cannot execute: Primary transaction file {transaction_json_path} not found.")
+        return
         
     logger.info("Starting execution phase.")
     rename_res = execute_rename_transactions_task(
@@ -898,8 +971,10 @@ def find_and_replace_phased_flow(
     )
 
     logger.info("Flow finished.")
-    if dry_run: logger.info("DRY RUN COMPLETED.")
-    else: logger.info("EXECUTION COMPLETED.")
+    if dry_run: 
+        logger.info("DRY RUN COMPLETED.")
+    else: 
+        logger.info("EXECUTION COMPLETED.")
 
 # --- Main Execution ---
 def main():
