@@ -12,21 +12,36 @@ import uuid
 import tempfile
 import filecmp # For comparing JSON files
 from pathlib import Path
-from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any
+from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
+import types # For ModuleType
 
 # Prefect integration
 try:
     from prefect import task, flow, get_run_logger
+    from prefect.utilities.logging import get_logger as get_prefect_logger_outside_flow # For helpers
 except ImportError:
     print("Prefect library not found. Please install it to run this script: pip install prefect")
-    exit(1)
+    # Fallback logger if prefect is not available, for basic script operation outside a flow
+    import logging as std_logging
+    def get_prefect_logger_outside_flow(name: Optional[str] = None) -> Any: # type: ignore[no-untyped-def]
+        return std_logging.getLogger(name or "mass_find_replace")
+    # Define dummy decorators if prefect is not installed, so script can be parsed
+    def task(fn: Callable) -> Callable: return fn # type: ignore[no-untyped-def]
+    def flow(*args: Any, **kwargs: Any) -> Callable: # type: ignore[no-untyped-def]
+        def decorator(fn: Callable) -> Callable:
+            return fn
+        return decorator
+    # Provide a dummy get_run_logger if prefect is not available
+    def get_run_logger() -> Any: # type: ignore[no-untyped-def]
+        return get_prefect_logger_outside_flow("prefect_dummy_logger")
+
 
 # Chardet integration for encoding detection
 try:
     import chardet
 except ImportError:
     print("chardet library not found. Please install it for robust encoding detection: pip install chardet")
-    chardet = None
+    chardet: Optional[types.ModuleType] = None
 
 
 # --- Constants ---
@@ -44,7 +59,7 @@ DEFAULT_ENCODING_FALLBACK = 'utf-8'
 
 # --- Core Helper Functions (Shared Logic) ---
 
-def get_file_encoding(file_path: Path, logger, sample_size=10240) -> Optional[str]:
+def get_file_encoding(file_path: Path, logger: Any, sample_size: int = 10240) -> Optional[str]:
     """Detects file encoding using chardet, with fallback."""
     if not chardet:
         logger.debug(f"chardet library not available. Using default fallback encoding '{DEFAULT_ENCODING_FALLBACK}' for {file_path}.")
@@ -57,8 +72,8 @@ def get_file_encoding(file_path: Path, logger, sample_size=10240) -> Optional[st
             return DEFAULT_ENCODING_FALLBACK 
         
         detected = chardet.detect(raw_data)
-        encoding = detected.get('encoding')
-        confidence = detected.get('confidence', 0)
+        encoding: Optional[str] = detected.get('encoding')
+        confidence: float = detected.get('confidence', 0.0)
 
         if encoding and confidence and confidence > 0.7: 
             logger.debug(f"Detected encoding for {file_path}: {encoding} (confidence: {confidence:.2f})")
@@ -86,7 +101,7 @@ def get_file_encoding(file_path: Path, logger, sample_size=10240) -> Optional[st
         logger.error(f"Error detecting encoding for {file_path}: {e}. Using system default (None).")
         return None 
 
-def is_likely_binary_file(file_path: Path, logger, sample_size=1024) -> bool:
+def is_likely_binary_file(file_path: Path, logger: Any, sample_size: int = 1024) -> bool:
     """Heuristic to check if a file is likely binary."""
     try:
         with open(file_path, 'rb') as f:
@@ -123,10 +138,12 @@ def _get_case_preserved_replacement(matched_text: str, base_find: str, base_repl
         if matched_text == 'floJoy': 
             return 'atlasVibe' 
         try: 
-            logger = get_run_logger()
+            logger = get_run_logger() # type: ignore[name-defined]
             if logger: 
                 logger.debug(f"Applying default '{base_replace.lower()}' casing for unmatched variant: '{matched_text}'")
-        except: 
+        except NameError: # get_run_logger not defined if prefect not imported
+            pass
+        except Exception: # Catch other potential errors with logger
             pass
         return base_replace.lower() 
     
@@ -149,7 +166,7 @@ def perform_text_replacement(text: str, find_pattern: str, replace_pattern: str,
         not case_sensitive and 
         find_pattern.lower() == 'flojoy' and 
         replace_pattern.lower() == 'atlasvibe'):
-        def replace_func(match_obj):
+        def replace_func(match_obj: re.Match[str]) -> str:
             return _get_case_preserved_replacement(match_obj.group(0), 'flojoy', 'atlasvibe')
         return re.sub(r'flojoy', replace_func, text, flags=re.IGNORECASE)
     else:
@@ -219,13 +236,13 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
 
 # --- Phase 1: Scan & Collect Tasks ---
 
-@task
+@task # type: ignore[operator]
 def scan_and_collect_occurrences_task(
     root_dir: Path, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
     process_binary_files: bool, scan_id: str 
 ) -> List[Dict[str, Any]]:
-    logger = get_run_logger()
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info(f"Phase 1 (Scan ID: {scan_id}): Scanning project for occurrences...")
     transactions: List[Dict[str, Any]] = []
     abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
@@ -311,12 +328,12 @@ def scan_and_collect_occurrences_task(
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
-@task
+@task # type: ignore[operator]
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
-    logger = get_run_logger()
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
     
-    def sort_key(t): 
+    def sort_key(t: Dict[str, Any]) -> Tuple[int, int, str, int]: 
         path_depth = t["PATH"].count(os.sep)
         type_order = {"FOLDERNAME": 0, "FILENAME": 1, "STRING_IN_FILE": 2}
         return (type_order[t["OCCURRENCE_TYPE"]], -path_depth if t["OCCURRENCE_TYPE"] != "STRING_IN_FILE" else path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
@@ -333,9 +350,9 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
         raise
     return json_file_path
 
-@task
-def compare_transaction_files_task(file1_path: Path, file2_path: Path):
-    logger = get_run_logger()
+@task # type: ignore[operator]
+def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
     if not file1_path.exists() or not file2_path.exists():
         logger.error("One or both transaction files do not exist for comparison.")
@@ -346,7 +363,7 @@ def compare_transaction_files_task(file1_path: Path, file2_path: Path):
             data1 = json.load(f1)
             data2 = json.load(f2)
         
-        def comparable_tx(tx_list):
+        def comparable_tx(tx_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             return sorted([ {k: v for k, v in tx.items() if k not in ['id', 'STATUS']} for tx in tx_list ], 
                           key=lambda x: (x['OCCURRENCE_TYPE'], x['PATH'], x.get('LINE_NUMBER', 0), x.get('ORIGINAL_LINE_CONTENT', '')))
 
@@ -380,17 +397,17 @@ def compare_transaction_files_task(file1_path: Path, file2_path: Path):
 
 # --- Phase 3: Execute Transactions Tasks ---
 
-def _load_transactions_with_fallback(json_file_path: Path, logger) -> Optional[List[Dict[str, Any]]]:
+def _load_transactions_with_fallback(json_file_path: Path, logger: Any) -> Optional[List[Dict[str, Any]]]:
     """Loads transactions from primary JSON, falls back to .bak on error."""
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     try:
         if json_file_path.exists():
             with open(json_file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                return cast(List[Dict[str, Any]], json.load(f))
         elif backup_path.exists():
             logger.warning(f"Primary transaction file {json_file_path} not found. Attempting to load from backup {backup_path}.")
             with open(backup_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                return cast(List[Dict[str, Any]], json.load(f))
         else:
             logger.error(f"Neither primary transaction file nor backup found for {json_file_path.name}.")
             return None
@@ -400,7 +417,7 @@ def _load_transactions_with_fallback(json_file_path: Path, logger) -> Optional[L
             logger.warning(f"Attempting to load from backup {backup_path} due to primary file corruption.")
             try:
                 with open(backup_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    return cast(List[Dict[str, Any]], json.load(f))
             except Exception as backup_e:
                 logger.error(f"Error loading from backup file {backup_path} as well: {backup_e}")
         return None
@@ -409,9 +426,9 @@ def _load_transactions_with_fallback(json_file_path: Path, logger) -> Optional[L
         return None
 
 
-def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str, new_status: str, error_message: Optional[str] = None):
+def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str, new_status: str, error_message: Optional[str] = None) -> None:
     """Updates status, creating a backup first."""
-    logger = get_run_logger() 
+    logger = get_run_logger() # type: ignore[name-defined]
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     
     if not json_file_path.exists():
@@ -430,7 +447,7 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
 
     try:
         with open(json_file_path, 'r+', encoding='utf-8') as f:
-            data = json.load(f)
+            data: List[Dict[str, Any]] = json.load(f)
             updated = False
             for t_item in data:
                 if t_item['id'] == transaction_id:
@@ -458,12 +475,12 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
             logger.error(f"Failed to restore {json_file_path} from backup: {restore_e}. JSON file might be corrupt.")
 
 
-@task
+@task # type: ignore[operator]
 def execute_rename_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     validation_json_path: Optional[Path] = None 
 ) -> Dict[str, Any]:
-    logger = get_run_logger()
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info("Phase 3a: Executing RENAME transactions...")
     
     transactions = _load_transactions_with_fallback(json_file_path, logger)
@@ -546,14 +563,14 @@ def execute_rename_transactions_task(
     return {"completed": completed_count, "failed": failed_count, "skipped": skipped_count, "path_translation_map": path_translation_map}
 
 
-@task
+@task # type: ignore[operator]
 def execute_content_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     path_translation_map: Dict[str, str], process_binary_files: bool,
     find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     validation_json_path: Optional[Path] = None 
 ) -> Dict[str, int]:
-    logger = get_run_logger()
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info("Phase 3b: Executing STRING_IN_FILE transactions (whole file approach)...")
 
     transactions = _load_transactions_with_fallback(json_file_path, logger)
@@ -656,7 +673,7 @@ def execute_content_transactions_task(
 
 
 # --- Self-Test Functionality ---
-def _create_self_test_environment(base_dir: Path, logger):
+def _create_self_test_environment(base_dir: Path, logger: Any) -> None:
     logger.info(f"Creating self-test environment in {base_dir}...")
     (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True)
     (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file_mixed_eol.txt").write_text(
@@ -688,12 +705,12 @@ def _create_self_test_environment(base_dir: Path, logger):
     (base_dir / "no_flojoy_here.log").write_text("This is a log file without the target string.") 
     logger.info("Self-test environment created.")
 
-@task
-def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files: bool):
+@task # type: ignore[operator]
+def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_files: bool) -> bool:
     logger.info("--- Verifying Self-Test Results ---")
     passed_checks, failed_checks = 0, 0
 
-    def check(condition, pass_msg, fail_msg):
+    def check(condition: bool, pass_msg: str, fail_msg: str) -> bool:
         nonlocal passed_checks, failed_checks
         if condition: 
             logger.info(f"PASS: {pass_msg}")
@@ -823,9 +840,9 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
     return True
 
 
-@flow(name="Self-Test Find and Replace Flow")
-def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool):
-    logger = get_run_logger()
+@flow(name="Self-Test Find and Replace Flow") # type: ignore[operator]
+def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool) -> None:
+    logger = get_run_logger() # type: ignore[name-defined]
     logger.info("--- Starting Self-Test ---")
     temp_dir = Path(temp_dir_str)
     _create_self_test_environment(temp_dir, logger)
@@ -839,38 +856,39 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     transaction_json_path_test = temp_dir / SELF_TEST_TRANSACTION_FILE_NAME
     validation_json_path_test = temp_dir / SELF_TEST_VALIDATION_FILE_NAME
 
-    collected_tx1 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan1")(
+    collected_tx1 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan1")( # type: ignore[attr-defined]
         root_dir=temp_dir, find_pattern=test_find, replace_pattern=test_replace,
         is_regex=test_is_regex, case_sensitive=test_case_sensitive,
         excluded_dirs=test_excluded_dirs, excluded_files=test_excluded_files,
         file_extensions=test_extensions, process_binary_files=process_binary_for_test, scan_id="SelfTestPrimary"
     )
-    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON1")(
+    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON1")( # type: ignore[attr-defined]
         transactions=collected_tx1, output_dir=temp_dir, filename=transaction_json_path_test.name
     )
-    collected_tx2 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan2")(
+    collected_tx2 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan2")( # type: ignore[attr-defined]
         root_dir=temp_dir, find_pattern=test_find, replace_pattern=test_replace,
         is_regex=test_is_regex, case_sensitive=test_case_sensitive,
         excluded_dirs=test_excluded_dirs, excluded_files=test_excluded_files,
         file_extensions=test_extensions, process_binary_files=process_binary_for_test, scan_id="SelfTestValidation"
     )
-    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON2")(
+    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON2")( # type: ignore[attr-defined]
         transactions=collected_tx2, output_dir=temp_dir, filename=validation_json_path_test.name
     )
-    compare_transaction_files_task(transaction_json_path_test, validation_json_path_test)
+    compare_transaction_files_task(transaction_json_path_test, validation_json_path_test) # type: ignore[attr-defined]
 
     if not transaction_json_path_test.exists(): 
         logger.error("Self-test failed: JSON not created.")
         return
     logger.info(f"Self-test plan: {transaction_json_path_test}. Review for planned changes.")
     
-    rename_res = execute_rename_transactions_task.with_options(name="SelfTest-Renames")(
+    rename_res = execute_rename_transactions_task.with_options(name="SelfTest-Renames")( # type: ignore[attr-defined]
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         validation_json_path=validation_json_path_test
     )
-    path_map = rename_res.get("path_translation_map", {}) if isinstance(rename_res, dict) else {}
+    path_map_result = rename_res.result() if hasattr(rename_res, 'result') else rename_res # Handle Prefect future if any
+    path_map = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
-    execute_content_transactions_task.with_options(name="SelfTest-ContentChanges")(
+    execute_content_transactions_task.with_options(name="SelfTest-ContentChanges")( # type: ignore[attr-defined]
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         path_translation_map=path_map, process_binary_files=process_binary_for_test,
         find_pattern=test_find, replace_pattern=test_replace, 
@@ -879,7 +897,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     
     if not dry_run_for_test: 
-        _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test)
+        _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test) # type: ignore[attr-defined]
 
     logger.info(f"--- Self-Test Completed (in {temp_dir_str}) ---")
     if dry_run_for_test: 
@@ -888,14 +906,14 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
 
 # --- Main Prefect Flow ---
 
-@flow(name="Mass Find and Replace Flow - Phased", log_prints=True)
+@flow(name="Mass Find and Replace Flow - Phased", log_prints=True) # type: ignore[operator]
 def find_and_replace_phased_flow(
     directory: str, find_pattern: str, replace_pattern: str, 
     extensions: Optional[List[str]], exclude_dirs: List[str], exclude_files: List[str],
     is_regex: bool, case_sensitive: bool, dry_run: bool,
     skip_scan: bool, process_binary_files: bool, force_execution: bool 
-    ):
-    logger = get_run_logger() 
+    ) -> None:
+    logger = get_run_logger() # type: ignore[name-defined]
     root_dir = Path(directory).resolve(strict=False) 
     transaction_json_path = root_dir / TRANSACTION_FILE_NAME
     validation_json_path = root_dir / VALIDATION_TRANSACTION_FILE_NAME
@@ -920,27 +938,27 @@ def find_and_replace_phased_flow(
         if not root_dir.is_dir(): 
             logger.error(f"Target directory '{root_dir}' does not exist. Cannot scan.")
             return
-        collected_tx1 = scan_and_collect_occurrences_task.with_options(name="PrimaryScan")(
+        collected_tx1 = scan_and_collect_occurrences_task.with_options(name="PrimaryScan")( # type: ignore[attr-defined]
             root_dir=root_dir, find_pattern=find_pattern, replace_pattern=replace_pattern,
             is_regex=is_regex, case_sensitive=case_sensitive,
             excluded_dirs=exclude_dirs, excluded_files=exclude_files,
             file_extensions=extensions, process_binary_files=process_binary_files, scan_id="Primary"
         )
-        compile_transactions_json_task.with_options(name="CompilePrimaryJSON")(
+        compile_transactions_json_task.with_options(name="CompilePrimaryJSON")( # type: ignore[attr-defined]
             transactions=collected_tx1, output_dir=root_dir, filename=TRANSACTION_FILE_NAME
         )
-        collected_tx2 = scan_and_collect_occurrences_task.with_options(name="ValidationScan")(
+        collected_tx2 = scan_and_collect_occurrences_task.with_options(name="ValidationScan")( # type: ignore[attr-defined]
             root_dir=root_dir, find_pattern=find_pattern, replace_pattern=replace_pattern,
             is_regex=is_regex, case_sensitive=case_sensitive,
             excluded_dirs=exclude_dirs, excluded_files=exclude_files,
             file_extensions=extensions, process_binary_files=process_binary_files, scan_id="Validation"
         )
-        compile_transactions_json_task.with_options(name="CompileValidationJSON")(
+        compile_transactions_json_task.with_options(name="CompileValidationJSON")( # type: ignore[attr-defined]
             transactions=collected_tx2, output_dir=root_dir, filename=VALIDATION_TRANSACTION_FILE_NAME
         )
         
         try:
-            compare_transaction_files_task(transaction_json_path, validation_json_path)
+            compare_transaction_files_task(transaction_json_path, validation_json_path) # type: ignore[attr-defined]
         except Exception as e:
             logger.error(f"Scan determinism check failed: {e}. Halting execution.")
             return 
@@ -955,13 +973,14 @@ def find_and_replace_phased_flow(
         return
         
     logger.info("Starting execution phase.")
-    rename_res = execute_rename_transactions_task(
+    rename_res = execute_rename_transactions_task.with_options(name="ExecuteRenames")( # type: ignore[attr-defined]
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         validation_json_path=validation_json_path 
     )
-    path_map = rename_res.get("path_translation_map", {}) if isinstance(rename_res, dict) else {}
+    path_map_result = rename_res.result() if hasattr(rename_res, 'result') else rename_res 
+    path_map = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
-    execute_content_transactions_task(
+    execute_content_transactions_task.with_options(name="ExecuteContentChanges")( # type: ignore[attr-defined]
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         path_translation_map=path_map, process_binary_files=process_binary_files,
         find_pattern=find_pattern, replace_pattern=replace_pattern, 
@@ -976,7 +995,7 @@ def find_and_replace_phased_flow(
         logger.info("EXECUTION COMPLETED.")
 
 # --- Main Execution ---
-def main():
+def main() -> None:
     script_path_obj = Path(__file__).resolve(strict=False) 
 
     epilog_text = """
@@ -1114,3 +1133,4 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
 
 if __name__ == "__main__":
     main()
+```
