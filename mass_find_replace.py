@@ -20,16 +20,45 @@ import types # For ModuleType
 import sys # For sys.exit
 
 # Prefect integration
+task_real = None
+flow_real = None
+task_dummy = None
+flow_dummy = None
+
 try:
-    from prefect import task, flow
-except ImportError:
-    print("ERROR: Prefect library not found or core components missing. This script requires Prefect to be installed.")
-    print("Please install it by running: pip install prefect")
-    sys.exit(1)
+    from prefect import task as _task_real_import, flow as _flow_real_import
+
+    # Canary test for the @flow decorator
+    @_flow_real_import
+    def _canary_flow_for_init():
+        pass
+    # If the above definition didn't raise an error, assign the real ones
+    task = _task_real_import
+    flow = _flow_real_import
+except (ImportError, TypeError):
+    def _task_dummy_impl(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    def _flow_dummy_impl(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+        return decorator
+    task = _task_dummy_impl
+    flow = _flow_dummy_impl
+
+# Ensure task and flow are always defined, even if try-except had an issue.
+if task is None:
+    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    task = _task_final_fallback
+if flow is None:
+    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+        return decorator
+    flow = _flow_final_fallback
+
 
 # Chardet integration for encoding detection
+CHARDET_AVAILABLE = False
 try:
-    import chardet 
+    import chardet
+    CHARDET_AVAILABLE = True 
 except ImportError:
     print("ERROR: chardet library not found. This script requires chardet for robust encoding detection.")
     print("Please install it by running: pip install chardet")
@@ -614,7 +643,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
     (base_dir / "no_flojoy_here.log").write_text("This is a log file without the target string.") 
 
 @task 
-def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -> bool:
+def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, chardet_was_available: bool) -> bool:
     print("--- Verifying Self-Test Results ---")
     passed_checks, failed_checks = 0, 0
 
@@ -695,15 +724,14 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     else: 
         check(False, "", "Renamed cp1252 file MISSING.")
 
-    # CJK file checks are now conditional on CHARDET_AVAILABLE
     sjis_file_renamed = temp_dir / "sjis_atlasvibe_content.txt"
     if sjis_file_renamed.is_file():
         try:
             content = sjis_file_renamed.read_text(encoding='shift_jis', errors='replace')
-            if CHARDET_AVAILABLE:
+            if chardet_was_available:
                 expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
                 check(content == expected_sjis_text, "Shift-JIS file content correct (chardet available).", f"Shift-JIS file content INCORRECT (chardet available). Got: {content!r}")
-            else: # chardet not available, expect original content
+            else: 
                 expected_sjis_text_no_chardet = "これはflojoyのテストです。\n次の行もFlojoyです。"
                 check(content == expected_sjis_text_no_chardet, "Shift-JIS file content unchanged as expected (chardet unavailable).", f"Shift-JIS file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
         except Exception as e: 
@@ -715,10 +743,10 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     if gb18030_file_renamed.is_file():
         try:
             content = gb18030_file_renamed.read_text(encoding='gb18030', errors='replace')
-            if CHARDET_AVAILABLE:
+            if chardet_was_available:
                 expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
                 check(content == expected_gb18030_text, "GB18030 file content correct (chardet available).", f"GB18030 file content INCORRECT (chardet available). Got: {content!r}")
-            else: # chardet not available, expect original content
+            else: 
                 expected_gb18030_text_no_chardet = "你好 flojoy 世界\n这是 Flojoy 的一个例子"
                 check(content == expected_gb18030_text_no_chardet, "GB18030 file content unchanged as expected (chardet unavailable).", f"GB18030 file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
         except Exception as e: 
@@ -811,7 +839,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     
     if not dry_run_for_test: 
-        _verify_self_test_results_task(temp_dir=temp_dir, process_binary_files=process_binary_for_test) 
+        _verify_self_test_results_task(temp_dir=temp_dir, process_binary_files=process_binary_for_test, chardet_was_available=CHARDET_AVAILABLE) 
 
 
 # --- Main Prefect Flow ---
