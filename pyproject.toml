@@ -27,7 +27,8 @@ dependencies = [
     "python-box>=7.0.0,<8.0.0",
     "plotly>=5.0.0,<6.0.0",
     "prefect>=2.16.8",
-    "chardet>=3.0.0,<6.0.0", 
+    "chardet>=3.0.0,<6.0.0",
+    "griffe>=0.37.0,<0.42.0", 
 ]
 
 [project.optional-dependencies]
