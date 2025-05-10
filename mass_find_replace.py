@@ -236,7 +236,7 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
 
 # --- Phase 1: Scan & Collect Tasks ---
 
-@task # type: ignore[operator]
+@task
 def scan_and_collect_occurrences_task(
     root_dir: Path, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
@@ -328,7 +328,7 @@ def scan_and_collect_occurrences_task(
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
-@task # type: ignore[operator]
+@task
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
     logger: Any = get_run_logger()
     logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
@@ -350,7 +350,7 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
         raise
     return json_file_path
 
-@task # type: ignore[operator]
+@task
 def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
     logger: Any = get_run_logger()
     logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
