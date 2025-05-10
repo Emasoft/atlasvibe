@@ -27,6 +27,7 @@ dependencies = [
     "python-box>=7.0.0,<8.0.0",
     "plotly>=5.0.0,<6.0.0",
     "prefect>=2.16.8",
+    "chardet>=3.0.0,<6.0.0", 
 ]
 
 [project.optional-dependencies]
@@ -44,7 +45,6 @@ dev = [
     "boto3>=1.20.0,<2.0.0",      
     "scipy>=1.7.0,<2.0.0",
     "prefect>=2.0.0,<3.0.0", 
-    "chardet>=3.0.0,<6.0.0"  
 ]
 
 [build-system]
