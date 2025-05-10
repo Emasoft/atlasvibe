@@ -1,7 +1,11 @@
-# Copyright (c) 2024 Emasoft
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 #
-# This software is licensed under the MIT License.
-# Refer to the LICENSE file for more details.
+# Copyright (c) 2025 Emasoft
+# This file is released under the MIT License
+
+from __future__ import annotations
+
 
 import os
 import shutil
