@@ -84,7 +84,7 @@ def get_file_encoding(file_path: Path, logger: Any, sample_size: int = 10240) ->
                 return 'utf-8'
             try:
                 b"test".decode(encoding) 
-                return encoding # Returning Any, but str is expected
+                return encoding 
             except LookupError:
                 logger.warning(f"Encoding '{encoding}' detected by chardet for {file_path} is not recognized by Python. Falling back to default.")
                 return DEFAULT_ENCODING_FALLBACK 
@@ -236,7 +236,7 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
 
 # --- Phase 1: Scan & Collect Tasks ---
 
-@task # type: ignore[operator]
+@task 
 def scan_and_collect_occurrences_task(
     root_dir: Path, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
@@ -328,7 +328,7 @@ def scan_and_collect_occurrences_task(
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
-@task # type: ignore[operator]
+@task 
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
     logger: Any = get_run_logger()
     logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
@@ -350,7 +350,7 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
         raise
     return json_file_path
 
-@task # type: ignore[operator]
+@task 
 def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
     logger: Any = get_run_logger()
     logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
@@ -475,7 +475,7 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
             logger.error(f"Failed to restore {json_file_path} from backup: {restore_e}. JSON file might be corrupt.")
 
 
-@task # type: ignore[operator]
+@task 
 def execute_rename_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     validation_json_path: Optional[Path] = None 
@@ -563,7 +563,7 @@ def execute_rename_transactions_task(
     return {"completed": completed_count, "failed": failed_count, "skipped": skipped_count, "path_translation_map": path_translation_map}
 
 
-@task # type: ignore[operator]
+@task 
 def execute_content_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     path_translation_map: Dict[str, str], process_binary_files: bool,
