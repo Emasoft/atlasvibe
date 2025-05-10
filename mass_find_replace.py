@@ -19,15 +19,39 @@ from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
 import types # For ModuleType
 
 # Prefect integration
+task_real = None
+flow_real = None
+task_dummy = None
+flow_dummy = None
+
 try:
-    from prefect import task, flow
-except ImportError:
-    # Define dummy decorators if prefect is not installed
-    def task(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    def flow(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
-            return fn
+    from prefect import task as _task_real_import, flow as _flow_real_import
+
+    # Canary test for the @flow decorator
+    @_flow_real_import
+    def _canary_flow_for_init():
+        pass
+    # If the above definition didn't raise an error, assign the real ones
+    task = _task_real_import
+    flow = _flow_real_import
+except (ImportError, TypeError):
+    def _task_dummy_impl(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    def _flow_dummy_impl(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
         return decorator
+    task = _task_dummy_impl
+    flow = _flow_dummy_impl
+
+# Ensure task and flow are always defined, even if try-except had an issue.
+if task is None:
+    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    task = _task_final_fallback
+if flow is None:
+    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+        return decorator
+    flow = _flow_final_fallback
+
 
 # Chardet integration for encoding detection
 try:
@@ -609,13 +633,16 @@ def _create_self_test_environment(base_dir: Path) -> None:
 
 @task 
 def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -> bool:
+    print("--- Verifying Self-Test Results ---")
     passed_checks, failed_checks = 0, 0
 
     def check(condition: bool, pass_msg: str, fail_msg: str) -> bool:
         nonlocal passed_checks, failed_checks
         if condition: 
+            print(f"PASS: {pass_msg}")
             passed_checks += 1
         else: 
+            print(f"FAIL: {fail_msg}")
             failed_checks += 1
         return condition
 
@@ -732,6 +759,7 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     if log_file_test.is_file():
         check("This is a log file without the target string." == log_file_test.read_text(), ".log file content unchanged.", ".log file content CHANGED.")
 
+    print(f"--- Self-Test Verification Summary: {passed_checks} PASSED, {failed_checks} FAILED ---")
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s).")
     return True
@@ -778,7 +806,9 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         validation_json_path=validation_json_path_test
     )
-    path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') else rename_res 
+    # Prefect tasks might return a future-like object if Prefect is active.
+    # For no-op decorators, it's the direct result.
+    path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') and callable(rename_res.result) else rename_res
     path_map: Dict[str, str] = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
     execute_content_transactions_task( 
@@ -853,7 +883,7 @@ def find_and_replace_phased_flow(
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         validation_json_path=validation_json_path 
     )
-    path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') else rename_res 
+    path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') and callable(rename_res.result) else rename_res
     path_map: Dict[str, str] = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
     execute_content_transactions_task( 
