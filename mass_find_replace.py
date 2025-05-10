@@ -739,7 +739,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger, process_binary_files:
         bin_content = bin_file.read_bytes()
         original_bin_text_parts = (b"prefix_flojoy_suffix", b"flojoy_data")
         replaced_bin_text_parts = (b"prefix_atlasvibe_suffix", b"atlasvibe_data")
-        binary_core = b"\x00\x01\x02"; 
+        binary_core = b"\x00\x01\x02"
         binary_end = b"\x03\x04"
         expected_after_replace = replaced_bin_text_parts[0] + binary_core + replaced_bin_text_parts[1] + binary_end
         expected_if_untouched = original_bin_text_parts[0] + binary_core + original_bin_text_parts[1] + binary_end
