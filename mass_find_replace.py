@@ -310,15 +310,17 @@ def scan_and_collect_occurrences_task(
         current_encoding_to_try = original_encoding or DEFAULT_ENCODING_FALLBACK 
 
         try:
-            file_content_str = item_path.read_text(encoding=current_encoding_to_try, errors='surrogateescape')
+            # Read as bytes first to allow decoding with surrogateescape
+            file_content_bytes = item_path.read_bytes()
+            file_content_str = file_content_bytes.decode(current_encoding_to_try, errors='surrogateescape')
             
             if _text_contains_pattern(file_content_str, find_pattern, is_regex, case_sensitive):
                 transactions.append({
                     "id": str(uuid.uuid4()), "OCCURRENCE_TYPE": "STRING_IN_FILE", 
                     "PATH": relative_path_str, "NEW_PATH_COMPONENT": None,
                     "LINE_NUMBER": 0, 
-                    "ORIGINAL_LINE_CONTENT": None, 
-                    "PROPOSED_LINE_CONTENT": None, 
+                    "ORIGINAL_LINE_CONTENT": None, # Kept for schema, but not used for whole-file
+                    "PROPOSED_LINE_CONTENT": None, # Kept for schema, but not used for whole-file
                     "ORIGINAL_ENCODING": original_encoding, 
                     "FIND_PATTERN": find_pattern, "REPLACE_PATTERN": replace_pattern,
                     "IS_REGEX": is_regex, "CASE_SENSITIVE": case_sensitive, "STATUS": STATUS_PENDING
@@ -651,13 +653,16 @@ def execute_content_transactions_task(
             continue
 
         try:
-            original_full_content = current_abs_path.read_text(encoding=current_encoding_to_try, errors='surrogateescape')
-            modified_full_content = perform_text_replacement(
-                original_full_content, find_pattern, replace_pattern, is_regex, case_sensitive
+            original_full_bytes = current_abs_path.read_bytes()
+            original_full_content_str = original_full_bytes.decode(current_encoding_to_try, errors='surrogateescape')
+            
+            modified_full_content_str = perform_text_replacement(
+                original_full_content_str, find_pattern, replace_pattern, is_regex, case_sensitive
             )
 
-            if modified_full_content != original_full_content:
-                current_abs_path.write_text(modified_full_content, encoding=current_encoding_to_try, errors='surrogateescape', newline=None) 
+            if modified_full_content_str != original_full_content_str:
+                modified_bytes = modified_full_content_str.encode(current_encoding_to_try, errors='surrogateescape')
+                current_abs_path.write_bytes(modified_bytes)
                 logger.info(f"Modified content of {current_abs_path} (encoding: {current_encoding_to_try}) for {len(tx_ids_for_file)} occurrences.")
                 for tx_id in tx_ids_for_file: 
                     _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED)
@@ -746,7 +751,9 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if deep_file.is_file():
         raw_content_bytes = deep_file.read_bytes() 
         expected_text_content = "atlasvibe line 1\r\nATLASVIBE line 2\nAtlasvibe line 3\r\nAtlasVibe line 4\natlasVibe line 5\nmyatlasvibe_project details"
-        expected_raw_bytes = expected_text_content.encode('utf-8') 
+        # The expected bytes must match the original file's mixed EOLs after replacement
+        # This means encoding the string with its mixed EOLs directly.
+        expected_raw_bytes = expected_text_content.encode('utf-8') # UTF-8 is the default for this test file
         check(raw_content_bytes == expected_raw_bytes, "Mixed EOL file content and EOLs preserved.", 
               f"Mixed EOL file content/EOLs NOT preserved. Expected: {expected_raw_bytes!r}, Got: {raw_content_bytes!r}")
 
@@ -796,7 +803,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if sjis_file.is_file():
         try:
             content = sjis_file.read_text(encoding='shift_jis', errors='replace')
-            expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
+            expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。" # Corrected "Flojoy" to "Atlasvibe"
             check(content == expected_sjis_text, "Shift-JIS file content correct and encoding preserved.", f"Shift-JIS file content/encoding INCORRECT. Got: {content!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify Shift-JIS file: {e}")
@@ -807,7 +814,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if gb18030_file.is_file():
         try:
             content = gb18030_file.read_text(encoding='gb18030', errors='replace')
-            expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
+            expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子" # Corrected "Flojoy" to "Atlasvibe"
             check(content == expected_gb18030_text, "GB18030 file content correct and encoding preserved.", f"GB18030 file content/encoding INCORRECT. Got: {content!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify GB18030 file: {e}")
