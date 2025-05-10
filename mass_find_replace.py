@@ -19,8 +19,33 @@ from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
 import types # For ModuleType
 
 # Prefect integration
-from prefect import task, flow, get_run_logger 
-from prefect.utilities.logging import get_logger as get_prefect_logger_outside_flow
+try:
+    from prefect import task, flow, get_run_logger
+    import logging # Standard library logging
+    
+    # Define get_prefect_logger_outside_flow using standard logging,
+    # but namespaced in a way that's common for Prefect utility logging.
+    def get_prefect_logger_outside_flow(name: Optional[str] = None) -> Any:
+        logger_name = "prefect.mass_find_replace" # Default namespace
+        if name:
+            logger_name = f"prefect.{name}" # Allow specific sub-namespacing
+        return logging.getLogger(logger_name)
+
+except ImportError:
+    print("Prefect library not found or core components missing. Please install it to run this script: pip install prefect")
+    # Fallback logger if prefect is not available, for basic script operation outside a flow
+    import logging as std_logging
+    def get_prefect_logger_outside_flow(name: Optional[str] = None) -> Any:
+        return std_logging.getLogger(name or "mass_find_replace_fallback")
+    # Define dummy decorators if prefect is not installed, so script can be parsed
+    def task(fn: Callable[..., Any]) -> Callable[..., Any]: return fn 
+    def flow(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]: 
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
+            return fn
+        return decorator
+    # Provide a dummy get_run_logger if prefect is not available
+    def get_run_logger() -> Any: 
+        return get_prefect_logger_outside_flow("mass_find_replace_fallback_run_logger")
 
 
 # Chardet integration for encoding detection
