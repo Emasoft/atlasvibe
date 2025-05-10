@@ -854,7 +854,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     return True
 
 
-@flow(name="Self-Test Find and Replace Flow") 
+@flow(name="Self-Test Find and Replace Flow", log_prints=True) 
 def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool) -> None:
     logger: Any = get_run_logger()
     logger.info("--- Starting Self-Test ---")
