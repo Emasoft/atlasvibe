@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
 # Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
 # Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
 #
