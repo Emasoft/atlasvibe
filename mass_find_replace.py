@@ -705,7 +705,7 @@ def _create_self_test_environment(base_dir: Path, logger: Any) -> None:
     (base_dir / "no_flojoy_here.log").write_text("This is a log file without the target string.") 
     logger.info("Self-test environment created.")
 
-@task # type: ignore[operator]
+@task 
 def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_files: bool) -> bool:
     logger.info("--- Verifying Self-Test Results ---")
     passed_checks, failed_checks = 0, 0
@@ -840,7 +840,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     return True
 
 
-@flow(name="Self-Test Find and Replace Flow") # type: ignore[operator]
+@flow(name="Self-Test Find and Replace Flow") 
 def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool) -> None:
     logger: Any = get_run_logger()
     logger.info("--- Starting Self-Test ---")
@@ -906,7 +906,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
 
 # --- Main Prefect Flow ---
 
-@flow(name="Mass Find and Replace Flow - Phased", log_prints=True) # type: ignore[operator]
+@flow(name="Mass Find and Replace Flow - Phased", log_prints=True) 
 def find_and_replace_phased_flow(
     directory: str, find_pattern: str, replace_pattern: str, 
     extensions: Optional[List[str]], exclude_dirs: List[str], exclude_files: List[str],
