@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
 # Copyright (c) 2024 Emasoft
 #
 # This software is licensed under the MIT License.
@@ -1133,4 +1136,3 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
 
 if __name__ == "__main__":
     main()
-```
