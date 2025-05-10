@@ -19,81 +19,20 @@ from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
 import types # For ModuleType
 
 # Prefect integration
-PREFECT_AVAILABLE = False
-task = None
-flow = None
-get_run_logger = None
-get_prefect_logger_outside_flow = None
-
 try:
-    from prefect import task as _task_real, flow as _flow_real, get_run_logger as _get_run_logger_real
-    import logging as _logging_main_prefect # Standard library logging for prefect-enabled mode
-    
-    def _get_prefect_logger_outside_flow_real(name: Optional[str] = None) -> Any:
-        logger_name = "prefect.mass_find_replace"
-        if name:
-            logger_name = f"prefect.{name}"
-        return _logging_main_prefect.getLogger(logger_name)
-
-    # Attempt to use the flow decorator to see if it triggers the Pydantic error
-    # This is a canary test.
-    @_flow_real(name="PrefectInitTestFlowInternal", log_prints=True)
-    def _prefect_init_test_function():
-        pass
-    _prefect_init_test_function() # Call to ensure it fully initializes if lazy
-
-    task = _task_real
-    flow = _flow_real
-    get_run_logger = _get_run_logger_real
-    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_real
-    PREFECT_AVAILABLE = True
-    print("Prefect successfully imported and initialized.")
-
-except (ImportError, TypeError) as e:
-    print(f"Prefect not available or initialization error ({type(e).__name__}: {e}). Using fallback logging and no-op decorators.")
-    import logging as _logging_fallback # Standard library logging for fallback
-
-    def _get_prefect_logger_outside_flow_fallback(name: Optional[str] = None) -> Any:
-        return _logging_fallback.getLogger(name or "mass_find_replace_fallback_outside")
-
-    def _task_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    def _flow_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    from prefect import task, flow
+except ImportError:
+    # Define dummy decorators if prefect is not installed
+    def task(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    def flow(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
             return fn
         return decorator
-    def _get_run_logger_fallback() -> Any:
-        return _get_prefect_logger_outside_flow_fallback("mass_find_replace_fallback_run_logger")
-
-    task = _task_fallback
-    flow = _flow_fallback
-    get_run_logger = _get_run_logger_fallback
-    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_fallback
-    PREFECT_AVAILABLE = False
-
-# Final safety net: Ensure callables are defined if all above failed unexpectedly
-if task is None:
-    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    task = _task_final_fallback
-if flow is None:
-    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-        return decorator
-    flow = _flow_final_fallback
-if get_run_logger is None:
-    import logging as _logging_ultra_fallback_run
-    def _get_run_logger_final_fallback() -> Any: return _logging_ultra_fallback_run.getLogger("mass_find_replace_ultra_fallback_run")
-    get_run_logger = _get_run_logger_final_fallback
-if get_prefect_logger_outside_flow is None:
-    import logging as _logging_ultra_fallback_outside
-    def _get_prefect_logger_outside_flow_final_fallback(name: Optional[str] = None) -> Any: return _logging_ultra_fallback_outside.getLogger(name or "mass_find_replace_ultra_fallback_outside")
-    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_final_fallback
-
 
 # Chardet integration for encoding detection
 try:
     import chardet 
 except ImportError:
-    print("chardet library not found. Please install it for robust encoding detection: pip install chardet")
     chardet: Optional[types.ModuleType] = None
 
 
@@ -112,10 +51,9 @@ DEFAULT_ENCODING_FALLBACK = 'utf-8'
 
 # --- Core Helper Functions (Shared Logic) ---
 
-def get_file_encoding(file_path: Path, logger: Any, sample_size: int = 10240) -> Optional[str]:
+def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
     """Detects file encoding using chardet, with fallback."""
     if not chardet:
-        logger.debug(f"chardet library not available. Using default fallback encoding '{DEFAULT_ENCODING_FALLBACK}' for {file_path}.")
         return DEFAULT_ENCODING_FALLBACK
 
     try:
@@ -129,7 +67,6 @@ def get_file_encoding(file_path: Path, logger: Any, sample_size: int = 10240) ->
         confidence: float = detected.get('confidence', 0.0)
 
         if encoding and confidence and confidence > 0.7: 
-            logger.debug(f"Detected encoding for {file_path}: {encoding} (confidence: {confidence:.2f})")
             norm_encoding = encoding.lower()
             if norm_encoding == 'ascii': 
                 return 'ascii'
@@ -139,22 +76,17 @@ def get_file_encoding(file_path: Path, logger: Any, sample_size: int = 10240) ->
                 b"test".decode(encoding) 
                 return encoding 
             except LookupError:
-                logger.warning(f"Encoding '{encoding}' detected by chardet for {file_path} is not recognized by Python. Falling back to default.")
                 return DEFAULT_ENCODING_FALLBACK 
         else:
-            logger.warning(f"Low confidence ({confidence:.2f}) or no encoding detected for {file_path} (detected: {encoding}). Falling back to UTF-8 attempt.")
             try:
                 raw_data.decode('utf-8') 
-                logger.debug(f"Successfully decoded sample of {file_path} with UTF-8 as fallback.")
                 return 'utf-8'
             except UnicodeDecodeError:
-                logger.warning(f"Could not decode sample of {file_path} with UTF-8. Using system default (None) as last resort.")
                 return None 
-    except Exception as e:
-        logger.error(f"Error detecting encoding for {file_path}: {e}. Using system default (None).")
+    except Exception:
         return None 
 
-def is_likely_binary_file(file_path: Path, logger: Any, sample_size: int = 1024) -> bool:
+def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
     """Heuristic to check if a file is likely binary."""
     try:
         with open(file_path, 'rb') as f:
@@ -170,11 +102,7 @@ def is_likely_binary_file(file_path: Path, logger: Any, sample_size: int = 1024)
         if len(sample) > 0 and (non_text_count / len(sample)) > 0.3: 
             return True
         return False
-    except Exception as e:
-        if logger: 
-            logger.error(f"Could not read sample from {file_path} for binary check: {e}")
-        else: 
-            print(f"Error: Could not read sample from {file_path} for binary check: {e}")
+    except Exception:
         return False 
 
 def _get_case_preserved_replacement(matched_text: str, base_find: str, base_replace: str) -> str:
@@ -190,7 +118,6 @@ def _get_case_preserved_replacement(matched_text: str, base_find: str, base_repl
             return 'AtlasVibe' 
         if matched_text == 'floJoy': 
             return 'atlasVibe' 
-        # Removed logger call that was here for debugging unmatched variants
         return base_replace.lower() 
     
     if matched_text.islower(): 
@@ -288,8 +215,6 @@ def scan_and_collect_occurrences_task(
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
     process_binary_files: bool, scan_id: str 
 ) -> List[Dict[str, Any]]:
-    logger: Any = get_run_logger()
-    logger.info(f"Phase 1 (Scan ID: {scan_id}): Scanning project for occurrences...")
     transactions: List[Dict[str, Any]] = []
     abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
 
@@ -301,17 +226,14 @@ def scan_and_collect_occurrences_task(
         try:
             relative_path_str = str(item_path.relative_to(root_dir))
         except ValueError: 
-            logger.warning(f"Could not get relative path for {item_path} to {root_dir}. Skipping name scan.")
             continue
         original_name = item_path.name
         
         if item_path.is_file() and item_path.resolve(strict=False) in abs_excluded_files:
-            logger.debug(f"Skipping excluded file for name scan: {relative_path_str}")
             continue
 
         if item_path.is_file() and file_extensions:
             if not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]:
-                logger.debug(f"Skipping file (name scan) due to extension filter: {relative_path_str}")
                 continue
         
         if _text_contains_pattern(original_name, find_pattern, is_regex, case_sensitive):
@@ -335,25 +257,20 @@ def scan_and_collect_occurrences_task(
         try:
             relative_path_str = str(item_path.relative_to(root_dir))
         except ValueError:
-            logger.warning(f"Could not get relative path for {item_path} to {root_dir}. Skipping content scan.")
             continue
 
         if item_path.resolve(strict=False) in abs_excluded_files:
-            logger.debug(f"Skipping excluded file for content scan: {relative_path_str}")
             continue
         if file_extensions and (not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]):
-            logger.debug(f"Skipping file (content scan) due to extension filter: {relative_path_str}")
             continue
         
-        if not process_binary_files and is_likely_binary_file(item_path, logger):
-            logger.info(f"Skipping likely binary file for content scan: {relative_path_str}")
+        if not process_binary_files and is_likely_binary_file(item_path):
             continue
 
-        original_encoding = get_file_encoding(item_path, logger)
+        original_encoding = get_file_encoding(item_path)
         current_encoding_to_try = original_encoding or DEFAULT_ENCODING_FALLBACK 
 
         try:
-            # Read as bytes first to allow decoding with surrogateescape
             file_content_bytes = item_path.read_bytes()
             file_content_str = file_content_bytes.decode(current_encoding_to_try, errors='surrogateescape')
             
@@ -362,30 +279,24 @@ def scan_and_collect_occurrences_task(
                     "id": str(uuid.uuid4()), "OCCURRENCE_TYPE": "STRING_IN_FILE", 
                     "PATH": relative_path_str, "NEW_PATH_COMPONENT": None,
                     "LINE_NUMBER": 0, 
-                    "ORIGINAL_LINE_CONTENT": None, # Kept for schema, but not used for whole-file
-                    "PROPOSED_LINE_CONTENT": None, # Kept for schema, but not used for whole-file
+                    "ORIGINAL_LINE_CONTENT": None, 
+                    "PROPOSED_LINE_CONTENT": None, 
                     "ORIGINAL_ENCODING": original_encoding, 
                     "FIND_PATTERN": find_pattern, "REPLACE_PATTERN": replace_pattern,
                     "IS_REGEX": is_regex, "CASE_SENSITIVE": case_sensitive, "STATUS": STATUS_PENDING
                 })
-        except Exception as e: 
-            logger.error(f"Error scanning content of {relative_path_str} (tried encoding: {current_encoding_to_try}): {e}")
+        except Exception: 
+            pass # Silently skip files that cannot be processed
             
-    logger.info(f"Phase 1 (Scan ID: {scan_id}): Scan complete. Found {len(transactions)} potential transactions.")
     return transactions
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
 @task
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
-    logger: Any = get_run_logger()
-    logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
-    
     def sort_key(t: Dict[str, Any]) -> Tuple[int, int, str, int]: 
         path_depth = t["PATH"].count(os.sep)
         type_order = {"FOLDERNAME": 0, "FILENAME": 1, "STRING_IN_FILE": 2}
-        # For FOLDERNAME and FILENAME, sort by path_depth (shallowest first)
-        # For STRING_IN_FILE, sort by path_depth (shallowest first), then line number
         return (type_order[t["OCCURRENCE_TYPE"]], path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
 
     transactions.sort(key=sort_key)
@@ -394,18 +305,13 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
     try:
         with open(json_file_path, 'w', encoding='utf-8') as f:
             json.dump(transactions, f, indent=4)
-        logger.info(f"Phase 2: Successfully compiled {len(transactions)} transactions to {json_file_path}")
     except Exception as e:
-        logger.error(f"Phase 2: Failed to write transactions JSON to {json_file_path}: {e}")
         raise
     return json_file_path
 
 @task
 def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
-    logger: Any = get_run_logger()
-    logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
     if not file1_path.exists() or not file2_path.exists():
-        logger.error("One or both transaction files do not exist for comparison.")
         raise FileNotFoundError("Transaction file(s) missing for comparison.")
 
     try:
@@ -421,33 +327,16 @@ def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
         comp_data2 = comparable_tx(data2)
 
         if comp_data1 == comp_data2:
-            logger.info("Transaction files are identical (excluding IDs and status). Scan is deterministic.")
             return True
         else:
-            logger.error("Transaction files differ! Scan may not be deterministic or there's an issue.")
-            diff_count = 0
-            if len(comp_data1) != len(comp_data2):
-                logger.error(f"Different number of transactions: {len(comp_data1)} vs {len(comp_data2)}")
-                diff_count = abs(len(comp_data1) - len(comp_data2))
-            else:
-                for i, (tx1, tx2) in enumerate(zip(comp_data1, comp_data2)):
-                    if tx1 != tx2:
-                        logger.warning(f"Difference at transaction index {i}:")
-                        logger.warning(f"File1 TX: {tx1}")
-                        logger.warning(f"File2 TX: {tx2}")
-                        diff_count +=1
-                        if diff_count > 5 : 
-                            logger.warning("More differences exist...")
-                            break
             raise ValueError("Scan determinism check failed: Transaction plans differ.")
             
     except Exception as e:
-        logger.error(f"Error comparing transaction files: {e}")
         raise
 
 # --- Phase 3: Execute Transactions Tasks ---
 
-def _load_transactions_with_fallback(json_file_path: Path, logger: Any) -> Optional[List[Dict[str, Any]]]:
+def _load_transactions_with_fallback(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
     """Loads transactions from primary JSON, falls back to .bak on error."""
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     try:
@@ -455,44 +344,35 @@ def _load_transactions_with_fallback(json_file_path: Path, logger: Any) -> Optio
             with open(json_file_path, 'r', encoding='utf-8') as f:
                 return cast(List[Dict[str, Any]], json.load(f))
         elif backup_path.exists():
-            logger.warning(f"Primary transaction file {json_file_path} not found. Attempting to load from backup {backup_path}.")
             with open(backup_path, 'r', encoding='utf-8') as f:
                 return cast(List[Dict[str, Any]], json.load(f))
         else:
-            logger.error(f"Neither primary transaction file nor backup found for {json_file_path.name}.")
             return None
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON from {json_file_path}: {e}")
+    except json.JSONDecodeError:
         if backup_path.exists():
-            logger.warning(f"Attempting to load from backup {backup_path} due to primary file corruption.")
             try:
                 with open(backup_path, 'r', encoding='utf-8') as f:
                     return cast(List[Dict[str, Any]], json.load(f))
-            except Exception as backup_e:
-                logger.error(f"Error loading from backup file {backup_path} as well: {backup_e}")
+            except Exception:
+                pass
         return None
-    except Exception as e:
-        logger.error(f"Failed to load transaction file {json_file_path}: {e}")
+    except Exception:
         return None
 
 
 def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str, new_status: str, error_message: Optional[str] = None) -> None:
     """Updates status, creating a backup first."""
-    logger: Any = get_run_logger()
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     
     if not json_file_path.exists():
-        logger.error(f"Cannot update status: Primary transaction file {json_file_path} does not exist.")
         if backup_path.exists():
-            logger.warning(f"Primary file missing, but backup {backup_path} exists. This indicates a previous failure.")
+            pass # Primary file missing, but backup exists.
         return
 
     try:
         if json_file_path.exists(): 
             shutil.copy2(json_file_path, backup_path) 
-            logger.debug(f"Created backup: {backup_path}")
-    except Exception as e:
-        logger.error(f"Failed to create backup of {json_file_path}: {e}. Aborting status update for safety.")
+    except Exception:
         return 
 
     try:
@@ -512,17 +392,13 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
                 f.seek(0)
                 json.dump(data, f, indent=4)
                 f.truncate()
-                logger.debug(f"Updated status for tx_id {transaction_id} to {new_status} in {json_file_path.name}")
             else:
-                logger.warning(f"Transaction ID {transaction_id} not found in {json_file_path.name} for status update.")
-    except Exception as e:
-        logger.error(f"Critical error updating transaction status in {json_file_path} for ID {transaction_id}: {e}")
-        logger.warning(f"Attempting to restore {json_file_path} from backup {backup_path} due to update failure.")
+                pass # Transaction ID not found
+    except Exception:
         try:
             shutil.copy2(backup_path, json_file_path)
-            logger.info(f"Restored {json_file_path} from backup.")
-        except Exception as restore_e:
-            logger.error(f"Failed to restore {json_file_path} from backup: {restore_e}. JSON file might be corrupt.")
+        except Exception:
+            pass # Failed to restore
 
 
 @task 
@@ -530,10 +406,7 @@ def execute_rename_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     validation_json_path: Optional[Path] = None 
 ) -> Dict[str, Any]:
-    logger: Any = get_run_logger()
-    logger.info("Phase 3a: Executing RENAME transactions...")
-    
-    transactions = _load_transactions_with_fallback(json_file_path, logger)
+    transactions = _load_transactions_with_fallback(json_file_path)
     if transactions is None:
         return {"completed": 0, "failed": 0, "skipped": 0, "path_translation_map": {}}
 
@@ -543,8 +416,8 @@ def execute_rename_transactions_task(
             with open(validation_json_path, 'r', encoding='utf-8') as vf: 
                 validation_data = json.load(vf)
             validation_tx_map_by_id = {tx_val['id']: tx_val for tx_val in validation_data}
-        except Exception as e: 
-            logger.warning(f"Could not load validation transaction file {validation_json_path}: {e}")
+        except Exception: 
+            pass
 
     rename_txs = [t for t in transactions if t["OCCURRENCE_TYPE"] in ["FOLDERNAME", "FILENAME"] and t["STATUS"] == STATUS_PENDING]
     completed_count, failed_count, skipped_count = 0, 0, 0
@@ -554,18 +427,15 @@ def execute_rename_transactions_task(
         tx_id = tx_from_primary.get("id")
         tx = tx_from_primary
         if not all(k in tx_from_primary for k in ["PATH", "NEW_PATH_COMPONENT"]) and tx_id and validation_tx_map_by_id:
-            logger.warning(f"Transaction {tx_id} from primary JSON seems incomplete. Trying to use validation data.")
             pristine_tx = validation_tx_map_by_id.get(tx_id)
             if pristine_tx and all(k in pristine_tx for k in ["PATH", "NEW_PATH_COMPONENT"]): 
                 tx = pristine_tx
             else:
-                logger.error(f"Cannot process transaction {tx_id}: incomplete in primary and not found/incomplete in validation JSON.")
                 if tx_id: 
                     _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
                 failed_count += 1
                 continue
         elif not all(k in tx_from_primary for k in ["PATH", "NEW_PATH_COMPONENT"]):
-             logger.error(f"Cannot process transaction (ID: {tx_id if tx_id else 'Unknown'}): critical keys missing.")
              if tx_id: 
                  _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
              failed_count += 1
@@ -575,7 +445,6 @@ def execute_rename_transactions_task(
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
         
         if not current_abs_path.exists():
-            logger.warning(f"Skipping rename: Path {current_abs_path} (derived from {original_relative_path_str}) does not exist.")
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_SKIPPED, "Original path not found")
             skipped_count += 1
             continue
@@ -584,14 +453,12 @@ def execute_rename_transactions_task(
         new_abs_path = current_abs_path.with_name(proposed_new_name_component)
 
         if dry_run:
-            logger.info(f"[DRY RUN] Would rename: {current_abs_path} -> {new_abs_path}")
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_COMPLETED + " (DRY_RUN)")
             completed_count += 1
             continue
 
         if new_abs_path.exists() and current_abs_path.resolve(strict=False) != new_abs_path.resolve(strict=False):
-            logger.warning(f"Target path '{new_abs_path}' already exists. Skipping rename of '{current_abs_path}'.")
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_SKIPPED, "Target path already exists")
             skipped_count += 1
             continue
@@ -600,16 +467,13 @@ def execute_rename_transactions_task(
             if not new_abs_path.parent.exists(): 
                 os.makedirs(new_abs_path.parent, exist_ok=True)
             os.rename(current_abs_path, new_abs_path)
-            logger.info(f"Renamed: {current_abs_path} -> {new_abs_path}")
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_COMPLETED)
             completed_count += 1
         except Exception as e:
-            logger.error(f"Error renaming {current_abs_path} to {new_abs_path}: {e}")
             _update_transaction_status_in_json(json_file_path, tx["id"], STATUS_FAILED, str(e))
             failed_count += 1
 
-    logger.info(f"Phase 3a: Rename execution. Completed: {completed_count}, Failed: {failed_count}, Skipped: {skipped_count}")
     return {"completed": completed_count, "failed": failed_count, "skipped": skipped_count, "path_translation_map": path_translation_map}
 
 
@@ -620,10 +484,7 @@ def execute_content_transactions_task(
     find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     validation_json_path: Optional[Path] = None 
 ) -> Dict[str, int]:
-    logger: Any = get_run_logger()
-    logger.info("Phase 3b: Executing STRING_IN_FILE transactions (whole file approach)...")
-
-    transactions = _load_transactions_with_fallback(json_file_path, logger)
+    transactions = _load_transactions_with_fallback(json_file_path)
     if transactions is None:
         return {"completed": 0, "failed": 0, "skipped": 0}
 
@@ -633,8 +494,8 @@ def execute_content_transactions_task(
             with open(validation_json_path, 'r', encoding='utf-8') as vf: 
                 validation_data = json.load(vf)
             validation_tx_map_by_id = {tx_val['id']: tx_val for tx_val in validation_data}
-        except Exception as e: 
-            logger.warning(f"Could not load validation transaction file {validation_json_path} for content task: {e}")
+        except Exception: 
+            pass
             
     file_to_process_details: Dict[str, Dict[str, Any]] = {} 
 
@@ -643,17 +504,14 @@ def execute_content_transactions_task(
             tx_id = tx_from_primary.get("id")
             tx_data_to_use = tx_from_primary
             if not all(k in tx_from_primary for k in ["PATH"]) and tx_id and validation_tx_map_by_id: 
-                logger.warning(f"Content transaction {tx_id} from primary JSON seems incomplete. Using validation data.")
                 pristine_tx = validation_tx_map_by_id.get(tx_id)
                 if pristine_tx and all(k in pristine_tx for k in ["PATH"]): 
                     tx_data_to_use = pristine_tx
                 else:
-                    logger.error(f"Cannot process content transaction {tx_id}: incomplete in primary and validation JSON.")
                     if tx_id: 
                         _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
                     continue 
             elif not all(k in tx_from_primary for k in ["PATH"]):
-                 logger.error(f"Cannot process content transaction (ID: {tx_id if tx_id else 'Unknown'}): critical keys missing.")
                  if tx_id: 
                      _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, "Transaction data corrupted/incomplete")
                  continue
@@ -672,14 +530,12 @@ def execute_content_transactions_task(
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
 
         if not current_abs_path.is_file(): 
-            logger.warning(f"Skipping content change for {len(tx_ids_for_file)} occurrences: Path {current_abs_path} (derived from {original_relative_path_str}) not a file or not found.")
             for tx_id in tx_ids_for_file: 
                 _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "File path not found or not a file after renames")
             skipped_count += len(tx_ids_for_file)
             continue
 
-        if not process_binary_files and is_likely_binary_file(current_abs_path, logger):
-            logger.info(f"Skipping likely binary file for content change: {current_abs_path}")
+        if not process_binary_files and is_likely_binary_file(current_abs_path):
             for tx_id in tx_ids_for_file: 
                 _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "Skipped binary file")
             skipped_count += len(tx_ids_for_file)
@@ -689,7 +545,6 @@ def execute_content_transactions_task(
         current_encoding_to_try = original_encoding or DEFAULT_ENCODING_FALLBACK
 
         if dry_run:
-            logger.info(f"[DRY RUN] Would process content of {current_abs_path} for {len(tx_ids_for_file)} occurrences.")
             for tx_id in tx_ids_for_file: 
                 _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED + " (DRY_RUN)")
             completed_count += len(tx_ids_for_file)
@@ -706,28 +561,23 @@ def execute_content_transactions_task(
             if modified_full_content_str != original_full_content_str:
                 modified_bytes = modified_full_content_str.encode(current_encoding_to_try, errors='surrogateescape')
                 current_abs_path.write_bytes(modified_bytes)
-                logger.info(f"Modified content of {current_abs_path} (encoding: {current_encoding_to_try}) for {len(tx_ids_for_file)} occurrences.")
                 for tx_id in tx_ids_for_file: 
                     _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED)
                 completed_count += len(tx_ids_for_file)
             else: 
-                logger.info(f"Content of {current_abs_path} did not change after replacement. Marking {len(tx_ids_for_file)} transactions as skipped.")
                 for tx_id in tx_ids_for_file: 
                     _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, "No change to file content")
                 skipped_count += len(tx_ids_for_file)
         except Exception as e: 
-            logger.error(f"Error modifying content of {current_abs_path} (encoding: {current_encoding_to_try}): {e}")
             for tx_id in tx_ids_for_file: 
                 _update_transaction_status_in_json(json_file_path, tx_id, STATUS_FAILED, str(e))
             failed_count += len(tx_ids_for_file)
             
-    logger.info(f"Phase 3b: Content execution. Completed: {completed_count}, Failed: {failed_count}, Skipped: {skipped_count}")
     return {"completed": completed_count, "failed": failed_count, "skipped": skipped_count}
 
 
 # --- Self-Test Functionality ---
-def _create_self_test_environment(base_dir: Path, logger: Any) -> None:
-    logger.info(f"Creating self-test environment in {base_dir}...")
+def _create_self_test_environment(base_dir: Path) -> None:
     (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True)
     (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file_mixed_eol.txt").write_text(
         "flojoy line 1\r\nFLOJOY line 2\nFlojoy line 3\r\nFloJoy line 4\nfloJoy line 5\nmyflojoy_project details"
@@ -752,24 +602,20 @@ def _create_self_test_environment(base_dir: Path, logger: Any) -> None:
         invalid_utf8_bytes = b"ValidStart_flojoy_" + b"\xff\xfe" + b"_flojoy_ValidEnd" 
         (base_dir / "invalid_utf8_flojoy_file.txt").write_bytes(invalid_utf8_bytes)
 
-    except Exception as e: 
-        logger.warning(f"Could not create non-utf8 test files for self-test: {e}")
+    except Exception: 
+        pass # Silently skip if encodings are not supported on the system
     (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in excluded file")
     (base_dir / "no_flojoy_here.log").write_text("This is a log file without the target string.") 
-    logger.info("Self-test environment created.")
 
 @task 
-def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_files: bool) -> bool:
-    logger.info("--- Verifying Self-Test Results ---")
+def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -> bool:
     passed_checks, failed_checks = 0, 0
 
     def check(condition: bool, pass_msg: str, fail_msg: str) -> bool:
         nonlocal passed_checks, failed_checks
         if condition: 
-            logger.info(f"PASS: {pass_msg}")
             passed_checks += 1
         else: 
-            logger.error(f"FAIL: {fail_msg}")
             failed_checks += 1
         return condition
 
@@ -794,9 +640,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if deep_file.is_file():
         raw_content_bytes = deep_file.read_bytes() 
         expected_text_content = "atlasvibe line 1\r\nATLASVIBE line 2\nAtlasvibe line 3\r\nAtlasVibe line 4\natlasVibe line 5\nmyatlasvibe_project details"
-        # The expected bytes must match the original file's mixed EOLs after replacement
-        # This means encoding the string with its mixed EOLs directly.
-        expected_raw_bytes = expected_text_content.encode('utf-8') # UTF-8 is the default for this test file
+        expected_raw_bytes = expected_text_content.encode('utf-8') 
         check(raw_content_bytes == expected_raw_bytes, "Mixed EOL file content and EOLs preserved.", 
               f"Mixed EOL file content/EOLs NOT preserved. Expected: {expected_raw_bytes!r}, Got: {raw_content_bytes!r}")
 
@@ -846,7 +690,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if sjis_file.is_file():
         try:
             content = sjis_file.read_text(encoding='shift_jis', errors='replace')
-            expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。" # Corrected "Flojoy" to "Atlasvibe"
+            expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。" 
             check(content == expected_sjis_text, "Shift-JIS file content correct and encoding preserved.", f"Shift-JIS file content/encoding INCORRECT. Got: {content!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify Shift-JIS file: {e}")
@@ -857,7 +701,7 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if gb18030_file.is_file():
         try:
             content = gb18030_file.read_text(encoding='gb18030', errors='replace')
-            expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子" # Corrected "Flojoy" to "Atlasvibe"
+            expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子" 
             check(content == expected_gb18030_text, "GB18030 file content correct and encoding preserved.", f"GB18030 file content/encoding INCORRECT. Got: {content!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify GB18030 file: {e}")
@@ -866,7 +710,6 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     
     invalid_utf8_file = temp_dir / "invalid_utf8_atlasvibe_file.txt" 
     if invalid_utf8_file.is_file():
-        original_invalid_bytes = b"ValidStart_flojoy_" + b"\xff\xfe" + b"_flojoy_ValidEnd"
         expected_bytes_after_replace = b"ValidStart_atlasvibe_" + b"\xff\xfe" + b"_atlasvibe_ValidEnd"
         try:
             content_bytes = invalid_utf8_file.read_bytes()
@@ -889,7 +732,6 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
     if log_file_test.is_file():
         check("This is a log file without the target string." == log_file_test.read_text(), ".log file content unchanged.", ".log file content CHANGED.")
 
-    logger.info(f"--- Self-Test Verification Summary: {passed_checks} PASSED, {failed_checks} FAILED ---")
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s).")
     return True
@@ -897,10 +739,8 @@ def _verify_self_test_results_task(temp_dir: Path, logger: Any, process_binary_f
 
 @flow(name="Self-Test Find and Replace Flow", log_prints=True) 
 def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool) -> None:
-    logger: Any = get_run_logger()
-    logger.info("--- Starting Self-Test ---")
     temp_dir = Path(temp_dir_str)
-    _create_self_test_environment(temp_dir, logger)
+    _create_self_test_environment(temp_dir)
 
     test_find, test_replace = "flojoy", "atlasvibe"
     test_extensions = [".txt", ".py", ".md", ".bin"] 
@@ -932,9 +772,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     compare_transaction_files_task(transaction_json_path_test, validation_json_path_test) 
 
     if not transaction_json_path_test.exists(): 
-        logger.error("Self-test failed: JSON not created.")
         return
-    logger.info(f"Self-test plan: {transaction_json_path_test}. Review for planned changes.")
     
     rename_res = execute_rename_transactions_task( 
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
@@ -952,11 +790,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     
     if not dry_run_for_test: 
-        _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test) 
-
-    logger.info(f"--- Self-Test Completed (in {temp_dir_str}) ---")
-    if dry_run_for_test: 
-        logger.info("Self-Test was DRY RUN.")
+        _verify_self_test_results_task(temp_dir=temp_dir, process_binary_files=process_binary_for_test) 
 
 
 # --- Main Prefect Flow ---
@@ -968,30 +802,21 @@ def find_and_replace_phased_flow(
     is_regex: bool, case_sensitive: bool, dry_run: bool,
     skip_scan: bool, process_binary_files: bool, force_execution: bool 
     ) -> None:
-    logger: Any = get_run_logger()
     root_dir = Path(directory).resolve(strict=False) 
     transaction_json_path = root_dir / TRANSACTION_FILE_NAME
     validation_json_path = root_dir / VALIDATION_TRANSACTION_FILE_NAME
 
-    logger.info(f"Starting flow for: {root_dir}. Find: '{find_pattern}', Replace: '{replace_pattern}'. Log: {transaction_json_path}")
-
     if dry_run: 
-        logger.info("DRY RUN MODE ENABLED.")
+        pass
     elif not force_execution:
-        logger.warning("!!! POTENTIALLY DESTRUCTIVE OPERATION !!!")
         confirm = input(f"Modifying '{root_dir}'. Find '{find_pattern}', Replace '{replace_pattern}'. Backup? Continue? (yes/no): ")
         if confirm.lower() != 'yes': 
-            logger.info("Operation cancelled.")
             return
-        logger.info("User confirmed. Proceeding...")
     else: 
-        logger.warning(f"Executing with --force for '{root_dir}'.")
-    if not dry_run: 
-        logger.warning("CRITICAL: Ensure backup before running without --dry-run.")
+        pass # Force execution
 
     if not skip_scan:
         if not root_dir.is_dir(): 
-            logger.error(f"Target directory '{root_dir}' does not exist. Cannot scan.")
             return
         collected_tx1 = scan_and_collect_occurrences_task( 
             root_dir=root_dir, find_pattern=find_pattern, replace_pattern=replace_pattern,
@@ -1014,20 +839,16 @@ def find_and_replace_phased_flow(
         
         try:
             compare_transaction_files_task(transaction_json_path, validation_json_path) 
-        except Exception as e:
-            logger.error(f"Scan determinism check failed: {e}. Halting execution.")
+        except Exception:
             return 
     elif transaction_json_path.exists() and validation_json_path.exists():
-        logger.info(f"Skipping scan. Using existing transaction files: {transaction_json_path} and {validation_json_path}")
+        pass # Skipping scan
     else: 
-        logger.error(f"Skip scan requested, but one or both transaction files ({transaction_json_path.name}, {validation_json_path.name}) not found. Cannot proceed.")
         return
 
     if not transaction_json_path.exists(): 
-        logger.error(f"Cannot execute: Primary transaction file {transaction_json_path} not found.")
         return
         
-    logger.info("Starting execution phase.")
     rename_res = execute_rename_transactions_task( 
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         validation_json_path=validation_json_path 
@@ -1042,12 +863,6 @@ def find_and_replace_phased_flow(
         is_regex=is_regex, case_sensitive=case_sensitive,
         validation_json_path=validation_json_path
     )
-
-    logger.info("Flow finished.")
-    if dry_run: 
-        logger.info("DRY RUN COMPLETED.")
-    else: 
-        logger.info("EXECUTION COMPLETED.")
 
 # --- Main Execution ---
 def main() -> None:
@@ -1146,36 +961,30 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
                 if script_resolved.parent == target_dir_resolved: 
                     if script_path_obj.name not in args.exclude_files:
                         args.exclude_files.append(script_path_obj.name)
-                        print(f"Info: Automatically excluding this script from modifications: {script_path_obj.name}")
                 elif script_resolved.is_relative_to(target_dir_resolved): 
                     script_relative_to_target = str(script_resolved.relative_to(target_dir_resolved))
                     if script_relative_to_target not in args.exclude_files:
                         args.exclude_files.append(script_relative_to_target)
-                        print(f"Info: Automatically excluding this script from modifications: {script_relative_to_target}")
     except FileNotFoundError: 
         if not (args.self_test or args.self_check):
-             print(f"Warning: Target directory '{args.directory}' not found during self-exclusion check. Ensure it's valid for main operation.")
+             pass # Silently skip if target dir not found during self-exclusion
     except ValueError: 
         pass 
-    except Exception as e:
-        print(f"Warning: Could not robustly determine if script needs self-exclusion: {e}")
+    except Exception:
+        pass # Silently skip other errors during self-exclusion
 
 
     if args.self_test or args.self_check:
-        print("--- Running Self-Test Mode ---")
         with tempfile.TemporaryDirectory(prefix="mass_replace_self_test_") as tmpdir_str:
             tmpdir_path = Path(tmpdir_str)
-            print(f"Self-test will run in temporary directory: {tmpdir_path}")
             self_test_flow(
                 temp_dir_str=str(tmpdir_path), 
                 dry_run_for_test=args.dry_run, 
                 process_binary_for_test=args.process_binary_files
             )
-        print(f"--- Self-Test Mode Finished (temp dir {tmpdir_str} cleaned up) ---")
         return
 
     if not Path(args.directory).is_dir(): 
-        print(f"Error: Directory '{args.directory}' not found.")
         return
 
     find_and_replace_phased_flow(
