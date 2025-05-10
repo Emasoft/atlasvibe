@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# Copyright (c) 2024 Emasoft
 #
-# Copyright (c) 2025 Emasoft
-# This file is released under the MIT License
-
-from __future__ import annotations
-
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
 
 import os
 import shutil
@@ -42,7 +38,7 @@ except ImportError:
 
 # Chardet integration for encoding detection
 try:
-    import chardet # type: ignore[import-not-found]
+    import chardet 
 except ImportError:
     print("chardet library not found. Please install it for robust encoding detection: pip install chardet")
     chardet: Optional[types.ModuleType] = None
@@ -240,7 +236,7 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
 
 # --- Phase 1: Scan & Collect Tasks ---
 
-@task
+@task # type: ignore[operator]
 def scan_and_collect_occurrences_task(
     root_dir: Path, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
@@ -332,7 +328,7 @@ def scan_and_collect_occurrences_task(
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
-@task
+@task # type: ignore[operator]
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
     logger: Any = get_run_logger()
     logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
@@ -354,7 +350,7 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
         raise
     return json_file_path
 
-@task
+@task # type: ignore[operator]
 def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
     logger: Any = get_run_logger()
     logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
@@ -1137,3 +1133,4 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
 
 if __name__ == "__main__":
     main()
+```
