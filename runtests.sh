@@ -13,6 +13,9 @@ fi
 echo "Setting up Poetry virtual environment and installing dependencies..."
 poetry install
 
+# Add project root to PYTHONPATH to ensure atlasvibe_engine is discoverable
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+
 echo "Running Python tests..."
 poetry run python -m pytest .
 
