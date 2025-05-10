@@ -18,7 +18,7 @@ poetry install
 export PYTHONPATH="$(pwd)${PYTHONPATH:+":$PYTHONPATH"}"
 
 echo "Running Python tests..."
-poetry run python -m pytest .
+poetry run pytest .
 
 echo "Running Playwright tests..."
 npx playwright test
