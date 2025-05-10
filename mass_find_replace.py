@@ -41,7 +41,7 @@ try:
     import chardet # type: ignore[import-not-found]
 except ImportError:
     print("chardet library not found. Please install it for robust encoding detection: pip install chardet")
-    chardet: Optional[types.ModuleType] = None
+    chardet: Optional[types.ModuleType] = None # Keep this for when chardet is not installed
 
 
 # --- Constants ---
@@ -236,7 +236,7 @@ def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, 
 
 # --- Phase 1: Scan & Collect Tasks ---
 
-@task 
+@task # type: ignore[operator]
 def scan_and_collect_occurrences_task(
     root_dir: Path, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool,
     excluded_dirs: List[str], excluded_files: List[str], file_extensions: Optional[List[str]],
@@ -328,7 +328,7 @@ def scan_and_collect_occurrences_task(
 
 # --- Phase 2: Compile JSON Task & Compare ---
 
-@task 
+@task # type: ignore[operator]
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
     logger: Any = get_run_logger()
     logger.info(f"Phase 2: Compiling transactions to JSON ({filename})...")
@@ -350,7 +350,7 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
         raise
     return json_file_path
 
-@task 
+@task # type: ignore[operator]
 def compare_transaction_files_task(file1_path: Path, file2_path: Path) -> bool:
     logger: Any = get_run_logger()
     logger.info(f"Comparing transaction files: {file1_path.name} and {file2_path.name}")
@@ -475,7 +475,7 @@ def _update_transaction_status_in_json(json_file_path: Path, transaction_id: str
             logger.error(f"Failed to restore {json_file_path} from backup: {restore_e}. JSON file might be corrupt.")
 
 
-@task 
+@task # type: ignore[operator]
 def execute_rename_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     validation_json_path: Optional[Path] = None 
@@ -563,7 +563,7 @@ def execute_rename_transactions_task(
     return {"completed": completed_count, "failed": failed_count, "skipped": skipped_count, "path_translation_map": path_translation_map}
 
 
-@task 
+@task # type: ignore[operator]
 def execute_content_transactions_task(
     json_file_path: Path, root_dir: Path, dry_run: bool,
     path_translation_map: Dict[str, str], process_binary_files: bool,
@@ -856,39 +856,39 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     transaction_json_path_test = temp_dir / SELF_TEST_TRANSACTION_FILE_NAME
     validation_json_path_test = temp_dir / SELF_TEST_VALIDATION_FILE_NAME
 
-    collected_tx1 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan1")( # type: ignore[attr-defined]
+    collected_tx1 = scan_and_collect_occurrences_task( # type: ignore[call-arg]
         root_dir=temp_dir, find_pattern=test_find, replace_pattern=test_replace,
         is_regex=test_is_regex, case_sensitive=test_case_sensitive,
         excluded_dirs=test_excluded_dirs, excluded_files=test_excluded_files,
         file_extensions=test_extensions, process_binary_files=process_binary_for_test, scan_id="SelfTestPrimary"
     )
-    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON1")( # type: ignore[attr-defined]
+    compile_transactions_json_task( # type: ignore[call-arg]
         transactions=collected_tx1, output_dir=temp_dir, filename=transaction_json_path_test.name
     )
-    collected_tx2 = scan_and_collect_occurrences_task.with_options(name="SelfTest-Scan2")( # type: ignore[attr-defined]
+    collected_tx2 = scan_and_collect_occurrences_task( # type: ignore[call-arg]
         root_dir=temp_dir, find_pattern=test_find, replace_pattern=test_replace,
         is_regex=test_is_regex, case_sensitive=test_case_sensitive,
         excluded_dirs=test_excluded_dirs, excluded_files=test_excluded_files,
         file_extensions=test_extensions, process_binary_files=process_binary_for_test, scan_id="SelfTestValidation"
     )
-    compile_transactions_json_task.with_options(name="SelfTest-CompileJSON2")( # type: ignore[attr-defined]
+    compile_transactions_json_task( # type: ignore[call-arg]
         transactions=collected_tx2, output_dir=temp_dir, filename=validation_json_path_test.name
     )
-    compare_transaction_files_task(transaction_json_path_test, validation_json_path_test) # type: ignore[attr-defined]
+    compare_transaction_files_task(transaction_json_path_test, validation_json_path_test) # type: ignore[call-arg]
 
     if not transaction_json_path_test.exists(): 
         logger.error("Self-test failed: JSON not created.")
         return
     logger.info(f"Self-test plan: {transaction_json_path_test}. Review for planned changes.")
     
-    rename_res = execute_rename_transactions_task.with_options(name="SelfTest-Renames")( # type: ignore[attr-defined]
+    rename_res = execute_rename_transactions_task( # type: ignore[call-arg]
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         validation_json_path=validation_json_path_test
     )
     path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') else rename_res 
     path_map: Dict[str, str] = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
-    execute_content_transactions_task.with_options(name="SelfTest-ContentChanges")( # type: ignore[attr-defined]
+    execute_content_transactions_task( # type: ignore[call-arg]
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         path_translation_map=path_map, process_binary_files=process_binary_for_test,
         find_pattern=test_find, replace_pattern=test_replace, 
@@ -897,7 +897,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     
     if not dry_run_for_test: 
-        _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test) # type: ignore[attr-defined]
+        _verify_self_test_results_task(temp_dir=temp_dir, logger=logger, process_binary_files=process_binary_for_test) # type: ignore[call-arg]
 
     logger.info(f"--- Self-Test Completed (in {temp_dir_str}) ---")
     if dry_run_for_test: 
@@ -938,27 +938,27 @@ def find_and_replace_phased_flow(
         if not root_dir.is_dir(): 
             logger.error(f"Target directory '{root_dir}' does not exist. Cannot scan.")
             return
-        collected_tx1 = scan_and_collect_occurrences_task.with_options(name="PrimaryScan")( # type: ignore[attr-defined]
+        collected_tx1 = scan_and_collect_occurrences_task( # type: ignore[call-arg]
             root_dir=root_dir, find_pattern=find_pattern, replace_pattern=replace_pattern,
             is_regex=is_regex, case_sensitive=case_sensitive,
             excluded_dirs=exclude_dirs, excluded_files=exclude_files,
             file_extensions=extensions, process_binary_files=process_binary_files, scan_id="Primary"
         )
-        compile_transactions_json_task.with_options(name="CompilePrimaryJSON")( # type: ignore[attr-defined]
+        compile_transactions_json_task( # type: ignore[call-arg]
             transactions=collected_tx1, output_dir=root_dir, filename=TRANSACTION_FILE_NAME
         )
-        collected_tx2 = scan_and_collect_occurrences_task.with_options(name="ValidationScan")( # type: ignore[attr-defined]
+        collected_tx2 = scan_and_collect_occurrences_task( # type: ignore[call-arg]
             root_dir=root_dir, find_pattern=find_pattern, replace_pattern=replace_pattern,
             is_regex=is_regex, case_sensitive=case_sensitive,
             excluded_dirs=exclude_dirs, excluded_files=exclude_files,
             file_extensions=extensions, process_binary_files=process_binary_files, scan_id="Validation"
         )
-        compile_transactions_json_task.with_options(name="CompileValidationJSON")( # type: ignore[attr-defined]
+        compile_transactions_json_task( # type: ignore[call-arg]
             transactions=collected_tx2, output_dir=root_dir, filename=VALIDATION_TRANSACTION_FILE_NAME
         )
         
         try:
-            compare_transaction_files_task(transaction_json_path, validation_json_path) # type: ignore[attr-defined]
+            compare_transaction_files_task(transaction_json_path, validation_json_path) # type: ignore[call-arg]
         except Exception as e:
             logger.error(f"Scan determinism check failed: {e}. Halting execution.")
             return 
@@ -973,14 +973,14 @@ def find_and_replace_phased_flow(
         return
         
     logger.info("Starting execution phase.")
-    rename_res = execute_rename_transactions_task.with_options(name="ExecuteRenames")( # type: ignore[attr-defined]
+    rename_res = execute_rename_transactions_task( # type: ignore[call-arg]
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         validation_json_path=validation_json_path 
     )
     path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') else rename_res 
     path_map: Dict[str, str] = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
-    execute_content_transactions_task.with_options(name="ExecuteContentChanges")( # type: ignore[attr-defined]
+    execute_content_transactions_task( # type: ignore[call-arg]
         json_file_path=transaction_json_path, root_dir=root_dir, dry_run=dry_run,
         path_translation_map=path_map, process_binary_files=process_binary_files,
         find_pattern=find_pattern, replace_pattern=replace_pattern, 
@@ -1133,4 +1133,4 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
 
 if __name__ == "__main__":
     main()
-
+```
