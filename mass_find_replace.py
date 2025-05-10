@@ -339,7 +339,9 @@ def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_di
     def sort_key(t: Dict[str, Any]) -> Tuple[int, int, str, int]: 
         path_depth = t["PATH"].count(os.sep)
         type_order = {"FOLDERNAME": 0, "FILENAME": 1, "STRING_IN_FILE": 2}
-        return (type_order[t["OCCURRENCE_TYPE"]], -path_depth if t["OCCURRENCE_TYPE"] != "STRING_IN_FILE" else path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
+        # For FOLDERNAME and FILENAME, sort by path_depth (shallowest first)
+        # For STRING_IN_FILE, sort by path_depth (shallowest first), then line number
+        return (type_order[t["OCCURRENCE_TYPE"]], path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
 
     transactions.sort(key=sort_key)
     

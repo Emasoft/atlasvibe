@@ -12,7 +12,7 @@ fi
 
 echo "Setting up uv virtual environment and installing dependencies..."
 uv venv --python 3.11 # Or your desired Python version
-uv sync
+uv sync -E dev # Ensure dev dependencies (like chardet, pytest) are installed
 
 # Add project root to PYTHONPATH to ensure atlasvibe_engine is discoverable,
 # prepending it to give it higher priority.
