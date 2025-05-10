@@ -22,6 +22,10 @@ dependencies = [
     "requests>=2.31.0,<3.0.0",
     "debugpy>=1.8.0,<2.0.0",
     "watchfiles>=0.21.0,<0.22.0",
+    "numpy>=1.23.0,<2.0.0", 
+    "pandas>=1.4.0,<3.0.0", 
+    "python-box>=7.0.0,<8.0.0", 
+    "plotly>=5.0.0,<6.0.0", 
 ]
 
 [project.optional-dependencies]
@@ -34,6 +38,12 @@ dev = [
     "python-frontmatter>=1.0.1,<2.0.0",
     "httpx>=0.26.0,<0.27.0",
     "pytest-json-report>=1.5.0,<2.0.0",
+    "Pillow>=9.0.0,<11.0.0",      
+    "scikit-image>=0.19.0,<0.24.0", 
+    "boto3>=1.20.0,<2.0.0",      
+    "scipy>=1.7.0,<2.0.0",
+    "prefect>=2.0.0,<3.0.0", # Added prefect
+    "chardet>=3.0.0,<6.0.0"  # Added chardet
 ]
 
 [build-system]
@@ -60,4 +70,4 @@ markers = [
 pythonpath = ["."]
 
 [tool.uv.workspace]
-members = ["atlasvibe"]
+members = ["atlasvibe_engine"] # Correctly point to your source package directory
