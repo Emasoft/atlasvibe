@@ -100,11 +100,13 @@ name = "atlasvibe"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "chardet" },
     { name = "debugpy" },
     { name = "fastapi" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
+    { name = "prefect" },
     { name = "python-box" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -116,7 +118,6 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "boto3" },
-    { name = "chardet" },
     { name = "httpx" },
     { name = "pillow" },
     { name = "prefect" },
@@ -134,7 +135,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", marker = "extra == 'dev'", specifier = ">=1.20.0,<2.0.0" },
-    { name = "chardet", marker = "extra == 'dev'", specifier = ">=3.0.0,<6.0.0" },
+    { name = "chardet", specifier = ">=3.0.0,<6.0.0" },
     { name = "debugpy", specifier = ">=1.8.0,<2.0.0" },
     { name = "fastapi", specifier = ">=0.104.1,<0.105.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.26.0,<0.27.0" },
@@ -142,6 +143,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=1.4.0,<3.0.0" },
     { name = "pillow", marker = "extra == 'dev'", specifier = ">=9.0.0,<11.0.0" },
     { name = "plotly", specifier = ">=5.0.0,<6.0.0" },
+    { name = "prefect", specifier = ">=2.16.8" },
     { name = "prefect", marker = "extra == 'dev'", specifier = ">=2.0.0,<3.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.2,<8.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<5.0.0" },
