@@ -750,7 +750,7 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
             except Exception as e:
                 check(False, "", f"Could not read/verify renamed Shift-JIS file (chardet unavailable): {e}")
         elif sjis_file_original.is_file():
-             check(False, "", f"Shift-JIS file was not renamed to sjis_atlasvibe_content.txt (chardet unavailable).")
+             check(False, "", "Shift-JIS file was not renamed to sjis_atlasvibe_content.txt (chardet unavailable).")
         else:
             check(False, "", "Shift-JIS file (neither original nor renamed) MISSING (chardet unavailable).")
 
@@ -764,7 +764,7 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
             except Exception as e:
                 check(False, "", f"Could not read/verify renamed GB18030 file (chardet unavailable): {e}")
         elif gb18030_file_original.is_file():
-            check(False, "", f"GB18030 file was not renamed to gb18030_atlasvibe_content.txt (chardet unavailable).")
+            check(False, "", "GB18030 file was not renamed to gb18030_atlasvibe_content.txt (chardet unavailable).")
         else:
             check(False, "", "GB18030 file (neither original nor renamed) MISSING (chardet unavailable).")
     
