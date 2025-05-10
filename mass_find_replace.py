@@ -140,14 +140,7 @@ def _get_case_preserved_replacement(matched_text: str, base_find: str, base_repl
             return 'AtlasVibe' 
         if matched_text == 'floJoy': 
             return 'atlasVibe' 
-        try: 
-            logger: Any = get_run_logger()
-            if logger: 
-                logger.debug(f"Applying default '{base_replace.lower()}' casing for unmatched variant: '{matched_text}'")
-        except NameError: 
-            pass
-        except Exception: 
-            pass
+        # Removed logger call that was here for debugging unmatched variants
         return base_replace.lower() 
     
     if matched_text.islower(): 
