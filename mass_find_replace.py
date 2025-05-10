@@ -19,33 +19,74 @@ from typing import List, Tuple, Optional, Callable, Iterator, Dict, Any, cast
 import types # For ModuleType
 
 # Prefect integration
-try:
-    from prefect import task, flow, get_run_logger
-    import logging # Standard library logging
-    
-    # Define get_prefect_logger_outside_flow using standard logging,
-    # but namespaced in a way that's common for Prefect utility logging.
-    def get_prefect_logger_outside_flow(name: Optional[str] = None) -> Any:
-        logger_name = "prefect.mass_find_replace" # Default namespace
-        if name:
-            logger_name = f"prefect.{name}" # Allow specific sub-namespacing
-        return logging.getLogger(logger_name)
+PREFECT_AVAILABLE = False
+task = None
+flow = None
+get_run_logger = None
+get_prefect_logger_outside_flow = None
 
-except ImportError:
-    print("Prefect library not found or core components missing. Please install it to run this script: pip install prefect")
-    # Fallback logger if prefect is not available, for basic script operation outside a flow
-    import logging as std_logging
-    def get_prefect_logger_outside_flow(name: Optional[str] = None) -> Any:
-        return std_logging.getLogger(name or "mass_find_replace_fallback")
-    # Define dummy decorators if prefect is not installed, so script can be parsed
-    def task(fn: Callable[..., Any]) -> Callable[..., Any]: return fn 
-    def flow(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]: 
+try:
+    from prefect import task as _task_real, flow as _flow_real, get_run_logger as _get_run_logger_real
+    import logging as _logging_main_prefect # Standard library logging for prefect-enabled mode
+    
+    def _get_prefect_logger_outside_flow_real(name: Optional[str] = None) -> Any:
+        logger_name = "prefect.mass_find_replace"
+        if name:
+            logger_name = f"prefect.{name}"
+        return _logging_main_prefect.getLogger(logger_name)
+
+    # Attempt to use the flow decorator to see if it triggers the Pydantic error
+    # This is a canary test.
+    @_flow_real(name="PrefectInitTestFlowInternal", log_prints=True)
+    def _prefect_init_test_function():
+        pass
+    _prefect_init_test_function() # Call to ensure it fully initializes if lazy
+
+    task = _task_real
+    flow = _flow_real
+    get_run_logger = _get_run_logger_real
+    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_real
+    PREFECT_AVAILABLE = True
+    print("Prefect successfully imported and initialized.")
+
+except (ImportError, TypeError) as e:
+    print(f"Prefect not available or initialization error ({type(e).__name__}: {e}). Using fallback logging and no-op decorators.")
+    import logging as _logging_fallback # Standard library logging for fallback
+
+    def _get_prefect_logger_outside_flow_fallback(name: Optional[str] = None) -> Any:
+        return _logging_fallback.getLogger(name or "mass_find_replace_fallback_outside")
+
+    def _task_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    def _flow_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
             return fn
         return decorator
-    # Provide a dummy get_run_logger if prefect is not available
-    def get_run_logger() -> Any: 
-        return get_prefect_logger_outside_flow("mass_find_replace_fallback_run_logger")
+    def _get_run_logger_fallback() -> Any:
+        return _get_prefect_logger_outside_flow_fallback("mass_find_replace_fallback_run_logger")
+
+    task = _task_fallback
+    flow = _flow_fallback
+    get_run_logger = _get_run_logger_fallback
+    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_fallback
+    PREFECT_AVAILABLE = False
+
+# Final safety net: Ensure callables are defined if all above failed unexpectedly
+if task is None:
+    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+    task = _task_final_fallback
+if flow is None:
+    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
+        return decorator
+    flow = _flow_final_fallback
+if get_run_logger is None:
+    import logging as _logging_ultra_fallback_run
+    def _get_run_logger_final_fallback() -> Any: return _logging_ultra_fallback_run.getLogger("mass_find_replace_ultra_fallback_run")
+    get_run_logger = _get_run_logger_final_fallback
+if get_prefect_logger_outside_flow is None:
+    import logging as _logging_ultra_fallback_outside
+    def _get_prefect_logger_outside_flow_final_fallback(name: Optional[str] = None) -> Any: return _logging_ultra_fallback_outside.getLogger(name or "mass_find_replace_ultra_fallback_outside")
+    get_prefect_logger_outside_flow = _get_prefect_logger_outside_flow_final_fallback
 
 
 # Chardet integration for encoding detection
