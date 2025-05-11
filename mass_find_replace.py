@@ -248,7 +248,8 @@ def _verify_self_test_results_task(
         id_text_content = str(result['id'])
 
         wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width)
-        if not wrapped_desc_lines: wrapped_desc_lines = [''] # Ensure at least one line for empty descriptions
+        if not wrapped_desc_lines: # Ensure at least one line for empty descriptions
+            wrapped_desc_lines = [''] 
 
         for i, line_frag in enumerate(wrapped_desc_lines):
             id_cell_content = id_text_content if i == 0 else ""
