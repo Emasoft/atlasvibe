@@ -121,7 +121,6 @@ def _verify_self_test_results_task(
     unmapped_content_file = exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt") # Name changed
     if unmapped_content_file and unmapped_content_file.exists():
         content = unmapped_content_file.read_text(encoding='utf-8')
-        # "fLoJoY" should be untouched, "flojoy" should become "atlasvibe"
         expected_content = "This has fLoJoY content, and also atlasvibe."
         check(content == expected_content, "Content of 'unmapped_variant_atlasvibe_content.txt' correct (unmapped variant preserved).",
               f"Content of 'unmapped_variant_atlasvibe_content.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
@@ -134,7 +133,6 @@ def _verify_self_test_results_task(
         check(content == expected_content, "Content of 'only_name_atlasvibe.md' correct.",
               "Content of 'only_name_atlasvibe.md' INCORRECT.")
 
-    # Excluded file by name
     excluded_by_name_file = exp_paths_after_rename.get("exclude_this_flojoy_file.txt")
     if excluded_by_name_file and excluded_by_name_file.exists(): 
         content = excluded_by_name_file.read_text(encoding='utf-8')
@@ -142,16 +140,14 @@ def _verify_self_test_results_task(
         check(content == expected_content, "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' correct.",
               "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' INCORRECT.")
     
-    # File inside excluded directory
     file_in_excluded_dir = exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir")
     if file_in_excluded_dir and file_in_excluded_dir.exists():
         content = file_in_excluded_dir.read_text(encoding='utf-8')
-        expected_content = "flojoy inside excluded dir" # Should be untouched
+        expected_content = "flojoy inside excluded dir" 
         check(content == expected_content, "Content of file in excluded dir 'inner_flojoy_file.txt' correct.",
               "Content of file in excluded dir 'inner_flojoy_file.txt' INCORRECT.")
 
 
-    # Binary file checks
     binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
     if binary_file_renamed and binary_file_renamed.exists():
         original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
@@ -171,32 +167,26 @@ def _verify_self_test_results_task(
 
     transactions = load_transactions(original_transaction_file)
     if transactions:
-        all_completed_or_skipped = True
+        all_processed_correctly = True
+        excluded_paths_had_transactions = False
         for tx in transactions:
-            is_excluded_path = "exclude_this_flojoy_file.txt" in tx["PATH"] or "excluded_flojoy_dir" in tx["PATH"]
+            tx_path_str = tx["PATH"]
+            # Check if transaction path indicates an excluded item
+            if "exclude_this_flojoy_file.txt" in tx_path_str or "excluded_flojoy_dir" in tx_path_str:
+                excluded_paths_had_transactions = True
+                break 
             
-            if is_excluded_path:
-                # For excluded items, name transactions might be SKIPPED if name didn't match, or PENDING if scan doesn't pre-filter.
-                # Content transactions should not be COMPLETED.
-                if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-                    all_completed_or_skipped = False
-                    print(f"FAIL: Transaction {tx['id']} for excluded item content (Path: {tx['PATH']}) has status COMPLETED.")
-                    break
-                # Allow name changes for files directly excluded if their name matches, but not for files *within* excluded dirs.
-                # The current scan logic filters out items from excluded_dirs early.
-                # Files in excluded_files list are also filtered out early by scan_directory_for_occurrences.
-                # So, no transactions should ideally be generated for these. If they are, they must be SKIPPED.
-                if tx["STATUS"] not in [TransactionStatus.SKIPPED.value, TransactionStatus.PENDING.value]: # PENDING if scan doesn't mark as skipped
-                     all_completed_or_skipped = False
-                     print(f"FAIL: Transaction {tx['id']} for excluded item (Path: {tx['PATH']}) has status {tx['STATUS']} instead of SKIPPED/PENDING.")
-                     break
-
-            elif tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                all_completed_or_skipped = False
+            # For non-excluded items, check status
+            if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
+                all_processed_correctly = False
                 print(f"FAIL: Transaction {tx['id']} (Type: {tx['TYPE']}, Path: {tx['PATH']}) has status {tx['STATUS']}.")
                 break
-        check(all_completed_or_skipped, "All processed (non-excluded) transactions are COMPLETED or SKIPPED.",
-              "Not all processed (non-excluded) transactions are COMPLETED or SKIPPED.")
+        
+        check(not excluded_paths_had_transactions, "No transactions generated for explicitly excluded files/dirs.",
+              "Transactions WERE generated for explicitly excluded files/dirs.")
+        if not excluded_paths_had_transactions: # Only check this if no excluded path transactions were found
+            check(all_processed_correctly, "All non-excluded transactions are COMPLETED or SKIPPED.",
+                  "Not all non-excluded transactions are COMPLETED or SKIPPED.")
     else:
         check(False, "", f"Could not load transaction file {original_transaction_file} for status verification.")
 
@@ -216,7 +206,7 @@ def self_test_flow(
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt"]
-    test_extensions = [".txt", ".py", ".md", ".bin", ".log"] # .bin and .log for name testing
+    test_extensions = [".txt", ".py", ".md", ".bin", ".log"] 
 
     transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
 
