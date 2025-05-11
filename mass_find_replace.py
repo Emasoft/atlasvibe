@@ -73,13 +73,11 @@ def _create_self_test_environment(base_dir: Path) -> None:
     (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
 
 
-@task
+# This is now a regular function, not a Prefect task, to avoid log prefixing on table output.
 def _verify_self_test_results_task(
     temp_dir: Path, # This will be the SELF_TEST_SANDBOX_DIR
     original_transaction_file: Path 
 ) -> bool:
-    # This initial print might still be caught by Prefect if log_prints=True on the flow
-    # and this task is called directly. For table formatting, sys.stdout.write is critical.
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
     failed_checks = 0
@@ -262,8 +260,6 @@ def _verify_self_test_results_task(
                 padded_outcome_text = f"{outcome_text_content:<{outcome_col_content_width}}"
                 outcome_cell_content_colored = f"{color}{padded_outcome_text}{RESET}"
             
-            # This line for outcome_cell_str was a bit complex due to color codes; simplified below
-            # outcome_cell_str = f"{' ' * padding}{outcome_cell_content_colored:<{outcome_col_content_width + (len(color)+len(RESET) if i==0 else 0)}}{' ' * padding}"
             if i == 0:
                  outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
             else:
@@ -346,9 +342,8 @@ def self_test_flow(
         )
         print(f"Self-Test: Execution complete. Stats: {execution_stats}")
         
-        # _verify_self_test_results_task is a Prefect task.
-        # Calling it directly will have its prints (if any not using sys.stdout) logged by Prefect.
-        # The table itself inside _verify_self_test_results_task now uses sys.stdout.write.
+        # _verify_self_test_results_task is now a regular function.
+        # Its sys.stdout.write calls will go directly to console.
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=transaction_file
