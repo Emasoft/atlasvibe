@@ -10,7 +10,7 @@ import argparse
 import tempfile
 from pathlib import Path
 import sys
-from typing import List, Dict, Any, Optional 
+from typing import List, Dict, Any, Optional, Union
 
 # Prefect integration - now a hard dependency
 from prefect import task, flow
