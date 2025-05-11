@@ -13,6 +13,7 @@ import sys
 from typing import List, Dict, Any, Optional, Union
 import shutil # For shutil.rmtree and shutil.get_terminal_size
 import textwrap # Added for text wrapping
+import json # Added to resolve F821
 
 # Prefect integration - now a hard dependency
 from prefect import task, flow
@@ -219,8 +220,10 @@ def _verify_self_test_results_task(
             record_test(f"{test_description_base} (File Existence for Content Check)", False, f"File MISSING at '{file_path}' for content check.")
             return
         actual_content: Union[str, bytes]
-        if is_binary: actual_content = file_path.read_bytes()
-        else: actual_content = file_path.read_text(encoding='utf-8')
+        if is_binary:
+            actual_content = file_path.read_bytes()
+        else:
+            actual_content = file_path.read_text(encoding='utf-8')
         condition = actual_content == expected_content
         details = ""
         if not condition:
@@ -387,7 +390,8 @@ def _verify_self_test_results_task(
         outcome_text_content = f"{status_symbol} {result['status']}"
         id_text_content = str(result['id'])
         wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width)
-        if not wrapped_desc_lines: wrapped_desc_lines = [''] 
+        if not wrapped_desc_lines: 
+            wrapped_desc_lines = [''] 
 
         for i, line_frag in enumerate(wrapped_desc_lines):
             if i == 0:
