@@ -357,7 +357,7 @@ def _verify_self_test_results_task(
 
     header_id = f"{'#':^{id_col_content_width}}"
     header_desc = f"{'Test Description':^{desc_col_content_width}}"
-    header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
+    header_outcome = f"{'Outcome':<{outcome_col_content_width}}" # Left-align Outcome header
 
     sys.stdout.write("\n")
     sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
@@ -379,9 +379,8 @@ def _verify_self_test_results_task(
                 id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}"
                 outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
             else:
-                # Symmetrical construction for blank cells on wrapped lines
-                id_cell_str = f"{' ' * padding}{'':<{id_col_content_width}}{' ' * padding}"
-                outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}"
+                id_cell_str = f"{' ' * padding}{'':>{id_col_content_width}}{' ' * padding}" # Symmetrical padding for blank ID
+                outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}" # Symmetrical padding for blank Outcome
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             sys.stdout.write(BLUE + DBL_VERTICAL + id_cell_str + DBL_VERTICAL + desc_cell_str + DBL_VERTICAL + outcome_cell_str + DBL_VERTICAL + RESET + "\n")
