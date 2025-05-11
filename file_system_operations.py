@@ -275,6 +275,14 @@ def _execute_rename_transaction(
     
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
 
+    # Diagnostic for missing file issue
+    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in original_name : # Target specific problematic file
+        print(f"DEBUG_RENAME: Processing transaction for: {original_name}")
+        print(f"DEBUG_RENAME: Original relative path: {original_relative_path_str}")
+        print(f"DEBUG_RENAME: Current absolute path resolved to: {current_abs_path}")
+        print(f"DEBUG_RENAME: Does current_abs_path exist? {current_abs_path.exists()}")
+
+
     if not current_abs_path.exists():
         return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
 
@@ -283,6 +291,11 @@ def _execute_rename_transaction(
         return TransactionStatus.SKIPPED, "Name unchanged after replacement."
 
     new_abs_path = current_abs_path.with_name(new_name)
+    
+    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in new_name:
+        print(f"DEBUG_RENAME: Proposed new name: {new_name}")
+        print(f"DEBUG_RENAME: Proposed new absolute path: {new_abs_path}")
+
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")

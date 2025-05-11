@@ -31,29 +31,46 @@ def replace_flojoy_occurrences(input_string: str) -> str:
     with its case-preserved 'atlasvibe' equivalent based on REPLACEMENT_MAPPING.
     """
     if not isinstance(input_string, str):
-        # Or raise TypeError, depending on desired strictness
         return input_string 
+
+    # This function is now simplified as the detailed case logic is in _get_case_preserved_replacement
+    # which is called by the replace_callback.
+    # The _get_case_preserved_replacement function itself is not defined in this module anymore
+    # based on the refactoring to put replacement logic here.
+    # The actual case preservation logic should be here.
+
+    # Let's redefine _get_case_preserved_replacement inline or call it if it were here.
+    # For clarity, moving the logic directly into the callback or a helper within this module.
+
+    def _get_internal_case_preserved_replacement(text_to_match: str) -> str:
+        print(f"TRACE_REPLACE_LOGIC: _get_internal_case_preserved_replacement ENTERED with text_to_match: {repr(text_to_match)}")
+        result_to_return = None
+
+        # Check against REPLACEMENT_MAPPING directly
+        # The re.sub with IGNORECASE will find "flojoy", "Flojoy", "FLOJOY", etc.
+        # The `text_to_match` will be the actual string found by re.sub (e.g., "Flojoy").
+        # We then use this actual found string to look up in our specific-case mapping.
+        if text_to_match in REPLACEMENT_MAPPING:
+            result_to_return = REPLACEMENT_MAPPING[text_to_match]
+            print(f"TRACE_REPLACE_LOGIC: Matched key {repr(text_to_match)} in REPLACEMENT_MAPPING. Returning: {repr(result_to_return)}")
+        else:
+            # This case should ideally not be hit if re.sub's IGNORECASE works as expected
+            # and REPLACEMENT_MAPPING covers all cases found by the regex.
+            # However, as a fallback, if a variant like "fLoJoY" was matched by re.IGNORECASE
+            # but is not in REPLACEMENT_MAPPING, we return it as is, or apply a default.
+            # The current REPLACEMENT_MAPPING is exhaustive for typical casings.
+            result_to_return = text_to_match # Fallback: return original match if no specific case found
+            print(f"TRACE_REPLACE_LOGIC: No exact match for {repr(text_to_match)} in REPLACEMENT_MAPPING. Fallback returning original: {repr(result_to_return)}")
+        
+        return result_to_return
 
     def replace_callback(match_obj: re.Match[str]) -> str:
         actual_matched_text = match_obj.group(0)
-        # The diagnostic prints previously here have been removed as per user request for clean code.
-        # The logic relies on REPLACEMENT_MAPPING containing all relevant casings.
-        return get_replacement_for_match(actual_matched_text)
-
-    # Use a regex that finds all variations of "flojoy" case-insensitively.
-    # The callback then ensures the correct replacement from the mapping.
-    # This pattern ensures we only target the specific word "flojoy" and its casings.
-    # Using word boundaries (\b) might be too restrictive if "myflojoy_project" should become "myatlasvibe_project".
-    # The current REPLACEMENT_MAPPING implies whole-word matches.
-    # If "flojoy" can be part of a larger word and still needs replacement based on these rules,
-    # the regex might need adjustment, or the mapping expanded.
-    # For now, sticking to direct replacement of the keys in the map.
+        # The wrapper print from main_cli will show this `actual_matched_text`
+        return _get_internal_case_preserved_replacement(actual_matched_text)
     
-    # Construct a regex pattern from the keys of REPLACEMENT_MAPPING to ensure only these are matched.
-    # This makes the re.sub more targeted to the specific strings we want to replace.
-    # Sort keys by length descending to match longer strings first (e.g., "FloJoy" before "Flojoy" if that were an issue, though re.IGNORECASE handles it well).
-    # However, re.IGNORECASE on "flojoy" is simpler and the callback handles the specific casing.
-    
-    pattern = r'flojoy' # Simple case-insensitive match for "flojoy"
+    # The pattern should match any of the keys in REPLACEMENT_MAPPING case-insensitively.
+    # A simple 'flojoy' with re.IGNORECASE is fine, the callback will get the exact match.
+    pattern = r'flojoy' 
     return re.sub(pattern, replace_callback, input_string, flags=re.IGNORECASE)
 
