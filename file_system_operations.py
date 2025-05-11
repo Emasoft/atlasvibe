@@ -203,9 +203,6 @@ def scan_directory_for_occurrences(
                             "STATUS": TransactionStatus.PENDING.value
                         })
             except Exception as e:
-                # This print is a warning for a file processing error, not a fatal script error.
-                # It's useful for debugging why a specific file might not have been processed.
-                # Kept as per interpretation of "fatal errors" for the script's operation.
                 print(f"Warning: Could not read/process content of file {item_path}: {e}")
                 pass
     return transactions
@@ -218,10 +215,10 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         if path.exists():
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    # Removed informational print: print(f"Loading transactions from: {path}")
+                    # The following print statement was causing the table formatting issue.
+                    # print(f"Loading transactions from: {path}") 
                     return cast(List[Dict[str, Any]], json.load(f))
             except Exception as e:
-                # This print indicates a failure to load the transaction file, which is a significant issue.
                 print(f"Warning: Failed to load transactions from {path}: {e}")
     return None
 
@@ -236,7 +233,6 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
         with open(json_file_path, 'w', encoding='utf-8') as f:
             json.dump(transactions, f, indent=4)
     except Exception as e:
-        # This is an error during a critical save operation.
         print(f"Error: Could not save transactions to {json_file_path}: {e}")
         raise
 
@@ -279,8 +275,6 @@ def _execute_rename_transaction(
     original_relative_path_str = tx_item["PATH"]
     original_name = tx_item["ORIGINAL_NAME"]
     
-    # These are debug prints, useful during development but could be removed for cleaner "production" runs.
-    # For now, keeping them as they are not part of the table output itself.
     print(f"DEBUG_RENAME_EXEC: Processing transaction for: {original_name} (Type: {tx_item['TYPE']})")
     print(f"DEBUG_RENAME_EXEC: Original relative path: {original_relative_path_str}")
     
@@ -389,7 +383,6 @@ def execute_all_transactions(
 ) -> Dict[str, int]:
     transactions = load_transactions(transactions_file_path)
     if not transactions:
-        # This print indicates a failure to load transactions, which is critical for this function.
         print(f"Error: Could not load transactions from {transactions_file_path}")
         return {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
 
@@ -403,8 +396,6 @@ def execute_all_transactions(
         line_num = tx.get("LINE_NUMBER", 0)
 
         if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-            # For folders and files, process shallower paths first (parents before children).
-            # path_depth (ascending) ensures this.
             return (type_order[tx["TYPE"]], path_depth, tx["PATH"])
         else: 
             return (type_order[tx["TYPE"]], tx["PATH"], line_num)
@@ -445,11 +436,10 @@ def execute_all_transactions(
             except SandboxViolationError as sve: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"CRITICAL SANDBOX VIOLATION: {sve}"
-                print(error_msg) # This is a critical error.
+                print(error_msg) 
             except Exception as e: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"Unexpected error during transaction execution: {e}"
-                # This is also a significant error.
                 print(error_msg)
 
 
@@ -460,8 +450,6 @@ def execute_all_transactions(
                 stats["completed"] += 1
             elif new_status == TransactionStatus.FAILED:
                 stats["failed"] += 1
-                # Error message for this specific transaction failure is already printed above or returned by execute_ functions.
-                # print(f"Transaction {tx_id} FAILED: {error_msg}") # This might be redundant.
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
         

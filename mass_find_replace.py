@@ -118,19 +118,58 @@ def _verify_self_test_results_task(
         "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin"
     }
 
-    for name, path in exp_paths_after_rename.items():
-        record_test(f"Path exists: '{path.relative_to(temp_dir)}' (for '{name}')", 
-                    path.exists(), 
-                    f"Path '{path.relative_to(temp_dir)}' MISSING for '{name}'")
+    # Path Existence Tests
+    record_test(f"Verify base 'flojoy_root' renames to 'atlasvibe_root' at top level.", 
+                exp_paths_after_rename["atlasvibe_root"].exists(), 
+                f"Path '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify nested 'sub_flojoy_folder' renames correctly under 'atlasvibe_root'.", 
+                exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
+                f"Path '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify deeply nested 'another_FLOJOY_dir' renames with case change.", 
+                exp_paths_after_rename["another_ATLASVIBE_dir"].exists(), 
+                f"Path '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'deep_flojoy_file.txt' renames within transformed path.", 
+                exp_paths_after_rename["deep_atlasvibe_file.txt"].exists(), 
+                f"Path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'another_flojoy_file.py' renames at 'atlasvibe_root' level.", 
+                exp_paths_after_rename["another_atlasvibe_file.py"].exists(), 
+                f"Path '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'only_name_flojoy.md' (name match only) renames.", 
+                exp_paths_after_rename["only_name_atlasvibe.md"].exists(), 
+                f"Path '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'file_with_floJoy_lines.txt' (mixed case name) renames.", 
+                exp_paths_after_rename["file_with_atlasVibe_lines.txt"].exists(), 
+                f"Path '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'unmapped_variant_flojoy_content.txt' renames (name is mapped).", 
+                exp_paths_after_rename["unmapped_variant_atlasvibe_content.txt"].exists(), 
+                f"Path '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify file 'no_target_here.log' (no target in name/content) remains unchanged.", 
+                exp_paths_after_rename["no_target_here.log"].exists(), 
+                f"Path '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
+    record_test(f"Verify explicitly excluded file 'exclude_this_flojoy_file.txt' is not renamed.", 
+                exp_paths_after_rename["exclude_this_flojoy_file.txt"].exists(), 
+                f"Path '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
+    record_test(f"Verify explicitly excluded dir 'excluded_flojoy_dir' is not renamed.", 
+                exp_paths_after_rename["excluded_flojoy_dir"].exists(), 
+                f"Path '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
+    record_test(f"Verify file 'inner_flojoy_file.txt' within excluded dir is not renamed.", 
+                exp_paths_after_rename["inner_flojoy_file.txt_in_excluded_dir"].exists(), 
+                f"Path '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
+    record_test(f"Verify binary file 'binary_flojoy_file.bin' (mapped name) renames.", 
+                exp_paths_after_rename["binary_atlasvibe_file.bin"].exists(), 
+                f"Path '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
+    record_test(f"Verify binary file 'binary_fLoJoY_name.bin' (unmapped name variant) is not renamed.", 
+                exp_paths_after_rename["binary_fLoJoY_name.bin"].exists(), 
+                f"Path '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
 
-    record_test("Old 'flojoy_root' base directory removed", 
+    record_test("Verify original 'flojoy_root' base directory is removed after rename.", 
                 not (temp_dir / "flojoy_root").exists(),
-                "Old 'flojoy_root' base directory STILL EXISTS")
+                "Old 'flojoy_root' base directory STILL EXISTS.")
 
     # Content checks helper
     def check_file_content(file_path: Optional[Path], expected_content: Union[str, bytes], test_description_base: str, is_binary: bool = False):
         if not file_path or not file_path.exists():
-            record_test(f"Content: '{test_description_base}'", False, f"File MISSING at '{file_path}'")
+            record_test(f"{test_description_base}: File existence for content check.", False, f"File MISSING at '{file_path}' for content check.")
             return
 
         actual_content: Union[str, bytes]
@@ -146,38 +185,38 @@ def _verify_self_test_results_task(
                 details = f"Expected: {expected_content!r}, Got: {actual_content!r}"
             else: 
                 details = f"Expected:\n{expected_content}\nGot:\n{actual_content}"
-        record_test(f"Content: '{test_description_base}'", condition, details)
+        record_test(test_description_base, condition, details)
 
     # Content verifications
     check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
                        "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
-                       "deep_atlasvibe_file.txt")
+                       "Content: Verify all mapped 'flojoy' variants replaced in 'deep_atlasvibe_file.txt'.")
     check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
                        "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
-                       "file_with_atlasVibe_lines.txt")
+                       "Content: Verify mixed-case 'floJoy' variants replaced in 'file_with_atlasVibe_lines.txt'.")
     check_file_content(exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt"),
                        "This has fLoJoY content, and also atlasvibe.",
-                       "unmapped_variant_atlasvibe_content.txt (unmapped variant preserved)")
+                       "Content: Verify unmapped 'fLoJoY' preserved, mapped 'flojoy' replaced.")
     check_file_content(exp_paths_after_rename.get("only_name_atlasvibe.md"),
                        "Content without target string.",
-                       "only_name_atlasvibe.md")
+                       "Content: Verify file with only name match has its content unchanged.")
     check_file_content(exp_paths_after_rename.get("exclude_this_flojoy_file.txt"),
                        "flojoy content in explicitly excluded file",
-                       "exclude_this_flojoy_file.txt (explicitly excluded)")
+                       "Content: Verify explicitly excluded file's content remains untouched.")
     check_file_content(exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir"),
                        "flojoy inside excluded dir",
-                       "inner_flojoy_file.txt (in excluded_dir)")
+                       "Content: Verify file in excluded directory has its content untouched.")
     
     check_file_content(exp_paths_after_rename.get("binary_atlasvibe_file.bin"),
                        b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04",
-                       "binary_atlasvibe_file.bin (content untouched)", is_binary=True)
+                       "Content: Verify binary file (renamed) has its content untouched.", is_binary=True)
     check_file_content(exp_paths_after_rename.get("binary_fLoJoY_name.bin"),
                        b"unmapped_variant_binary_content" + b"\x00\xff",
-                       "binary_fLoJoY_name.bin (content untouched)", is_binary=True)
+                       "Content: Verify binary file (unmapped name) has its content untouched.", is_binary=True)
 
     binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
     if binary_file_renamed and binary_file_renamed.exists():
-        record_test(f"File type: '{binary_file_renamed.name}' still binary",
+        record_test(f"File Type: Verify renamed binary file ('{binary_file_renamed.name}') is still binary.",
                     is_likely_binary_file(binary_file_renamed),
                     f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
@@ -189,7 +228,7 @@ def _verify_self_test_results_task(
             if "excluded_flojoy_dir/" in tx_path_str or tx_path_str == "exclude_this_flojoy_file.txt":
                 found_tx_for_excluded = True
                 break 
-        record_test("Exclusion: No transactions for excluded items",
+        record_test("Scan Exclusion: Verify no transactions were generated for explicitly excluded files/dirs.",
                     not found_tx_for_excluded,
                     "Transactions WERE generated for items that should have been excluded by scan.")
 
@@ -199,19 +238,19 @@ def _verify_self_test_results_task(
                  if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"):
                     if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                         all_non_excluded_processed_correctly = False
-                        record_test(f"Transaction status (ID: {tx['id']})", False,
+                        record_test(f"Execution Status (Tx ID: {tx['id']}): Check if non-excluded transaction processed.", False,
                                     f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
                         break 
             if all_non_excluded_processed_correctly: 
-                 record_test("Transaction statuses: All non-excluded are COMPLETED or SKIPPED", True)
+                 record_test("Execution Status: Verify all non-excluded transactions are COMPLETED or SKIPPED.", True)
     else:
-        record_test(f"Transaction file load: '{original_transaction_file.name}'", False, "Could not load for status verification.")
+        record_test(f"Transaction File Load: Verify '{original_transaction_file.name}' can be loaded.", False, "Could not load for status verification.")
 
     # --- Table Formatting ---
     term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
     padding = 1
     
-    id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3 # Max width for test ID
+    id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3 
     id_col_total_width = id_col_content_width + 2 * padding
     
     outcome_text_pass = f"{PASS_SYMBOL} PASS"
@@ -219,8 +258,7 @@ def _verify_self_test_results_task(
     outcome_col_content_width = max(len(outcome_text_pass), len(outcome_text_fail))
     outcome_col_total_width = outcome_col_content_width + 2 * padding
 
-    # 4 vertical bars "│"
-    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4)
+    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4) # 4 for "│" separators
     
     min_desc_col_content_width = 20
     if desc_col_total_width - 2 * padding < min_desc_col_content_width:
@@ -302,7 +340,7 @@ def _verify_self_test_results_task(
 
 @flow(name="Self-Test Flow", log_prints=True)
 def self_test_flow(
-    temp_dir_str: str, # This will be the path to SELF_TEST_SANDBOX_DIR
+    temp_dir_str: str, 
     dry_run_for_test: bool
 ) -> None:
     temp_dir = Path(temp_dir_str) 
@@ -314,7 +352,6 @@ def self_test_flow(
 
     transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
 
-    # These print statements will be logged by Prefect due to log_prints=True
     print("Self-Test: Scanning directory...")
     transactions = scan_directory_for_occurrences(
         root_dir=temp_dir,
@@ -335,8 +372,6 @@ def self_test_flow(
         )
         print(f"Self-Test: Execution complete. Stats: {execution_stats}")
         
-        # _verify_self_test_results_task is now a regular function.
-        # Its sys.stdout.write calls will go directly to console.
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=transaction_file
@@ -359,14 +394,12 @@ def main_flow(
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
-        # For CLI utilities, direct print to stderr for early errors is often clearer.
         sys.stderr.write(f"Error: Root directory '{root_dir}' does not exist or is not a directory.\n")
         return
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
 
     if not dry_run and not force_execution and not resume: 
-        # Direct print for interactive parts
         sys.stdout.write("--- Proposed Operation ---\n")
         sys.stdout.write(f"Root Directory: {root_dir}\n")
         sys.stdout.write("Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.\n")
@@ -374,13 +407,12 @@ def main_flow(
         sys.stdout.write(f"Exclude Dirs: {exclude_dirs}\n")
         sys.stdout.write(f"Exclude Files: {exclude_files}\n")
         sys.stdout.write("-------------------------\n")
-        sys.stdout.flush() # Ensure prompt appears before input
+        sys.stdout.flush() 
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes':
             sys.stdout.write("Operation cancelled by user.\n")
             return
 
-    # Messages below will be captured by Prefect's log_prints=True
     if not skip_scan and not resume: 
         print(f"Starting scan phase in '{root_dir}'...")
         found_transactions = scan_directory_for_occurrences(
@@ -449,7 +481,6 @@ def main_cli() -> None:
     args = parser.parse_args()
     
     if args.self_test:
-        # Use direct print for self-test setup messages as they occur before Prefect flow might capture them fully.
         sys.stdout.write(f"Running self-test in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         
@@ -467,23 +498,18 @@ def main_cli() -> None:
             sys.stderr.write(RED + f"Error creating sandbox {self_test_sandbox}: {e}" + RESET + "\n")
             sys.exit(1)
         
-        sys.stdout.flush() # Ensure setup messages are printed before flow starts
+        sys.stdout.flush() 
             
         try:
-            # For self_test_flow, log_prints=True will handle its internal print statements.
             self_test_flow(
                 temp_dir_str=str(self_test_sandbox), 
                 dry_run_for_test=args.dry_run
             )
             if not args.dry_run:
-                 # Success message for non-dry run is part of _verify_self_test_results_task
                  pass
             else:
-                 # Message for dry run completion
                  sys.stdout.write(YELLOW + "Self-test dry run scan complete." + RESET + "\n")
         except AssertionError: 
-            # The _verify_self_test_results_task already prints detailed failure info.
-            # Exiting with 1 indicates failure.
             sys.exit(1) 
         except Exception as e:
             sys.stderr.write(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET + "\n")
@@ -516,7 +542,7 @@ def main_cli() -> None:
              script_relative_to_target = str(script_path_obj.relative_to(target_dir_resolved))
              if script_relative_to_target not in args.exclude_files:
                  args.exclude_files.append(script_relative_to_target)
-    except (FileNotFoundError, ValueError): # Handle cases where paths might not exist yet or are not relative
+    except (FileNotFoundError, ValueError): 
          pass 
 
     main_flow(
@@ -534,7 +560,6 @@ if __name__ == "__main__":
     try:
         main_cli()
     except ImportError as e:
-        # Critical errors printed directly to stderr
         sys.stderr.write(f"CRITICAL ERROR: A required dependency is missing: {e}.\n")
         sys.stderr.write("Please ensure 'prefect' and 'chardet' are installed in your Python environment.\n")
         sys.stderr.write("You can typically install them using pip: pip install prefect chardet\n")
