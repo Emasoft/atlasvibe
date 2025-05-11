@@ -1,4 +1,0 @@
-DEBUG_RENAME: Processing transaction for: deep_flojoy_file.txt
-DEBUG_RENAME: Original relative path: flojoy_root/sub_flojoy_folder/another_FLOJOY_dir/deep_flojoy_file.txt
-DEBUG_RENAME: Current absolute path resolved to: /var/.../flojoy_root/sub_flojoy_folder/another_ATLASVIBE_dir/deep_flojoy_file.txt
-DEBUG_RENAME: Does current_abs_path exist? False
