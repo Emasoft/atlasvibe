@@ -250,22 +250,15 @@ def _verify_self_test_results_task(
             wrapped_desc_lines = [''] 
 
         for i, line_frag in enumerate(wrapped_desc_lines):
-            id_cell_content = id_text_content if i == 0 else ""
-            id_cell_str = f"{' ' * padding}{id_cell_content:>{id_col_content_width}}{' ' * padding}" # Right-align ID
+            if i == 0:
+                id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}"
+                outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
+            else:
+                id_cell_str = " " * id_col_total_width
+                outcome_cell_str = " " * outcome_col_total_width
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             
-            outcome_cell_content_colored = ""
-            if i == 0:
-                padded_outcome_text = f"{outcome_text_content:<{outcome_col_content_width}}"
-                outcome_cell_content_colored = f"{color}{padded_outcome_text}{RESET}"
-            
-            if i == 0:
-                 outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
-            else:
-                 outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}"
-
-
             sys.stdout.write(BLUE + f"│{id_cell_str}│{desc_cell_str}│{outcome_cell_str}│" + RESET + "\n")
 
         if result["status"] == "FAIL" and result["details"]:
