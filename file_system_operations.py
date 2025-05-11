@@ -120,14 +120,10 @@ def _get_current_absolute_path(
         cache["."] = root_dir
         return root_dir
 
-    # If the item itself was directly renamed, its new relative path is in the map.
     if original_relative_path_str in path_translation_map:
-        new_relative_path = path_translation_map[original_relative_path_str]
-        current_abs_path = root_dir / new_relative_path
-        cache[original_relative_path_str] = current_abs_path
-        return current_abs_path
+        new_relative_path_from_root = path_translation_map[original_relative_path_str]
+        current_abs_path = root_dir / new_relative_path_from_root
     else:
-        # Item itself was not renamed, but its parent might have been.
         original_path_obj = Path(original_relative_path_str)
         original_parent_rel_str = str(original_path_obj.parent)
         item_original_name = original_path_obj.name
@@ -137,8 +133,9 @@ def _get_current_absolute_path(
         )
         
         current_abs_path = current_parent_abs_path / item_original_name
-        cache[original_relative_path_str] = current_abs_path
-        return current_abs_path
+    
+    cache[original_relative_path_str] = current_abs_path
+    return current_abs_path
 
 # --- Scan Logic ---
 def scan_directory_for_occurrences(
@@ -244,13 +241,13 @@ def update_transaction_status_in_list(
     error_message: Optional[str] = None
 ) -> bool:
     updated = False
-    for tx in transactions:
-        if tx['id'] == transaction_id:
-            tx['STATUS'] = new_status.value
+    for tx_item in transactions: # Renamed tx to tx_item to avoid conflict with outer scope tx
+        if tx_item['id'] == transaction_id:
+            tx_item['STATUS'] = new_status.value
             if error_message:
-                tx['ERROR_MESSAGE'] = error_message
+                tx_item['ERROR_MESSAGE'] = error_message
             else:
-                tx.pop('ERROR_MESSAGE', None)
+                tx_item.pop('ERROR_MESSAGE', None)
             updated = True
             break
     return updated
@@ -267,23 +264,21 @@ def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_de
         )
 
 def _execute_rename_transaction(
-    tx: Dict[str, Any],
-    root_dir: Path, # This is the sandbox root during self-test
+    tx_item: Dict[str, Any], # Renamed tx to tx_item
+    root_dir: Path, 
     path_translation_map: Dict[str, str],
     path_cache: Dict[str, Path],
     dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str]]:
-    original_relative_path_str = tx["PATH"]
-    original_name = tx["ORIGINAL_NAME"]
+    original_relative_path_str = tx_item["PATH"]
+    original_name = tx_item["ORIGINAL_NAME"]
+    
+    print(f"DEBUG_RENAME_EXEC: Processing transaction for: {original_name} (Type: {tx_item['TYPE']})")
+    print(f"DEBUG_RENAME_EXEC: Original relative path: {original_relative_path_str}")
     
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
-
-    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in original_name : 
-        print(f"DEBUG_RENAME: Processing transaction for: {original_name}")
-        print(f"DEBUG_RENAME: Original relative path: {original_relative_path_str}")
-        print(f"DEBUG_RENAME: Current absolute path resolved to: {current_abs_path}")
-        print(f"DEBUG_RENAME: Does current_abs_path exist? {current_abs_path.exists()}")
-
+    print(f"DEBUG_RENAME_EXEC: Current absolute path resolved to: {current_abs_path}")
+    print(f"DEBUG_RENAME_EXEC: Does current_abs_path exist? {current_abs_path.exists()}")
 
     if not current_abs_path.exists():
         return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
@@ -293,11 +288,8 @@ def _execute_rename_transaction(
         return TransactionStatus.SKIPPED, "Name unchanged after replacement."
 
     new_abs_path = current_abs_path.with_name(new_name)
-    
-    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in new_name:
-        print(f"DEBUG_RENAME: Proposed new name: {new_name}")
-        print(f"DEBUG_RENAME: Proposed new absolute path: {new_abs_path}")
-
+    print(f"DEBUG_RENAME_EXEC: Proposed new name: {new_name}")
+    print(f"DEBUG_RENAME_EXEC: Proposed new absolute path: {new_abs_path}")
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
@@ -306,7 +298,6 @@ def _execute_rename_transaction(
         return TransactionStatus.COMPLETED, "DRY_RUN"
     
     try:
-        # Sandbox check before actual operation
         _ensure_within_sandbox(current_abs_path, root_dir, f"rename_source for {original_name}")
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename_destination for {new_name}")
 
@@ -314,25 +305,27 @@ def _execute_rename_transaction(
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
 
         os.rename(current_abs_path, new_abs_path)
+        print(f"DEBUG_RENAME_EXEC: Successfully renamed '{current_abs_path}' to '{new_abs_path}'")
         path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
         path_cache[original_relative_path_str] = new_abs_path
         return TransactionStatus.COMPLETED, None
     except SandboxViolationError as sve:
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
     except Exception as e:
+        print(f"DEBUG_RENAME_EXEC: os.rename failed for '{current_abs_path}' to '{new_abs_path}': {e}")
         return TransactionStatus.FAILED, str(e)
 
 def _execute_content_line_transaction(
-    tx: Dict[str, Any],
-    root_dir: Path, # This is the sandbox root during self-test
+    tx_item: Dict[str, Any], # Renamed tx to tx_item
+    root_dir: Path, 
     path_translation_map: Dict[str, str],
     path_cache: Dict[str, Path],
     dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str]]:
-    original_relative_path_str = tx["PATH"]
-    line_number_1_indexed = tx["LINE_NUMBER"]
-    original_line_content = tx["ORIGINAL_LINE_CONTENT"] 
-    file_encoding = tx["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
+    original_relative_path_str = tx_item["PATH"]
+    line_number_1_indexed = tx_item["LINE_NUMBER"]
+    original_line_content = tx_item["ORIGINAL_LINE_CONTENT"] 
+    file_encoding = tx_item["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
 
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
 
@@ -344,7 +337,7 @@ def _execute_content_line_transaction(
 
     new_line_content = replace_flojoy_occurrences(original_line_content)
     
-    tx["PROPOSED_LINE_CONTENT"] = new_line_content 
+    tx_item["PROPOSED_LINE_CONTENT"] = new_line_content 
 
     if new_line_content == original_line_content:
         return TransactionStatus.SKIPPED, "Line content unchanged after replacement."
@@ -356,7 +349,6 @@ def _execute_content_line_transaction(
         return TransactionStatus.COMPLETED, "DRY_RUN"
 
     try:
-        # Sandbox check before actual operation
         _ensure_within_sandbox(current_abs_path, root_dir, f"file_content_write for {current_abs_path.name}")
 
         with open(current_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
@@ -408,9 +400,9 @@ def execute_all_transactions(
 
     transactions.sort(key=execution_sort_key)
     
-    for tx in transactions:
-        tx_id = tx["id"]
-        current_status = TransactionStatus(tx["STATUS"])
+    for tx_item in transactions: # Renamed tx to tx_item
+        tx_id = tx_item["id"]
+        current_status = TransactionStatus(tx_item["STATUS"])
 
         if current_status == TransactionStatus.COMPLETED or current_status == TransactionStatus.FAILED:
             if current_status == TransactionStatus.COMPLETED:
@@ -420,7 +412,7 @@ def execute_all_transactions(
             continue 
 
         if not resume and current_status == TransactionStatus.IN_PROGRESS:
-            tx["STATUS"] = TransactionStatus.PENDING.value 
+            tx_item["STATUS"] = TransactionStatus.PENDING.value 
             current_status = TransactionStatus.PENDING
         
         if current_status == TransactionStatus.PENDING or \
@@ -433,12 +425,12 @@ def execute_all_transactions(
             error_msg: Optional[str] = None
 
             try:
-                if tx["TYPE"] == TransactionType.FOLDER_NAME.value or tx["TYPE"] == TransactionType.FILE_NAME.value:
-                    new_status, error_msg = _execute_rename_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
-                elif tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-                    new_status, error_msg = _execute_content_line_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
+                if tx_item["TYPE"] == TransactionType.FOLDER_NAME.value or tx_item["TYPE"] == TransactionType.FILE_NAME.value:
+                    new_status, error_msg = _execute_rename_transaction(tx_item, root_dir, path_translation_map, path_cache, dry_run)
+                elif tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                    new_status, error_msg = _execute_content_line_transaction(tx_item, root_dir, path_translation_map, path_cache, dry_run)
                 else:
-                    new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
+                    new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx_item['TYPE']}"
             except SandboxViolationError as sve: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"CRITICAL SANDBOX VIOLATION: {sve}"
