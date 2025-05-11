@@ -150,7 +150,6 @@ def scan_directory_for_occurrences(
 
     all_items_for_scan = list(_walk_for_scan(root_dir, excluded_dirs))
     
-    # Sort for deterministic transaction generation (deepest first for potential rename conflicts)
     sorted_items = sorted(all_items_for_scan, key=lambda p: len(p.parts), reverse=True)
 
     for item_path in sorted_items:
@@ -160,6 +159,9 @@ def scan_directory_for_occurrences(
             continue 
         
         original_name = item_path.name
+
+        if item_path.resolve(strict=False) in abs_excluded_files:
+            continue
 
         # Check name (applies to both files and folders)
         if find_target_lower in original_name.lower():
@@ -176,25 +178,19 @@ def scan_directory_for_occurrences(
                 "STATUS": TransactionStatus.PENDING.value
             })
 
-        # Check content ONLY if it's a non-binary file
+        # Check content ONLY if it's a file and NOT binary and matches extension filters
         if item_path.is_file():
-            if item_path.resolve(strict=False) in abs_excluded_files:
+            # Skip content scan if binary
+            if is_likely_binary_file(item_path):
                 continue
+
+            # Skip content scan if file_extensions are specified and this file doesn't match
             if file_extensions and (not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]):
-                # If extensions are specified, only scan content of matching files
-                pass # Continue to next item if extension doesn't match
-            elif file_extensions is None and is_likely_binary_file(item_path):
-                # If no extensions specified, skip binary files for content scan
                 continue
-            elif file_extensions and is_likely_binary_file(item_path):
-                # If extensions are specified AND it's binary, skip content scan
-                # (name scan above would have still happened)
-                continue
-
-
+            
+            # If we reach here, it's a non-binary file eligible for content scan
             file_encoding = get_file_encoding(item_path) or DEFAULT_ENCODING_FALLBACK
             try:
-                # Read lines preserving original line endings
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
                     lines = f.readlines()
                 
@@ -239,13 +235,11 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
             shutil.copy2(json_file_path, backup_path)
         except Exception as e:
             print(f"Warning: Could not create backup of {json_file_path}: {e}")
-            # Decide if we should proceed without backup or raise error
     try:
         with open(json_file_path, 'w', encoding='utf-8') as f:
             json.dump(transactions, f, indent=4)
     except Exception as e:
         print(f"Error: Could not save transactions to {json_file_path}: {e}")
-        # Consider restoring from backup if save fails and backup was made
         raise
 
 def update_transaction_status_in_list(
@@ -292,7 +286,6 @@ def _execute_rename_transaction(
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
-        # Simulate for path_translation_map and cache
         path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
         path_cache[original_relative_path_str] = new_abs_path
         return TransactionStatus.COMPLETED, "DRY_RUN"
@@ -317,7 +310,7 @@ def _execute_content_line_transaction(
 ) -> Tuple[TransactionStatus, Optional[str]]:
     original_relative_path_str = tx["PATH"]
     line_number_1_indexed = tx["LINE_NUMBER"]
-    original_line_content = tx["ORIGINAL_LINE_CONTENT"] # This should have original line endings
+    original_line_content = tx["ORIGINAL_LINE_CONTENT"] 
     file_encoding = tx["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
 
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
@@ -325,14 +318,11 @@ def _execute_content_line_transaction(
     if not current_abs_path.is_file():
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' not found or not a file."
 
-    # Double check it's not binary before attempting line-based content modification
-    # This is a safeguard, as scan_directory_for_occurrences should prevent this.
     if is_likely_binary_file(current_abs_path):
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' identified as binary during execution; content modification skipped."
 
     new_line_content = replace_flojoy_occurrences(original_line_content)
     
-    # Update proposed content in transaction for record-keeping, even if skipped
     tx["PROPOSED_LINE_CONTENT"] = new_line_content 
 
     if new_line_content == original_line_content:
@@ -381,8 +371,8 @@ def execute_all_transactions(
         return {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
 
     stats = {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
-    path_translation_map: Dict[str, str] = {} # original_rel_path -> new_rel_path
-    path_cache: Dict[str, Path] = {} # original_rel_path -> current_abs_path
+    path_translation_map: Dict[str, str] = {} 
+    path_cache: Dict[str, Path] = {} 
 
     def execution_sort_key(tx: Dict[str, Any]):
         type_order = {TransactionType.FOLDER_NAME.value: 0, TransactionType.FILE_NAME.value: 1, TransactionType.FILE_CONTENT_LINE.value: 2}
@@ -391,7 +381,7 @@ def execute_all_transactions(
 
         if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
             return (type_order[tx["TYPE"]], -path_depth, tx["PATH"])
-        else: # FILE_CONTENT_LINE
+        else: 
             return (type_order[tx["TYPE"]], tx["PATH"], line_num)
 
     transactions.sort(key=execution_sort_key)
