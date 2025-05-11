@@ -69,6 +69,8 @@ def _create_self_test_environment(base_dir: Path) -> None:
     )
     (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in excluded file")
     (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
+    # Binary file for testing name change, content should be untouched
+    (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
 
 
 @task
@@ -100,7 +102,8 @@ def _verify_self_test_results_task(
         "only_name_atlasvibe.md": temp_dir / "only_name_atlasvibe.md",
         "file_with_atlasVibe_lines.txt": temp_dir / "file_with_atlasVibe_lines.txt", # floJoy -> atlasVibe
         "no_target_here.log": temp_dir / "no_target_here.log", # Unchanged name
-        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt" # Excluded, so original name
+        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt", # Excluded, so original name
+        "binary_atlasvibe_file.bin": temp_dir / "binary_atlasvibe_file.bin" # Name changed
     }
 
     for name, path in exp_paths_after_rename.items():
@@ -142,9 +145,17 @@ def _verify_self_test_results_task(
         expected_content = "flojoy content in excluded file"
         check(content == expected_content, "Content of excluded file correct.",
               "Content of excluded file INCORRECT.")
-    else: # This check is covered by path checks, but good to be explicit if path check fails
+    else: 
         if not (temp_dir / "exclude_this_flojoy_file.txt").exists():
              check(False, "", "Excluded file 'exclude_this_flojoy_file.txt' MISSING.")
+    
+    # binary_atlasvibe_file.bin (content should be original, name changed)
+    binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
+    if binary_file_renamed and binary_file_renamed.exists():
+        original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
+        actual_content = binary_file_renamed.read_bytes()
+        check(actual_content == original_binary_content, "Binary file content UNTOUCHED as expected.",
+              f"Binary file content MODIFIED. Expected: {original_binary_content!r}, Got: {actual_content!r}")
 
 
     # 3. Verify transaction statuses in the JSON file
@@ -152,17 +163,16 @@ def _verify_self_test_results_task(
     if transactions:
         all_completed_or_skipped = True
         for tx in transactions:
-            # Excluded files should not generate transactions or they should be SKIPPED if they did
             if "exclude_this_flojoy_file.txt" in tx["PATH"]:
-                if tx["STATUS"] != TransactionStatus.SKIPPED.value and tx["STATUS"] != TransactionStatus.PENDING.value : # PENDING if scan doesn't mark excluded as skipped
-                    # This depends on whether excluded files are filtered out before transaction creation or marked as skipped
-                    # For now, assume they might be PENDING if not processed, or SKIPPED if filtered by execution logic
-                    # A stricter test would ensure no transaction is created for them.
-                    # For now, let's assume they are correctly skipped by execution if they were part of `excluded_files` list.
-                    # The self-test setup passes `excluded_files` to scan.
-                    # The scan logic should ideally not create transactions for explicitly excluded files.
-                    # If it does, execution should skip them.
-                    pass # This needs refinement based on actual scan behavior for excluded files.
+                # Transactions for excluded files might be SKIPPED by scan or execution
+                # For now, we assume they are correctly handled (not processed for change)
+                # A more robust check would be that no *change* transactions are COMPLETED for them.
+                if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx["TYPE"] != TransactionType.FILE_NAME.value: # Name can change if not excluded by name
+                     # If it's a content line for an excluded file, it should not be completed.
+                     if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                        all_completed_or_skipped = False
+                        print(f"FAIL: Transaction {tx['id']} for excluded file content (Path: {tx['PATH']}) has status {tx['STATUS']}.")
+                        break
             elif tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                 all_completed_or_skipped = False
                 print(f"FAIL: Transaction {tx['id']} (Type: {tx['TYPE']}, Path: {tx['PATH']}) has status {tx['STATUS']}.")
@@ -181,17 +191,14 @@ def _verify_self_test_results_task(
 @flow(name="Self-Test Flow", log_prints=True)
 def self_test_flow(
     temp_dir_str: str,
-    dry_run_for_test: bool,
-    process_binary_for_test: bool # This arg might become less relevant if binary processing is simplified
+    dry_run_for_test: bool
 ) -> None:
     temp_dir = Path(temp_dir_str)
     _create_self_test_environment(temp_dir)
 
-    # Self-test specific parameters
     test_excluded_dirs: List[str] = [] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt"]
-    # File extensions to scan for content (example)
-    test_extensions = [".txt", ".py", ".md"] 
+    test_extensions = [".txt", ".py", ".md"] # Binary files are handled by name, content ignored
 
     transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
 
@@ -200,8 +207,7 @@ def self_test_flow(
         root_dir=temp_dir,
         excluded_dirs=test_excluded_dirs,
         excluded_files=test_excluded_files,
-        file_extensions=test_extensions,
-        process_binary_files=process_binary_for_test # Script now only handles text-like
+        file_extensions=test_extensions
     )
     save_transactions(transactions, transaction_file)
     print(f"Self-Test: Scan complete. {len(transactions)} transactions planned in {transaction_file}")
@@ -211,8 +217,8 @@ def self_test_flow(
         execution_stats = execute_all_transactions(
             transactions_file_path=transaction_file,
             root_dir=temp_dir,
-            dry_run=False, # Actual execution for self-test verification
-            resume=False   # Start fresh for self-test
+            dry_run=False, 
+            resume=False   
         )
         print(f"Self-Test: Execution complete. Stats: {execution_stats}")
         
@@ -222,8 +228,6 @@ def self_test_flow(
         )
     else:
         print("Self-Test: Dry run selected. Skipping execution and verification of changes.")
-        # Optionally, could do a dry-run execution and inspect the transaction file for proposed changes.
-        # For now, dry-run self-test mainly checks scan and setup.
 
 
 # --- Main CLI Orchestration ---
@@ -233,11 +237,10 @@ def main_flow(
     extensions: Optional[List[str]],
     exclude_dirs: List[str],
     exclude_files: List[str],
-    process_binary_files: bool, # Note: new logic is less focused on binary
     dry_run: bool,
     skip_scan: bool,
     resume: bool,
-    force_execution: bool # For skipping prompt
+    force_execution: bool 
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
@@ -246,28 +249,26 @@ def main_flow(
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
 
-    if not dry_run and not force_execution and not resume: # Prompt only for fresh, non-dry runs
+    if not dry_run and not force_execution and not resume: 
         print("--- Proposed Operation ---")
         print(f"Root Directory: {root_dir}")
         print("Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.")
         print(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}")
         print(f"Exclude Dirs: {exclude_dirs}")
         print(f"Exclude Files: {exclude_files}")
-        # print(f"Process Binary Files: {process_binary_files}") # Less relevant now
         print("-------------------------")
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes':
             print("Operation cancelled by user.")
             return
 
-    if not skip_scan and not resume: # Scan only if not skipping and not resuming (resume implies transactions exist)
+    if not skip_scan and not resume: 
         print(f"Starting scan phase in '{root_dir}'...")
         found_transactions = scan_directory_for_occurrences(
             root_dir=root_dir,
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
-            file_extensions=extensions,
-            process_binary_files=process_binary_files
+            file_extensions=extensions
         )
         save_transactions(found_transactions, transaction_json_path)
         print(f"Scan complete. {len(found_transactions)} transactions planned in '{transaction_json_path}'")
@@ -282,13 +283,11 @@ def main_flow(
 
     if dry_run:
         print("Dry run: Simulating execution of transactions...")
-        # For dry run, we can load and display transactions, or simulate execution without changes
-        # The execute_all_transactions function handles dry_run internally.
         stats = execute_all_transactions(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=True,
-            resume=resume # Resume can be true for a dry run to see what would be resumed
+            resume=resume 
         )
         print(f"Dry run complete. Simulated stats: {stats}")
         print(f"Review '{transaction_json_path}' for transaction details and statuses (will show DRY_RUN).")
@@ -305,23 +304,18 @@ def main_flow(
 
 
 def main_cli() -> None:
-    # Simplified parser for "flojoy" -> "atlasvibe" specific task
     parser = argparse.ArgumentParser(
-        description="Find and replace 'flojoy' with 'atlasvibe' (case-preserving) in file/folder names and content.",
+        description="Find and replace 'flojoy' with 'atlasvibe' (case-preserving) in file/folder names and content. Binary file content is ignored.",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("directory", nargs='?', default=".",
                         help="The root directory to process (default: current directory).")
     parser.add_argument("--extensions", nargs="+",
-                        help="List of file extensions to process for content changes (e.g., .py .txt). If not specified, attempts to process text-like files.")
+                        help="List of file extensions to process for content changes (e.g., .py .txt). If not specified, attempts to process text-like files, skipping binaries.")
     parser.add_argument("--exclude-dirs", nargs="+", default=[".git", ".venv", "node_modules", "__pycache__"],
                         help="Directory names to exclude (default: .git, .venv, node_modules, __pycache__).")
     parser.add_argument("--exclude-files", nargs="+", default=[],
                         help="Specific file paths (relative to root) to exclude.")
-    # process_binary_files is less relevant as the core logic is text-based.
-    # Kept for compatibility but its effect is now minor.
-    parser.add_argument("--process-binary-files", action="store_true",
-                        help="Attempt to scan files that seem binary. Replacement is still text-based. (Use with caution)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Scan and plan changes, but do not execute them. Updates transaction file with DRY_RUN status.")
     parser.add_argument("--skip-scan", action="store_true",
@@ -335,20 +329,13 @@ def main_cli() -> None:
 
     args = parser.parse_args()
     
-    # Remove the monkeypatching for _get_case_preserved_replacement from main_cli
-    # The trace prints are now directly in the function if needed for debugging.
-
     if args.self_test:
         print("Running self-test...")
         with tempfile.TemporaryDirectory(prefix="mass_replace_self_test_") as tmpdir_str:
             try:
-                # For self-test, we don't use Prefect's task/flow decorators from the main script's context
-                # but call the underlying functions directly or a specific self-test flow.
-                # The self_test_flow is already decorated with @flow if PREFECT_AVAILABLE.
                 self_test_flow(
                     temp_dir_str=tmpdir_str,
-                    dry_run_for_test=args.dry_run,
-                    process_binary_for_test=args.process_binary_files
+                    dry_run_for_test=args.dry_run
                 )
                 if not args.dry_run:
                      print("Self-test PASSED.")
@@ -359,12 +346,9 @@ def main_cli() -> None:
                 sys.exit(1)
             except Exception as e:
                 print(f"Self-test ERRORED: {e}")
-                # import traceback
-                # traceback.print_exc() # For more detailed error during self-test
                 sys.exit(1)
         return
 
-    # Default transaction log files to always exclude from main operations
     default_log_files_to_exclude = [
         MAIN_TRANSACTION_FILE_NAME,
         MAIN_TRANSACTION_FILE_NAME + TRANSACTION_FILE_BACKUP_EXT,
@@ -373,7 +357,6 @@ def main_cli() -> None:
         if log_file not in args.exclude_files:
             args.exclude_files.append(log_file)
     
-    # Script self-exclusion (if script is in target directory)
     try:
         script_path_obj = Path(__file__).resolve(strict=True)
         target_dir_resolved = Path(args.directory).resolve(strict=True)
@@ -382,14 +365,14 @@ def main_cli() -> None:
              if script_relative_to_target not in args.exclude_files:
                  args.exclude_files.append(script_relative_to_target)
     except (FileNotFoundError, ValueError):
-         pass # Silently skip if paths can't be resolved or script not in target.
+         pass 
 
     main_flow(
         directory=args.directory,
         extensions=args.extensions,
         exclude_dirs=args.exclude_dirs,
         exclude_files=args.exclude_files,
-        process_binary_files=args.process_binary_files,
+        process_binary_files=False, # This argument is now effectively ignored for content
         dry_run=args.dry_run,
         skip_scan=args.skip_scan,
         resume=args.resume,
@@ -402,15 +385,11 @@ if __name__ == "__main__":
     except ImportError as e:
         if "prefect" in str(e).lower():
             print("Warning: Prefect not installed, running without Prefect task/flow features.")
-            # Potentially call a non-Prefect version of main_flow or ensure functions work standalone
-            # For now, the dummy decorators handle this.
-            main_cli() # Try again, dummy decorators should be in place
+            main_cli() 
         else:
             print(f"Critical dependency missing: {e}")
             sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        # import traceback
-        # traceback.print_exc() # For debugging
         sys.exit(1)
 

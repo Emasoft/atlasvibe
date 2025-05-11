@@ -137,12 +137,12 @@ def scan_directory_for_occurrences(
     root_dir: Path,
     excluded_dirs: List[str],
     excluded_files: List[str],
-    file_extensions: Optional[List[str]], # For filtering files to scan content
-    process_binary_files: bool
+    file_extensions: Optional[List[str]] # For filtering files to scan content
 ) -> List[Dict[str, Any]]:
     """
     Scans the directory for "flojoy" occurrences in names and content.
     Search is case-insensitive for "flojoy".
+    Binary file content is NOT scanned.
     """
     transactions: List[Dict[str, Any]] = []
     find_target_lower = "flojoy" # Hardcoded as per new requirements
@@ -161,15 +161,14 @@ def scan_directory_for_occurrences(
         
         original_name = item_path.name
 
-        # Check name
+        # Check name (applies to both files and folders)
         if find_target_lower in original_name.lower():
             tx_type = TransactionType.FOLDER_NAME if item_path.is_dir() else TransactionType.FILE_NAME
-            # For name changes, we don't need line content or encoding initially
             transactions.append({
                 "id": str(uuid.uuid4()),
                 "TYPE": tx_type.value,
-                "PATH": relative_path_str, # Original relative path
-                "ORIGINAL_NAME": original_name, # Store original name for replacement
+                "PATH": relative_path_str, 
+                "ORIGINAL_NAME": original_name,
                 "LINE_NUMBER": 0,
                 "ORIGINAL_LINE_CONTENT": None,
                 "PROPOSED_LINE_CONTENT": None,
@@ -177,14 +176,21 @@ def scan_directory_for_occurrences(
                 "STATUS": TransactionStatus.PENDING.value
             })
 
-        # Check content if it's a file
+        # Check content ONLY if it's a non-binary file
         if item_path.is_file():
             if item_path.resolve(strict=False) in abs_excluded_files:
                 continue
             if file_extensions and (not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]):
+                # If extensions are specified, only scan content of matching files
+                pass # Continue to next item if extension doesn't match
+            elif file_extensions is None and is_likely_binary_file(item_path):
+                # If no extensions specified, skip binary files for content scan
                 continue
-            if not process_binary_files and is_likely_binary_file(item_path):
+            elif file_extensions and is_likely_binary_file(item_path):
+                # If extensions are specified AND it's binary, skip content scan
+                # (name scan above would have still happened)
                 continue
+
 
             file_encoding = get_file_encoding(item_path) or DEFAULT_ENCODING_FALLBACK
             try:
@@ -197,17 +203,16 @@ def scan_directory_for_occurrences(
                         transactions.append({
                             "id": str(uuid.uuid4()),
                             "TYPE": TransactionType.FILE_CONTENT_LINE.value,
-                            "PATH": relative_path_str, # Original relative path to file
+                            "PATH": relative_path_str, 
                             "ORIGINAL_NAME": None,
                             "LINE_NUMBER": line_num_0_indexed + 1, # 1-indexed
-                            "ORIGINAL_LINE_CONTENT": line_content, # Store original line
-                            "PROPOSED_LINE_CONTENT": None, # Will be filled during execution
+                            "ORIGINAL_LINE_CONTENT": line_content, 
+                            "PROPOSED_LINE_CONTENT": None, 
                             "ORIGINAL_ENCODING": file_encoding,
                             "STATUS": TransactionStatus.PENDING.value
                         })
             except Exception as e:
-                print(f"Warning: Could not read/process file {item_path}: {e}")
-                # Optionally create a FAILED transaction here or log more formally
+                print(f"Warning: Could not read/process content of file {item_path}: {e}")
                 pass
     return transactions
 
@@ -320,6 +325,11 @@ def _execute_content_line_transaction(
     if not current_abs_path.is_file():
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' not found or not a file."
 
+    # Double check it's not binary before attempting line-based content modification
+    # This is a safeguard, as scan_directory_for_occurrences should prevent this.
+    if is_likely_binary_file(current_abs_path):
+        return TransactionStatus.SKIPPED, f"File '{current_abs_path}' identified as binary during execution; content modification skipped."
+
     new_line_content = replace_flojoy_occurrences(original_line_content)
     
     # Update proposed content in transaction for record-keeping, even if skipped
@@ -341,15 +351,11 @@ def _execute_content_line_transaction(
         if not (0 <= line_number_1_indexed - 1 < len(lines)):
             return TransactionStatus.FAILED, f"Line number {line_number_1_indexed} out of bounds for file {current_abs_path} (len: {len(lines)})."
 
-        # Verify if the original content still matches, as a safeguard
-        # This check might be too strict if multiple transactions modify the same line sequentially,
-        # but for now, it assumes the ORIGINAL_LINE_CONTENT from scan is what we expect to find.
         if lines[line_number_1_indexed - 1] != original_line_content:
              return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
 
         lines[line_number_1_indexed - 1] = new_line_content
         
-        # Write back using binary mode to preserve line endings exactly as read
         with open(current_abs_path, 'wb') as f:
             for line in lines:
                 f.write(line.encode(file_encoding, errors='surrogateescape'))
@@ -378,9 +384,6 @@ def execute_all_transactions(
     path_translation_map: Dict[str, str] = {} # original_rel_path -> new_rel_path
     path_cache: Dict[str, Path] = {} # original_rel_path -> current_abs_path
 
-    # Sort transactions: FOLDER_NAME first, then FILE_NAME, then FILE_CONTENT_LINE
-    # Within names, sort by path depth (descending) to handle parent renames before children.
-    # Within content, sort by path then line number.
     def execution_sort_key(tx: Dict[str, Any]):
         type_order = {TransactionType.FOLDER_NAME.value: 0, TransactionType.FILE_NAME.value: 1, TransactionType.FILE_CONTENT_LINE.value: 2}
         path_depth = tx["PATH"].count(os.sep)
@@ -402,10 +405,9 @@ def execute_all_transactions(
                 stats["completed"] +=1
             if current_status == TransactionStatus.FAILED:
                 stats["failed"] +=1
-            continue # Already processed or terminally failed
+            continue 
 
         if not resume and current_status == TransactionStatus.IN_PROGRESS:
-            # If not resuming, treat IN_PROGRESS from a previous run as PENDING
             tx["STATUS"] = TransactionStatus.PENDING.value 
             current_status = TransactionStatus.PENDING
         
@@ -413,7 +415,7 @@ def execute_all_transactions(
            (resume and current_status == TransactionStatus.IN_PROGRESS):
             
             update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-            save_transactions(transactions, transactions_file_path) # Save IN_PROGRESS state
+            save_transactions(transactions, transactions_file_path) 
 
             new_status: TransactionStatus
             error_msg: Optional[str] = None
@@ -426,7 +428,7 @@ def execute_all_transactions(
                 new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg)
-            save_transactions(transactions, transactions_file_path) # Save final state for this tx
+            save_transactions(transactions, transactions_file_path) 
 
             if new_status == TransactionStatus.COMPLETED:
                 stats["completed"] += 1
@@ -436,13 +438,11 @@ def execute_all_transactions(
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
         
-        elif current_status == TransactionStatus.SKIPPED : # Already processed as skipped
+        elif current_status == TransactionStatus.SKIPPED : 
              stats["skipped"] +=1
-        else: # Still PENDING but not processed in this run (e.g. if resume=False and it was IN_PROGRESS)
+        else: 
             stats["pending"] +=1
 
-
-    # Final count of pending if any loop was skipped
     final_pending = sum(1 for t in transactions if t["STATUS"] == TransactionStatus.PENDING.value)
     stats["pending"] = final_pending
     

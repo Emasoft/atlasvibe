@@ -15,7 +15,7 @@ These parts should be modular, potentially residing in separate Python modules.
 - Occurrences can be in:
     - File names
     - Folder names
-    - File content (on a per-line basis)
+    - File content (on a per-line basis for non-binary files)
 - Generate and manage a `planned_transactions.json` file.
 
 **`planned_transactions.json` Structure:**
@@ -89,9 +89,20 @@ Each entry (transaction) in the JSON array must include:
 - The "String Search and Retrieve Logic" calls this replacement function during its execution phase, passing the relevant string (a name or a line of content).
 - The "String Search and Retrieve Logic" is then responsible for persisting the change (renaming or rewriting the file line).
 
+## Binary File Handling
+
+- **Content Modification**: The content of binary files must **never** be modified. Attempting to replace strings within binary files (including compressed archives like .zip, .gz, compressed .svg, etc.) can lead to corruption, as byte offsets and checksums would be invalidated.
+- **Name Modification**: The names of binary files **must** be scanned and are eligible for renaming if they contain the target string "flojoy". Any references to these filenames in other parts of the project (if also processed by the script) would be updated accordingly.
+- **Detection**: A file must be determined as binary by examining its initial bytes (heuristic check), not based on its filename or extension.
+- **Scanning**:
+    - If a file is identified as binary, its content will **not** be read or scanned for `FILE_CONTENT_LINE` transactions.
+    - Its name will still be checked for `FILE_NAME` transactions.
+- **CLI**: The `--process-binary-files` argument (or similar) related to content processing is obsolete and should be removed. The script will inherently ignore binary content.
+
 ## CLI Simplification
 - Arguments like `find_pattern`, `replace_pattern`, `is_regex`, `case_sensitive` should be re-evaluated. If the script is now solely for "flojoy" to "atlasvibe" with the fixed mapping, these may be removed or hardcoded. The primary find operation is always case-insensitive for "flojoy".
 
 ## Testing
 - Self-tests need to be adapted to the new modular structure and line-based transactions.
+- Self-tests must verify that binary file content remains untouched while their names are correctly processed.
 - Temporary files for testing should be created in a `./tests/temp/` directory (or similar, managed by the self-test framework).
