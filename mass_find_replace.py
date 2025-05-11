@@ -244,7 +244,7 @@ def main_flow(
     if not dry_run and not force_execution and not resume: # Prompt only for fresh, non-dry runs
         print("--- Proposed Operation ---")
         print(f"Root Directory: {root_dir}")
-        print(f"Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.")
+        print("Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.")
         print(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}")
         print(f"Exclude Dirs: {exclude_dirs}")
         print(f"Exclude Files: {exclude_files}")
