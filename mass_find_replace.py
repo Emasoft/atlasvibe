@@ -20,49 +20,10 @@ import types # For ModuleType
 import sys # For sys.exit
 
 # Prefect integration
-task_real = None
-flow_real = None
-task_dummy = None
-flow_dummy = None
-
-try:
-    from prefect import task as _task_real_import, flow as _flow_real_import
-
-    # Canary test for the @flow decorator
-    @_flow_real_import
-    def _canary_flow_for_init():
-        pass
-    # If the above definition didn't raise an error, assign the real ones
-    task = _task_real_import
-    flow = _flow_real_import
-except (ImportError, TypeError):
-    def _task_dummy_impl(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    def _flow_dummy_impl(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-        return decorator
-    task = _task_dummy_impl
-    flow = _flow_dummy_impl
-
-# Ensure task and flow are always defined, even if try-except had an issue.
-if task is None:
-    def _task_final_fallback(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-    task = _task_final_fallback
-if flow is None:
-    def _flow_final_fallback(*args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]: return fn
-        return decorator
-    flow = _flow_final_fallback
-
+from prefect import task, flow # Script will fail here if prefect is not installed
 
 # Chardet integration for encoding detection
-CHARDET_AVAILABLE = False
-try:
-    import chardet
-    CHARDET_AVAILABLE = True 
-except ImportError:
-    print("ERROR: chardet library not found. This script requires chardet for robust encoding detection.")
-    print("Please install it by running: pip install chardet")
-    sys.exit(1)
+import chardet # Script will fail here if chardet is not installed
 
 
 # --- Constants ---
@@ -76,19 +37,16 @@ STATUS_PENDING = "PENDING"
 STATUS_COMPLETED = "COMPLETED"
 STATUS_FAILED = "FAILED"
 STATUS_SKIPPED = "SKIPPED" 
-DEFAULT_ENCODING_FALLBACK = 'utf-8' # Should ideally not be used if chardet is mandatory
+DEFAULT_ENCODING_FALLBACK = 'utf-8'
 
 # --- Core Helper Functions (Shared Logic) ---
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
     """Detects file encoding using chardet."""
-    # Assumes chardet is available due to check at script start
     try:
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size) 
         if not raw_data:
-            # Fallback for empty files, though chardet might handle this.
-            # Consider if empty files should have a specific encoding or be skipped.
             return DEFAULT_ENCODING_FALLBACK 
         
         detected = chardet.detect(raw_data)
@@ -102,23 +60,17 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
             if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: 
                 return 'utf-8'
             try:
-                # Validate if Python can actually use this encoding
                 b"test".decode(encoding) 
                 return encoding 
             except LookupError:
-                # If chardet suggests an encoding Python doesn't know, fallback or error
-                # For now, falling back to UTF-8 as a last resort before None
                 return DEFAULT_ENCODING_FALLBACK 
         else:
-            # Low confidence or no encoding detected, try UTF-8 as a common default
             try:
                 raw_data.decode('utf-8') 
                 return 'utf-8'
             except UnicodeDecodeError:
-                # If UTF-8 fails, we can't reliably determine encoding
                 return None 
     except Exception:
-        # Broad exception for any file I/O or chardet internal errors
         return None 
 
 def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
@@ -329,10 +281,17 @@ def scan_and_collect_occurrences_task(
 
 @task
 def compile_transactions_json_task(transactions: List[Dict[str, Any]], output_dir: Path, filename: str) -> Path:
-    def sort_key(t: Dict[str, Any]) -> Tuple[int, int, str, int]: 
+    def sort_key(t: Dict[str, Any]) -> Tuple[Any, ...]:  # More generic type hint for key
         path_depth = t["PATH"].count(os.sep)
-        type_order = {"FOLDERNAME": 0, "FILENAME": 1, "STRING_IN_FILE": 2}
-        return (type_order[t["OCCURRENCE_TYPE"]], path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
+        type_order_map = {"FOLDERNAME": 0, "FILENAME": 1, "STRING_IN_FILE": 2}
+        occurrence_type = t["OCCURRENCE_TYPE"]
+        
+        if occurrence_type in ["FOLDERNAME", "FILENAME"]:
+            # Sort renames by type, then by descending depth, then by path string
+            return (type_order_map[occurrence_type], -path_depth, t["PATH"])
+        else: # STRING_IN_FILE
+            # Sort content changes by path, then line number (original sort for content was fine)
+            return (type_order_map[occurrence_type], path_depth, t["PATH"], t.get("LINE_NUMBER", 0))
 
     transactions.sort(key=sort_key)
     
@@ -643,7 +602,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
     (base_dir / "no_flojoy_here.log").write_text("This is a log file without the target string.") 
 
 @task 
-def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, chardet_was_available: bool) -> bool:
+def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -> bool:
     print("--- Verifying Self-Test Results ---")
     passed_checks, failed_checks = 0, 0
 
@@ -676,17 +635,20 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, c
 
     deep_file = temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file_mixed_eol.txt"
     if deep_file.is_file():
-        raw_content_bytes = deep_file.read_bytes() 
+        actual_bytes = deep_file.read_bytes() 
         expected_text_content = "atlasvibe line 1\r\nATLASVIBE line 2\nAtlasvibe line 3\r\nAtlasVibe line 4\natlasVibe line 5\nmyatlasvibe_project details"
-        expected_raw_bytes = expected_text_content.encode('utf-8') 
-        check(raw_content_bytes == expected_raw_bytes, "Mixed EOL file content and EOLs preserved.", 
-              f"Mixed EOL file content/EOLs NOT preserved. Expected: {expected_raw_bytes!r}, Got: {raw_content_bytes!r}")
+        expected_bytes = expected_text_content.encode('utf-8') 
+        check(actual_bytes == expected_bytes, "Mixed EOL file content and EOLs preserved (byte-level check).", 
+              f"Mixed EOL file content/EOLs NOT preserved. Expected: {expected_bytes!r}, Got: {actual_bytes!r}")
 
     multiple_file = temp_dir / "multiple_on_line_atlasvibe.txt"
     if multiple_file.is_file():
-        content = multiple_file.read_text(encoding='utf-8')
-        expected_content = "atlasvibe atlasvibe Atlasvibe ATLASVIBE atlasVibe AtlasVibe"
-        check(content.strip() == expected_content, "Multiple occurrences on one line handled.", f"Multiple on line INCORRECT: '{content.strip()}'")
+        actual_bytes = multiple_file.read_bytes()
+        expected_text_content = "atlasvibe atlasvibe Atlasvibe ATLASVIBE atlasVibe AtlasVibe"
+        expected_bytes = expected_text_content.encode('utf-8') # Assuming UTF-8 for this test file
+        check(actual_bytes.strip() == expected_bytes, "Multiple occurrences on one line handled (byte-level check).", 
+              f"Multiple on line INCORRECT: Expected: {expected_bytes!r}, Got: '{actual_bytes.strip()!r}'")
+
 
     bin_file = temp_dir / "binary_atlasvibe_file.bin"
     if bin_file.is_file():
@@ -705,10 +667,12 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, c
     latin1_file = temp_dir / "latin1_atlasvibe_content.txt"
     if latin1_file.is_file():
         try:
-            content = latin1_file.read_text(encoding='latin-1') 
-            check("café atlasvibe here" in content and "Another Atlasvibe line with accent aigu: é" in content, 
-                  "Latin-1 file content correct and encoding preserved.", 
-                  f"Latin-1 file content/encoding INCORRECT. Content: {content[:100]}...")
+            actual_bytes = latin1_file.read_bytes()
+            expected_text = "café atlasvibe here\nAnother Atlasvibe line with accent aigu: é"
+            expected_bytes = expected_text.encode('latin-1')
+            check(actual_bytes == expected_bytes, 
+                  "Latin-1 file content correct and encoding preserved (byte-level check).", 
+                  f"Latin-1 file content/encoding INCORRECT. Expected: {expected_bytes!r}, Got: {actual_bytes!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify latin-1 file: {e}")
     else: 
@@ -717,8 +681,11 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, c
     cp1252_file = temp_dir / "cp1252_atlasvibe_content.txt"
     if cp1252_file.is_file():
         try:
-            content = cp1252_file.read_text(encoding='cp1252')
-            check("Euro € symbol with atlasvibe." in content, "CP1252 file content correct and encoding preserved.", f"CP1252 file content/encoding INCORRECT: {content}")
+            actual_bytes = cp1252_file.read_bytes()
+            expected_text = "Euro € symbol with atlasvibe."
+            expected_bytes = expected_text.encode('cp1252')
+            check(actual_bytes == expected_bytes, "CP1252 file content correct and encoding preserved (byte-level check).", 
+                  f"CP1252 file content/encoding INCORRECT. Expected: {expected_bytes!r}, Got: {actual_bytes!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify cp1252 file: {e}")
     else: 
@@ -727,13 +694,11 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, c
     sjis_file_renamed = temp_dir / "sjis_atlasvibe_content.txt"
     if sjis_file_renamed.is_file():
         try:
-            content = sjis_file_renamed.read_text(encoding='shift_jis', errors='replace')
-            if chardet_was_available:
-                expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
-                check(content == expected_sjis_text, "Shift-JIS file content correct (chardet available).", f"Shift-JIS file content INCORRECT (chardet available). Got: {content!r}")
-            else: 
-                expected_sjis_text_no_chardet = "これはflojoyのテストです。\n次の行もFlojoyです。"
-                check(content == expected_sjis_text_no_chardet, "Shift-JIS file content unchanged as expected (chardet unavailable).", f"Shift-JIS file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
+            actual_bytes = sjis_file_renamed.read_bytes()
+            expected_sjis_text = "これはatlasvibeのテストです。\n次の行もAtlasvibeです。"
+            expected_bytes = expected_sjis_text.encode('shift_jis', errors='replace')
+            check(actual_bytes == expected_bytes, "Shift-JIS file content correct and encoding preserved (byte-level check).", 
+                  f"Shift-JIS file content INCORRECT. Expected: {expected_bytes!r}, Got: {actual_bytes!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify Shift-JIS file: {e}")
     else: 
@@ -742,13 +707,11 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool, c
     gb18030_file_renamed = temp_dir / "gb18030_atlasvibe_content.txt"
     if gb18030_file_renamed.is_file():
         try:
-            content = gb18030_file_renamed.read_text(encoding='gb18030', errors='replace')
-            if chardet_was_available:
-                expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
-                check(content == expected_gb18030_text, "GB18030 file content correct (chardet available).", f"GB18030 file content INCORRECT (chardet available). Got: {content!r}")
-            else: 
-                expected_gb18030_text_no_chardet = "你好 flojoy 世界\n这是 Flojoy 的一个例子"
-                check(content == expected_gb18030_text_no_chardet, "GB18030 file content unchanged as expected (chardet unavailable).", f"GB18030 file content UNEXPECTEDLY CHANGED (chardet unavailable). Got: {content!r}")
+            actual_bytes = gb18030_file_renamed.read_bytes()
+            expected_gb18030_text = "你好 atlasvibe 世界\n这是 Atlasvibe 的一个例子"
+            expected_bytes = expected_gb18030_text.encode('gb18030', errors='replace')
+            check(actual_bytes == expected_bytes, "GB18030 file content correct and encoding preserved (byte-level check).", 
+                  f"GB18030 file content INCORRECT. Expected: {expected_bytes!r}, Got: {actual_bytes!r}")
         except Exception as e: 
             check(False, "", f"Could not read/verify GB18030 file: {e}")
     else: 
@@ -825,8 +788,6 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
         json_file_path=transaction_json_path_test, root_dir=temp_dir, dry_run=dry_run_for_test,
         validation_json_path=validation_json_path_test
     )
-    # Prefect tasks might return a future-like object if Prefect is active.
-    # For no-op decorators, it's the direct result.
     path_map_result: Any = rename_res.result() if hasattr(rename_res, 'result') and callable(rename_res.result) else rename_res
     path_map: Dict[str, str] = path_map_result.get("path_translation_map", {}) if isinstance(path_map_result, dict) else {}
     
@@ -839,7 +800,7 @@ def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for
     )
     
     if not dry_run_for_test: 
-        _verify_self_test_results_task(temp_dir=temp_dir, process_binary_files=process_binary_for_test, chardet_was_available=CHARDET_AVAILABLE) 
+        _verify_self_test_results_task(temp_dir=temp_dir, process_binary_files=process_binary_for_test) 
 
 
 # --- Main Prefect Flow ---
