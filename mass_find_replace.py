@@ -350,9 +350,9 @@ if __name__ == "__main__":
     try:
         main_cli()
     except ImportError as e:
-        # This primarily catches the Prefect import error if it's not installed.
-        # Chardet is also a direct import at the top of file_system_operations.
-        print(f"Critical dependency missing: {e}. Please ensure 'prefect' and 'chardet' are installed.")
+        print(f"CRITICAL ERROR: A required dependency is missing: {e}.")
+        print("Please ensure 'prefect' and 'chardet' are installed in your Python environment.")
+        print("You can typically install them using pip: pip install prefect chardet")
         sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
