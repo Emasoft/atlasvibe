@@ -203,6 +203,9 @@ def scan_directory_for_occurrences(
                             "STATUS": TransactionStatus.PENDING.value
                         })
             except Exception as e:
+                # This print is a warning for a file processing error, not a fatal script error.
+                # It's useful for debugging why a specific file might not have been processed.
+                # Kept as per interpretation of "fatal errors" for the script's operation.
                 print(f"Warning: Could not read/process content of file {item_path}: {e}")
                 pass
     return transactions
@@ -215,9 +218,10 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         if path.exists():
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    print(f"Loading transactions from: {path}")
+                    # Removed informational print: print(f"Loading transactions from: {path}")
                     return cast(List[Dict[str, Any]], json.load(f))
             except Exception as e:
+                # This print indicates a failure to load the transaction file, which is a significant issue.
                 print(f"Warning: Failed to load transactions from {path}: {e}")
     return None
 
@@ -232,6 +236,7 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
         with open(json_file_path, 'w', encoding='utf-8') as f:
             json.dump(transactions, f, indent=4)
     except Exception as e:
+        # This is an error during a critical save operation.
         print(f"Error: Could not save transactions to {json_file_path}: {e}")
         raise
 
@@ -274,6 +279,8 @@ def _execute_rename_transaction(
     original_relative_path_str = tx_item["PATH"]
     original_name = tx_item["ORIGINAL_NAME"]
     
+    # These are debug prints, useful during development but could be removed for cleaner "production" runs.
+    # For now, keeping them as they are not part of the table output itself.
     print(f"DEBUG_RENAME_EXEC: Processing transaction for: {original_name} (Type: {tx_item['TYPE']})")
     print(f"DEBUG_RENAME_EXEC: Original relative path: {original_relative_path_str}")
     
@@ -294,8 +301,8 @@ def _execute_rename_transaction(
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
-        path_translation_map[original_relative_path_str] = new_name # Store new name component
-        path_cache[original_relative_path_str] = new_abs_path # Cache the full new absolute path
+        path_translation_map[original_relative_path_str] = new_name 
+        path_cache[original_relative_path_str] = new_abs_path 
         return TransactionStatus.COMPLETED, "DRY_RUN"
     
     try:
@@ -307,8 +314,8 @@ def _execute_rename_transaction(
 
         os.rename(current_abs_path, new_abs_path)
         print(f"DEBUG_RENAME_EXEC: Successfully renamed '{current_abs_path}' to '{new_abs_path}'")
-        path_translation_map[original_relative_path_str] = new_name # Store new name component
-        path_cache[original_relative_path_str] = new_abs_path # Cache the full new absolute path
+        path_translation_map[original_relative_path_str] = new_name 
+        path_cache[original_relative_path_str] = new_abs_path 
         return TransactionStatus.COMPLETED, None
     except SandboxViolationError as sve:
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
@@ -382,6 +389,7 @@ def execute_all_transactions(
 ) -> Dict[str, int]:
     transactions = load_transactions(transactions_file_path)
     if not transactions:
+        # This print indicates a failure to load transactions, which is critical for this function.
         print(f"Error: Could not load transactions from {transactions_file_path}")
         return {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
 
@@ -395,7 +403,9 @@ def execute_all_transactions(
         line_num = tx.get("LINE_NUMBER", 0)
 
         if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-            return (type_order[tx["TYPE"]], -path_depth, tx["PATH"])
+            # For folders and files, process shallower paths first (parents before children).
+            # path_depth (ascending) ensures this.
+            return (type_order[tx["TYPE"]], path_depth, tx["PATH"])
         else: 
             return (type_order[tx["TYPE"]], tx["PATH"], line_num)
 
@@ -435,10 +445,12 @@ def execute_all_transactions(
             except SandboxViolationError as sve: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"CRITICAL SANDBOX VIOLATION: {sve}"
-                print(error_msg) 
+                print(error_msg) # This is a critical error.
             except Exception as e: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"Unexpected error during transaction execution: {e}"
+                # This is also a significant error.
+                print(error_msg)
 
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg)
@@ -448,7 +460,8 @@ def execute_all_transactions(
                 stats["completed"] += 1
             elif new_status == TransactionStatus.FAILED:
                 stats["failed"] += 1
-                print(f"Transaction {tx_id} FAILED: {error_msg}")
+                # Error message for this specific transaction failure is already printed above or returned by execute_ functions.
+                # print(f"Transaction {tx_id} FAILED: {error_msg}") # This might be redundant.
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
         
