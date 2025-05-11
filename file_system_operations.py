@@ -110,7 +110,7 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
 def _get_current_absolute_path(
     original_relative_path_str: str,
     root_dir: Path,
-    path_translation_map: Dict[str, str], # original_rel_path -> new_relative_path
+    path_translation_map: Dict[str, str], # original_rel_path -> new_relative_path_from_root
     cache: Dict[str, Path] # original_rel_path -> current_absolute_path
 ) -> Path:
     if original_relative_path_str in cache:
@@ -120,23 +120,25 @@ def _get_current_absolute_path(
         cache["."] = root_dir
         return root_dir
 
-    original_path_obj = Path(original_relative_path_str)
-    original_parent_rel_str = str(original_path_obj.parent)
-    item_original_name = original_path_obj.name
-
-    current_parent_abs_path = _get_current_absolute_path(
-        original_parent_rel_str, root_dir, path_translation_map, cache
-    )
-
-    current_item_name = item_original_name
+    # If the item itself was directly renamed, its new relative path is in the map.
     if original_relative_path_str in path_translation_map:
-        new_relative_path_of_this_item = Path(path_translation_map[original_relative_path_str])
-        current_item_name = new_relative_path_of_this_item.name
-    
-    current_abs_path = current_parent_abs_path / current_item_name
-    
-    cache[original_relative_path_str] = current_abs_path
-    return current_abs_path
+        new_relative_path = path_translation_map[original_relative_path_str]
+        current_abs_path = root_dir / new_relative_path
+        cache[original_relative_path_str] = current_abs_path
+        return current_abs_path
+    else:
+        # Item itself was not renamed, but its parent might have been.
+        original_path_obj = Path(original_relative_path_str)
+        original_parent_rel_str = str(original_path_obj.parent)
+        item_original_name = original_path_obj.name
+
+        current_parent_abs_path = _get_current_absolute_path(
+            original_parent_rel_str, root_dir, path_translation_map, cache
+        )
+        
+        current_abs_path = current_parent_abs_path / item_original_name
+        cache[original_relative_path_str] = current_abs_path
+        return current_abs_path
 
 # --- Scan Logic ---
 def scan_directory_for_occurrences(
@@ -282,6 +284,7 @@ def _execute_rename_transaction(
         print(f"DEBUG_RENAME: Current absolute path resolved to: {current_abs_path}")
         print(f"DEBUG_RENAME: Does current_abs_path exist? {current_abs_path.exists()}")
 
+
     if not current_abs_path.exists():
         return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
 
@@ -294,6 +297,7 @@ def _execute_rename_transaction(
     if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in new_name:
         print(f"DEBUG_RENAME: Proposed new name: {new_name}")
         print(f"DEBUG_RENAME: Proposed new absolute path: {new_abs_path}")
+
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
@@ -435,12 +439,11 @@ def execute_all_transactions(
                     new_status, error_msg = _execute_content_line_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
                 else:
                     new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
-            except SandboxViolationError as sve: # Catch sandbox violations from execution helpers
+            except SandboxViolationError as sve: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"CRITICAL SANDBOX VIOLATION: {sve}"
-                print(error_msg) # Print critical error immediately
-                # Optionally, re-raise or handle more drastically to stop all further processing
-            except Exception as e: # Catch other unexpected errors during execution logic
+                print(error_msg) 
+            except Exception as e: 
                 new_status = TransactionStatus.FAILED
                 error_msg = f"Unexpected error during transaction execution: {e}"
 
