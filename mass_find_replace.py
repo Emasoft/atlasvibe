@@ -32,6 +32,14 @@ from file_system_operations import (
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json" 
 SELF_TEST_PRIMARY_TRANSACTION_FILE = "self_test_transactions.json"
 
+# ANSI Color Codes & Unicode Symbols for formatted output
+GREEN = "\033[92m"
+RED = "\033[91m"
+RESET = "\033[0m"
+YELLOW = "\033[93m"
+PASS_SYMBOL = "✅"
+FAIL_SYMBOL = "❌"
+
 
 # --- Self-Test Functionality ---
 def _create_self_test_environment(base_dir: Path) -> None:
@@ -69,15 +77,22 @@ def _verify_self_test_results_task(
     print("--- Verifying Self-Test Results ---")
     passed_checks = 0
     failed_checks = 0
+    test_results: List[Dict[str, Any]] = []
 
-    def check(condition: bool, pass_msg: str, fail_msg: str) -> None:
+    def record_test(description: str, condition: bool, details_on_fail: str = "") -> None:
         nonlocal passed_checks, failed_checks
+        status = "PASS" if condition else "FAIL"
+        
         if condition:
-            print(f"PASS: {pass_msg}")
             passed_checks += 1
         else:
-            print(f"FAIL: {fail_msg}")
             failed_checks += 1
+            
+        test_results.append({
+            "description": description,
+            "status": status,
+            "details": details_on_fail if not condition else ""
+        })
 
     exp_paths_after_rename = {
         "atlasvibe_root": temp_dir / "atlasvibe_root",
@@ -87,111 +102,148 @@ def _verify_self_test_results_task(
         "another_atlasvibe_file.py": temp_dir / "atlasvibe_root" / "another_atlasvibe_file.py",
         "only_name_atlasvibe.md": temp_dir / "only_name_atlasvibe.md",
         "file_with_atlasVibe_lines.txt": temp_dir / "file_with_atlasVibe_lines.txt",
-        "unmapped_variant_atlasvibe_content.txt": temp_dir / "unmapped_variant_atlasvibe_content.txt", # Name changes due to "flojoy"
+        "unmapped_variant_atlasvibe_content.txt": temp_dir / "unmapped_variant_atlasvibe_content.txt",
         "no_target_here.log": temp_dir / "no_target_here.log", 
-        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt", # Excluded by name
-        "excluded_flojoy_dir": temp_dir / "excluded_flojoy_dir", # Excluded dir name should not change
-        "inner_flojoy_file.txt_in_excluded_dir": temp_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt", # File inside excluded dir
+        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt",
+        "excluded_flojoy_dir": temp_dir / "excluded_flojoy_dir",
+        "inner_flojoy_file.txt_in_excluded_dir": temp_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt",
         "binary_atlasvibe_file.bin": temp_dir / "binary_atlasvibe_file.bin",
-        "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin" # Name should NOT change as "fLoJoY" is not in mapping for names
+        "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin"
     }
 
     for name, path in exp_paths_after_rename.items():
-        check(path.exists(), f"Path '{path.relative_to(temp_dir)}' exists for '{name}'.",
-              f"Path '{path.relative_to(temp_dir)}' MISSING for '{name}'.")
+        record_test(f"Path '{path.relative_to(temp_dir)}' exists for '{name}'", 
+                    path.exists(), 
+                    f"Path '{path.relative_to(temp_dir)}' MISSING for '{name}'")
 
-    check(not (temp_dir / "flojoy_root").exists(), "Old 'flojoy_root' base directory removed.",
-          "Old 'flojoy_root' base directory STILL EXISTS.")
+    record_test("Old 'flojoy_root' base directory removed", 
+                not (temp_dir / "flojoy_root").exists(),
+                "Old 'flojoy_root' base directory STILL EXISTS")
 
-    # Content checks
-    deep_file = exp_paths_after_rename.get("deep_atlasvibe_file.txt")
-    if deep_file and deep_file.exists():
-        content = deep_file.read_text(encoding='utf-8')
-        expected_content = "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project."
-        check(content == expected_content, "Content of 'deep_atlasvibe_file.txt' correct.",
-              f"Content of 'deep_atlasvibe_file.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
+    # Content checks helper
+    def check_file_content(file_path: Optional[Path], expected_content: Union[str, bytes], test_description_base: str, is_binary: bool = False):
+        if not file_path or not file_path.exists():
+            record_test(f"Content check for '{test_description_base}'", False, f"File MISSING at '{file_path}'")
+            return
 
-    multi_line_file = exp_paths_after_rename.get("file_with_atlasVibe_lines.txt")
-    if multi_line_file and multi_line_file.exists():
-        content = multi_line_file.read_text(encoding='utf-8')
-        expected_content = "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line."
-        check(content == expected_content, "Content of 'file_with_atlasVibe_lines.txt' correct.",
-              f"Content of 'file_with_atlasVibe_lines.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
+        actual_content: Union[str, bytes]
+        if is_binary:
+            actual_content = file_path.read_bytes()
+        else:
+            actual_content = file_path.read_text(encoding='utf-8')
+        
+        condition = actual_content == expected_content
+        details = ""
+        if not condition:
+            if is_binary:
+                details = f"Content INCORRECT. Expected: {expected_content!r}, Got: {actual_content!r}"
+            else: # Text diff might be too verbose for summary, but good for detailed logs
+                details = f"Content INCORRECT.\nExpected:\n{expected_content}\nGot:\n{actual_content}"
 
-    unmapped_content_file = exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt") # Name changed
-    if unmapped_content_file and unmapped_content_file.exists():
-        content = unmapped_content_file.read_text(encoding='utf-8')
-        expected_content = "This has fLoJoY content, and also atlasvibe."
-        check(content == expected_content, "Content of 'unmapped_variant_atlasvibe_content.txt' correct (unmapped variant preserved).",
-              f"Content of 'unmapped_variant_atlasvibe_content.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
+        record_test(f"Content of '{test_description_base}' is correct", condition, details)
 
-
-    only_name_file = exp_paths_after_rename.get("only_name_atlasvibe.md")
-    if only_name_file and only_name_file.exists():
-        content = only_name_file.read_text(encoding='utf-8')
-        expected_content = "Content without target string."
-        check(content == expected_content, "Content of 'only_name_atlasvibe.md' correct.",
-              "Content of 'only_name_atlasvibe.md' INCORRECT.")
-
-    excluded_by_name_file = exp_paths_after_rename.get("exclude_this_flojoy_file.txt")
-    if excluded_by_name_file and excluded_by_name_file.exists(): 
-        content = excluded_by_name_file.read_text(encoding='utf-8')
-        expected_content = "flojoy content in explicitly excluded file"
-        check(content == expected_content, "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' correct.",
-              "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' INCORRECT.")
+    # Content verifications
+    check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
+                       "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
+                       "deep_atlasvibe_file.txt")
+    check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
+                       "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
+                       "file_with_atlasVibe_lines.txt")
+    check_file_content(exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt"),
+                       "This has fLoJoY content, and also atlasvibe.",
+                       "unmapped_variant_atlasvibe_content.txt (unmapped variant preserved)")
+    check_file_content(exp_paths_after_rename.get("only_name_atlasvibe.md"),
+                       "Content without target string.",
+                       "only_name_atlasvibe.md")
+    check_file_content(exp_paths_after_rename.get("exclude_this_flojoy_file.txt"),
+                       "flojoy content in explicitly excluded file",
+                       "exclude_this_flojoy_file.txt (explicitly excluded)")
+    check_file_content(exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir"),
+                       "flojoy inside excluded dir",
+                       "inner_flojoy_file.txt (in excluded_dir)")
     
-    file_in_excluded_dir = exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir")
-    if file_in_excluded_dir and file_in_excluded_dir.exists():
-        content = file_in_excluded_dir.read_text(encoding='utf-8')
-        expected_content = "flojoy inside excluded dir" 
-        check(content == expected_content, "Content of file in excluded dir 'inner_flojoy_file.txt' correct.",
-              "Content of file in excluded dir 'inner_flojoy_file.txt' INCORRECT.")
+    # Binary file content checks
+    check_file_content(exp_paths_after_rename.get("binary_atlasvibe_file.bin"),
+                       b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04",
+                       "binary_atlasvibe_file.bin (content untouched)", is_binary=True)
+    check_file_content(exp_paths_after_rename.get("binary_fLoJoY_name.bin"),
+                       b"unmapped_variant_binary_content" + b"\x00\xff",
+                       "binary_fLoJoY_name.bin (content untouched)", is_binary=True)
 
-
+    # Binary file type check
     binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
     if binary_file_renamed and binary_file_renamed.exists():
-        original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
-        actual_content = binary_file_renamed.read_bytes()
-        check(actual_content == original_binary_content, "Binary file ('binary_atlasvibe_file.bin') content UNTOUCHED as expected.",
-              f"Binary file ('binary_atlasvibe_file.bin') content MODIFIED. Expected: {original_binary_content!r}, Got: {actual_content!r}")
-        check(is_likely_binary_file(binary_file_renamed), "Renamed binary file still detected as binary.",
-              "Renamed binary file NOT detected as binary.")
+        record_test(f"File '{binary_file_renamed.name}' still detected as binary",
+                    is_likely_binary_file(binary_file_renamed),
+                    f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
-    binary_unmapped_name = exp_paths_after_rename.get("binary_fLoJoY_name.bin")
-    if binary_unmapped_name and binary_unmapped_name.exists():
-        original_binary_content_unmapped = b"unmapped_variant_binary_content" + b"\x00\xff"
-        actual_content_unmapped = binary_unmapped_name.read_bytes()
-        check(actual_content_unmapped == original_binary_content_unmapped, "Binary file with unmapped variant in name ('binary_fLoJoY_name.bin') content UNTOUCHED.",
-              f"Binary file with unmapped variant in name ('binary_fLoJoY_name.bin') content MODIFIED. Expected: {original_binary_content_unmapped!r}, Got: {actual_content_unmapped!r}")
-
-
+    # Transaction verification
     transactions = load_transactions(original_transaction_file)
-    if transactions:
-        processed_correctly = True
+    if transactions is not None:
         found_tx_for_excluded = False
         for tx in transactions:
             tx_path_str = tx["PATH"]
-            # Check if transaction path indicates an item that should have been fully excluded by scan
             if "excluded_flojoy_dir/" in tx_path_str or tx_path_str == "exclude_this_flojoy_file.txt":
                 found_tx_for_excluded = True
-                print(f"FAIL: Transaction {tx['id']} generated for excluded path: {tx_path_str}")
                 break 
-            
-            # For non-excluded items, check status
-            if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                processed_correctly = False
-                print(f"FAIL: Transaction {tx['id']} (Type: {tx['TYPE']}, Path: {tx['PATH']}) has status {tx['STATUS']}.")
-                break
-        
-        check(not found_tx_for_excluded, "No transactions generated for items within excluded_dirs or matching excluded_files.",
-              "Transactions WERE generated for items that should have been excluded by scan.")
-        if not found_tx_for_excluded: # Only check this if no excluded path transactions were found
-            check(processed_correctly, "All non-excluded transactions are COMPLETED or SKIPPED.",
-                  "Not all non-excluded transactions are COMPLETED or SKIPPED.")
-    else:
-        check(False, "", f"Could not load transaction file {original_transaction_file} for status verification.")
+        record_test("No transactions generated for items within excluded_dirs or matching excluded_files",
+                    not found_tx_for_excluded,
+                    "Transactions WERE generated for items that should have been excluded by scan.")
 
-    print(f"--- Self-Test Verification Summary: {passed_checks} PASSED, {failed_checks} FAILED ---")
+        if not found_tx_for_excluded:
+            all_non_excluded_processed_correctly = True
+            for tx in transactions: # Iterate again, only non-excluded this time
+                 if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"):
+                    if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
+                        all_non_excluded_processed_correctly = False
+                        record_test(f"Transaction {tx['id']} (Path: {tx['PATH']}) status check", False,
+                                    f"Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
+                        break # One failure is enough to mark this group test as failed
+            if all_non_excluded_processed_correctly: # Only record success if all passed
+                 record_test("All non-excluded transactions are COMPLETED or SKIPPED", True)
+
+    else:
+        record_test(f"Loading transaction file '{original_transaction_file.name}'", False, "Could not load for status verification.")
+
+    # Print formatted results
+    print("\n" + YELLOW + "--- Self-Test Results Table ---" + RESET)
+    header = f"{'Status':<10} | {'Test Description'}"
+    print(YELLOW + header + RESET)
+    print(YELLOW + "-" * (len(header) + 10) + RESET) # Adjust separator length
+
+    for result in test_results:
+        status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
+        color = GREEN if result["status"] == "PASS" else RED
+        
+        status_cell = f"{color}{status_symbol:<2}{RESET}" # Symbol with padding
+        print(f"{status_cell}    | {result['description']}")
+        if result["status"] == "FAIL" and result["details"]:
+            # Indent details for readability
+            details_lines = result["details"].split('\n')
+            for i, line in enumerate(details_lines):
+                prefix = "     └── Details: " if i == 0 else "                  "
+                print(f"{RED}{prefix}{line}{RESET}")
+    
+    print(YELLOW + "--- Self-Test Verification Summary ---" + RESET)
+    total_tests = passed_checks + failed_checks
+    if total_tests > 0:
+        percentage_passed = (passed_checks / total_tests) * 100
+        summary_color = GREEN if failed_checks == 0 else RED
+        summary_emoji = PASS_SYMBOL if failed_checks == 0 else FAIL_SYMBOL
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"Passed: {GREEN}{passed_checks}{RESET}")
+        print(f"Failed: {RED if failed_checks > 0 else GREEN}{failed_checks}{RESET}")
+        print(f"Percentage Passed: {summary_color}{percentage_passed:.2f}% {summary_emoji}{RESET}")
+        
+        if failed_checks == 0:
+            print(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET)
+        else:
+            print(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET)
+    else:
+        print(YELLOW + "No self-test checks were recorded." + RESET)
+
+
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s).")
     return True
@@ -346,15 +398,18 @@ def main_cli() -> None:
                     temp_dir_str=tmpdir_str,
                     dry_run_for_test=args.dry_run
                 )
-                if not args.dry_run:
-                     print("Self-test PASSED.")
+                # _verify_self_test_results_task will raise AssertionError if tests fail
+                # If it completes without raising, and not a dry run, it means tests passed.
+                if not args.dry_run: # Only print PASSED if it wasn't a dry run and no assertion was raised
+                     print(GREEN + "Self-test PASSED successfully! " + PASS_SYMBOL + RESET)
                 else:
-                     print("Self-test dry run scan complete.")
-            except AssertionError as e:
-                print(f"Self-test FAILED: {e}")
+                     print(YELLOW + "Self-test dry run scan complete." + RESET)
+            except AssertionError as e: # Explicitly catch AssertionError from _verify_self_test_results_task
+                # The error message from the assertion is already printed by _verify_self_test_results_task's summary
+                # print(RED + f"Self-test FAILED: {e} " + FAIL_SYMBOL + RESET) # This would be redundant
                 sys.exit(1)
             except Exception as e:
-                print(f"Self-test ERRORED: {e}")
+                print(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET)
                 sys.exit(1)
         return
 
