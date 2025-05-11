@@ -1033,6 +1033,7 @@ def find_and_replace_phased_flow(
 
 # --- Main Execution ---
 def main() -> None:
+    global _get_case_preserved_replacement # Moved global declaration to the top of the function
     script_path_obj = Path(__file__).resolve(strict=False) # Get script path early
 
     epilog_text = """
@@ -1107,27 +1108,14 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
     # --- Self-Test Execution ---
     if args.self_test or args.self_check:
         print("Running self-test...")
-        # Uncomment the diagnostic print in _get_case_preserved_replacement for debugging self-test
-        # This is a temporary measure for debugging.
-        # global _DEBUG_PRINT_MATCHED_TEXT # A way to toggle if needed, or just uncomment directly
-        # _DEBUG_PRINT_MATCHED_TEXT = True 
         
-        # To enable the diagnostic print, you would typically uncomment the line:
-        # print(f"DEBUG: _get_case_preserved_replacement received matched_text: {repr(matched_text)}")
-        # directly in the _get_case_preserved_replacement function.
-        # For this interaction, I will add it now and then it can be removed once diagnosed.
-        # NOTE: This is a deviation for diagnostic purposes as requested by "examine for errors".
+        original_func_ref = _get_case_preserved_replacement # Store original global function
         
-        # Temporarily activate debug print for self-test runs
-        # This is a bit of a hack for this context. A proper logger or conditional print would be better.
-        original_get_case_preserved_replacement = _get_case_preserved_replacement
-        
-        def _get_case_preserved_replacement_debug(matched_text: str, base_find: str, base_replace: str) -> str:
+        def _debug_wrapper(matched_text: str, base_find: str, base_replace: str) -> str:
             print(f"DEBUG_SELF_TEST: _get_case_preserved_replacement matched_text: {repr(matched_text)}")
-            return original_get_case_preserved_replacement(matched_text, base_find, base_replace)
+            return original_func_ref(matched_text, base_find, base_replace) # Call original via ref
 
-        global _get_case_preserved_replacement
-        _get_case_preserved_replacement = _get_case_preserved_replacement_debug
+        _get_case_preserved_replacement = _debug_wrapper # Assign wrapper to global name
         
         with tempfile.TemporaryDirectory(prefix="mass_replace_self_test_") as tmpdir_str:
             tmpdir_path = Path(tmpdir_str)
@@ -1148,8 +1136,8 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
                 print(f"Self-test ERRORED: {e}")
                 sys.exit(1)
             finally:
-                # Restore original function
-                _get_case_preserved_replacement = original_get_case_preserved_replacement
+                # Restore original function to the global name
+                _get_case_preserved_replacement = original_func_ref
         return # Exit after self-test
 
     # --- Regular Operation ---
