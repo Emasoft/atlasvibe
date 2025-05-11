@@ -1,0 +1,433 @@
+# file_system_operations.py
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2024 Emasoft
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
+
+import os
+import shutil
+import json
+import uuid
+from pathlib import Path
+from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union
+from enum import Enum
+import chardet
+
+from replace_logic import replace_flojoy_occurrences # Import the replacement function
+
+# --- Constants & Enums ---
+DEFAULT_ENCODING_FALLBACK = 'utf-8'
+TRANSACTION_FILE_BACKUP_EXT = ".bak"
+
+class TransactionType(str, Enum):
+    FILE_NAME = "FILE_NAME"
+    FOLDER_NAME = "FOLDER_NAME"
+    FILE_CONTENT_LINE = "FILE_CONTENT_LINE"
+
+class TransactionStatus(str, Enum):
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED" # Added for cases where no change is made or item not found
+
+# TypedDict for transaction structure might be useful for type hinting
+# from typing_extensions import TypedDict
+# class Transaction(TypedDict): ...
+
+# --- Helper Functions ---
+
+def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
+    """Detects file encoding using chardet."""
+    try:
+        with open(file_path, 'rb') as f:
+            raw_data = f.read(sample_size)
+        if not raw_data:
+            return DEFAULT_ENCODING_FALLBACK
+        detected = chardet.detect(raw_data)
+        encoding: Optional[str] = detected.get('encoding')
+        confidence: float = detected.get('confidence', 0.0)
+
+        if encoding and confidence and confidence > 0.7:
+            norm_encoding = encoding.lower()
+            if norm_encoding == 'ascii': return 'ascii'
+            if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: return 'utf-8'
+            try:
+                b"test".decode(encoding); return encoding
+            except LookupError: return DEFAULT_ENCODING_FALLBACK
+        else:
+            try:
+                raw_data.decode('utf-8'); return 'utf-8'
+            except UnicodeDecodeError: return None
+    except Exception:
+        return None
+
+def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
+    """Heuristic to check if a file is likely binary."""
+    try:
+        with open(file_path, 'rb') as f:
+            sample = f.read(sample_size)
+        if not sample: return False
+        if b'\x00' in sample: return True
+        text_chars = set(range(32, 127)) | {ord('\n'), ord('\r'), ord('\t')}
+        non_text_count = sum(1 for byte in sample if byte not in text_chars)
+        if len(sample) > 0 and (non_text_count / len(sample)) > 0.3: return True
+        return False
+    except Exception:
+        return False
+
+def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
+    """Yields paths for scanning, respecting exclusions."""
+    abs_excluded_dirs = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
+    for item_path in root_dir.rglob("*"):
+        is_excluded = False
+        try:
+            resolved_item_path = item_path.resolve(strict=False)
+            for excluded_dir in abs_excluded_dirs:
+                if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
+                    is_excluded = True; break
+        except (ValueError, OSError):
+            item_path_str = str(item_path)
+            if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
+                 is_excluded = True
+        if is_excluded: continue
+        yield item_path
+
+def _get_current_absolute_path(
+    original_relative_path_str: str,
+    root_dir: Path,
+    path_translation_map: Dict[str, str], # original_rel_path -> new_rel_path
+    cache: Dict[str, Path] # original_rel_path -> current_abs_path
+) -> Path:
+    if original_relative_path_str in cache:
+        return cache[original_relative_path_str]
+    if original_relative_path_str == ".":
+        cache[original_relative_path_str] = root_dir
+        return root_dir
+    if original_relative_path_str in path_translation_map:
+        current_item_rel_path_str = path_translation_map[original_relative_path_str]
+        res = root_dir / current_item_rel_path_str
+        cache[original_relative_path_str] = res
+        return res
+    original_path_obj = Path(original_relative_path_str)
+    original_parent_rel_str = str(original_path_obj.parent)
+    item_name = original_path_obj.name
+    current_parent_abs_path = _get_current_absolute_path(
+        original_parent_rel_str, root_dir, path_translation_map, cache
+    )
+    res = current_parent_abs_path / item_name
+    cache[original_relative_path_str] = res
+    return res
+
+# --- Scan Logic ---
+def scan_directory_for_occurrences(
+    root_dir: Path,
+    excluded_dirs: List[str],
+    excluded_files: List[str],
+    file_extensions: Optional[List[str]], # For filtering files to scan content
+    process_binary_files: bool
+) -> List[Dict[str, Any]]:
+    """
+    Scans the directory for "flojoy" occurrences in names and content.
+    Search is case-insensitive for "flojoy".
+    """
+    transactions: List[Dict[str, Any]] = []
+    find_target_lower = "flojoy" # Hardcoded as per new requirements
+    abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
+
+    all_items_for_scan = list(_walk_for_scan(root_dir, excluded_dirs))
+    
+    # Sort for deterministic transaction generation (deepest first for potential rename conflicts)
+    sorted_items = sorted(all_items_for_scan, key=lambda p: len(p.parts), reverse=True)
+
+    for item_path in sorted_items:
+        try:
+            relative_path_str = str(item_path.relative_to(root_dir))
+        except ValueError:
+            continue 
+        
+        original_name = item_path.name
+
+        # Check name
+        if find_target_lower in original_name.lower():
+            tx_type = TransactionType.FOLDER_NAME if item_path.is_dir() else TransactionType.FILE_NAME
+            # For name changes, we don't need line content or encoding initially
+            transactions.append({
+                "id": str(uuid.uuid4()),
+                "TYPE": tx_type.value,
+                "PATH": relative_path_str, # Original relative path
+                "ORIGINAL_NAME": original_name, # Store original name for replacement
+                "LINE_NUMBER": 0,
+                "ORIGINAL_LINE_CONTENT": None,
+                "PROPOSED_LINE_CONTENT": None,
+                "ORIGINAL_ENCODING": None,
+                "STATUS": TransactionStatus.PENDING.value
+            })
+
+        # Check content if it's a file
+        if item_path.is_file():
+            if item_path.resolve(strict=False) in abs_excluded_files:
+                continue
+            if file_extensions and (not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]):
+                continue
+            if not process_binary_files and is_likely_binary_file(item_path):
+                continue
+
+            file_encoding = get_file_encoding(item_path) or DEFAULT_ENCODING_FALLBACK
+            try:
+                # Read lines preserving original line endings
+                with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
+                    lines = f.readlines()
+                
+                for line_num_0_indexed, line_content in enumerate(lines):
+                    if find_target_lower in line_content.lower():
+                        transactions.append({
+                            "id": str(uuid.uuid4()),
+                            "TYPE": TransactionType.FILE_CONTENT_LINE.value,
+                            "PATH": relative_path_str, # Original relative path to file
+                            "ORIGINAL_NAME": None,
+                            "LINE_NUMBER": line_num_0_indexed + 1, # 1-indexed
+                            "ORIGINAL_LINE_CONTENT": line_content, # Store original line
+                            "PROPOSED_LINE_CONTENT": None, # Will be filled during execution
+                            "ORIGINAL_ENCODING": file_encoding,
+                            "STATUS": TransactionStatus.PENDING.value
+                        })
+            except Exception as e:
+                print(f"Warning: Could not read/process file {item_path}: {e}")
+                # Optionally create a FAILED transaction here or log more formally
+                pass
+    return transactions
+
+# --- Transaction File Management ---
+def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
+    """Loads transactions from primary JSON, falls back to .bak on error."""
+    backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
+    paths_to_try = [json_file_path, backup_path]
+    for path in paths_to_try:
+        if path.exists():
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    print(f"Loading transactions from: {path}")
+                    return cast(List[Dict[str, Any]], json.load(f))
+            except Exception as e:
+                print(f"Warning: Failed to load transactions from {path}: {e}")
+    return None
+
+def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
+    """Saves transactions to JSON file, creating a backup first if file exists."""
+    if json_file_path.exists():
+        backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
+        try:
+            shutil.copy2(json_file_path, backup_path)
+        except Exception as e:
+            print(f"Warning: Could not create backup of {json_file_path}: {e}")
+            # Decide if we should proceed without backup or raise error
+    try:
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            json.dump(transactions, f, indent=4)
+    except Exception as e:
+        print(f"Error: Could not save transactions to {json_file_path}: {e}")
+        # Consider restoring from backup if save fails and backup was made
+        raise
+
+def update_transaction_status_in_list(
+    transactions: List[Dict[str, Any]],
+    transaction_id: str,
+    new_status: TransactionStatus,
+    error_message: Optional[str] = None
+) -> bool:
+    """Updates status of a single transaction in the provided list."""
+    updated = False
+    for tx in transactions:
+        if tx['id'] == transaction_id:
+            tx['STATUS'] = new_status.value
+            if error_message:
+                tx['ERROR_MESSAGE'] = error_message
+            else:
+                tx.pop('ERROR_MESSAGE', None)
+            updated = True
+            break
+    return updated
+
+# --- Execution Logic ---
+
+def _execute_rename_transaction(
+    tx: Dict[str, Any],
+    root_dir: Path,
+    path_translation_map: Dict[str, str],
+    path_cache: Dict[str, Path],
+    dry_run: bool
+) -> Tuple[TransactionStatus, Optional[str]]:
+    original_relative_path_str = tx["PATH"]
+    original_name = tx["ORIGINAL_NAME"]
+    
+    current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
+
+    if not current_abs_path.exists():
+        return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
+
+    new_name = replace_flojoy_occurrences(original_name)
+    if new_name == original_name:
+        return TransactionStatus.SKIPPED, "Name unchanged after replacement."
+
+    new_abs_path = current_abs_path.with_name(new_name)
+
+    if dry_run:
+        print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
+        # Simulate for path_translation_map and cache
+        path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
+        path_cache[original_relative_path_str] = new_abs_path
+        return TransactionStatus.COMPLETED, "DRY_RUN"
+    
+    if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
+        return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
+
+    try:
+        os.rename(current_abs_path, new_abs_path)
+        path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
+        path_cache[original_relative_path_str] = new_abs_path
+        return TransactionStatus.COMPLETED, None
+    except Exception as e:
+        return TransactionStatus.FAILED, str(e)
+
+def _execute_content_line_transaction(
+    tx: Dict[str, Any],
+    root_dir: Path,
+    path_translation_map: Dict[str, str],
+    path_cache: Dict[str, Path],
+    dry_run: bool
+) -> Tuple[TransactionStatus, Optional[str]]:
+    original_relative_path_str = tx["PATH"]
+    line_number_1_indexed = tx["LINE_NUMBER"]
+    original_line_content = tx["ORIGINAL_LINE_CONTENT"] # This should have original line endings
+    file_encoding = tx["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
+
+    current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
+
+    if not current_abs_path.is_file():
+        return TransactionStatus.SKIPPED, f"File '{current_abs_path}' not found or not a file."
+
+    new_line_content = replace_flojoy_occurrences(original_line_content)
+    
+    # Update proposed content in transaction for record-keeping, even if skipped
+    tx["PROPOSED_LINE_CONTENT"] = new_line_content 
+
+    if new_line_content == original_line_content:
+        return TransactionStatus.SKIPPED, "Line content unchanged after replacement."
+
+    if dry_run:
+        print(f"[DRY RUN] File '{current_abs_path}', line {line_number_1_indexed}:")
+        print(f"[DRY RUN]   Original: {repr(original_line_content)}")
+        print(f"[DRY RUN]   Proposed: {repr(new_line_content)}")
+        return TransactionStatus.COMPLETED, "DRY_RUN"
+
+    try:
+        with open(current_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
+            lines = f.readlines()
+        
+        if not (0 <= line_number_1_indexed - 1 < len(lines)):
+            return TransactionStatus.FAILED, f"Line number {line_number_1_indexed} out of bounds for file {current_abs_path} (len: {len(lines)})."
+
+        # Verify if the original content still matches, as a safeguard
+        # This check might be too strict if multiple transactions modify the same line sequentially,
+        # but for now, it assumes the ORIGINAL_LINE_CONTENT from scan is what we expect to find.
+        if lines[line_number_1_indexed - 1] != original_line_content:
+             return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
+
+        lines[line_number_1_indexed - 1] = new_line_content
+        
+        # Write back using binary mode to preserve line endings exactly as read
+        with open(current_abs_path, 'wb') as f:
+            for line in lines:
+                f.write(line.encode(file_encoding, errors='surrogateescape'))
+        
+        return TransactionStatus.COMPLETED, None
+    except Exception as e:
+        return TransactionStatus.FAILED, str(e)
+
+
+def execute_all_transactions(
+    transactions_file_path: Path,
+    root_dir: Path,
+    dry_run: bool,
+    resume: bool
+) -> Dict[str, int]:
+    """
+    Executes all PENDING (or IN_PROGRESS if resuming) transactions.
+    Updates the transaction file with status changes.
+    """
+    transactions = load_transactions(transactions_file_path)
+    if not transactions:
+        print(f"Error: Could not load transactions from {transactions_file_path}")
+        return {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
+
+    stats = {"completed": 0, "failed": 0, "skipped": 0, "pending": 0}
+    path_translation_map: Dict[str, str] = {} # original_rel_path -> new_rel_path
+    path_cache: Dict[str, Path] = {} # original_rel_path -> current_abs_path
+
+    # Sort transactions: FOLDER_NAME first, then FILE_NAME, then FILE_CONTENT_LINE
+    # Within names, sort by path depth (descending) to handle parent renames before children.
+    # Within content, sort by path then line number.
+    def execution_sort_key(tx: Dict[str, Any]):
+        type_order = {TransactionType.FOLDER_NAME.value: 0, TransactionType.FILE_NAME.value: 1, TransactionType.FILE_CONTENT_LINE.value: 2}
+        path_depth = tx["PATH"].count(os.sep)
+        line_num = tx.get("LINE_NUMBER", 0)
+
+        if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+            return (type_order[tx["TYPE"]], -path_depth, tx["PATH"])
+        else: # FILE_CONTENT_LINE
+            return (type_order[tx["TYPE"]], tx["PATH"], line_num)
+
+    transactions.sort(key=execution_sort_key)
+    
+    for tx in transactions:
+        tx_id = tx["id"]
+        current_status = TransactionStatus(tx["STATUS"])
+
+        if current_status == TransactionStatus.COMPLETED or current_status == TransactionStatus.FAILED:
+            if current_status == TransactionStatus.COMPLETED: stats["completed"] +=1
+            if current_status == TransactionStatus.FAILED: stats["failed"] +=1
+            continue # Already processed or terminally failed
+
+        if not resume and current_status == TransactionStatus.IN_PROGRESS:
+            # If not resuming, treat IN_PROGRESS from a previous run as PENDING
+            tx["STATUS"] = TransactionStatus.PENDING.value 
+            current_status = TransactionStatus.PENDING
+        
+        if current_status == TransactionStatus.PENDING or \
+           (resume and current_status == TransactionStatus.IN_PROGRESS):
+            
+            update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
+            save_transactions(transactions, transactions_file_path) # Save IN_PROGRESS state
+
+            new_status: TransactionStatus
+            error_msg: Optional[str] = None
+
+            if tx["TYPE"] == TransactionType.FOLDER_NAME.value or tx["TYPE"] == TransactionType.FILE_NAME.value:
+                new_status, error_msg = _execute_rename_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
+            elif tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                new_status, error_msg = _execute_content_line_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
+            else:
+                new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
+
+            update_transaction_status_in_list(transactions, tx_id, new_status, error_msg)
+            save_transactions(transactions, transactions_file_path) # Save final state for this tx
+
+            if new_status == TransactionStatus.COMPLETED: stats["completed"] += 1
+            elif new_status == TransactionStatus.FAILED: stats["failed"] += 1; print(f"Transaction {tx_id} FAILED: {error_msg}")
+            elif new_status == TransactionStatus.SKIPPED: stats["skipped"] += 1
+        
+        elif current_status == TransactionStatus.SKIPPED : # Already processed as skipped
+             stats["skipped"] +=1
+        else: # Still PENDING but not processed in this run (e.g. if resume=False and it was IN_PROGRESS)
+            stats["pending"] +=1
+
+
+    # Final count of pending if any loop was skipped
+    final_pending = sum(1 for t in transactions if t["STATUS"] == TransactionStatus.PENDING.value)
+    stats["pending"] = final_pending
+    
+    return stats
+
