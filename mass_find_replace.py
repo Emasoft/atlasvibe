@@ -94,6 +94,8 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
 
 def _get_case_preserved_replacement(matched_text: str, base_find: str, base_replace: str) -> str:
     """Handles case-preserving replacement, with special logic for flojoy->atlasvibe."""
+    # Diagnostic print statement
+    # print(f"DEBUG: _get_case_preserved_replacement received matched_text: {repr(matched_text)}")
     if base_find.lower() == 'flojoy' and base_replace.lower() == 'atlasvibe':
         if matched_text == 'flojoy': 
             return 'atlasvibe'
@@ -1105,6 +1107,28 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
     # --- Self-Test Execution ---
     if args.self_test or args.self_check:
         print("Running self-test...")
+        # Uncomment the diagnostic print in _get_case_preserved_replacement for debugging self-test
+        # This is a temporary measure for debugging.
+        # global _DEBUG_PRINT_MATCHED_TEXT # A way to toggle if needed, or just uncomment directly
+        # _DEBUG_PRINT_MATCHED_TEXT = True 
+        
+        # To enable the diagnostic print, you would typically uncomment the line:
+        # print(f"DEBUG: _get_case_preserved_replacement received matched_text: {repr(matched_text)}")
+        # directly in the _get_case_preserved_replacement function.
+        # For this interaction, I will add it now and then it can be removed once diagnosed.
+        # NOTE: This is a deviation for diagnostic purposes as requested by "examine for errors".
+        
+        # Temporarily activate debug print for self-test runs
+        # This is a bit of a hack for this context. A proper logger or conditional print would be better.
+        original_get_case_preserved_replacement = _get_case_preserved_replacement
+        
+        def _get_case_preserved_replacement_debug(matched_text: str, base_find: str, base_replace: str) -> str:
+            print(f"DEBUG_SELF_TEST: _get_case_preserved_replacement matched_text: {repr(matched_text)}")
+            return original_get_case_preserved_replacement(matched_text, base_find, base_replace)
+
+        global _get_case_preserved_replacement
+        _get_case_preserved_replacement = _get_case_preserved_replacement_debug
+        
         with tempfile.TemporaryDirectory(prefix="mass_replace_self_test_") as tmpdir_str:
             tmpdir_path = Path(tmpdir_str)
             try:
@@ -1123,6 +1147,9 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
             except Exception as e:
                 print(f"Self-test ERRORED: {e}")
                 sys.exit(1)
+            finally:
+                # Restore original function
+                _get_case_preserved_replacement = original_get_case_preserved_replacement
         return # Exit after self-test
 
     # --- Regular Operation ---
