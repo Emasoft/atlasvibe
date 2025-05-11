@@ -98,26 +98,26 @@ def _get_case_preserved_replacement(matched_text: str, base_find: str, base_repl
     if base_find.lower() == 'flojoy' and base_replace.lower() == 'atlasvibe':
         print(f"TRACE: flojoy/atlasvibe special case. matched_text: {repr(matched_text)}")
         if matched_text == 'flojoy': 
-            print(f"TRACE: Condition matched_text == 'flojoy' is TRUE")
+            print("TRACE: Condition matched_text == 'flojoy' is TRUE")
             return 'atlasvibe'
-        print(f"TRACE: Condition matched_text == 'flojoy' is FALSE")
+        print("TRACE: Condition matched_text == 'flojoy' is FALSE")
         if matched_text == 'Flojoy': 
-            print(f"TRACE: Condition matched_text == 'Flojoy' is TRUE")
+            print("TRACE: Condition matched_text == 'Flojoy' is TRUE")
             return 'Atlasvibe'
-        print(f"TRACE: Condition matched_text == 'Flojoy' is FALSE")
+        print("TRACE: Condition matched_text == 'Flojoy' is FALSE")
         if matched_text == 'FLOJOY': 
-            print(f"TRACE: Condition matched_text == 'FLOJOY' is TRUE")
+            print("TRACE: Condition matched_text == 'FLOJOY' is TRUE")
             return 'ATLASVIBE'
-        print(f"TRACE: Condition matched_text == 'FLOJOY' is FALSE")
+        print("TRACE: Condition matched_text == 'FLOJOY' is FALSE")
         if matched_text == 'FloJoy': 
-            print(f"TRACE: Condition matched_text == 'FloJoy' is TRUE")
+            print("TRACE: Condition matched_text == 'FloJoy' is TRUE")
             return 'AtlasVibe' 
-        print(f"TRACE: Condition matched_text == 'FloJoy' is FALSE")
+        print("TRACE: Condition matched_text == 'FloJoy' is FALSE")
         if matched_text == 'floJoy': 
-            print(f"TRACE: Condition matched_text == 'floJoy' is TRUE")
+            print("TRACE: Condition matched_text == 'floJoy' is TRUE")
             return 'atlasVibe' 
-        print(f"TRACE: Condition matched_text == 'floJoy' is FALSE")
-        print(f"TRACE: flojoy/atlasvibe special case FALLBACK")
+        print("TRACE: Condition matched_text == 'floJoy' is FALSE")
+        print("TRACE: flojoy/atlasvibe special case FALLBACK")
         return base_replace.lower() 
     
     print(f"TRACE: Generic case preservation. matched_text: {repr(matched_text)}")
@@ -137,7 +137,7 @@ def _get_case_preserved_replacement(matched_text: str, base_find: str, base_repl
         if matched_text[0].islower() and not base_replace[0].islower(): 
             print("TRACE: Generic matched_text[0].islower() and not base_replace[0].islower() is TRUE")
             return base_replace[0].lower() + base_replace[1:]
-    print(f"TRACE: Generic case preservation FALLBACK")
+    print("TRACE: Generic case preservation FALLBACK")
     return base_replace 
 
 def perform_text_replacement(text: str, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool) -> str:
