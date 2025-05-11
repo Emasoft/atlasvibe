@@ -183,33 +183,56 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
             continue
         yield item_path
 
-def _get_current_absolute_path(original_relative_path_str: str, root_dir: Path, path_translation_map: Dict[str, str]) -> Path:
+def _get_current_absolute_path(
+    original_relative_path_str: str, 
+    root_dir: Path, 
+    path_translation_map: Dict[str, str],
+    cache: Dict[str, Path] 
+) -> Path:
     """
-    Determines the current absolute path of an item, considering parent renames
-    recorded in the path_translation_map.
-    path_translation_map stores: original_relative_path_str -> new_relative_path_str
+    Recursively determines the current absolute path of an item,
+    considering parent renames recorded in the path_translation_map.
+    path_translation_map stores: original_relative_path_str -> new_relative_path_str.
+    Cache is used for memoization.
     """
-    current_path_to_check_str = original_relative_path_str
-    temp_original_rel_path = Path(original_relative_path_str)
-    
-    # Iterate from the full path down to its root, checking if any ancestor was renamed
-    for i in range(len(temp_original_rel_path.parts), -1, -1): # Check ancestors from parent up to root
-        # Construct ancestor path string from parts
-        ancestor_original_rel_str = str(Path(*temp_original_rel_path.parts[:i])) if i > 0 else ""
-        if ancestor_original_rel_str == ".": # Handle case where Path(".") might be stringified
-            ancestor_original_rel_str = ""
+    if original_relative_path_str in cache:
+        return cache[original_relative_path_str]
 
-        if ancestor_original_rel_str in path_translation_map:
-            translated_ancestor_rel_str = path_translation_map[ancestor_original_rel_str]
-            # Reconstruct the path: translated_ancestor + remaining_part_of_original_path
-            if ancestor_original_rel_str: # If it's not the root itself being translated
-                segment_after_ancestor = temp_original_rel_path.relative_to(Path(ancestor_original_rel_str))
-            else: # If the root itself (empty string relative path) was "renamed" (conceptually)
-                segment_after_ancestor = temp_original_rel_path
-            current_path_to_check_str = str(Path(translated_ancestor_rel_str) / segment_after_ancestor)
-            break # Found the longest matching translated ancestor
-            
-    return root_dir.joinpath(current_path_to_check_str)
+    # Base case: if the original path is ".", it refers to the root_dir
+    if original_relative_path_str == ".":
+        # The root of the relative path structure is the main root_dir.
+        # It cannot be "renamed" in the context of path_translation_map keys,
+        # as keys are relative paths *under* root_dir.
+        cache[original_relative_path_str] = root_dir
+        return root_dir
+
+    # If the path itself was directly renamed, its entry in path_translation_map is authoritative
+    # for its new relative path.
+    if original_relative_path_str in path_translation_map:
+        # The value in path_translation_map is the new relative path *for this specific item*
+        # This new relative path is already "final" as it was determined when this item was renamed.
+        current_item_rel_path_str = path_translation_map[original_relative_path_str]
+        res = root_dir / current_item_rel_path_str
+        cache[original_relative_path_str] = res
+        return res
+
+    # If not directly in map, it's either a child of some (potentially renamed) directory,
+    # or it's an item that was never part of any rename operation (e.g. file in a non-renamed dir).
+    original_path_obj = Path(original_relative_path_str)
+    original_parent_rel_str = str(original_path_obj.parent)
+    item_name = original_path_obj.name
+
+    # Recursively find the current absolute path of the parent directory.
+    current_parent_abs_path = _get_current_absolute_path(
+        original_parent_rel_str, root_dir, path_translation_map, cache
+    )
+    
+    # The item's name itself (relative to its parent) hasn't changed *by this lookup*.
+    # If the item *is* to be renamed, that's a separate transaction for original_relative_path_str.
+    # Here, we are just finding its current location based on parent renames.
+    res = current_parent_abs_path / item_name
+    cache[original_relative_path_str] = res
+    return res
 
 # --- Phase 1: Scan & Collect Tasks ---
 
@@ -485,6 +508,9 @@ def execute_rename_transactions_task(
     
     completed_count, failed_count, skipped_count = 0, 0, 0
     path_translation_map: Dict[str, str] = {} # Tracks original_rel_path -> new_rel_path
+    # Cache for _get_current_absolute_path to optimize recursive calls
+    path_cache: Dict[str, Path] = {}
+
 
     for tx in rename_txs: # Iterate through the pre-sorted list from JSON
         tx_id = tx["id"] # Assume ID is always present
@@ -497,7 +523,7 @@ def execute_rename_transactions_task(
 
         original_relative_path_str = tx["PATH"]
         # Determine current absolute path, considering previous renames in this same execution run
-        current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
+        current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
         
         if not current_abs_path.exists():
             _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, f"Original path '{current_abs_path}' not found (possibly moved or deleted manually, or affected by prior unrecorded rename).")
@@ -509,13 +535,17 @@ def execute_rename_transactions_task(
 
         if dry_run:
             # In dry run, simulate the rename for the translation map
+            # The new relative path is based on the new_abs_path, which itself was derived from current_abs_path.
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
+            # Update cache as if rename happened, so subsequent calls to _get_current_absolute_path see this change
+            path_cache[original_relative_path_str] = new_abs_path
+
             _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED + " (DRY_RUN)")
             completed_count += 1
             continue
 
         # Prevent overwriting if target already exists and is a different inode
-        if new_abs_path.exists() and not current_abs_path.samefile(new_abs_path): # os.path.samfile might be better for cross-platform
+        if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
             _update_transaction_status_in_json(json_file_path, tx_id, STATUS_SKIPPED, f"Target path '{new_abs_path}' already exists and is a different file/directory.")
             skipped_count += 1
             continue
@@ -533,6 +563,8 @@ def execute_rename_transactions_task(
             # The key is the *original* relative path from the scan.
             # The value is the *new* relative path.
             path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
+            # Update cache with the new absolute path for this original relative path
+            path_cache[original_relative_path_str] = new_abs_path
             
             _update_transaction_status_in_json(json_file_path, tx_id, STATUS_COMPLETED)
             completed_count += 1
@@ -556,6 +588,9 @@ def execute_content_transactions_task(
             
     # Group transactions by original file path to process each file once
     file_to_process_details: Dict[str, Dict[str, Any]] = {} 
+    # Cache for _get_current_absolute_path
+    path_cache: Dict[str, Path] = {}
+
 
     for tx in transactions:
         if tx["OCCURRENCE_TYPE"] == "STRING_IN_FILE" and tx["STATUS"] == STATUS_PENDING:
@@ -578,7 +613,7 @@ def execute_content_transactions_task(
     for original_relative_path_str, details in file_to_process_details.items():
         tx_ids_for_file = details["tx_ids"] # All tx_ids for this single file
         # Determine current absolute path using the translation map from rename phase
-        current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map)
+        current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
 
         if not current_abs_path.is_file(): # Check if it's a file and exists
             error_msg = f"File path '{current_abs_path}' not found or not a file (original: '{original_relative_path_str}')."
