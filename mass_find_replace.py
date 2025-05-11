@@ -432,23 +432,18 @@ def main_cli() -> None:
                 temp_dir_str=str(self_test_sandbox), 
                 dry_run_for_test=args.dry_run
             )
-            # _verify_self_test_results_task raises AssertionError on failure
-            # If we reach here and not a dry run, it means all tests passed.
             if not args.dry_run:
-                 # The success message is now printed by _verify_self_test_results_task
                  pass
             else:
                  print(YELLOW + "Self-test dry run scan complete." + RESET)
         except AssertionError: 
-            # The detailed failure summary is printed by _verify_self_test_results_task
-            sys.exit(1) # Exit with error code if self-test fails
+            sys.exit(1) 
         except Exception as e:
             print(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET)
             import traceback
             traceback.print_exc()
             sys.exit(1)
         finally:
-            # Always clean up the self-test sandbox
             if self_test_sandbox.exists():
                 print(f"Cleaning up self-test sandbox: {self_test_sandbox}")
                 try:
