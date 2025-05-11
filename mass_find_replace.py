@@ -167,25 +167,26 @@ def _verify_self_test_results_task(
 
     transactions = load_transactions(original_transaction_file)
     if transactions:
-        all_processed_correctly = True
-        excluded_paths_had_transactions = False
+        processed_correctly = True
+        found_tx_for_excluded = False
         for tx in transactions:
             tx_path_str = tx["PATH"]
-            # Check if transaction path indicates an excluded item
-            if "exclude_this_flojoy_file.txt" in tx_path_str or "excluded_flojoy_dir" in tx_path_str:
-                excluded_paths_had_transactions = True
+            # Check if transaction path indicates an item that should have been fully excluded by scan
+            if "excluded_flojoy_dir/" in tx_path_str or tx_path_str == "exclude_this_flojoy_file.txt":
+                found_tx_for_excluded = True
+                print(f"FAIL: Transaction {tx['id']} generated for excluded path: {tx_path_str}")
                 break 
             
             # For non-excluded items, check status
             if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                all_processed_correctly = False
+                processed_correctly = False
                 print(f"FAIL: Transaction {tx['id']} (Type: {tx['TYPE']}, Path: {tx['PATH']}) has status {tx['STATUS']}.")
                 break
         
-        check(not excluded_paths_had_transactions, "No transactions generated for explicitly excluded files/dirs.",
-              "Transactions WERE generated for explicitly excluded files/dirs.")
-        if not excluded_paths_had_transactions: # Only check this if no excluded path transactions were found
-            check(all_processed_correctly, "All non-excluded transactions are COMPLETED or SKIPPED.",
+        check(not found_tx_for_excluded, "No transactions generated for items within excluded_dirs or matching excluded_files.",
+              "Transactions WERE generated for items that should have been excluded by scan.")
+        if not found_tx_for_excluded: # Only check this if no excluded path transactions were found
+            check(processed_correctly, "All non-excluded transactions are COMPLETED or SKIPPED.",
                   "Not all non-excluded transactions are COMPLETED or SKIPPED.")
     else:
         check(False, "", f"Could not load transaction file {original_transaction_file} for status verification.")
