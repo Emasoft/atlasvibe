@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 from typing import List, Dict, Any, Optional, Union
 import shutil # For shutil.rmtree and shutil.get_terminal_size
+import textwrap # Added for text wrapping
 
 # Prefect integration - now a hard dependency
 from prefect import task, flow
@@ -77,7 +78,9 @@ def _verify_self_test_results_task(
     temp_dir: Path, # This will be the SELF_TEST_SANDBOX_DIR
     original_transaction_file: Path 
 ) -> bool:
-    print(BLUE + "--- Verifying Self-Test Results ---" + RESET) # Use a distinct color for section start
+    # This initial print might still be caught by Prefect if log_prints=True on the flow
+    # and this task is called directly. For table formatting, sys.stdout.write is critical.
+    sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
     failed_checks = 0
     test_results: List[Dict[str, Any]] = []
@@ -206,62 +209,101 @@ def _verify_self_test_results_task(
     else:
         record_test(f"Transaction file load: '{original_transaction_file.name}'", False, "Could not load for status verification.")
 
-    # Print formatted table
+    # --- Table Formatting ---
     term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
-    num_col_width = 5
-    outcome_col_width = 12 # For "✅ PASS" or "❌ FAIL"
-    separator_width = 7 # For " | " and borders
-    desc_col_width = term_width - num_col_width - outcome_col_width - separator_width
-    if desc_col_width < 20: # Minimum description width
-        desc_col_width = 20
+    padding = 1
     
-    print("\n" + BLUE + "┌" + "─" * num_col_width + "┬" + "─" * desc_col_width + "┬" + "─" * outcome_col_width + "┐" + RESET)
-    print(BLUE + f"│ {'#':<{num_col_width-2}} │ {'Test Description':<{desc_col_width-1}} │ {'Outcome':<{outcome_col_width-1}} │" + RESET)
-    print(BLUE + "├" + "─" * num_col_width + "┼" + "─" * desc_col_width + "┼" + "─" * outcome_col_width + "┤" + RESET)
+    id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3 # Max width for test ID
+    id_col_total_width = id_col_content_width + 2 * padding
+    
+    outcome_text_pass = f"{PASS_SYMBOL} PASS"
+    outcome_text_fail = f"{FAIL_SYMBOL} FAIL"
+    outcome_col_content_width = max(len(outcome_text_pass), len(outcome_text_fail))
+    outcome_col_total_width = outcome_col_content_width + 2 * padding
+
+    # 4 vertical bars "│"
+    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4)
+    
+    min_desc_col_content_width = 20
+    if desc_col_total_width - 2 * padding < min_desc_col_content_width:
+        desc_col_content_width = min_desc_col_content_width
+        desc_col_total_width = desc_col_content_width + 2 * padding
+    else:
+        desc_col_content_width = desc_col_total_width - 2 * padding
+
+    header_id = f"{'#':^{id_col_content_width}}"
+    header_desc = f"{'Test Description':^{desc_col_content_width}}"
+    header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
+
+    sys.stdout.write("\n")
+    sys.stdout.write(BLUE + "┌" + "─" * id_col_total_width + "┬" + "─" * desc_col_total_width + "┬" + "─" * outcome_col_total_width + "┐" + RESET + "\n")
+    sys.stdout.write(BLUE + f"│{' ' * padding}{header_id}{' ' * padding}│{' ' * padding}{header_desc}{' ' * padding}│{' ' * padding}{header_outcome}{' ' * padding}│" + RESET + "\n")
+    sys.stdout.write(BLUE + "├" + "─" * id_col_total_width + "┼" + "─" * desc_col_total_width + "┼" + "─" * outcome_col_total_width + "┤" + RESET + "\n")
 
     failed_test_details = []
     for result in test_results:
         status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
         color = GREEN if result["status"] == "PASS" else RED
-        outcome_text = f"{status_symbol} {result['status']}"
-        
-        # Truncate description if too long
-        desc = result['description']
-        if len(desc) > desc_col_width -1: # -1 for padding
-            desc = desc[:desc_col_width-4] + "..."
+        outcome_text_content = f"{status_symbol} {result['status']}"
+        id_text_content = str(result['id'])
 
-        print(BLUE + f"│ {result['id']:<{num_col_width-2}} │ " + RESET + f"{desc:<{desc_col_width-1}} " + BLUE + "│ " + RESET + f"{color}{outcome_text:<{outcome_col_width+len(color)+len(RESET)-2}}{RESET} " + BLUE + "│" + RESET)
+        wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width)
+        if not wrapped_desc_lines: wrapped_desc_lines = [''] # Ensure at least one line for empty descriptions
+
+        for i, line_frag in enumerate(wrapped_desc_lines):
+            id_cell_content = id_text_content if i == 0 else ""
+            id_cell_str = f"{' ' * padding}{id_cell_content:<{id_col_content_width}}{' ' * padding}"
+            
+            desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
+            
+            outcome_cell_content_colored = ""
+            if i == 0:
+                padded_outcome_text = f"{outcome_text_content:<{outcome_col_content_width}}"
+                outcome_cell_content_colored = f"{color}{padded_outcome_text}{RESET}"
+            
+            outcome_cell_str = f"{' ' * padding}{outcome_cell_content_colored:<{outcome_col_content_width + (len(color)+len(RESET) if i==0 else 0)}}{' ' * padding}"
+            # A simpler way for outcome cell if alignment with color is tricky:
+            if i == 0:
+                 outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
+            else:
+                 outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}"
+
+
+            sys.stdout.write(BLUE + f"│{id_cell_str}│{desc_cell_str}│{outcome_cell_str}│" + RESET + "\n")
+
         if result["status"] == "FAIL" and result["details"]:
             failed_test_details.append({"id": result['id'], "description": result['description'], "details": result['details']})
     
-    print(BLUE + "└" + "─" * num_col_width + "┴" + "─" * desc_col_width + "┴" + "─" * outcome_col_width + "┘" + RESET)
+    sys.stdout.write(BLUE + "└" + "─" * id_col_total_width + "┴" + "─" * desc_col_total_width + "┴" + "─" * outcome_col_total_width + "┘" + RESET + "\n")
 
     if failed_test_details:
-        print("\n" + RED + "--- Failure Details ---" + RESET)
+        sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n")
         for failure in failed_test_details:
-            print(RED + f"Test #{failure['id']}: {failure['description']}" + RESET)
+            sys.stdout.write(RED + f"Test #{failure['id']}: {failure['description']}" + RESET + "\n")
             details_lines = failure['details'].split('\n')
             for line in details_lines:
-                print(RED + f"  └── {line}" + RESET)
+                sys.stdout.write(RED + f"  └── {line}" + RESET + "\n")
     
-    print(YELLOW + "\n--- Self-Test Summary ---" + RESET)
+    sys.stdout.write(YELLOW + "\n--- Self-Test Summary ---" + RESET + "\n")
     total_tests = passed_checks + failed_checks
     if total_tests > 0:
         percentage_passed = (passed_checks / total_tests) * 100
         summary_color = GREEN if failed_checks == 0 else RED
         summary_emoji = PASS_SYMBOL if failed_checks == 0 else FAIL_SYMBOL
         
-        print(f"Total Tests Run: {total_tests}")
-        print(f"Passed: {GREEN}{passed_checks}{RESET}")
-        print(f"Failed: {RED if failed_checks > 0 else GREEN}{failed_checks}{RESET}")
-        print(f"Success Rate: {summary_color}{percentage_passed:.2f}% {summary_emoji}{RESET}")
+        sys.stdout.write(f"Total Tests Run: {total_tests}\n")
+        sys.stdout.write(f"Passed: {GREEN}{passed_checks}{RESET}\n")
+        sys.stdout.write(f"Failed: {RED if failed_checks > 0 else GREEN}{failed_checks}{RESET}\n")
+        sys.stdout.write(f"Success Rate: {summary_color}{percentage_passed:.2f}% {summary_emoji}{RESET}\n")
         
         if failed_checks == 0:
-            print(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET)
+            sys.stdout.write(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET + "\n")
         else:
-            print(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET)
+            sys.stdout.write(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET + "\n")
     else:
-        print(YELLOW + "No self-test checks were recorded." + RESET)
+        sys.stdout.write(YELLOW + "No self-test checks were recorded." + RESET + "\n")
+    
+    sys.stdout.flush()
 
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s).")
@@ -282,6 +324,7 @@ def self_test_flow(
 
     transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
 
+    # These print statements will be logged by Prefect due to log_prints=True
     print("Self-Test: Scanning directory...")
     transactions = scan_directory_for_occurrences(
         root_dir=temp_dir,
@@ -302,6 +345,9 @@ def self_test_flow(
         )
         print(f"Self-Test: Execution complete. Stats: {execution_stats}")
         
+        # _verify_self_test_results_task is a Prefect task.
+        # Calling it directly will have its prints (if any not using sys.stdout) logged by Prefect.
+        # The table itself inside _verify_self_test_results_task now uses sys.stdout.write.
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=transaction_file
@@ -324,24 +370,28 @@ def main_flow(
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
-        print(f"Error: Root directory '{root_dir}' does not exist or is not a directory.")
+        # For CLI utilities, direct print to stderr for early errors is often clearer.
+        sys.stderr.write(f"Error: Root directory '{root_dir}' does not exist or is not a directory.\n")
         return
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
 
     if not dry_run and not force_execution and not resume: 
-        print("--- Proposed Operation ---")
-        print(f"Root Directory: {root_dir}")
-        print("Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.")
-        print(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}")
-        print(f"Exclude Dirs: {exclude_dirs}")
-        print(f"Exclude Files: {exclude_files}")
-        print("-------------------------")
+        # Direct print for interactive parts
+        sys.stdout.write("--- Proposed Operation ---\n")
+        sys.stdout.write(f"Root Directory: {root_dir}\n")
+        sys.stdout.write("Operation: Replace 'flojoy' and its variants with 'atlasvibe' equivalents.\n")
+        sys.stdout.write(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}\n")
+        sys.stdout.write(f"Exclude Dirs: {exclude_dirs}\n")
+        sys.stdout.write(f"Exclude Files: {exclude_files}\n")
+        sys.stdout.write("-------------------------\n")
+        sys.stdout.flush() # Ensure prompt appears before input
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes':
-            print("Operation cancelled by user.")
+            sys.stdout.write("Operation cancelled by user.\n")
             return
 
+    # Messages below will be captured by Prefect's log_prints=True
     if not skip_scan and not resume: 
         print(f"Starting scan phase in '{root_dir}'...")
         found_transactions = scan_directory_for_occurrences(
@@ -410,47 +460,56 @@ def main_cli() -> None:
     args = parser.parse_args()
     
     if args.self_test:
-        print(f"Running self-test in sandbox: '{SELF_TEST_SANDBOX_DIR}'...")
+        # Use direct print for self-test setup messages as they occur before Prefect flow might capture them fully.
+        sys.stdout.write(f"Running self-test in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         
         if self_test_sandbox.exists():
-            print(f"Cleaning existing sandbox: {self_test_sandbox}")
+            sys.stdout.write(f"Cleaning existing sandbox: {self_test_sandbox}\n")
             try:
                 shutil.rmtree(self_test_sandbox)
             except OSError as e:
-                print(RED + f"Error cleaning sandbox {self_test_sandbox}: {e}" + RESET)
+                sys.stderr.write(RED + f"Error cleaning sandbox {self_test_sandbox}: {e}" + RESET + "\n")
                 sys.exit(1)
         try:
             self_test_sandbox.mkdir(parents=True, exist_ok=True)
-            print(f"Created sandbox: {self_test_sandbox}")
+            sys.stdout.write(f"Created sandbox: {self_test_sandbox}\n")
         except OSError as e:
-            print(RED + f"Error creating sandbox {self_test_sandbox}: {e}" + RESET)
+            sys.stderr.write(RED + f"Error creating sandbox {self_test_sandbox}: {e}" + RESET + "\n")
             sys.exit(1)
+        
+        sys.stdout.flush() # Ensure setup messages are printed before flow starts
             
         try:
+            # For self_test_flow, log_prints=True will handle its internal print statements.
             self_test_flow(
                 temp_dir_str=str(self_test_sandbox), 
                 dry_run_for_test=args.dry_run
             )
             if not args.dry_run:
+                 # Success message for non-dry run is part of _verify_self_test_results_task
                  pass
             else:
-                 print(YELLOW + "Self-test dry run scan complete." + RESET)
+                 # Message for dry run completion
+                 sys.stdout.write(YELLOW + "Self-test dry run scan complete." + RESET + "\n")
         except AssertionError: 
+            # The _verify_self_test_results_task already prints detailed failure info.
+            # Exiting with 1 indicates failure.
             sys.exit(1) 
         except Exception as e:
-            print(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET)
+            sys.stderr.write(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET + "\n")
             import traceback
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stderr)
             sys.exit(1)
         finally:
             if self_test_sandbox.exists():
-                print(f"Cleaning up self-test sandbox: {self_test_sandbox}")
+                sys.stdout.write(f"Cleaning up self-test sandbox: {self_test_sandbox}\n")
                 try:
                     shutil.rmtree(self_test_sandbox)
-                    print(f"Sandbox '{self_test_sandbox}' successfully removed.")
+                    sys.stdout.write(f"Sandbox '{self_test_sandbox}' successfully removed.\n")
                 except OSError as e:
-                    print(RED + f"Error removing sandbox {self_test_sandbox}: {e}" + RESET)
+                    sys.stderr.write(RED + f"Error removing sandbox {self_test_sandbox}: {e}" + RESET + "\n")
+            sys.stdout.flush()
         return
 
     default_log_files_to_exclude = [
@@ -468,7 +527,7 @@ def main_cli() -> None:
              script_relative_to_target = str(script_path_obj.relative_to(target_dir_resolved))
              if script_relative_to_target not in args.exclude_files:
                  args.exclude_files.append(script_relative_to_target)
-    except (FileNotFoundError, ValueError):
+    except (FileNotFoundError, ValueError): # Handle cases where paths might not exist yet or are not relative
          pass 
 
     main_flow(
@@ -486,13 +545,14 @@ if __name__ == "__main__":
     try:
         main_cli()
     except ImportError as e:
-        print(f"CRITICAL ERROR: A required dependency is missing: {e}.")
-        print("Please ensure 'prefect' and 'chardet' are installed in your Python environment.")
-        print("You can typically install them using pip: pip install prefect chardet")
+        # Critical errors printed directly to stderr
+        sys.stderr.write(f"CRITICAL ERROR: A required dependency is missing: {e}.\n")
+        sys.stderr.write("Please ensure 'prefect' and 'chardet' are installed in your Python environment.\n")
+        sys.stderr.write("You can typically install them using pip: pip install prefect chardet\n")
         sys.exit(1)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        sys.stderr.write(f"An unexpected error occurred: {e}\n")
         import traceback
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
