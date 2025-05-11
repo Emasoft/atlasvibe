@@ -103,6 +103,7 @@ dependencies = [
     { name = "chardet" },
     { name = "debugpy" },
     { name = "fastapi" },
+    { name = "griffe" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
@@ -138,6 +139,7 @@ requires-dist = [
     { name = "chardet", specifier = ">=3.0.0,<6.0.0" },
     { name = "debugpy", specifier = ">=1.8.0,<2.0.0" },
     { name = "fastapi", specifier = ">=0.104.1,<0.105.0" },
+    { name = "griffe", specifier = ">=0.37.0,<0.42.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.26.0,<0.27.0" },
     { name = "numpy", specifier = ">=1.23.0,<2.0.0" },
     { name = "pandas", specifier = ">=1.4.0,<3.0.0" },
@@ -517,14 +519,14 @@ wheels = [
 
 [[package]]
 name = "griffe"
-version = "1.7.3"
+version = "0.41.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/3e/5aa9a61f7c3c47b0b52a1d930302992229d191bf4bc76447b324b731510a/griffe-1.7.3.tar.gz", hash = "sha256:52ee893c6a3a968b639ace8015bec9d36594961e156e23315c8e8e51401fa50b", size = 395137 }
+sdist = { url = "https://files.pythonhosted.org/packages/90/ba/ca63ce1322b22bee29050250b5a3c86fe8c657d0cabc6f1565527372510c/griffe-0.41.3.tar.gz", hash = "sha256:9edcfa9f57f4d9c5fcc6d5ce067c67a685b7101a21a7d11848ce0437368e474c", size = 133015 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/c6/5c20af38c2a57c15d87f7f38bee77d63c1d2a3689f74fefaf35915dd12b2/griffe-1.7.3-py3-none-any.whl", hash = "sha256:c6b3ee30c2f0f17f30bcdef5068d6ab7a2a4f1b8bf1a3e74b56fffd21e1c5f75", size = 129303 },
+    { url = "https://files.pythonhosted.org/packages/4e/f8/0a768c870a6f436e103d915f3dbb5e9f625a448d8ffd999b30624145b6b7/griffe-0.41.3-py3-none-any.whl", hash = "sha256:27b4610f1ba6e5d039e9f0a2c97232e13463df75e53cb1833e0679f3377b9de2", size = 115510 },
 ]
 
 [[package]]
