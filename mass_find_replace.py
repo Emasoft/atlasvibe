@@ -47,9 +47,18 @@ def _create_self_test_environment(base_dir: Path) -> None:
     (base_dir / "file_with_floJoy_lines.txt").write_text(
         "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
     )
-    (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in excluded file")
-    (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
+    (base_dir / "unmapped_variant_flojoy_content.txt").write_text( # Test unmapped variant in content
+        "This has fLoJoY content, and also flojoy."
+    )
     (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
+    (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff") # Unmapped variant in name
+
+    # Exclusions
+    (base_dir / "excluded_flojoy_dir").mkdir(exist_ok=True)
+    (base_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt").write_text("flojoy inside excluded dir")
+    (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
+    
+    (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
 
 
 @task
@@ -78,9 +87,13 @@ def _verify_self_test_results_task(
         "another_atlasvibe_file.py": temp_dir / "atlasvibe_root" / "another_atlasvibe_file.py",
         "only_name_atlasvibe.md": temp_dir / "only_name_atlasvibe.md",
         "file_with_atlasVibe_lines.txt": temp_dir / "file_with_atlasVibe_lines.txt",
+        "unmapped_variant_atlasvibe_content.txt": temp_dir / "unmapped_variant_atlasvibe_content.txt", # Name changes due to "flojoy"
         "no_target_here.log": temp_dir / "no_target_here.log", 
-        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt",
-        "binary_atlasvibe_file.bin": temp_dir / "binary_atlasvibe_file.bin"
+        "exclude_this_flojoy_file.txt": temp_dir / "exclude_this_flojoy_file.txt", # Excluded by name
+        "excluded_flojoy_dir": temp_dir / "excluded_flojoy_dir", # Excluded dir name should not change
+        "inner_flojoy_file.txt_in_excluded_dir": temp_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt", # File inside excluded dir
+        "binary_atlasvibe_file.bin": temp_dir / "binary_atlasvibe_file.bin",
+        "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin" # Name should NOT change as "fLoJoY" is not in mapping for names
     }
 
     for name, path in exp_paths_after_rename.items():
@@ -90,6 +103,7 @@ def _verify_self_test_results_task(
     check(not (temp_dir / "flojoy_root").exists(), "Old 'flojoy_root' base directory removed.",
           "Old 'flojoy_root' base directory STILL EXISTS.")
 
+    # Content checks
     deep_file = exp_paths_after_rename.get("deep_atlasvibe_file.txt")
     if deep_file and deep_file.exists():
         content = deep_file.read_text(encoding='utf-8')
@@ -104,6 +118,15 @@ def _verify_self_test_results_task(
         check(content == expected_content, "Content of 'file_with_atlasVibe_lines.txt' correct.",
               f"Content of 'file_with_atlasVibe_lines.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
 
+    unmapped_content_file = exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt") # Name changed
+    if unmapped_content_file and unmapped_content_file.exists():
+        content = unmapped_content_file.read_text(encoding='utf-8')
+        # "fLoJoY" should be untouched, "flojoy" should become "atlasvibe"
+        expected_content = "This has fLoJoY content, and also atlasvibe."
+        check(content == expected_content, "Content of 'unmapped_variant_atlasvibe_content.txt' correct (unmapped variant preserved).",
+              f"Content of 'unmapped_variant_atlasvibe_content.txt' INCORRECT. Got:\n{content}\nExpected:\n{expected_content}")
+
+
     only_name_file = exp_paths_after_rename.get("only_name_atlasvibe.md")
     if only_name_file and only_name_file.exists():
         content = only_name_file.read_text(encoding='utf-8')
@@ -111,42 +134,69 @@ def _verify_self_test_results_task(
         check(content == expected_content, "Content of 'only_name_atlasvibe.md' correct.",
               "Content of 'only_name_atlasvibe.md' INCORRECT.")
 
-    excluded_file = exp_paths_after_rename.get("exclude_this_flojoy_file.txt")
-    if excluded_file and excluded_file.exists(): 
-        content = excluded_file.read_text(encoding='utf-8')
-        expected_content = "flojoy content in excluded file"
-        check(content == expected_content, "Content of excluded file correct.",
-              "Content of excluded file INCORRECT.")
-    else: 
-        if not (temp_dir / "exclude_this_flojoy_file.txt").exists():
-             check(False, "", "Excluded file 'exclude_this_flojoy_file.txt' MISSING.")
+    # Excluded file by name
+    excluded_by_name_file = exp_paths_after_rename.get("exclude_this_flojoy_file.txt")
+    if excluded_by_name_file and excluded_by_name_file.exists(): 
+        content = excluded_by_name_file.read_text(encoding='utf-8')
+        expected_content = "flojoy content in explicitly excluded file"
+        check(content == expected_content, "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' correct.",
+              "Content of explicitly excluded file 'exclude_this_flojoy_file.txt' INCORRECT.")
     
+    # File inside excluded directory
+    file_in_excluded_dir = exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir")
+    if file_in_excluded_dir and file_in_excluded_dir.exists():
+        content = file_in_excluded_dir.read_text(encoding='utf-8')
+        expected_content = "flojoy inside excluded dir" # Should be untouched
+        check(content == expected_content, "Content of file in excluded dir 'inner_flojoy_file.txt' correct.",
+              "Content of file in excluded dir 'inner_flojoy_file.txt' INCORRECT.")
+
+
+    # Binary file checks
     binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
     if binary_file_renamed and binary_file_renamed.exists():
         original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
         actual_content = binary_file_renamed.read_bytes()
-        check(actual_content == original_binary_content, "Binary file content UNTOUCHED as expected.",
-              f"Binary file content MODIFIED. Expected: {original_binary_content!r}, Got: {actual_content!r}")
+        check(actual_content == original_binary_content, "Binary file ('binary_atlasvibe_file.bin') content UNTOUCHED as expected.",
+              f"Binary file ('binary_atlasvibe_file.bin') content MODIFIED. Expected: {original_binary_content!r}, Got: {actual_content!r}")
         check(is_likely_binary_file(binary_file_renamed), "Renamed binary file still detected as binary.",
               "Renamed binary file NOT detected as binary.")
+
+    binary_unmapped_name = exp_paths_after_rename.get("binary_fLoJoY_name.bin")
+    if binary_unmapped_name and binary_unmapped_name.exists():
+        original_binary_content_unmapped = b"unmapped_variant_binary_content" + b"\x00\xff"
+        actual_content_unmapped = binary_unmapped_name.read_bytes()
+        check(actual_content_unmapped == original_binary_content_unmapped, "Binary file with unmapped variant in name ('binary_fLoJoY_name.bin') content UNTOUCHED.",
+              f"Binary file with unmapped variant in name ('binary_fLoJoY_name.bin') content MODIFIED. Expected: {original_binary_content_unmapped!r}, Got: {actual_content_unmapped!r}")
 
 
     transactions = load_transactions(original_transaction_file)
     if transactions:
         all_completed_or_skipped = True
         for tx in transactions:
-            if "exclude_this_flojoy_file.txt" in tx["PATH"]:
-                if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx["TYPE"] != TransactionType.FILE_NAME.value:
-                     if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-                        all_completed_or_skipped = False
-                        print(f"FAIL: Transaction {tx['id']} for excluded file content (Path: {tx['PATH']}) has status {tx['STATUS']}.")
-                        break
+            is_excluded_path = "exclude_this_flojoy_file.txt" in tx["PATH"] or "excluded_flojoy_dir" in tx["PATH"]
+            
+            if is_excluded_path:
+                # For excluded items, name transactions might be SKIPPED if name didn't match, or PENDING if scan doesn't pre-filter.
+                # Content transactions should not be COMPLETED.
+                if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                    all_completed_or_skipped = False
+                    print(f"FAIL: Transaction {tx['id']} for excluded item content (Path: {tx['PATH']}) has status COMPLETED.")
+                    break
+                # Allow name changes for files directly excluded if their name matches, but not for files *within* excluded dirs.
+                # The current scan logic filters out items from excluded_dirs early.
+                # Files in excluded_files list are also filtered out early by scan_directory_for_occurrences.
+                # So, no transactions should ideally be generated for these. If they are, they must be SKIPPED.
+                if tx["STATUS"] not in [TransactionStatus.SKIPPED.value, TransactionStatus.PENDING.value]: # PENDING if scan doesn't mark as skipped
+                     all_completed_or_skipped = False
+                     print(f"FAIL: Transaction {tx['id']} for excluded item (Path: {tx['PATH']}) has status {tx['STATUS']} instead of SKIPPED/PENDING.")
+                     break
+
             elif tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                 all_completed_or_skipped = False
                 print(f"FAIL: Transaction {tx['id']} (Type: {tx['TYPE']}, Path: {tx['PATH']}) has status {tx['STATUS']}.")
                 break
-        check(all_completed_or_skipped, "All processed transactions are COMPLETED or SKIPPED.",
-              "Not all processed transactions are COMPLETED or SKIPPED.")
+        check(all_completed_or_skipped, "All processed (non-excluded) transactions are COMPLETED or SKIPPED.",
+              "Not all processed (non-excluded) transactions are COMPLETED or SKIPPED.")
     else:
         check(False, "", f"Could not load transaction file {original_transaction_file} for status verification.")
 
@@ -164,9 +214,9 @@ def self_test_flow(
     temp_dir = Path(temp_dir_str)
     _create_self_test_environment(temp_dir)
 
-    test_excluded_dirs: List[str] = [] 
+    test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt"]
-    test_extensions = [".txt", ".py", ".md"] 
+    test_extensions = [".txt", ".py", ".md", ".bin", ".log"] # .bin and .log for name testing
 
     transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
 
