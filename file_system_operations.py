@@ -110,29 +110,30 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
 def _get_current_absolute_path(
     original_relative_path_str: str,
     root_dir: Path,
-    path_translation_map: Dict[str, str], # original_rel_path -> new_relative_path_from_root
+    path_translation_map: Dict[str, str], # original_rel_path -> new_NAME_component_only
     cache: Dict[str, Path] # original_rel_path -> current_absolute_path
 ) -> Path:
     if original_relative_path_str in cache:
         return cache[original_relative_path_str]
 
-    if original_relative_path_str == ".":
+    if original_relative_path_str == ".": # Base case for recursion
         cache["."] = root_dir
         return root_dir
 
-    if original_relative_path_str in path_translation_map:
-        new_relative_path_from_root = path_translation_map[original_relative_path_str]
-        current_abs_path = root_dir / new_relative_path_from_root
-    else:
-        original_path_obj = Path(original_relative_path_str)
-        original_parent_rel_str = str(original_path_obj.parent)
-        item_original_name = original_path_obj.name
+    original_path_obj = Path(original_relative_path_str)
+    original_parent_rel_str = str(original_path_obj.parent)
+    item_original_name = original_path_obj.name
 
-        current_parent_abs_path = _get_current_absolute_path(
-            original_parent_rel_str, root_dir, path_translation_map, cache
-        )
-        
-        current_abs_path = current_parent_abs_path / item_original_name
+    # Recursively find the current absolute path of the parent directory.
+    current_parent_abs_path = _get_current_absolute_path(
+        original_parent_rel_str, root_dir, path_translation_map, cache
+    )
+
+    # Determine the current name of the item.
+    # If the item itself was directly renamed, its new name is in the map.
+    current_item_name = path_translation_map.get(original_relative_path_str, item_original_name)
+    
+    current_abs_path = current_parent_abs_path / current_item_name
     
     cache[original_relative_path_str] = current_abs_path
     return current_abs_path
@@ -241,7 +242,7 @@ def update_transaction_status_in_list(
     error_message: Optional[str] = None
 ) -> bool:
     updated = False
-    for tx_item in transactions: # Renamed tx to tx_item to avoid conflict with outer scope tx
+    for tx_item in transactions: 
         if tx_item['id'] == transaction_id:
             tx_item['STATUS'] = new_status.value
             if error_message:
@@ -264,9 +265,9 @@ def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_de
         )
 
 def _execute_rename_transaction(
-    tx_item: Dict[str, Any], # Renamed tx to tx_item
+    tx_item: Dict[str, Any], 
     root_dir: Path, 
-    path_translation_map: Dict[str, str],
+    path_translation_map: Dict[str, str], # Stores original_relative_path -> new_NAME_component
     path_cache: Dict[str, Path],
     dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str]]:
@@ -293,8 +294,8 @@ def _execute_rename_transaction(
 
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
-        path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
-        path_cache[original_relative_path_str] = new_abs_path
+        path_translation_map[original_relative_path_str] = new_name # Store new name component
+        path_cache[original_relative_path_str] = new_abs_path # Cache the full new absolute path
         return TransactionStatus.COMPLETED, "DRY_RUN"
     
     try:
@@ -306,8 +307,8 @@ def _execute_rename_transaction(
 
         os.rename(current_abs_path, new_abs_path)
         print(f"DEBUG_RENAME_EXEC: Successfully renamed '{current_abs_path}' to '{new_abs_path}'")
-        path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
-        path_cache[original_relative_path_str] = new_abs_path
+        path_translation_map[original_relative_path_str] = new_name # Store new name component
+        path_cache[original_relative_path_str] = new_abs_path # Cache the full new absolute path
         return TransactionStatus.COMPLETED, None
     except SandboxViolationError as sve:
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
@@ -316,7 +317,7 @@ def _execute_rename_transaction(
         return TransactionStatus.FAILED, str(e)
 
 def _execute_content_line_transaction(
-    tx_item: Dict[str, Any], # Renamed tx to tx_item
+    tx_item: Dict[str, Any], 
     root_dir: Path, 
     path_translation_map: Dict[str, str],
     path_cache: Dict[str, Path],
@@ -400,7 +401,7 @@ def execute_all_transactions(
 
     transactions.sort(key=execution_sort_key)
     
-    for tx_item in transactions: # Renamed tx to tx_item
+    for tx_item in transactions: 
         tx_id = tx_item["id"]
         current_status = TransactionStatus(tx_item["STATUS"])
 
