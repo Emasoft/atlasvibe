@@ -95,50 +95,58 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
 def _get_case_preserved_replacement(matched_text: str, base_find: str, base_replace: str) -> str:
     """Handles case-preserving replacement, with special logic for flojoy->atlasvibe."""
     print(f"TRACE: _get_case_preserved_replacement ENTERED with matched_text: {repr(matched_text)}")
+    result_to_return = None # Variable to hold the determined result
+
     if base_find.lower() == 'flojoy' and base_replace.lower() == 'atlasvibe':
         print(f"TRACE: flojoy/atlasvibe special case. matched_text: {repr(matched_text)}")
         if matched_text == 'flojoy': 
             print("TRACE: Condition matched_text == 'flojoy' is TRUE")
-            return 'atlasvibe'
-        print("TRACE: Condition matched_text == 'flojoy' is FALSE")
-        if matched_text == 'Flojoy': 
+            result_to_return = 'atlasvibe'
+        elif matched_text == 'Flojoy': 
             print("TRACE: Condition matched_text == 'Flojoy' is TRUE")
-            return 'Atlasvibe'
-        print("TRACE: Condition matched_text == 'Flojoy' is FALSE")
-        if matched_text == 'FLOJOY': 
+            result_to_return = 'Atlasvibe'
+        elif matched_text == 'FLOJOY': 
             print("TRACE: Condition matched_text == 'FLOJOY' is TRUE")
-            return 'ATLASVIBE'
-        print("TRACE: Condition matched_text == 'FLOJOY' is FALSE")
-        if matched_text == 'FloJoy': 
+            result_to_return = 'ATLASVIBE'
+        elif matched_text == 'FloJoy': 
             print("TRACE: Condition matched_text == 'FloJoy' is TRUE")
-            return 'AtlasVibe' 
-        print("TRACE: Condition matched_text == 'FloJoy' is FALSE")
-        if matched_text == 'floJoy': 
+            result_to_return = 'AtlasVibe' 
+        elif matched_text == 'floJoy': 
             print("TRACE: Condition matched_text == 'floJoy' is TRUE")
-            return 'atlasVibe' 
-        print("TRACE: Condition matched_text == 'floJoy' is FALSE")
-        print("TRACE: flojoy/atlasvibe special case FALLBACK")
-        return base_replace.lower() 
+            result_to_return = 'atlasVibe' 
+        else:
+            print("TRACE: flojoy/atlasvibe special case FALLBACK to lower")
+            result_to_return = base_replace.lower()
+        
+        print(f"TRACE_FINAL_SPECIAL: Matched: {repr(matched_text)}, Returning: {repr(result_to_return)}")
+        return result_to_return
     
     print(f"TRACE: Generic case preservation. matched_text: {repr(matched_text)}")
     if matched_text.islower(): 
         print("TRACE: Generic matched_text.islower() is TRUE")
-        return base_replace.lower()
-    if matched_text.isupper(): 
+        result_to_return = base_replace.lower()
+    elif matched_text.isupper(): 
         print("TRACE: Generic matched_text.isupper() is TRUE")
-        return base_replace.upper()
-    if matched_text.istitle(): 
+        result_to_return = base_replace.upper()
+    elif matched_text.istitle(): 
         print("TRACE: Generic matched_text.istitle() is TRUE")
-        return base_replace.title()
-    if matched_text and base_replace: 
+        result_to_return = base_replace.title()
+    elif matched_text and base_replace: # Ensure neither is empty for indexed access
         if matched_text[0].isupper() and not base_replace[0].isupper():
             print("TRACE: Generic matched_text[0].isupper() and not base_replace[0].isupper() is TRUE")
-            return base_replace[0].upper() + base_replace[1:]
-        if matched_text[0].islower() and not base_replace[0].islower(): 
+            result_to_return = base_replace[0].upper() + base_replace[1:]
+        elif matched_text[0].islower() and not base_replace[0].islower(): 
             print("TRACE: Generic matched_text[0].islower() and not base_replace[0].islower() is TRUE")
-            return base_replace[0].lower() + base_replace[1:]
-    print("TRACE: Generic case preservation FALLBACK")
-    return base_replace 
+            result_to_return = base_replace[0].lower() + base_replace[1:]
+        else: # Fallback if specific first-letter casing doesn't apply but still in generic
+            print("TRACE: Generic case preservation - first letter casing rules not met, using base_replace as is.")
+            result_to_return = base_replace
+    else: # Fallback for generic if matched_text or base_replace is empty
+        print("TRACE: Generic case preservation - matched_text or base_replace is empty, using base_replace.")
+        result_to_return = base_replace
+
+    print(f"TRACE_FINAL_GENERIC: Matched: {repr(matched_text)}, Returning: {repr(result_to_return)}")
+    return result_to_return
 
 def perform_text_replacement(text: str, find_pattern: str, replace_pattern: str, is_regex: bool, case_sensitive: bool) -> str:
     """Performs text replacement, calling case-preservation logic if applicable."""
