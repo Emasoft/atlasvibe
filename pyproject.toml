@@ -13,12 +13,12 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.13.3"
+requires-python = ">=3.12.9"
 dependencies = [
     "uvicorn[standard]>=0.23.2,<0.24.0",
-    "fastapi>=0.104.1,<0.105.0",
+    "fastapi>=0.104.1,<0.112.0",
     "pyyaml>=6.0.1,<7.0.0",
-    "python-dotenv>=1.0.0,<2.0.0",
+    "python-dotenv",
     "requests>=2.31.0,<3.0.0",
     "debugpy>=1.8.0,<2.0.0",
     "watchfiles>=0.21.0,<0.22.0",
@@ -26,9 +26,10 @@ dependencies = [
     "pandas>=1.4.0,<3.0.0",
     "python-box>=7.0.0,<8.0.0",
     "plotly>=5.0.0,<6.0.0",
-    "prefect>=2.16.8",
+    "prefect>=3.1.4",
     "chardet>=3.0.0,<6.0.0",
-    "griffe>=0.37.0,<0.42.0", 
+    "griffe",
+    "pydantic>=2.11.4",
 ]
 
 [project.optional-dependencies]
@@ -37,7 +38,7 @@ dev = [
     "pytest-cov>=4.1.0,<5.0.0",
     "pytest-mock>=3.11.0,<4.0.0",
     "ruff>=0.3.0,<0.4.0",
-    "typer[all]>=0.9.0,<0.10.0",
+    "typer[all]",
     "python-frontmatter>=1.0.1,<2.0.0",
     "httpx>=0.26.0,<0.27.0",
     "pytest-json-report>=1.5.0,<2.0.0",
@@ -45,7 +46,6 @@ dev = [
     "scikit-image>=0.19.0,<0.24.0", 
     "boto3>=1.20.0,<2.0.0",      
     "scipy>=1.7.0,<2.0.0",
-    "prefect>=2.0.0,<3.0.0", 
 ]
 
 [build-system]
