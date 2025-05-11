@@ -20,12 +20,16 @@ except ImportError:
     PREFECT_AVAILABLE = False
     # Define dummy decorators if Prefect is not available
     def task(fn=None, **kwargs):
-        if fn: return fn
-        def decorator(fn_deco): return fn_deco
+        if fn:
+            return fn
+        def decorator(fn_deco):
+            return fn_deco
         return decorator
     def flow(fn=None, **kwargs):
-        if fn: return fn
-        def decorator(fn_deco): return fn_deco
+        if fn:
+            return fn
+        def decorator(fn_deco):
+            return fn_deco
         return decorator
 
 # Local module imports
@@ -35,7 +39,8 @@ from file_system_operations import (
     load_transactions,
     execute_all_transactions,
     TransactionStatus, # For self-test verification
-    TransactionType # For self-test verification
+    TransactionType, # For self-test verification
+    TRANSACTION_FILE_BACKUP_EXT # Import for constructing backup filenames
 )
 # from replace_logic import replace_flojoy_occurrences # Not directly used by main, but by file_system_operations
 

@@ -52,15 +52,21 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
 
         if encoding and confidence and confidence > 0.7:
             norm_encoding = encoding.lower()
-            if norm_encoding == 'ascii': return 'ascii'
-            if 'utf-8' in norm_encoding or 'utf8' in norm_encoding: return 'utf-8'
+            if norm_encoding == 'ascii':
+                return 'ascii'
+            if 'utf-8' in norm_encoding or 'utf8' in norm_encoding:
+                return 'utf-8'
             try:
-                b"test".decode(encoding); return encoding
-            except LookupError: return DEFAULT_ENCODING_FALLBACK
+                b"test".decode(encoding)
+                return encoding
+            except LookupError:
+                return DEFAULT_ENCODING_FALLBACK
         else:
             try:
-                raw_data.decode('utf-8'); return 'utf-8'
-            except UnicodeDecodeError: return None
+                raw_data.decode('utf-8')
+                return 'utf-8'
+            except UnicodeDecodeError:
+                return None
     except Exception:
         return None
 
@@ -69,11 +75,14 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
     try:
         with open(file_path, 'rb') as f:
             sample = f.read(sample_size)
-        if not sample: return False
-        if b'\x00' in sample: return True
+        if not sample:
+            return False
+        if b'\x00' in sample:
+            return True
         text_chars = set(range(32, 127)) | {ord('\n'), ord('\r'), ord('\t')}
         non_text_count = sum(1 for byte in sample if byte not in text_chars)
-        if len(sample) > 0 and (non_text_count / len(sample)) > 0.3: return True
+        if len(sample) > 0 and (non_text_count / len(sample)) > 0.3:
+            return True
         return False
     except Exception:
         return False
@@ -87,12 +96,14 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
             resolved_item_path = item_path.resolve(strict=False)
             for excluded_dir in abs_excluded_dirs:
                 if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
-                    is_excluded = True; break
+                    is_excluded = True
+                    break
         except (ValueError, OSError):
             item_path_str = str(item_path)
             if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
                  is_excluded = True
-        if is_excluded: continue
+        if is_excluded:
+            continue
         yield item_path
 
 def _get_current_absolute_path(
@@ -387,8 +398,10 @@ def execute_all_transactions(
         current_status = TransactionStatus(tx["STATUS"])
 
         if current_status == TransactionStatus.COMPLETED or current_status == TransactionStatus.FAILED:
-            if current_status == TransactionStatus.COMPLETED: stats["completed"] +=1
-            if current_status == TransactionStatus.FAILED: stats["failed"] +=1
+            if current_status == TransactionStatus.COMPLETED:
+                stats["completed"] +=1
+            if current_status == TransactionStatus.FAILED:
+                stats["failed"] +=1
             continue # Already processed or terminally failed
 
         if not resume and current_status == TransactionStatus.IN_PROGRESS:
@@ -415,9 +428,13 @@ def execute_all_transactions(
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg)
             save_transactions(transactions, transactions_file_path) # Save final state for this tx
 
-            if new_status == TransactionStatus.COMPLETED: stats["completed"] += 1
-            elif new_status == TransactionStatus.FAILED: stats["failed"] += 1; print(f"Transaction {tx_id} FAILED: {error_msg}")
-            elif new_status == TransactionStatus.SKIPPED: stats["skipped"] += 1
+            if new_status == TransactionStatus.COMPLETED:
+                stats["completed"] += 1
+            elif new_status == TransactionStatus.FAILED:
+                stats["failed"] += 1
+                print(f"Transaction {tx_id} FAILED: {error_msg}")
+            elif new_status == TransactionStatus.SKIPPED:
+                stats["skipped"] += 1
         
         elif current_status == TransactionStatus.SKIPPED : # Already processed as skipped
              stats["skipped"] +=1
