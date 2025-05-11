@@ -119,46 +119,46 @@ def _verify_self_test_results_task(
     }
 
     # Path Existence Tests
-    record_test(f"Verify base 'flojoy_root' renames to 'atlasvibe_root' at top level.", 
+    record_test("Verify base 'flojoy_root' renames to 'atlasvibe_root' at top level.", 
                 exp_paths_after_rename["atlasvibe_root"].exists(), 
                 f"Path '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify nested 'sub_flojoy_folder' renames correctly under 'atlasvibe_root'.", 
+    record_test("Verify nested 'sub_flojoy_folder' renames correctly under 'atlasvibe_root'.", 
                 exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
                 f"Path '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify deeply nested 'another_FLOJOY_dir' renames with case change.", 
+    record_test("Verify deeply nested 'another_FLOJOY_dir' renames with case change.", 
                 exp_paths_after_rename["another_ATLASVIBE_dir"].exists(), 
                 f"Path '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'deep_flojoy_file.txt' renames within transformed path.", 
+    record_test("Verify file 'deep_flojoy_file.txt' renames within transformed path.", 
                 exp_paths_after_rename["deep_atlasvibe_file.txt"].exists(), 
                 f"Path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'another_flojoy_file.py' renames at 'atlasvibe_root' level.", 
+    record_test("Verify file 'another_flojoy_file.py' renames at 'atlasvibe_root' level.", 
                 exp_paths_after_rename["another_atlasvibe_file.py"].exists(), 
                 f"Path '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'only_name_flojoy.md' (name match only) renames.", 
+    record_test("Verify file 'only_name_flojoy.md' (name match only) renames.", 
                 exp_paths_after_rename["only_name_atlasvibe.md"].exists(), 
                 f"Path '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'file_with_floJoy_lines.txt' (mixed case name) renames.", 
+    record_test("Verify file 'file_with_floJoy_lines.txt' (mixed case name) renames.", 
                 exp_paths_after_rename["file_with_atlasVibe_lines.txt"].exists(), 
                 f"Path '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'unmapped_variant_flojoy_content.txt' renames (name is mapped).", 
+    record_test("Verify file 'unmapped_variant_flojoy_content.txt' renames (name is mapped).", 
                 exp_paths_after_rename["unmapped_variant_atlasvibe_content.txt"].exists(), 
                 f"Path '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify file 'no_target_here.log' (no target in name/content) remains unchanged.", 
+    record_test("Verify file 'no_target_here.log' (no target in name/content) remains unchanged.", 
                 exp_paths_after_rename["no_target_here.log"].exists(), 
                 f"Path '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test(f"Verify explicitly excluded file 'exclude_this_flojoy_file.txt' is not renamed.", 
+    record_test("Verify explicitly excluded file 'exclude_this_flojoy_file.txt' is not renamed.", 
                 exp_paths_after_rename["exclude_this_flojoy_file.txt"].exists(), 
                 f"Path '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test(f"Verify explicitly excluded dir 'excluded_flojoy_dir' is not renamed.", 
+    record_test("Verify explicitly excluded dir 'excluded_flojoy_dir' is not renamed.", 
                 exp_paths_after_rename["excluded_flojoy_dir"].exists(), 
                 f"Path '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test(f"Verify file 'inner_flojoy_file.txt' within excluded dir is not renamed.", 
+    record_test("Verify file 'inner_flojoy_file.txt' within excluded dir is not renamed.", 
                 exp_paths_after_rename["inner_flojoy_file.txt_in_excluded_dir"].exists(), 
                 f"Path '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test(f"Verify binary file 'binary_flojoy_file.bin' (mapped name) renames.", 
+    record_test("Verify binary file 'binary_flojoy_file.bin' (mapped name) renames.", 
                 exp_paths_after_rename["binary_atlasvibe_file.bin"].exists(), 
                 f"Path '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
-    record_test(f"Verify binary file 'binary_fLoJoY_name.bin' (unmapped name variant) is not renamed.", 
+    record_test("Verify binary file 'binary_fLoJoY_name.bin' (unmapped name variant) is not renamed.", 
                 exp_paths_after_rename["binary_fLoJoY_name.bin"].exists(), 
                 f"Path '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
 
