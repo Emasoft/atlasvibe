@@ -248,12 +248,12 @@ def _verify_self_test_results_task(
         id_text_content = str(result['id'])
 
         wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width)
-        if not wrapped_desc_lines: # Ensure at least one line for empty descriptions
+        if not wrapped_desc_lines:
             wrapped_desc_lines = [''] 
 
         for i, line_frag in enumerate(wrapped_desc_lines):
             id_cell_content = id_text_content if i == 0 else ""
-            id_cell_str = f"{' ' * padding}{id_cell_content:<{id_col_content_width}}{' ' * padding}"
+            id_cell_str = f"{' ' * padding}{id_cell_content:>{id_col_content_width}}{' ' * padding}" # Right-align ID
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             
@@ -262,8 +262,8 @@ def _verify_self_test_results_task(
                 padded_outcome_text = f"{outcome_text_content:<{outcome_col_content_width}}"
                 outcome_cell_content_colored = f"{color}{padded_outcome_text}{RESET}"
             
-            outcome_cell_str = f"{' ' * padding}{outcome_cell_content_colored:<{outcome_col_content_width + (len(color)+len(RESET) if i==0 else 0)}}{' ' * padding}"
-            # A simpler way for outcome cell if alignment with color is tricky:
+            # This line for outcome_cell_str was a bit complex due to color codes; simplified below
+            # outcome_cell_str = f"{' ' * padding}{outcome_cell_content_colored:<{outcome_col_content_width + (len(color)+len(RESET) if i==0 else 0)}}{' ' * padding}"
             if i == 0:
                  outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
             else:
