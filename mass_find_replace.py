@@ -1198,7 +1198,7 @@ Requires 'prefect' and 'chardet' libraries: pip install prefect chardet
         directory=args.directory, find_pattern=args.find_pattern, replace_pattern=args.replace_pattern,
         extensions=args.extensions, exclude_dirs=args.exclude_dirs, exclude_files=args.exclude_files,
         is_regex=args.is_regex, case_sensitive=args.case_sensitive, dry_run=args.dry_run,
-        skip_scan=args.skip_scan, process_binary_files=process_binary_files,
+        skip_scan=args.skip_scan, process_binary_files=args.process_binary_files,
         force_execution=args.force
     )
 
