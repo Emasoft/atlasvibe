@@ -212,8 +212,9 @@ def _verify_self_test_results_task(
     outcome_col_width = 12 # For "✅ PASS" or "❌ FAIL"
     separator_width = 7 # For " | " and borders
     desc_col_width = term_width - num_col_width - outcome_col_width - separator_width
-    if desc_col_width < 20: desc_col_width = 20 # Minimum description width
-
+    if desc_col_width < 20: # Minimum description width
+        desc_col_width = 20
+    
     print("\n" + BLUE + "┌" + "─" * num_col_width + "┬" + "─" * desc_col_width + "┬" + "─" * outcome_col_width + "┐" + RESET)
     print(BLUE + f"│ {'#':<{num_col_width-2}} │ {'Test Description':<{desc_col_width-1}} │ {'Outcome':<{outcome_col_width-1}} │" + RESET)
     print(BLUE + "├" + "─" * num_col_width + "┼" + "─" * desc_col_width + "┼" + "─" * outcome_col_width + "┤" + RESET)
