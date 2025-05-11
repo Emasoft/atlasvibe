@@ -1,0 +1,7 @@
+        if text_to_match in REPLACEMENT_MAPPING:
+            result_to_return = REPLACEMENT_MAPPING[text_to_match]
+            # ...
+        else:
+            result_to_return = text_to_match # Fallback: return original match
+            # ...
+        return result_to_return

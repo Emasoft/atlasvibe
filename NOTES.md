@@ -71,8 +71,12 @@ Each entry (transaction) in the JSON array must include:
 
 **Replacement Algorithm:**
 - The function receives an input string.
-- It performs a case-insensitive search for "flojoy" and its variants within this input string.
-- For each match, it uses the *exact cased match* to determine the correct replacement based on the following predefined, fixed mapping:
+- It performs a case-insensitive search for "flojoy" (e.g., using `re.sub` with `re.IGNORECASE` and a pattern like `r'flojoy'`).
+- For each substring actually matched by the case-insensitive search (e.g., "flojoy", "Flojoy", "FLOJOY", "fLoJoY"):
+    - This exact matched substring is then looked up as a key in the `REPLACEMENT_MAPPING`.
+    - If the exact matched substring exists as a key in `REPLACEMENT_MAPPING`, it is replaced with the corresponding value.
+    - **If the exact matched substring is NOT a key in `REPLACEMENT_MAPPING` (e.g., "fLoJoY" if it's not in the map), it must be left unchanged in the output string.**
+- The predefined, fixed mapping is:
   ```python
   REPLACEMENT_MAPPING = {
       'flojoy': 'atlasvibe',
@@ -82,7 +86,7 @@ Each entry (transaction) in the JSON array must include:
       'FLOJOY': 'ATLASVIBE',
   }
   ```
-- All occurrences matching keys in the map are replaced.
+- All occurrences that are found by the case-insensitive search AND have an exact-case key in `REPLACEMENT_MAPPING` are replaced.
 - The function returns the modified string.
 
 **Interaction:**
