@@ -262,90 +262,72 @@ def _verify_self_test_results_task(
                     f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
     # --- New/Placeholder Tests based on user's list ---
-    record_test("Test to assess renaming in directory trees of depth >= 10.",
+    record_test("Test to assess the ability to replace folder and file names in a directory tree of depth=10.",
                 exp_paths_after_rename["depth10_file_atlasvibe.txt"].exists(),
                 f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt']}' not found or not renamed correctly. Requires setup verification.")
     
-    # GB18030 Test - simplified check
     gb_file_path = exp_paths_after_rename.get("gb18030_atlasvibe_file.txt")
     gb_expected_content = "你好 atlasvibe 世界"
     if not (gb_file_path and gb_file_path.exists()): # type: ignore
-        record_test("Test to assess search and replace in files with GB18030 charset encoding.", False, f"GB18030 test file missing: {gb_file_path}. Setup issue.")
+        record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"GB18030 test file missing: {gb_file_path}. Setup issue.")
     else:
         try:
             gb_actual_content = gb_file_path.read_text(encoding="gb18030") # type: ignore
-            record_test("Test to assess search and replace in files with GB18030 charset encoding.", 
+            record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", 
                         gb_actual_content == gb_expected_content,
                         f"GB18030 content mismatch. Expected (repr): {gb_expected_content!r}, Got (repr): {gb_actual_content!r}")
         except Exception as e:
-            record_test("Test to assess search and replace in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
+            record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
 
-    record_test("Test to assess replacing a string according to the replacement map.", True, "Covered by existing content tests; consider specific unit tests for replace_logic module.")
-    record_test("Test to assess leaving intact unmapped occurrences of the target string.", True, "Covered by existing unmapped variant tests; consider specific unit tests for replace_logic.")
-    record_test("Test to assess finding multiple target string occurrences across different lines in a file.", True, "Covered by 'deep_atlasvibe_file.txt' content checks.")
-
-    # Transaction generation tests (can be made more specific by checking transaction list details)
-    record_test("Test to assess creation of a transaction entry for each line containing target string occurrences.", 
+    record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Covered by existing content tests; consider specific unit tests for replace_logic module.")
+    record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Covered by existing unmapped variant tests; consider specific unit tests for replace_logic.")
+    record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Covered by 'deep_atlasvibe_file.txt' content checks.")
+    record_test("Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences.", 
                 True, "Implicitly covered by content change tests. For explicit check, analyze generated transactions.json.")
-    record_test("Test to assess creation of a transaction entry for each filename containing target string.",
+    record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences.",
                 True, "Implicitly covered by rename tests. For explicit check, analyze transactions.json.")
-    record_test("Test to assess creation of a transaction entry for each folder name containing target string.",
+    record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences.",
                 True, "Implicitly covered by rename tests. For explicit check, analyze transactions.json.")
-
-    # Transaction execution tests (already covered by verifying outcomes)
-    record_test("Test to assess execution of line content modification transactions from JSON.", True, "Covered by verifying content changes.")
-    record_test("Test to assess execution of file rename transactions from JSON.", True, "Covered by verifying path changes.")
-    record_test("Test to assess execution of folder rename transactions from JSON.", True, "Covered by verifying path changes.")
-
-    record_test("Test to assess atomic and secure update of transaction STATE in JSON.", 
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Covered by verifying content changes.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Covered by verifying path changes.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Covered by verifying path changes.")
+    record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way.", 
                 (original_transaction_file.with_suffix(original_transaction_file.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists() if not is_resume_test else True, 
                 "Backup file for transactions.json not consistently found. 'Secure' aspect not testable here.")
-
-    record_test("Test to assess deterministic results by comparing two scan outputs.", False, "Test not yet implemented. Requires running scan twice and comparing JSON outputs.")
-    
-    record_test("Test to assess resuming SEARCH phase from an incomplete transaction file.", False, "Test not yet implemented. Current resume only supports execution phase.")
+    record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Test not yet implemented. Requires running scan twice and comparing JSON outputs.")
+    record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Test not yet implemented. Current resume only supports execution phase.")
 
     if is_resume_test and resume_tx_file_path:
-        # Specific checks for the resume test
-        record_test("Test to assess resuming EXECUTION from a partially processed transaction file (PENDING tasks).",
-                    (temp_dir / "pending_atlasvibe.txt").exists(), # Assuming pending_flojoy.txt becomes pending_atlasvibe.txt
+        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
+                    (temp_dir / "pending_atlasvibe.txt").exists(), 
                     "Resumed PENDING task did not complete as expected.")
-        record_test("Test to assess resuming EXECUTION from a partially processed transaction file (IN_PROGRESS tasks).",
-                    (temp_dir / "inprogress_atlasvibe.txt").exists(), # Assuming inprogress_flojoy.txt becomes inprogress_atlasvibe.txt
+        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
+                    (temp_dir / "inprogress_atlasvibe.txt").exists(), 
                     "Resumed IN_PROGRESS task did not complete as expected.")
-        # Check that already COMPLETED tasks were not re-processed (e.g. completed_atlasvibe.txt should exist from setup, not re-created)
-        # This is harder to check without more intricate setup/state tracking.
     else:
-         record_test("Test to assess resuming EXECUTION from a partially processed transaction file.", False, "Resume test setup not active for this run.")
+         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run.")
 
-
-    record_test("Test to assess retry logic for ERROR state transactions.", False, "Test not yet implemented. Retry logic for ERROR state is not a current feature.")
+    record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Retry logic for ERROR state is not a current feature.")
     
-    # Large file test
     large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
     if not (large_file_path and large_file_path.exists()): # type: ignore
-        record_test("Test to assess processing of large files (>10MB, simulated) using line-by-line approach.", False, f"Large test file missing: {large_file_path}. Setup issue.")
+        record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Large test file missing: {large_file_path}. Setup issue.")
     else:
-        # Verify a few lines from the large file to confirm replacement
         try:
             with open(large_file_path, "r") as f: # type: ignore
-                lines = [f.readline().strip() for _ in range(5)] # Read first 5 lines
+                lines = [f.readline().strip() for _ in range(5)] 
             expected_lines = ["atlasvibe line " + str(i) for i in range(5)]
-            record_test("Test to assess processing of large files (>10MB, simulated) using line-by-line approach.", 
+            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", 
                         lines == expected_lines,
                         f"Large file content mismatch. Expected head: {expected_lines!r}, Got: {lines!r}")
         except Exception as e:
-            record_test("Test to assess processing of large files (>10MB, simulated) using line-by-line approach.", False, f"Error reading large file: {e}")
+            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Error reading large file: {e}")
 
-
-    # --- Final Transaction Status Check (from original self-test) ---
-    # This uses the main transaction file, not the resume-specific one for this check.
     transactions_for_status_check = load_transactions(original_transaction_file)
     if transactions_for_status_check is not None:
-        # ... (rest of the transaction status check logic from original, adapted for new test descriptions)
         all_non_excluded_processed_correctly = True
         for tx_idx, tx in enumerate(transactions_for_status_check): 
-             if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"): # Assuming these are the only exclusion patterns
+             if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"): 
                 if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                     all_non_excluded_processed_correctly = False
                     record_test(f"Transaction Lifecycle (Tx ID: {tx['id']}): Verify non-excluded transaction reaches final state (COMPLETED/SKIPPED).", False,
@@ -355,7 +337,6 @@ def _verify_self_test_results_task(
              record_test("Transaction Lifecycle: Verify all non-excluded transactions reach a final state (COMPLETED or SKIPPED).", True)
     else:
         record_test(f"Transaction File Integrity: Verify main transaction file '{original_transaction_file.name}' can be loaded.", False, "Could not load main transaction file for final status verification.")
-
 
     # --- Table Formatting ---
     term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
