@@ -109,28 +109,37 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
 def _get_current_absolute_path(
     original_relative_path_str: str,
     root_dir: Path,
-    path_translation_map: Dict[str, str], # original_rel_path -> new_rel_path
-    cache: Dict[str, Path] # original_rel_path -> current_abs_path
+    path_translation_map: Dict[str, str], # original_rel_path -> new_relative_path
+    cache: Dict[str, Path] # original_rel_path -> current_absolute_path
 ) -> Path:
     if original_relative_path_str in cache:
         return cache[original_relative_path_str]
+
     if original_relative_path_str == ".":
-        cache[original_relative_path_str] = root_dir
+        cache["."] = root_dir
         return root_dir
-    if original_relative_path_str in path_translation_map:
-        current_item_rel_path_str = path_translation_map[original_relative_path_str]
-        res = root_dir / current_item_rel_path_str
-        cache[original_relative_path_str] = res
-        return res
+
     original_path_obj = Path(original_relative_path_str)
     original_parent_rel_str = str(original_path_obj.parent)
-    item_name = original_path_obj.name
+    item_original_name = original_path_obj.name
+
+    # Get the current absolute path of the parent
     current_parent_abs_path = _get_current_absolute_path(
         original_parent_rel_str, root_dir, path_translation_map, cache
     )
-    res = current_parent_abs_path / item_name
-    cache[original_relative_path_str] = res
-    return res
+
+    # Determine the current name of the item itself.
+    # If the item itself was directly renamed, its new name is the last component
+    # of its new relative path stored in path_translation_map.
+    current_item_name = item_original_name
+    if original_relative_path_str in path_translation_map:
+        new_relative_path_of_this_item = Path(path_translation_map[original_relative_path_str])
+        current_item_name = new_relative_path_of_this_item.name
+    
+    current_abs_path = current_parent_abs_path / current_item_name
+    
+    cache[original_relative_path_str] = current_abs_path
+    return current_abs_path
 
 # --- Scan Logic ---
 def scan_directory_for_occurrences(
