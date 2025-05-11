@@ -44,6 +44,19 @@ BLUE = "\033[94m" # For table borders
 PASS_SYMBOL = "✅"
 FAIL_SYMBOL = "❌"
 
+# Unicode Double Line Box Characters
+DBL_TOP_LEFT = "╔"
+DBL_TOP_RIGHT = "╗"
+DBL_BOTTOM_LEFT = "╚"
+DBL_BOTTOM_RIGHT = "╝"
+DBL_HORIZONTAL = "═"
+DBL_VERTICAL = "║"
+DBL_T_DOWN = "╦"
+DBL_T_UP = "╩"
+DBL_T_RIGHT = "╠"
+DBL_T_LEFT = "╣"
+DBL_CROSS = "╬"
+
 
 # --- Self-Test Functionality ---
 def _create_self_test_environment(base_dir: Path) -> None:
@@ -118,58 +131,57 @@ def _verify_self_test_results_task(
         "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin"
     }
 
-    # Path Existence Tests
-    record_test("Verify base 'flojoy_root' renames to 'atlasvibe_root' at top level.", 
+    # Path Existence Tests - Functional Descriptions
+    record_test("Path: Top-level directory rename (e.g., 'flojoy_root' -> 'atlasvibe_root').", 
                 exp_paths_after_rename["atlasvibe_root"].exists(), 
-                f"Path '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify nested 'sub_flojoy_folder' renames correctly under 'atlasvibe_root'.", 
+                f"Expected renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Nested directory rename (e.g., 'sub_flojoy_folder' -> 'sub_atlasvibe_folder').", 
                 exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
-                f"Path '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify deeply nested 'another_FLOJOY_dir' renames with case change.", 
+                f"Expected renamed nested dir '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Deeply nested directory rename with case change (e.g., 'another_FLOJOY_dir' -> 'another_ATLASVIBE_dir').", 
                 exp_paths_after_rename["another_ATLASVIBE_dir"].exists(), 
-                f"Path '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'deep_flojoy_file.txt' renames within transformed path.", 
+                f"Expected renamed deep dir '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File rename within a transformed directory path.", 
                 exp_paths_after_rename["deep_atlasvibe_file.txt"].exists(), 
-                f"Path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'another_flojoy_file.py' renames at 'atlasvibe_root' level.", 
+                f"Expected renamed file in transformed path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File rename at a shallower level in transformed path.", 
                 exp_paths_after_rename["another_atlasvibe_file.py"].exists(), 
-                f"Path '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'only_name_flojoy.md' (name match only) renames.", 
+                f"Expected renamed file '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File rename based on name match only (content irrelevant for name change).", 
                 exp_paths_after_rename["only_name_atlasvibe.md"].exists(), 
-                f"Path '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'file_with_floJoy_lines.txt' (mixed case name) renames.", 
+                f"Expected renamed file '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File rename with mixed-case target string in original name.", 
                 exp_paths_after_rename["file_with_atlasVibe_lines.txt"].exists(), 
-                f"Path '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'unmapped_variant_flojoy_content.txt' renames (name is mapped).", 
+                f"Expected renamed file '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File rename where original name is mapped, content has unmapped variants.", 
                 exp_paths_after_rename["unmapped_variant_atlasvibe_content.txt"].exists(), 
-                f"Path '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify file 'no_target_here.log' (no target in name/content) remains unchanged.", 
+                f"Expected renamed file '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File with no target string in name or content remains unchanged.", 
                 exp_paths_after_rename["no_target_here.log"].exists(), 
-                f"Path '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test("Verify explicitly excluded file 'exclude_this_flojoy_file.txt' is not renamed.", 
+                f"Expected unchanged file '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Explicitly excluded file is not renamed and still exists.", 
                 exp_paths_after_rename["exclude_this_flojoy_file.txt"].exists(), 
-                f"Path '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test("Verify explicitly excluded dir 'excluded_flojoy_dir' is not renamed.", 
+                f"Expected excluded file '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Explicitly excluded directory is not renamed and still exists.", 
                 exp_paths_after_rename["excluded_flojoy_dir"].exists(), 
-                f"Path '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test("Verify file 'inner_flojoy_file.txt' within excluded dir is not renamed.", 
+                f"Expected excluded dir '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: File within an excluded directory is not renamed and still exists.", 
                 exp_paths_after_rename["inner_flojoy_file.txt_in_excluded_dir"].exists(), 
-                f"Path '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-    record_test("Verify binary file 'binary_flojoy_file.bin' (mapped name) renames.", 
+                f"Expected file in excluded dir '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Binary file with a mapped target string in its name is renamed.", 
                 exp_paths_after_rename["binary_atlasvibe_file.bin"].exists(), 
-                f"Path '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
-    record_test("Verify binary file 'binary_fLoJoY_name.bin' (unmapped name variant) is not renamed.", 
+                f"Expected renamed binary file '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Binary file with an unmapped target string variant in its name is NOT renamed.", 
                 exp_paths_after_rename["binary_fLoJoY_name.bin"].exists(), 
-                f"Path '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING (should exist and be unchanged).")
-
-    record_test("Verify original 'flojoy_root' base directory is removed after rename.", 
+                f"Expected unrenamed binary file '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING.")
+    record_test("Path: Original top-level directory is removed after its rename.", 
                 not (temp_dir / "flojoy_root").exists(),
                 "Old 'flojoy_root' base directory STILL EXISTS.")
 
     # Content checks helper
     def check_file_content(file_path: Optional[Path], expected_content: Union[str, bytes], test_description_base: str, is_binary: bool = False):
         if not file_path or not file_path.exists():
-            record_test(f"{test_description_base}: File existence for content check.", False, f"File MISSING at '{file_path}' for content check.")
+            record_test(f"{test_description_base} (File Existence)", False, f"File MISSING at '{file_path}' for content check.")
             return
 
         actual_content: Union[str, bytes]
@@ -182,41 +194,41 @@ def _verify_self_test_results_task(
         details = ""
         if not condition:
             if is_binary:
-                details = f"Expected: {expected_content!r}, Got: {actual_content!r}"
+                details = f"Expected (bytes): {expected_content!r}\nGot (bytes): {actual_content!r}"
             else: 
-                details = f"Expected:\n{expected_content}\nGot:\n{actual_content}"
+                # For text, show repr to reveal hidden differences for the failing test
+                details = f"Expected (repr):\n{expected_content!r}\nGot (repr):\n{actual_content!r}"
         record_test(test_description_base, condition, details)
 
-    # Content verifications
+    # Content verifications - Functional Descriptions
     check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
                        "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
-                       "Content: Verify all mapped 'flojoy' variants replaced in 'deep_atlasvibe_file.txt'.")
+                       "Content: All mapped 'flojoy' variants replaced in a deeply nested text file.")
     check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
                        "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
-                       "Content: Verify mixed-case 'floJoy' variants replaced in 'file_with_atlasVibe_lines.txt'.")
+                       "Content: Mixed-case mapped 'floJoy' variants replaced correctly in text file.")
     check_file_content(exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt"),
                        "This has fLoJoY content, and also atlasvibe.",
-                       "Content: Verify unmapped 'fLoJoY' preserved, mapped 'flojoy' replaced.")
+                       "Content: Unmapped 'fLoJoY' variant preserved, mapped 'flojoy' variant replaced in text file.")
     check_file_content(exp_paths_after_rename.get("only_name_atlasvibe.md"),
                        "Content without target string.",
-                       "Content: Verify file with only name match has its content unchanged.")
+                       "Content: File renamed due to name match has its content (without target) unchanged.")
     check_file_content(exp_paths_after_rename.get("exclude_this_flojoy_file.txt"),
                        "flojoy content in explicitly excluded file",
-                       "Content: Verify explicitly excluded file's content remains untouched.")
+                       "Content: Explicitly excluded file's content remains untouched, even if containing target string.")
     check_file_content(exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir"),
                        "flojoy inside excluded dir",
-                       "Content: Verify file in excluded directory has its content untouched.")
-    
+                       "Content: File within an excluded directory has its content untouched.")
     check_file_content(exp_paths_after_rename.get("binary_atlasvibe_file.bin"),
                        b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04",
-                       "Content: Verify binary file (renamed) has its content untouched.", is_binary=True)
+                       "Content: Binary file (renamed due to name match) has its byte content untouched.", is_binary=True)
     check_file_content(exp_paths_after_rename.get("binary_fLoJoY_name.bin"),
                        b"unmapped_variant_binary_content" + b"\x00\xff",
-                       "Content: Verify binary file (unmapped name) has its content untouched.", is_binary=True)
+                       "Content: Binary file (name not mapped) has its byte content untouched.", is_binary=True)
 
     binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
     if binary_file_renamed and binary_file_renamed.exists():
-        record_test(f"File Type: Verify renamed binary file ('{binary_file_renamed.name}') is still binary.",
+        record_test(f"File Type: Renamed binary file ('{binary_file_renamed.name}') is still detected as binary.",
                     is_likely_binary_file(binary_file_renamed),
                     f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
@@ -228,7 +240,7 @@ def _verify_self_test_results_task(
             if "excluded_flojoy_dir/" in tx_path_str or tx_path_str == "exclude_this_flojoy_file.txt":
                 found_tx_for_excluded = True
                 break 
-        record_test("Scan Exclusion: Verify no transactions were generated for explicitly excluded files/dirs.",
+        record_test("Scan Logic: No transactions generated for items in excluded directories or explicitly excluded files.",
                     not found_tx_for_excluded,
                     "Transactions WERE generated for items that should have been excluded by scan.")
 
@@ -238,13 +250,13 @@ def _verify_self_test_results_task(
                  if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"):
                     if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                         all_non_excluded_processed_correctly = False
-                        record_test(f"Execution Status (Tx ID: {tx['id']}): Check if non-excluded transaction processed.", False,
+                        record_test(f"Transaction Status (Tx ID: {tx['id']}): Non-excluded transaction processed to COMPLETED or SKIPPED.", False,
                                     f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
                         break 
             if all_non_excluded_processed_correctly: 
-                 record_test("Execution Status: Verify all non-excluded transactions are COMPLETED or SKIPPED.", True)
+                 record_test("Transaction Status: All non-excluded transactions are COMPLETED or SKIPPED.", True)
     else:
-        record_test(f"Transaction File Load: Verify '{original_transaction_file.name}' can be loaded.", False, "Could not load for status verification.")
+        record_test(f"Transaction File Integrity: '{original_transaction_file.name}' can be loaded for verification.", False, "Could not load for status verification.")
 
     # --- Table Formatting ---
     term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
@@ -258,7 +270,7 @@ def _verify_self_test_results_task(
     outcome_col_content_width = max(len(outcome_text_pass), len(outcome_text_fail))
     outcome_col_total_width = outcome_col_content_width + 2 * padding
 
-    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4) # 4 for "│" separators
+    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4) 
     
     min_desc_col_content_width = 20
     if desc_col_total_width - 2 * padding < min_desc_col_content_width:
@@ -272,9 +284,9 @@ def _verify_self_test_results_task(
     header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
 
     sys.stdout.write("\n")
-    sys.stdout.write(BLUE + "┌" + "─" * id_col_total_width + "┬" + "─" * desc_col_total_width + "┬" + "─" * outcome_col_total_width + "┐" + RESET + "\n")
-    sys.stdout.write(BLUE + f"│{' ' * padding}{header_id}{' ' * padding}│{' ' * padding}{header_desc}{' ' * padding}│{' ' * padding}{header_outcome}{' ' * padding}│" + RESET + "\n")
-    sys.stdout.write(BLUE + "├" + "─" * id_col_total_width + "┼" + "─" * desc_col_total_width + "┼" + "─" * outcome_col_total_width + "┤" + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
 
     failed_test_details = []
     for result in test_results:
@@ -297,12 +309,12 @@ def _verify_self_test_results_task(
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             
-            sys.stdout.write(BLUE + f"│{id_cell_str}│{desc_cell_str}│{outcome_cell_str}│" + RESET + "\n")
+            sys.stdout.write(BLUE + DBL_VERTICAL + id_cell_str + DBL_VERTICAL + desc_cell_str + DBL_VERTICAL + outcome_cell_str + DBL_VERTICAL + RESET + "\n")
 
         if result["status"] == "FAIL" and result["details"]:
             failed_test_details.append({"id": result['id'], "description": result['description'], "details": result['details']})
     
-    sys.stdout.write(BLUE + "└" + "─" * id_col_total_width + "┴" + "─" * desc_col_total_width + "┴" + "─" * outcome_col_total_width + "┘" + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
 
     if failed_test_details:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n")
