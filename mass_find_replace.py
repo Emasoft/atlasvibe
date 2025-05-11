@@ -925,7 +925,7 @@ def find_and_replace_phased_flow(
 
     if not dry_run and not force_execution:
         # Confirmation prompt
-        print(f"--- Proposed Operation ---")
+        print("--- Proposed Operation ---")
         print(f"Root Directory: {root_dir}")
         print(f"Find Pattern: '{find_pattern}' (Regex: {is_regex}, Case-Sensitive: {case_sensitive or (find_pattern.lower() == 'flojoy' and not is_regex)})") # Special case for flojoy
         print(f"Replace Pattern: '{replace_pattern}'")
@@ -933,7 +933,7 @@ def find_and_replace_phased_flow(
         print(f"Exclude Dirs: {exclude_dirs}")
         print(f"Exclude Files: {exclude_files}")
         print(f"Process Binary Files: {process_binary_files}")
-        print(f"-------------------------")
+        print("-------------------------")
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes': 
             print("Operation cancelled by user.")
