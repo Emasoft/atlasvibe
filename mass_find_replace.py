@@ -754,21 +754,16 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
         temp_dir / "ATLASVIBE_is_the_name_folder",
         temp_dir / "ATLASVIBE_is_the_name_folder" / "file_in_ATLASVIBE_folder.txt",
         temp_dir / "multiple_on_line_atlasvibe.txt",
-        # New files (names should be changed)
         temp_dir / "edge_case_atlasvibe_only.txt",
-        temp_dir / "edge_case_Atlasvibe_only.txt", # Assuming perform_text_replacement handles this for names
+        temp_dir / "edge_case_Atlasvibe_only.txt", 
         temp_dir / "edge_case_ATLASVIBE_only.txt",
         temp_dir / "edge_case_AtlasVibe_only.txt",
         temp_dir / "edge_case_atlasVibe_only.txt",
         temp_dir / "spacing_around_atlasvibe.txt",
-        temp_dir / "no_match_for_atlasvibe.txt", # Name changes if "flojoy" was in it
-        temp_dir / "eol_atlasvibe_eol.txt"
+        temp_dir / "no_match_for_atlasvibe.txt", 
+        temp_dir / "eol_atlasvibe_eol.txt",
+        temp_dir / "no_atlasvibe_here.log" # Added: Original "no_flojoy_here.log" should be renamed
     ]
-    # Adjust names for new files if original name contained 'flojoy'
-    # The script renames files based on 'flojoy' in name, then processes content.
-    # So, 'edge_case_flojoy_only.txt' becomes 'edge_case_atlasvibe_only.txt'
-    # 'no_match_for_flojoy.txt' becomes 'no_match_for_atlasvibe.txt'
-    # 'eol_flojoy_eol.txt' becomes 'eol_atlasvibe_eol.txt'
 
     for p in exp_paths: 
         check(p.exists(), f"Path '{p.relative_to(temp_dir)}' exists.", f"Path '{p.relative_to(temp_dir)}' MISSING.")
@@ -800,12 +795,6 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
         binary_core = b"\x00\x01\x02"
         binary_end = b"\x03\x04"
         expected_after_replace = replaced_bin_text_parts[0] + binary_core + replaced_bin_text_parts[1] + binary_end
-        # Original binary file name was binary_flojoy_file.bin, content had flojoy.
-        # If process_binary_files is true, content should change.
-        # If process_binary_files is false, content should NOT change, even if name changed.
-        # The test setup creates "binary_flojoy_file.bin" with "flojoy" in content.
-        # It's renamed to "binary_atlasvibe_file.bin".
-        # Its content is then processed (or not) based on process_binary_files.
         original_content_for_binary = b"prefix_flojoy_suffix" + binary_core + b"flojoy_data" + binary_end
 
         if process_binary_files:
@@ -831,16 +820,13 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     expected_invalid_bytes = b"ValidStart_atlasvibe_" + b"\xff\xfe" + b"_atlasvibe_ValidEnd"
     check_file_content_bytes(invalid_utf8_path, expected_invalid_bytes, "Invalid UTF-8 sequence preservation")
 
-    # Check content of only_name_atlasvibe.md (name changed, content should be original)
     only_name_md_path = temp_dir / "only_name_atlasvibe.md"
     check_file_content_bytes(only_name_md_path, "No relevant content here.".encode('utf-8'), "Name-only change (content preservation)")
 
-    # Check content of only_content.txt (name did NOT change, content should change)
     only_content_txt_path = temp_dir / "only_content.txt"
     expected_only_content_text = "Line with atlasvibe here.\nAnother line with Atlasvibe."
     check_file_content_bytes(only_content_txt_path, expected_only_content_text.encode('utf-8'), "Content-only change")
     
-    # --- New file content checks ---
     check_file_content_bytes(temp_dir / "edge_case_atlasvibe_only.txt", b"atlasvibe", "Edge case flojoy_only")
     check_file_content_bytes(temp_dir / "edge_case_Atlasvibe_only.txt", b"Atlasvibe", "Edge case Flojoy_only")
     check_file_content_bytes(temp_dir / "edge_case_ATLASVIBE_only.txt", b"ATLASVIBE", "Edge case FLOJOY_only")
@@ -850,25 +836,22 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     expected_spacing_text = "  atlasvibe  \nnext atlasvibe line"
     check_file_content_bytes(temp_dir / "spacing_around_atlasvibe.txt", expected_spacing_text.encode('utf-8'), "Spacing around flojoy")
     
-    # This file's name changes because "flojoy" is in "no_match_for_flojoy.txt"
-    # But its content should remain unchanged.
     no_match_path = temp_dir / "no_match_for_atlasvibe.txt" 
     original_no_match_text = "fl0j0y platform, no actual target string"
     check_file_content_bytes(no_match_path, original_no_match_text.encode('utf-8'), "No match in content")
 
     check_file_content_bytes(temp_dir / "eol_atlasvibe_eol.txt", b"\natlasvibe\r\n", "EOL flojoy EOL")
 
-    # --- Excluded files (should be untouched) ---
     excluded_file = temp_dir / "exclude_this_flojoy_file.txt" 
     check(excluded_file.is_file(), "Excluded file still exists.", "Excluded file MISSING.")
     if excluded_file.is_file():
-        # Content should be original "flojoy content in excluded file"
         check_file_content_bytes(excluded_file, "flojoy content in excluded file".encode('utf-8'), "Excluded file content")
     
-    log_file_test = temp_dir / "no_flojoy_here.log" # Name has no "flojoy", content has no "flojoy"
-    check(log_file_test.is_file(), ".log file still exists.", ".log file MISSING.")
+    # Corrected path for the .log file test
+    log_file_test = temp_dir / "no_atlasvibe_here.log" 
+    check(log_file_test.is_file(), "Renamed .log file 'no_atlasvibe_here.log' exists.", "Renamed .log file 'no_atlasvibe_here.log' MISSING.")
     if log_file_test.is_file():
-        check_file_content_bytes(log_file_test, "This is a log file without the target string.".encode('utf-8'), ".log file content")
+        check_file_content_bytes(log_file_test, "This is a log file without the target string.".encode('utf-8'), "Renamed .log file content (should be unchanged)")
 
     print(f"--- Self-Test Verification Summary: {passed_checks} PASSED, {failed_checks} FAILED ---")
     if failed_checks > 0:
