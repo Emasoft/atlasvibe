@@ -841,7 +841,7 @@ def _verify_self_test_results_task(temp_dir: Path, process_binary_files: bool) -
     return True
 
 
-@flow(name="Self-Test Find and Replace Flow", log_prints=True) 
+@flow#(name="Self-Test Find and Replace Flow", log_prints=True) 
 def self_test_flow(temp_dir_str: str, dry_run_for_test: bool, process_binary_for_test: bool) -> None:
     temp_dir = Path(temp_dir_str)
     _create_self_test_environment(temp_dir)
