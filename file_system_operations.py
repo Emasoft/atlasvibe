@@ -215,8 +215,7 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         if path.exists():
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    # The following print statement was causing the table formatting issue.
-                    # print(f"Loading transactions from: {path}") 
+                    # Removed informational print to prevent breaking table output in self-test
                     return cast(List[Dict[str, Any]], json.load(f))
             except Exception as e:
                 print(f"Warning: Failed to load transactions from {path}: {e}")
