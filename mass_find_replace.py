@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 import sys
 from typing import List, Dict, Any, Optional, Union
+import shutil # For shutil.rmtree
 
 # Prefect integration - now a hard dependency
 from prefect import task, flow
@@ -31,6 +32,7 @@ from file_system_operations import (
 # --- Constants ---
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json" 
 SELF_TEST_PRIMARY_TRANSACTION_FILE = "self_test_transactions.json"
+SELF_TEST_SANDBOX_DIR = "./tests/temp" # Defined sandbox for self-tests
 
 # ANSI Color Codes & Unicode Symbols for formatted output
 GREEN = "\033[92m"
@@ -71,7 +73,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
 
 @task
 def _verify_self_test_results_task(
-    temp_dir: Path,
+    temp_dir: Path, # This will be the SELF_TEST_SANDBOX_DIR
     original_transaction_file: Path 
 ) -> bool:
     print("--- Verifying Self-Test Results ---")
@@ -137,7 +139,7 @@ def _verify_self_test_results_task(
         if not condition:
             if is_binary:
                 details = f"Content INCORRECT. Expected: {expected_content!r}, Got: {actual_content!r}"
-            else: # Text diff might be too verbose for summary, but good for detailed logs
+            else: 
                 details = f"Content INCORRECT.\nExpected:\n{expected_content}\nGot:\n{actual_content}"
 
         record_test(f"Content of '{test_description_base}' is correct", condition, details)
@@ -192,14 +194,14 @@ def _verify_self_test_results_task(
 
         if not found_tx_for_excluded:
             all_non_excluded_processed_correctly = True
-            for tx in transactions: # Iterate again, only non-excluded this time
+            for tx in transactions: 
                  if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"):
                     if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
                         all_non_excluded_processed_correctly = False
                         record_test(f"Transaction {tx['id']} (Path: {tx['PATH']}) status check", False,
                                     f"Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
-                        break # One failure is enough to mark this group test as failed
-            if all_non_excluded_processed_correctly: # Only record success if all passed
+                        break 
+            if all_non_excluded_processed_correctly: 
                  record_test("All non-excluded transactions are COMPLETED or SKIPPED", True)
 
     else:
@@ -209,16 +211,15 @@ def _verify_self_test_results_task(
     print("\n" + YELLOW + "--- Self-Test Results Table ---" + RESET)
     header = f"{'Status':<10} | {'Test Description'}"
     print(YELLOW + header + RESET)
-    print(YELLOW + "-" * (len(header) + 10) + RESET) # Adjust separator length
+    print(YELLOW + "-" * (len(header) + 10) + RESET) 
 
     for result in test_results:
         status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
         color = GREEN if result["status"] == "PASS" else RED
         
-        status_cell = f"{color}{status_symbol:<2}{RESET}" # Symbol with padding
+        status_cell = f"{color}{status_symbol:<2}{RESET}" 
         print(f"{status_cell}    | {result['description']}")
         if result["status"] == "FAIL" and result["details"]:
-            # Indent details for readability
             details_lines = result["details"].split('\n')
             for i, line in enumerate(details_lines):
                 prefix = "     └── Details: " if i == 0 else "                  "
@@ -251,10 +252,10 @@ def _verify_self_test_results_task(
 
 @flow(name="Self-Test Flow", log_prints=True)
 def self_test_flow(
-    temp_dir_str: str,
+    temp_dir_str: str, # This will be the path to SELF_TEST_SANDBOX_DIR
     dry_run_for_test: bool
 ) -> None:
-    temp_dir = Path(temp_dir_str)
+    temp_dir = Path(temp_dir_str) # temp_dir is now the resolved path to ./tests/temp
     _create_self_test_environment(temp_dir)
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
@@ -277,14 +278,14 @@ def self_test_flow(
         print("Self-Test: Executing transactions...")
         execution_stats = execute_all_transactions(
             transactions_file_path=transaction_file,
-            root_dir=temp_dir,
+            root_dir=temp_dir, # Pass the sandbox root here
             dry_run=False, 
             resume=False   
         )
         print(f"Self-Test: Execution complete. Stats: {execution_stats}")
         
         _verify_self_test_results_task(
-            temp_dir=temp_dir,
+            temp_dir=temp_dir, # Pass the sandbox root here
             original_transaction_file=transaction_file
         )
     else:
@@ -386,31 +387,47 @@ def main_cli() -> None:
     parser.add_argument("--force", "--yes", "-y", action="store_true",
                         help="Force execution without confirmation prompt (if not in dry-run or resume mode).")
     parser.add_argument("--self-test", action="store_true",
-                        help="Run a predefined self-test in a temporary directory.")
+                        help=f"Run a predefined self-test in a sandboxed '{SELF_TEST_SANDBOX_DIR}' directory.")
 
     args = parser.parse_args()
     
     if args.self_test:
-        print("Running self-test...")
-        with tempfile.TemporaryDirectory(prefix="mass_replace_self_test_") as tmpdir_str:
+        print(f"Running self-test in sandbox: '{SELF_TEST_SANDBOX_DIR}'...")
+        self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
+        
+        # Clean and recreate the sandbox directory
+        if self_test_sandbox.exists():
+            print(f"Cleaning existing sandbox: {self_test_sandbox}")
             try:
-                self_test_flow(
-                    temp_dir_str=tmpdir_str,
-                    dry_run_for_test=args.dry_run
-                )
-                # _verify_self_test_results_task will raise AssertionError if tests fail
-                # If it completes without raising, and not a dry run, it means tests passed.
-                if not args.dry_run: # Only print PASSED if it wasn't a dry run and no assertion was raised
-                     print(GREEN + "Self-test PASSED successfully! " + PASS_SYMBOL + RESET)
-                else:
-                     print(YELLOW + "Self-test dry run scan complete." + RESET)
-            except AssertionError as e: # Explicitly catch AssertionError from _verify_self_test_results_task
-                # The error message from the assertion is already printed by _verify_self_test_results_task's summary
-                # print(RED + f"Self-test FAILED: {e} " + FAIL_SYMBOL + RESET) # This would be redundant
+                shutil.rmtree(self_test_sandbox)
+            except OSError as e:
+                print(RED + f"Error cleaning sandbox {self_test_sandbox}: {e}" + RESET)
                 sys.exit(1)
-            except Exception as e:
-                print(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET)
-                sys.exit(1)
+        try:
+            self_test_sandbox.mkdir(parents=True, exist_ok=True)
+            print(f"Created sandbox: {self_test_sandbox}")
+        except OSError as e:
+            print(RED + f"Error creating sandbox {self_test_sandbox}: {e}" + RESET)
+            sys.exit(1)
+            
+        try:
+            self_test_flow(
+                temp_dir_str=str(self_test_sandbox), # Pass the sandbox path
+                dry_run_for_test=args.dry_run
+            )
+            if not args.dry_run:
+                 print(GREEN + "Self-test PASSED successfully! " + PASS_SYMBOL + RESET)
+            else:
+                 print(YELLOW + "Self-test dry run scan complete." + RESET)
+        except AssertionError: # Error message is already printed by _verify_self_test_results_task
+            sys.exit(1)
+        except Exception as e:
+            print(RED + f"Self-test ERRORED: An unexpected error occurred: {e} " + FAIL_SYMBOL + RESET)
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+        # Note: Sandbox directory ./tests/temp is NOT automatically cleaned up after self-test
+        # to allow inspection of results.
         return
 
     default_log_files_to_exclude = [
@@ -452,5 +469,7 @@ if __name__ == "__main__":
         sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 

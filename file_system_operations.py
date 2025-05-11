@@ -17,6 +17,11 @@ import chardet
 
 from replace_logic import replace_flojoy_occurrences # Import the replacement function
 
+# --- Custom Exception ---
+class SandboxViolationError(Exception):
+    """Custom exception for operations attempting to escape the sandbox."""
+    pass
+
 # --- Constants & Enums ---
 DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
@@ -32,10 +37,6 @@ class TransactionStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     SKIPPED = "SKIPPED" # Added for cases where no change is made or item not found
-
-# TypedDict for transaction structure might be useful for type hinting
-# from typing_extensions import TypedDict
-# class Transaction(TypedDict): ...
 
 # --- Helper Functions ---
 
@@ -123,14 +124,10 @@ def _get_current_absolute_path(
     original_parent_rel_str = str(original_path_obj.parent)
     item_original_name = original_path_obj.name
 
-    # Get the current absolute path of the parent
     current_parent_abs_path = _get_current_absolute_path(
         original_parent_rel_str, root_dir, path_translation_map, cache
     )
 
-    # Determine the current name of the item itself.
-    # If the item itself was directly renamed, its new name is the last component
-    # of its new relative path stored in path_translation_map.
     current_item_name = item_original_name
     if original_relative_path_str in path_translation_map:
         new_relative_path_of_this_item = Path(path_translation_map[original_relative_path_str])
@@ -146,15 +143,10 @@ def scan_directory_for_occurrences(
     root_dir: Path,
     excluded_dirs: List[str],
     excluded_files: List[str],
-    file_extensions: Optional[List[str]] # For filtering files to scan content
+    file_extensions: Optional[List[str]] 
 ) -> List[Dict[str, Any]]:
-    """
-    Scans the directory for "flojoy" occurrences in names and content.
-    Search is case-insensitive for "flojoy".
-    Binary file content is NOT scanned.
-    """
     transactions: List[Dict[str, Any]] = []
-    find_target_lower = "flojoy" # Hardcoded as per new requirements
+    find_target_lower = "flojoy" 
     abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
 
     all_items_for_scan = list(_walk_for_scan(root_dir, excluded_dirs))
@@ -172,7 +164,6 @@ def scan_directory_for_occurrences(
         if item_path.resolve(strict=False) in abs_excluded_files:
             continue
 
-        # Check name (applies to both files and folders)
         if find_target_lower in original_name.lower():
             tx_type = TransactionType.FOLDER_NAME if item_path.is_dir() else TransactionType.FILE_NAME
             transactions.append({
@@ -187,17 +178,12 @@ def scan_directory_for_occurrences(
                 "STATUS": TransactionStatus.PENDING.value
             })
 
-        # Check content ONLY if it's a file and NOT binary and matches extension filters
         if item_path.is_file():
-            # Skip content scan if binary
             if is_likely_binary_file(item_path):
                 continue
-
-            # Skip content scan if file_extensions are specified and this file doesn't match
             if file_extensions and (not item_path.suffix or item_path.suffix.lower() not in [ext.lower() for ext in file_extensions]):
                 continue
             
-            # If we reach here, it's a non-binary file eligible for content scan
             file_encoding = get_file_encoding(item_path) or DEFAULT_ENCODING_FALLBACK
             try:
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
@@ -210,7 +196,7 @@ def scan_directory_for_occurrences(
                             "TYPE": TransactionType.FILE_CONTENT_LINE.value,
                             "PATH": relative_path_str, 
                             "ORIGINAL_NAME": None,
-                            "LINE_NUMBER": line_num_0_indexed + 1, # 1-indexed
+                            "LINE_NUMBER": line_num_0_indexed + 1, 
                             "ORIGINAL_LINE_CONTENT": line_content, 
                             "PROPOSED_LINE_CONTENT": None, 
                             "ORIGINAL_ENCODING": file_encoding,
@@ -223,7 +209,6 @@ def scan_directory_for_occurrences(
 
 # --- Transaction File Management ---
 def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
-    """Loads transactions from primary JSON, falls back to .bak on error."""
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     paths_to_try = [json_file_path, backup_path]
     for path in paths_to_try:
@@ -237,7 +222,6 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
     return None
 
 def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
-    """Saves transactions to JSON file, creating a backup first if file exists."""
     if json_file_path.exists():
         backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
         try:
@@ -257,7 +241,6 @@ def update_transaction_status_in_list(
     new_status: TransactionStatus,
     error_message: Optional[str] = None
 ) -> bool:
-    """Updates status of a single transaction in the provided list."""
     updated = False
     for tx in transactions:
         if tx['id'] == transaction_id:
@@ -272,9 +255,18 @@ def update_transaction_status_in_list(
 
 # --- Execution Logic ---
 
+def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_desc: str):
+    """Checks if a path is within the sandbox_root. Raises SandboxViolationError if not."""
+    resolved_path = path_to_check.resolve()
+    resolved_sandbox_root = sandbox_root.resolve()
+    if not resolved_path.is_relative_to(resolved_sandbox_root) and resolved_path != resolved_sandbox_root :
+        raise SandboxViolationError(
+            f"Operation '{operation_desc}' on path '{resolved_path}' is outside the sandbox '{resolved_sandbox_root}'."
+        )
+
 def _execute_rename_transaction(
     tx: Dict[str, Any],
-    root_dir: Path,
+    root_dir: Path, # This is the sandbox root during self-test
     path_translation_map: Dict[str, str],
     path_cache: Dict[str, Path],
     dry_run: bool
@@ -284,13 +276,11 @@ def _execute_rename_transaction(
     
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
 
-    # Diagnostic for missing file issue
-    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in original_name : # Target specific problematic file
+    if "deep_flojoy_file" in original_name or "deep_atlasvibe_file" in original_name : 
         print(f"DEBUG_RENAME: Processing transaction for: {original_name}")
         print(f"DEBUG_RENAME: Original relative path: {original_relative_path_str}")
         print(f"DEBUG_RENAME: Current absolute path resolved to: {current_abs_path}")
         print(f"DEBUG_RENAME: Does current_abs_path exist? {current_abs_path.exists()}")
-
 
     if not current_abs_path.exists():
         return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
@@ -305,27 +295,32 @@ def _execute_rename_transaction(
         print(f"DEBUG_RENAME: Proposed new name: {new_name}")
         print(f"DEBUG_RENAME: Proposed new absolute path: {new_abs_path}")
 
-
     if dry_run:
         print(f"[DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
         path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
         path_cache[original_relative_path_str] = new_abs_path
         return TransactionStatus.COMPLETED, "DRY_RUN"
     
-    if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
-        return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
-
     try:
+        # Sandbox check before actual operation
+        _ensure_within_sandbox(current_abs_path, root_dir, f"rename_source for {original_name}")
+        _ensure_within_sandbox(new_abs_path, root_dir, f"rename_destination for {new_name}")
+
+        if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
+            return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
+
         os.rename(current_abs_path, new_abs_path)
         path_translation_map[original_relative_path_str] = str(new_abs_path.relative_to(root_dir))
         path_cache[original_relative_path_str] = new_abs_path
         return TransactionStatus.COMPLETED, None
+    except SandboxViolationError as sve:
+        return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
     except Exception as e:
         return TransactionStatus.FAILED, str(e)
 
 def _execute_content_line_transaction(
     tx: Dict[str, Any],
-    root_dir: Path,
+    root_dir: Path, # This is the sandbox root during self-test
     path_translation_map: Dict[str, str],
     path_cache: Dict[str, Path],
     dry_run: bool
@@ -357,6 +352,9 @@ def _execute_content_line_transaction(
         return TransactionStatus.COMPLETED, "DRY_RUN"
 
     try:
+        # Sandbox check before actual operation
+        _ensure_within_sandbox(current_abs_path, root_dir, f"file_content_write for {current_abs_path.name}")
+
         with open(current_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f:
             lines = f.readlines()
         
@@ -373,6 +371,8 @@ def _execute_content_line_transaction(
                 f.write(line.encode(file_encoding, errors='surrogateescape'))
         
         return TransactionStatus.COMPLETED, None
+    except SandboxViolationError as sve:
+        return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
     except Exception as e:
         return TransactionStatus.FAILED, str(e)
 
@@ -383,10 +383,6 @@ def execute_all_transactions(
     dry_run: bool,
     resume: bool
 ) -> Dict[str, int]:
-    """
-    Executes all PENDING (or IN_PROGRESS if resuming) transactions.
-    Updates the transaction file with status changes.
-    """
     transactions = load_transactions(transactions_file_path)
     if not transactions:
         print(f"Error: Could not load transactions from {transactions_file_path}")
@@ -432,12 +428,22 @@ def execute_all_transactions(
             new_status: TransactionStatus
             error_msg: Optional[str] = None
 
-            if tx["TYPE"] == TransactionType.FOLDER_NAME.value or tx["TYPE"] == TransactionType.FILE_NAME.value:
-                new_status, error_msg = _execute_rename_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
-            elif tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-                new_status, error_msg = _execute_content_line_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
-            else:
-                new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
+            try:
+                if tx["TYPE"] == TransactionType.FOLDER_NAME.value or tx["TYPE"] == TransactionType.FILE_NAME.value:
+                    new_status, error_msg = _execute_rename_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
+                elif tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                    new_status, error_msg = _execute_content_line_transaction(tx, root_dir, path_translation_map, path_cache, dry_run)
+                else:
+                    new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx['TYPE']}"
+            except SandboxViolationError as sve: # Catch sandbox violations from execution helpers
+                new_status = TransactionStatus.FAILED
+                error_msg = f"CRITICAL SANDBOX VIOLATION: {sve}"
+                print(error_msg) # Print critical error immediately
+                # Optionally, re-raise or handle more drastically to stop all further processing
+            except Exception as e: # Catch other unexpected errors during execution logic
+                new_status = TransactionStatus.FAILED
+                error_msg = f"Unexpected error during transaction execution: {e}"
+
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg)
             save_transactions(transactions, transactions_file_path) 
