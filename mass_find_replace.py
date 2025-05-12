@@ -14,6 +14,7 @@ from typing import List, Dict, Any, Optional, Union
 import shutil # For shutil.rmtree and shutil.get_terminal_size
 import textwrap # Added for text wrapping
 import json # Added to resolve F821
+import os # For os.chmod
 
 # Prefect integration - now a hard dependency
 from prefect import task, flow
@@ -141,6 +142,9 @@ def _create_self_test_environment(base_dir: Path) -> None:
     with open(scan_resume_tx_file, 'w') as f:
         json.dump(scan_resume_partial_data, f)
 
+    # File for error handling test
+    (base_dir / "error_file_flojoy.txt").write_text("This file will cause an error.")
+
 
 def _verify_self_test_results_task(
     temp_dir: Path, 
@@ -199,6 +203,9 @@ def _verify_self_test_results_task(
         "scan_resume_initial_atlasvibe.txt": temp_dir / "scan_resume_initial_atlasvibe.txt",
         "scan_resume_new_atlasvibe_folder": temp_dir / "scan_resume_new_atlasvibe_folder",
         "scan_resume_new_file_atlasvibe.txt": temp_dir / "scan_resume_new_atlasvibe_folder" / "scan_resume_new_file_atlasvibe.txt",
+        # For error handling test
+        "error_file_flojoy.txt": temp_dir / "error_file_flojoy.txt", # Should not be renamed
+        "error_file_atlasvibe.txt": temp_dir / "error_file_atlasvibe.txt", # Should not exist
     }
 
     if not is_exec_resume_run and not is_scan_resume_run: # Standard path checks
@@ -342,9 +349,9 @@ def _verify_self_test_results_task(
             record_test("Test to assess transaction generation for line/file/folder occurrences (prerequisite: load transaction file).", False, "Could not load initial transaction file for generation checks.")
 
 
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Implicitly covered by verifying final file content after changes.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Implicitly covered by verifying final file names/paths after changes.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Implicitly covered by verifying final folder names/paths after changes.")
+    record_test("Test to assess the ability to execute a transaction for line content modification.", True, "Implicitly covered by verifying final file content after changes.")
+    record_test("Test to assess the ability to execute a transaction for file name replacement.", True, "Implicitly covered by verifying final file names/paths after changes.")
+    record_test("Test to assess the ability to execute a transaction for folder name replacement.", True, "Implicitly covered by verifying final folder names/paths after changes.")
     
     tx_file_for_backup_check = resume_tx_file_path if (is_exec_resume_run or is_scan_resume_run) and resume_tx_file_path else original_transaction_file
     record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way (via backup).", 
@@ -425,7 +432,24 @@ def _verify_self_test_results_task(
          record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Execution resume sub-test not active for this run. Trigger with --run-exec-resume-sub-test.")
          record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Scan resume sub-test not active for this run. Trigger with --run-scan-resume-sub-test.")
 
-
+    # Error handling test (part of standard run)
+    if not is_exec_resume_run and not is_scan_resume_run:
+        error_file_original_path = temp_dir / "error_file_flojoy.txt"
+        error_file_target_path = temp_dir / "error_file_atlasvibe.txt"
+        error_tx_found = False
+        error_tx_failed = False
+        loaded_transactions = load_transactions(original_transaction_file)
+        if loaded_transactions:
+            for tx in loaded_transactions:
+                if tx["PATH"] == "error_file_flojoy.txt" and tx["TYPE"] == TransactionType.FILE_NAME.value:
+                    error_tx_found = True
+                    if tx["STATUS"] == TransactionStatus.FAILED.value:
+                        error_tx_failed = True
+                    break
+        record_test("Test to assess handling of file operation errors (e.g., permission denied during rename), ensuring transaction is marked FAILED.",
+                    error_tx_found and error_tx_failed and error_file_original_path.exists() and not error_file_target_path.exists(),
+                    f"Error handling test failed. TxFound: {error_tx_found}, TxFailed: {error_tx_failed}, OriginalExists: {error_file_original_path.exists()}, TargetNotExists: {not error_file_target_path.exists()}")
+    
     record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Error retry logic is not a current feature.")
     
     if not is_exec_resume_run and not is_scan_resume_run:
@@ -459,12 +483,19 @@ def _verify_self_test_results_task(
                     continue 
             
             is_excluded_item = "excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"
-            if not is_excluded_item:
+            # Skip error_file_flojoy.txt for this general check as its FAILED status is checked separately
+            is_error_scenario_item = tx["PATH"] == "error_file_flojoy.txt"
+
+            if not is_excluded_item and not (is_error_scenario_item and not is_scan_resume_run and not is_exec_resume_run) : # Don't check error file in standard run here
                 if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                    all_relevant_tx_processed_correctly = False
-                    record_test(f"Transaction Lifecycle (Tx ID: {tx['id']}): Verify non-excluded transaction reaches final state (COMPLETED/SKIPPED).", False,
-                                f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
-                    break 
+                    # For scan resume, the initial item might still be PENDING if it was the only one and execution was skipped (dry_run)
+                    if is_scan_resume_run and tx["id"] == "uuid_scan_resume_initial" and tx["STATUS"] == TransactionStatus.PENDING.value:
+                        pass # This is acceptable for a dry-run scan resume verification
+                    else:
+                        all_relevant_tx_processed_correctly = False
+                        record_test(f"Transaction Lifecycle (Tx ID: {tx['id']}): Verify non-excluded transaction reaches final state (COMPLETED/SKIPPED).", False,
+                                    f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
+                        break 
         if all_relevant_tx_processed_correctly: 
              record_test("Transaction Lifecycle: Verify all relevant transactions reach a final state (COMPLETED or SKIPPED).", True)
     else:
@@ -595,7 +626,7 @@ def self_test_flow(
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=resume_tx_file, 
-            is_exec_resume_run=True, # Corrected flag name
+            is_exec_resume_run=True, 
             resume_tx_file_path=resume_tx_file
         )
     elif run_scan_resume_sub_test:
@@ -667,6 +698,12 @@ def self_test_flow(
         save_transactions(transactions2, validation_transaction_file)
         print(f"Self-Test (Standard Run): Second scan complete. {len(transactions2)} transactions planned in {validation_transaction_file}")
 
+        error_file_path = temp_dir / "error_file_flojoy.txt"
+        original_permissions = 0 # Placeholder
+        if not dry_run_for_test and error_file_path.exists():
+            print(f"Self-Test (Standard Run): Setting up error condition for {error_file_path.name}...")
+            original_permissions = error_file_path.stat().st_mode
+            os.chmod(error_file_path, 0o444) # Read-only
 
         if not dry_run_for_test:
             print("Self-Test (Standard Run): Executing transactions from first scan...")
@@ -678,11 +715,14 @@ def self_test_flow(
             )
             print(f"Self-Test (Standard Run): Execution complete. Stats: {execution_stats}")
             
+            if error_file_path.exists(): # Restore permissions if changed
+                os.chmod(error_file_path, original_permissions if original_permissions else 0o664)
+
             _verify_self_test_results_task(
                 temp_dir=temp_dir, 
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file, 
-                is_exec_resume_run=False, # Corrected flag name
+                is_exec_resume_run=False, 
                 is_scan_resume_run=False
             )
         else:
@@ -691,7 +731,7 @@ def self_test_flow(
                 temp_dir=temp_dir,
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file,
-                is_exec_resume_run=False, # Corrected flag name
+                is_exec_resume_run=False, 
                 is_scan_resume_run=False
             )
 
