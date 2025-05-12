@@ -1,0 +1,27 @@
+
+## Self-Test Scenarios (Checklist)
+
+- [X] Basic file name rename (`only_name_flojoy.md`)
+- [X] Basic folder name rename (`flojoy_root`)
+- [X] Nested folder rename (`sub_flojoy_folder`, `another_FLOJOY_dir`)
+- [X] File rename within renamed folder (`deep_flojoy_file.txt` becomes `deep_atlasvibe_file.txt` inside `atlasvibe_root/.../another_ATLASVIBE_dir`)
+- [X] Basic content replacement (single line, multiple occurrences)
+- [X] Case variant replacement in names and content (e.g., `FloJoy`, `FLOJOY`)
+- [X] Preservation of unmapped variants in content (e.g., `fLoJoY` if not in map, alongside mapped `flojoy`)
+- [X] Excluded directory is not processed (`excluded_flojoy_dir` and its contents)
+- [X] Excluded file is not processed (`exclude_this_flojoy_file.txt`)
+- [X] Binary file name rename, content untouched (`binary_flojoy_file.bin`)
+- [X] Binary file with unmapped variant in name, untouched (`binary_fLoJoY_name.bin`)
+- [X] Non-target file/folder names and content untouched (`no_target_here.log`)
+- [X] Transaction log backup creation
+- [X] Scan determinism (two scans produce identical transaction lists)
+- [X] Dry run correctly reports changes without making them
+- [X] Execution resume (processes PENDING/IN_PROGRESS from existing log)
+- [X] Scan resume (adds new items to existing log, avoids duplicates)
+- [X] Error handling (simulated permission error on rename, transaction marked FAILED)
+- [X] Large file processing (line-by-line, content replaced)
+- [X] Deeply nested path (depth=10) renames and content changes
+- [X] GB18030 encoded file: name rename and content replacement (using `surrogateescape`)
+- [X] Transaction lifecycle: all relevant transactions reach a final state (COMPLETED, SKIPPED, FAILED).
+- [X] Script self-exclusion from processing.
+- [X] Self-test sandbox directory exclusion.

@@ -1,116 +1,106 @@
-# Mass Find and Replace Script - Refactoring Requirements
+# Mass Find and Replace Script - Notes
 
-## Core Principle: Separation of Concerns
+## Project Goal
+Create a Python script using Prefect to find and replace all occurrences of "flojoy" (and its case variants) with "atlasvibe" (and its corresponding case variants) across a directory. This includes file names, folder names, and content within text files. The script must be robust, handle various file encodings, and allow for dry runs and resumability.
 
-The script's logic must be cleanly separated into two main parts:
-1.  String Search and Retrieve Logic
-2.  String Replacement Logic
+## Core Technologies
+- Python 3.10+
+- Prefect: For workflow orchestration, task management, and logging.
+- `chardet`: For detecting file encodings.
+- Standard Python libraries: `os`, `pathlib`, `json`, `re`, `shutil`.
 
-These parts should be modular, potentially residing in separate Python modules.
+## Key Requirements & Behaviors
 
-## 1. String Search and Retrieve Logic
+1.  **Target Strings & Replacements**:
+    *   The primary target is "flojoy".
+    *   Replacements must be case-preserving based on a predefined mapping:
+        *   `flojoy` -> `atlasvibe`
+        *   `Flojoy` -> `Atlasvibe`
+        *   `floJoy` -> `atlasVibe`
+        *   `FloJoy` -> `AtlasVibe`
+        *   `FLOJOY` -> `ATLASVIBE`
+    *   **Strict Matching and Preservation**:
+        *   The script MUST NOT perform any form of Unicode normalization (NFC, NFD, NFKC, NFKD) on filenames or file content.
+        *   Replacements are strictly limited to the exact strings defined in the `REPLACEMENT_MAPPING`.
+        *   Occurrences of target strings with diacritics, accents, phonetic marks, ligatures, or any other modifications (e.g., `flo̗j̕oy̆`, `f̐lȍj̨o̤y̲`) are NOT considered matches and MUST be left entirely intact. For example, in the string `The word flojoy is not identical to the word flo̗j̕oy̆.`, only the first `flojoy` would be replaced with `atlasvibe`, while `flo̗j̕oy̆` MUST remain unchanged.
+        *   All characters in filenames and file content that are not part of an exact match (as per `REPLACEMENT_MAPPING`) MUST be preserved in their original byte form. This includes control characters, line endings, and any byte sequences that may not be valid in the detected encoding (which are handled using `surrogateescape` during processing and written back as original bytes).
+        *   The script's sole modification to any file or name should be the direct replacement of a mapped target string with its corresponding replacement string, encoded back into the file's original encoding. No other bytes should be altered.
 
-**Responsibilities:**
-- Find all occurrences of the target string "flojoy" (case-insensitive search ONLY).
-- Occurrences can be in:
-    - File names
-    - Folder names
-    - File content (on a per-line basis for non-binary files)
-- Generate and manage a `planned_transactions.json` file.
+2.  **Scope of Operation**:
+    *   **Directory Traversal**: Recursively scan a given root directory.
+    *   **File Names**: Rename files containing "flojoy" variants.
+    *   **Folder Names**: Rename folders containing "flojoy" variants.
+    *   **File Content**: Modify content within text files.
+        *   Binary files (heuristically detected) should have their content skipped but their names processed if they match.
 
-**`planned_transactions.json` Structure:**
-Each entry (transaction) in the JSON array must include:
-- `id`: A unique UUID for the transaction.
-- `TYPE`: String enum. One of:
-    - `FILE_NAME`: For occurrences in a file's name.
-    - `FOLDER_NAME`: For occurrences in a folder's name.
-    - `FILE_CONTENT_LINE`: For occurrences within a line of a file's content.
-- `PATH`: String. The relative path from the root directory to the item. This is resolved to an absolute path during execution.
-    - If `TYPE` is `FILE_NAME`, path to the file.
-    - If `TYPE` is `FOLDER_NAME`, path to the folder.
-    - If `TYPE` is `FILE_CONTENT_LINE`, path to the file containing the line.
-- `ORIGINAL_NAME` (for `FILE_NAME`/`FOLDER_NAME`): The original name of the file/folder.
-- `LINE_NUMBER` (for `FILE_CONTENT_LINE`): Integer. The 1-indexed line number within the file where the string is found. `0` for `FILE_NAME`/`FOLDER_NAME`.
-- `ORIGINAL_LINE_CONTENT` (for `FILE_CONTENT_LINE`): String. The original content of the line.
-- `PROPOSED_LINE_CONTENT` (for `FILE_CONTENT_LINE`, after replacement simulation during scan or execution): String. The line content after replacement.
-- `ORIGINAL_ENCODING` (for `FILE_CONTENT_LINE`): String. The detected encoding of the file.
-- `STATUS`: String enum. One of:
-    - `PENDING`: Initial state.
-    - `IN_PROGRESS`: Transaction is being processed.
-    - `COMPLETED`: Transaction successfully executed.
-    - `FAILED`: Transaction failed.
-    - `SKIPPED`: Transaction was skipped (e.g., no change needed, item not found).
-- `ERROR_MESSAGE` (optional): String. Details if the transaction failed.
+3.  **Exclusions**:
+    *   Default excluded directories: `.git`, `.venv`, `node_modules`, `__pycache__`.
+    *   User-configurable excluded directories and specific files.
+    *   The script should automatically exclude itself and its transaction log files if they fall within the processing directory.
 
-**Transaction Granularity:**
-- For `FILE_CONTENT_LINE`, each line containing "flojoy" results in a separate transaction. If "flojoy" appears on lines 4, 20, and 238 of a file, three distinct transaction entries are created.
+4.  **File Encodings**:
+    *   Attempt to detect file encoding using `chardet`.
+    *   Fall back to a default (e.g., UTF-8) if detection is uncertain.
+    *   Handle read/write operations carefully to preserve original encoding and content integrity, especially for non-UTF encodings. Use `surrogateescape` for robust handling of undecodable bytes.
 
-**Execution Phase (handled by this logic):**
-- Read `planned_transactions.json`.
-- Process transactions serially.
-- Update `STATUS` in `planned_transactions.json` in real-time:
-    - `PENDING` -> `IN_PROGRESS` (before starting)
-    - `IN_PROGRESS` -> `COMPLETED`, `FAILED`, or `SKIPPED` (after attempting)
-- Atomicity: JSON updates should be robust against interruption (e.g., backup before write).
-- Resuming: A `--resume` flag should allow the script to continue from the last `PENDING` or `IN_PROGRESS` transaction.
-- For `FILE_NAME`/`FOLDER_NAME` types:
-    - The `ORIGINAL_NAME` is processed by the String Replacement Logic.
-    - The file/folder is renamed if the name changes.
-- For `FILE_CONTENT_LINE` types:
-    - The file at `PATH` is read.
-    - The specific line (`ORIGINAL_LINE_CONTENT`) is processed by the String Replacement Logic.
-    - If the line content changes, the file is rewritten with the modified line replacing the original.
-    - **Crucially, preserve original file encoding, control characters, and line endings.** (Current approach: read lines with `newline=''` to preserve endings, write back bytes using detected encoding).
+5.  **Transaction Management (Atomic Operations)**:
+    *   **Scan Phase**:
+        *   Identify all potential changes (transactions).
+        *   Store transactions in a JSON file (e.g., `planned_transactions.json`) within the root directory. Each transaction should include:
+            *   Unique ID
+            *   Type (file name, folder name, content line)
+            *   Path (relative to root)
+            *   Original name/content
+            *   Proposed name/content (can be filled during dry run/execution)
+            *   Line number (for content changes)
+            *   Original encoding (for content changes)
+            *   Status (PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED)
+            *   Error message (if any)
+    *   **Execution Phase**:
+        *   Process transactions from the JSON file.
+        *   Update transaction status in real-time.
+        *   Prioritize folder renames before file renames, and renames before content changes. Deeper paths should be renamed before shallower paths to ensure path validity.
+        *   Ensure operations are as atomic as possible. For the transaction file itself, create a backup before saving updates.
 
-## 2. String Replacement Logic
+6.  **User Experience & Control**:
+    *   **Dry Run Mode (`--dry-run`)**: Scan and report planned changes (populating `PROPOSED_LINE_CONTENT` and marking transactions as DRY_RUN) without actually modifying anything.
+    *   **Confirmation Prompt**: Before actual execution (not in dry run or resume mode), display a summary and ask for user confirmation, unless a `--force` or `--yes` flag is used.
+    *   **Logging**: Use Prefect's logging for actions, warnings, and errors. Provide clear output to the console.
+    *   **Resumability (`--resume`)**:
+        *   **Execution Resume**: If `planned_transactions.json` exists, resume executing PENDING or IN_PROGRESS transactions.
+        *   **Scan Resume**: If scan was interrupted, and `planned_transactions.json` exists, continue scanning and add new transactions, avoiding duplicates.
+    *   **Skip Scan (`--skip-scan`)**: Use an existing `planned_transactions.json` file directly for the execution phase.
 
-**Responsibilities:**
-- Provide a single, simple function (`replace_flojoy_occurrences`) that takes an input string.
-- This function is responsible *only* for performing the replacement.
-- It is agnostic to the source of the string (filename, folder name, or file content line).
+7.  **Error Handling & Robustness**:
+    *   Handle file I/O errors (permissions, file not found during execution).
+    *   Mark failed transactions appropriately in the JSON log.
+    *   Provide a summary of operations: number of files/folders scanned, items changed, errors.
+    *   Implement basic retry logic for rename operations if they fail due to temporary issues (e.g., file locks).
 
-**Replacement Algorithm:**
-- The function receives an input string.
-- It performs a case-insensitive search for "flojoy" (e.g., using `re.sub(r'flojoy', callback, input_string, flags=re.IGNORECASE)`).
-- The callback function receives the exact substring matched by the case-insensitive search (e.g., "flojoy", "Flojoy", "FLOJOY", "fLoJoY").
-- This exact matched substring is then looked up as a key in the `REPLACEMENT_MAPPING`.
-    - If the exact matched substring **exists as a key** in `REPLACEMENT_MAPPING`, it is replaced with the corresponding value from the map.
-    - If the exact matched substring **is NOT a key** in `REPLACEMENT_MAPPING` (e.g., "fLoJoY" if "fLoJoY" is not a key in the map), that specific occurrence **must be left unchanged** in the output string.
-- The predefined, fixed mapping is:
-  ```python
-  REPLACEMENT_MAPPING = {
-      'flojoy': 'atlasvibe',
-      'Flojoy': 'Atlasvibe',
-      'floJoy': 'atlasVibe',
-      'FloJoy': 'AtlasVibe',
-      'FLOJOY': 'ATLASVIBE',
-  }
-  ```
-- Only occurrences that are (1) found by the broad case-insensitive search for "flojoy" AND (2) whose exact matched form is a key in `REPLACEMENT_MAPPING` are replaced.
-- The function returns the modified string.
+8.  **Self-Test Functionality (`--self-test`)**:
+    *   Create a sandboxed environment with a predefined set of files and folders.
+    *   Run the script against this sandbox.
+    *   Verify:
+        *   Correct renaming of files and folders.
+        *   Correct content replacement in text files.
+        *   Exclusions are respected.
+        *   Binary file content is untouched (name might change).
+        *   Transactions are correctly logged with final states.
+        *   Determinism: two identical scans produce identical transaction files (before execution).
+        *   Execution resume: correctly processes remaining tasks.
+        *   Scan resume: correctly identifies new tasks and merges with existing.
+        *   Error handling for a simulated file operation error.
+    *   Clean up the sandbox afterwards.
+    *   The self-test should clearly report PASS/FAIL for each check and an overall status.
 
-**Interaction:**
-- The "String Search and Retrieve Logic" calls this replacement function during its execution phase, passing the relevant string (a name or a line of content).
-- The "String Search and Retrieve Logic" is then responsible for persisting the change (renaming or rewriting the file line).
+## Open Questions/Considerations (Archive - most are addressed)
+- *Initial thought: How to handle case preservation perfectly?* -> Addressed by specific mapping.
+- *Initial thought: What if a folder rename affects the path of a subsequent file transaction?* -> Addressed by sorting transactions (folders deep to shallow, then files, then content) and resolving paths dynamically during execution.
+- *Initial thought: How to make operations atomic, especially renaming?* -> OS rename is generally atomic. For transaction file, use backup. For sequences of changes, the log allows rollback/resume.
+- *Initial thought: Encoding detection reliability?* -> `chardet` is good but not perfect. Fallback and `surrogateescape` are key.
+- *Initial thought: Large file memory usage for content replacement?* -> Line-by-line processing for content.
+- *Initial thought: UI for reviewing transactions?* -> Beyond CLI scope for now; JSON log is the review mechanism.
+- *Initial thought: What if `flojoy` is part of a larger word (e.g., `myflojoyproject`)?* -> Current spec implies whole word match based on `REPLACEMENT_MAPPING` keys. Regex `\bflojoy\b` could be used for whole-word, but current `re.sub('flojoy', ...)` will do substring. The `REPLACEMENT_MAPPING` lookup on the *matched group* is the key to precision. If "myflojoyproject" is matched by `re.IGNORECASE` on "flojoy", `match_obj.group(0)` would be "flojoy". If the regex was `r'\bflojoy\b'`, then "myflojoyproject" wouldn't match. The current setup with `r'flojoy'` and then map lookup is fine as "flojoy" is a key.
 
-## Binary File Handling
+## Transaction File Structure Example
 
-- **Content Modification**: The content of binary files must **never** be modified.
-- **Name Modification**: The names of binary files **must** be scanned. If a binary file's name contains a "flojoy" variant that is a key in `REPLACEMENT_MAPPING`, the name should be changed according to the mapping. If the variant is not in the mapping, the name remains unchanged.
-- **Detection**: A file is determined as binary by examining its initial bytes (heuristic check).
-- **Scanning**:
-    - If a file is identified as binary, its content will **not** be read or scanned for `FILE_CONTENT_LINE` transactions.
-    - Its name will still be checked for `FILE_NAME` transactions.
-- **CLI**: The script inherently ignores binary content for modifications.
-
-## CLI Simplification
-- The script is specialized for the "flojoy" to "atlasvibe" replacement with the fixed `REPLACEMENT_MAPPING`.
-- Arguments for generic find/replace patterns, regex mode, or general case-sensitivity flags are removed.
-
-## Testing
-- Self-tests must adapt to the modular structure and line-based transactions.
-- Verify correct replacement of mapped "flojoy" variants.
-- Verify preservation of unmapped "flojoy" variants in content and names.
-- Verify binary file content remains untouched while names are processed according to mapping rules.
-- Verify excluded directories/files are not processed and generate no transactions.
-- Temporary files for testing are created in a system temporary directory.
