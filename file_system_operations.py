@@ -147,9 +147,10 @@ def _get_current_absolute_path(
     """
     Recursively determines the current absolute path of an item,
     considering parent directory renames recorded in path_translation_map.
+    Cache is used for optimization but correctness relies on recomputation.
     """
-    if original_relative_path_str in cache:
-        return cache[original_relative_path_str]
+    # The initial cache check was removed to ensure paths are re-evaluated
+    # against the potentially modified path_translation_map, especially after parent renames.
 
     if original_relative_path_str == ".": # Base case for recursion: the root directory
         cache["."] = root_dir
@@ -165,6 +166,7 @@ def _get_current_absolute_path(
     item_original_name = original_path_obj.name
 
     # Recursively find the current absolute path of the parent directory.
+    # This recursive call will use the translation map correctly.
     current_parent_abs_path = _get_current_absolute_path(
         original_parent_rel_str, root_dir, path_translation_map, cache
     )
@@ -175,6 +177,7 @@ def _get_current_absolute_path(
 
     current_abs_path = current_parent_abs_path / current_item_name
 
+    # Update cache with the computed path for potential future use within the same execution phase
     cache[original_relative_path_str] = current_abs_path
     return current_abs_path
 
@@ -275,7 +278,7 @@ def scan_directory_for_occurrences(
             file_encoding = get_file_encoding(item_path) # Use detected or fallback
             try:
                 # Read lines carefully, preserving line endings
-                with open(item_path, 'r', encoding=file_encoding, errors='ignore', newline=None) as f: # Use newline=None for universal line ending handling
+                with open(item_path, 'r', encoding=file_encoding, errors='replace', newline=None) as f: # Use newline=None for universal line ending handling, errors='replace'
                     lines = f.readlines() # Reads lines with their endings
 
                 for line_num_0_indexed, line_content in enumerate(lines):
@@ -298,7 +301,7 @@ def scan_directory_for_occurrences(
                             })
                             existing_transaction_ids.add(current_tx_id_tuple)
             except UnicodeDecodeError as ude:
-                 print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding}. Skipping content scan. Error: {ude}")
+                 print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='replace'). Skipping content scan. Error: {ude}")
             except Exception as e:
                 # Catch other potential errors during file read/processing
                 print(f"Warning: Could not read/process content of file {item_path} with encoding {file_encoding}: {e}")
@@ -411,11 +414,13 @@ def _execute_rename_transaction(
     # print(f"DEBUG_RENAME_EXEC: Original relative path: {original_relative_path_str}")
 
     try:
+        # Use the potentially updated _get_current_absolute_path
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
         # print(f"DEBUG_RENAME_EXEC: Current absolute path resolved to: {current_abs_path}")
         # print(f"DEBUG_RENAME_EXEC: Does current_abs_path exist? {current_abs_path.exists()}")
     except FileNotFoundError:
-         return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename)."
+         # This might happen if a parent directory was expected but not found after renames
+         return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename or path resolution issue)."
     except Exception as e:
          return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
@@ -427,7 +432,8 @@ def _execute_rename_transaction(
         if potential_new_path.exists():
              return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found, but target '{potential_new_path}' exists (already processed?)."
         else:
-             return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found."
+             # If neither original nor target exists, something went wrong earlier
+             return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found and target name does not exist either."
 
     new_name = replace_flojoy_occurrences(original_name)
     if new_name == original_name:
@@ -560,7 +566,8 @@ def _execute_content_line_transaction(
 
         # Read all lines from the file using the detected encoding
         try:
-            with open(current_abs_path, 'r', encoding=file_encoding, errors='ignore', newline=None) as f:
+            # Use errors='replace' for reading
+            with open(current_abs_path, 'r', encoding=file_encoding, errors='replace', newline=None) as f:
                 lines = f.readlines() # Reads lines with original endings
         except Exception as read_err:
              return TransactionStatus.FAILED, f"Error reading file {current_abs_path} for update: {read_err}"
@@ -584,13 +591,8 @@ def _execute_content_line_transaction(
         try:
             with open(current_abs_path, 'wb') as f: # Open in binary mode
                 for line in lines:
-                    # Encode each line using the original encoding.
-                    # Handle potential encoding errors with surrogateescape or similar if needed,
-                    # but 'ignore' during read might have already lost data.
-                    # Using 'surrogateescape' on encode allows writing back bytes that couldn't be decoded,
-                    # preserving them if they were read correctly with surrogateescape initially.
-                    # Let's try 'ignore' first to match the read behavior. If issues arise, reconsider.
-                    f.write(line.encode(file_encoding, errors='ignore'))
+                    # Encode each line using the original encoding with errors='replace'
+                    f.write(line.encode(file_encoding, errors='replace'))
         except Exception as write_err:
              return TransactionStatus.FAILED, f"Error writing updated content to file {current_abs_path}: {write_err}"
 
