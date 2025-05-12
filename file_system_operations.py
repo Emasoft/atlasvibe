@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set
 from enum import Enum
 import chardet
+import time # For retry delay
 
 from replace_logic import replace_flojoy_occurrences # Import the replacement function
 
@@ -22,9 +23,15 @@ class SandboxViolationError(Exception):
     """Custom exception for operations attempting to escape the sandbox."""
     pass
 
+class MockableRetriableError(OSError): # Custom error for testing retries
+    """A custom OSError subclass that can be specifically caught for retries in tests."""
+    pass
+
 # --- Constants & Enums ---
 DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
+MAX_RENAME_RETRIES = 1 # Simple retry: try once more
+RETRY_DELAY_SECONDS = 0.1 # Small delay before retrying
 
 class TransactionType(str, Enum):
     FILE_NAME = "FILE_NAME"
@@ -165,9 +172,6 @@ def scan_directory_for_occurrences(
 
     all_items_for_scan = list(_walk_for_scan(root_dir, excluded_dirs))
     
-    # Sort deepest first for initial scan to correctly identify parent folders before children files/folders
-    # This helps in scenarios where a folder and a file inside it might both have "flojoy"
-    # However, for execution, shallower paths (parents) are processed first.
     sorted_items = sorted(all_items_for_scan, key=lambda p: len(p.parts), reverse=True)
 
     for item_path in sorted_items:
@@ -293,7 +297,7 @@ def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_de
 def _execute_rename_transaction(
     tx_item: Dict[str, Any], 
     root_dir: Path, 
-    path_translation_map: Dict[str, str], # Stores original_relative_path -> new_NAME_component
+    path_translation_map: Dict[str, str], 
     path_cache: Dict[str, Path],
     dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str]]:
@@ -324,23 +328,35 @@ def _execute_rename_transaction(
         path_cache[original_relative_path_str] = new_abs_path 
         return TransactionStatus.COMPLETED, "DRY_RUN"
     
-    try:
-        _ensure_within_sandbox(current_abs_path, root_dir, f"rename_source for {original_name}")
-        _ensure_within_sandbox(new_abs_path, root_dir, f"rename_destination for {new_name}")
+    for attempt in range(MAX_RENAME_RETRIES + 1):
+        try:
+            _ensure_within_sandbox(current_abs_path, root_dir, f"rename_source for {original_name}")
+            _ensure_within_sandbox(new_abs_path, root_dir, f"rename_destination for {new_name}")
 
-        if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
-            return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
+            if new_abs_path.exists() and not current_abs_path.resolve().samefile(new_abs_path.resolve()):
+                return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists."
 
-        os.rename(current_abs_path, new_abs_path)
-        print(f"DEBUG_RENAME_EXEC: Successfully renamed '{current_abs_path}' to '{new_abs_path}'")
-        path_translation_map[original_relative_path_str] = new_name 
-        path_cache[original_relative_path_str] = new_abs_path 
-        return TransactionStatus.COMPLETED, None
-    except SandboxViolationError as sve:
-        return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
-    except Exception as e:
-        print(f"DEBUG_RENAME_EXEC: os.rename failed for '{current_abs_path}' to '{new_abs_path}': {e}")
-        return TransactionStatus.FAILED, str(e)
+            os.rename(current_abs_path, new_abs_path) # The actual operation
+            print(f"DEBUG_RENAME_EXEC: Successfully renamed '{current_abs_path}' to '{new_abs_path}' on attempt {attempt + 1}")
+            path_translation_map[original_relative_path_str] = new_name 
+            path_cache[original_relative_path_str] = new_abs_path 
+            return TransactionStatus.COMPLETED, None
+        except MockableRetriableError as mre: # Specific error for testing retries
+            print(f"DEBUG_RENAME_EXEC: Attempt {attempt + 1} failed with retriable error: {mre}")
+            if attempt < MAX_RENAME_RETRIES:
+                time.sleep(RETRY_DELAY_SECONDS)
+                continue # Go to next attempt
+            else: # Max retries reached
+                return TransactionStatus.FAILED, f"Retriable error persisted after {MAX_RENAME_RETRIES + 1} attempts: {mre}"
+        except SandboxViolationError as sve:
+            return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
+        except Exception as e: # Catch other OSErrors like PermissionError here
+            print(f"DEBUG_RENAME_EXEC: os.rename failed for '{current_abs_path}' to '{new_abs_path}': {e}")
+            return TransactionStatus.FAILED, str(e)
+    
+    # Should not be reached if logic is correct, but as a fallback:
+    return TransactionStatus.FAILED, "Unknown error after rename attempts."
+
 
 def _execute_content_line_transaction(
     tx_item: Dict[str, Any], 
