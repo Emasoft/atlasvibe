@@ -11,7 +11,7 @@ import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union
+from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set
 from enum import Enum
 import chardet
 
@@ -143,14 +143,31 @@ def scan_directory_for_occurrences(
     root_dir: Path,
     excluded_dirs: List[str],
     excluded_files: List[str],
-    file_extensions: Optional[List[str]] 
+    file_extensions: Optional[List[str]],
+    resume_from_transactions: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
-    transactions: List[Dict[str, Any]] = []
+    
+    processed_transactions: List[Dict[str, Any]]
+    existing_transaction_ids: Set[Tuple[str, str, int]] = set() # (PATH, TYPE, LINE_NUMBER)
+
+    if resume_from_transactions is not None:
+        processed_transactions = list(resume_from_transactions) # Start with existing ones
+        for tx in processed_transactions:
+            tx_type = tx["TYPE"]
+            tx_path = tx["PATH"]
+            tx_line = tx.get("LINE_NUMBER", 0) # Default to 0 for name transactions
+            existing_transaction_ids.add((tx_path, tx_type, tx_line))
+    else:
+        processed_transactions = []
+
     find_target_lower = "flojoy" 
     abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
 
     all_items_for_scan = list(_walk_for_scan(root_dir, excluded_dirs))
     
+    # Sort deepest first for initial scan to correctly identify parent folders before children files/folders
+    # This helps in scenarios where a folder and a file inside it might both have "flojoy"
+    # However, for execution, shallower paths (parents) are processed first.
     sorted_items = sorted(all_items_for_scan, key=lambda p: len(p.parts), reverse=True)
 
     for item_path in sorted_items:
@@ -164,20 +181,27 @@ def scan_directory_for_occurrences(
         if item_path.resolve(strict=False) in abs_excluded_files:
             continue
 
+        # Check for name-based transactions (FILE_NAME or FOLDER_NAME)
         if find_target_lower in original_name.lower():
-            tx_type = TransactionType.FOLDER_NAME if item_path.is_dir() else TransactionType.FILE_NAME
-            transactions.append({
-                "id": str(uuid.uuid4()),
-                "TYPE": tx_type.value,
-                "PATH": relative_path_str, 
-                "ORIGINAL_NAME": original_name,
-                "LINE_NUMBER": 0,
-                "ORIGINAL_LINE_CONTENT": None,
-                "PROPOSED_LINE_CONTENT": None,
-                "ORIGINAL_ENCODING": None,
-                "STATUS": TransactionStatus.PENDING.value
-            })
+            tx_type_val = TransactionType.FOLDER_NAME.value if item_path.is_dir() else TransactionType.FILE_NAME.value
+            current_tx_id_tuple = (relative_path_str, tx_type_val, 0) # Line number is 0 for name transactions
+            
+            if current_tx_id_tuple not in existing_transaction_ids:
+                processed_transactions.append({
+                    "id": str(uuid.uuid4()),
+                    "TYPE": tx_type_val,
+                    "PATH": relative_path_str, 
+                    "ORIGINAL_NAME": original_name,
+                    "LINE_NUMBER": 0,
+                    "ORIGINAL_LINE_CONTENT": None,
+                    "PROPOSED_LINE_CONTENT": None,
+                    "ORIGINAL_ENCODING": None,
+                    "STATUS": TransactionStatus.PENDING.value
+                })
+                existing_transaction_ids.add(current_tx_id_tuple)
 
+
+        # Check for content-based transactions (FILE_CONTENT_LINE)
         if item_path.is_file():
             if is_likely_binary_file(item_path):
                 continue
@@ -191,21 +215,24 @@ def scan_directory_for_occurrences(
                 
                 for line_num_0_indexed, line_content in enumerate(lines):
                     if find_target_lower in line_content.lower():
-                        transactions.append({
-                            "id": str(uuid.uuid4()),
-                            "TYPE": TransactionType.FILE_CONTENT_LINE.value,
-                            "PATH": relative_path_str, 
-                            "ORIGINAL_NAME": None,
-                            "LINE_NUMBER": line_num_0_indexed + 1, 
-                            "ORIGINAL_LINE_CONTENT": line_content, 
-                            "PROPOSED_LINE_CONTENT": None, 
-                            "ORIGINAL_ENCODING": file_encoding,
-                            "STATUS": TransactionStatus.PENDING.value
-                        })
+                        current_tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_num_0_indexed + 1)
+                        if current_tx_id_tuple not in existing_transaction_ids:
+                            processed_transactions.append({
+                                "id": str(uuid.uuid4()),
+                                "TYPE": TransactionType.FILE_CONTENT_LINE.value,
+                                "PATH": relative_path_str, 
+                                "ORIGINAL_NAME": None, # Not applicable for content lines
+                                "LINE_NUMBER": line_num_0_indexed + 1, 
+                                "ORIGINAL_LINE_CONTENT": line_content, 
+                                "PROPOSED_LINE_CONTENT": None, 
+                                "ORIGINAL_ENCODING": file_encoding,
+                                "STATUS": TransactionStatus.PENDING.value
+                            })
+                            existing_transaction_ids.add(current_tx_id_tuple)
             except Exception as e:
                 print(f"Warning: Could not read/process content of file {item_path}: {e}")
                 pass
-    return transactions
+    return processed_transactions
 
 # --- Transaction File Management ---
 def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
@@ -215,7 +242,6 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         if path.exists():
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    # Removed informational print to prevent breaking table output in self-test
                     return cast(List[Dict[str, Any]], json.load(f))
             except Exception as e:
                 print(f"Warning: Failed to load transactions from {path}: {e}")
