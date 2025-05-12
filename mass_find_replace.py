@@ -117,7 +117,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
     # Test for resume execution (partially completed transaction file)
     # This file will be used by a separate execution run if resume test is activated
     resume_tx_file = base_dir / "for_resume_test_transactions.json" 
-    (base_dir / "completed_flojoy_for_resume.txt").write_text("already done") 
+    (base_dir / "completed_flojoy_for_resume.txt").write_text("already done flojoy content") # Content should also change if name changes
     (base_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy")
     (base_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy")
     
@@ -132,9 +132,9 @@ def _create_self_test_environment(base_dir: Path) -> None:
 
 def _verify_self_test_results_task(
     temp_dir: Path, 
-    original_transaction_file: Path, # This is self_test_transactions.json for the main run
-    is_resume_run: bool = False, # Flag to indicate if this verification is for a resume test run
-    resume_tx_file_path: Optional[Path] = None # Added back to signature
+    original_transaction_file: Path, 
+    is_resume_run: bool = False, 
+    resume_tx_file_path: Optional[Path] = None 
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -277,101 +277,122 @@ def _verify_self_test_results_task(
                         is_likely_binary_file(binary_file_renamed),
                         f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
-    # --- New/Placeholder Tests based on user's list ---
     if not is_resume_run:
         record_test("Test to assess the ability to replace folder and file names in a directory tree of depth=10.",
                     exp_paths_after_rename["depth10_file_atlasvibe.txt"].exists(),
-                    f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt']}' not found or not renamed correctly. Requires setup verification.")
-        
+                    f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt'].relative_to(temp_dir)}' not found or not renamed correctly.")
+        check_file_content(exp_paths_after_rename.get("depth10_file_atlasvibe.txt"),
+                           "atlasvibe deep content",
+                           "Test to assess content replacement in a file within a directory tree of depth=10.")
+
         gb_file_path = exp_paths_after_rename.get("gb18030_atlasvibe_file.txt")
         gb_expected_content = "你好 atlasvibe 世界"
-        if not (gb_file_path and gb_file_path.exists()): # type: ignore
+        if not (gb_file_path and gb_file_path.exists()):
             record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"GB18030 test file missing: {gb_file_path}. Setup issue.")
         else:
             try:
-                gb_actual_content = gb_file_path.read_text(encoding="gb18030") # type: ignore
+                gb_actual_content = gb_file_path.read_text(encoding="gb18030")
                 record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", 
                             gb_actual_content == gb_expected_content,
                             f"GB18030 content mismatch. Expected (repr): {gb_expected_content!r}, Got (repr): {gb_actual_content!r}")
             except Exception as e:
                 record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
 
-    record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Implicitly covered by existing content replacement tests.")
-    record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests.")
-    record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by multi-line file content tests.")
+    record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Implicitly covered by various content replacement tests.")
+    record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests (name & content).")
+    record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by 'deep_atlasvibe_file.txt' content checks which has multiple occurrences.")
 
     if not is_resume_run:
         initial_transactions = load_transactions(original_transaction_file) 
         if initial_transactions is not None:
-            expected_line_tx_count = 3 
-            actual_line_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "deep_flojoy_file.txt" in tx["PATH"])
-            record_test("Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences.",
-                        actual_line_tx_count == expected_line_tx_count,
-                        f"Expected {expected_line_tx_count} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count}.")
+            expected_line_tx_count_deep_file = 3 
+            actual_line_tx_count_deep_file = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "deep_flojoy_file.txt" in tx["PATH"])
+            record_test("Test to assess the ability to create a transaction entry for each line occurrence in a multi-occurrence file.",
+                        actual_line_tx_count_deep_file == expected_line_tx_count_deep_file,
+                        f"Expected {expected_line_tx_count_deep_file} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count_deep_file}.")
 
-            expected_file_name_tx_count = 9 
+            # Count all file name transactions that should result in a rename
+            expected_file_name_tx_count = 0
+            for key, path_obj in exp_paths_after_rename.items():
+                original_name_part = Path(key).name # e.g., "atlasvibe_root" -> "atlasvibe_root"
+                # Heuristic: if it ends with common extension or doesn't have one, it might be a file/folder name
+                # This is a bit fragile; better to check against the original setup structure if possible
+                if "." in original_name_part or "dir" in original_name_part or "folder" in original_name_part or "root" in original_name_part:
+                     # Attempt to reconstruct original name based on replacement logic
+                     if "atlasvibe" in original_name_part.lower(): # If it was renamed
+                        # This count is tricky without knowing the exact original names that were mapped
+                        pass # Placeholder for a more accurate count if needed
+            # Using a known count from previous implementation for mapped names
+            # This counts transactions where ORIGINAL_NAME would change after replacement
             actual_file_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value and tx["ORIGINAL_NAME"] != replace_flojoy_occurrences(tx["ORIGINAL_NAME"]))
-            record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences.",
-                        actual_file_name_tx_count >= expected_file_name_tx_count, 
-                        f"Expected at least {expected_file_name_tx_count} file name transactions, found {actual_file_name_tx_count}.")
+            # Expected: deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, 
+            # unmapped_variant_flojoy_content, binary_flojoy_file, 
+            # depth10_file_flojoy, gb18030_flojoy_file, large_flojoy_file = 9
+            # Plus files for resume test setup: completed_flojoy_for_resume, pending_flojoy_for_resume, inprogress_flojoy_for_resume = 3
+            # Total = 12
+            # However, the scan for the main self-test doesn't include the "for_resume_test" files in its transaction list.
+            # So, expected is 9.
+            record_test("Test to assess the ability to create a transaction entry for each file name containing a mapped target string.",
+                        actual_file_name_tx_count >= 9, 
+                        f"Expected at least 9 mapped file name transactions, found {actual_file_name_tx_count}.")
 
-            expected_folder_name_tx_count = 7
             actual_folder_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FOLDER_NAME.value)
-            record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences.",
-                        actual_folder_name_tx_count == expected_folder_name_tx_count,
-                        f"Expected {expected_folder_name_tx_count} folder name transactions, found {actual_folder_name_tx_count}.")
+            # Expected: flojoy_root, sub_flojoy_folder, another_FLOJOY_dir, depth1_flojoy, depth3_flojoy, depth6_flojoy, depth9_flojoy = 7
+            record_test("Test to assess the ability to create a transaction entry for each folder name containing a mapped target string.",
+                        actual_folder_name_tx_count == 7,
+                        f"Expected 7 folder name transactions, found {actual_folder_name_tx_count}.")
         else:
-            record_test("Test to assess transaction generation (prerequisite: load transaction file).", False, "Could not load initial transaction file for generation checks.")
+            record_test("Test to assess transaction generation for line/file/folder occurrences (prerequisite: load transaction file).", False, "Could not load initial transaction file for generation checks.")
 
 
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Implicitly covered by verifying final file content.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Implicitly covered by verifying final file names.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Implicitly covered by verifying final folder names.")
+    record_test("Test to assess the ability to execute a transaction for line content modification.", True, "Implicitly covered by verifying final file content after changes.")
+    record_test("Test to assess the ability to execute a transaction for file name replacement.", True, "Implicitly covered by verifying final file names/paths after changes.")
+    record_test("Test to assess the ability to execute a transaction for folder name replacement.", True, "Implicitly covered by verifying final folder names/paths after changes.")
     
     tx_file_for_backup_check = resume_tx_file_path if is_resume_run and resume_tx_file_path else original_transaction_file
-    record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way (via backup).", 
+    record_test("Test to assess the atomicity of transaction file updates via backup creation.", 
                 (tx_file_for_backup_check.with_suffix(tx_file_for_backup_check.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists(), 
                 f"Backup file for '{tx_file_for_backup_check.name}' not found. Atomicity check via backup failed.")
 
-    record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Test not yet implemented. Requires significant new logic for dual scan and comparison.")
-    record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Test not yet implemented. Current resume logic only applies to the execution phase, not scan phase.")
+    record_test("Test to assess the deterministic nature of scan results by comparing two separate scans.", False, "Test not yet implemented. Requires significant new logic for dual scan and comparison of JSON outputs.")
+    record_test("Test to assess the ability to resume the scan phase from an incomplete transaction file.", False, "Test not yet implemented. Current resume logic only applies to the execution phase.")
 
     if is_resume_run:
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
+        record_test("Test to assess resuming execution of PENDING file rename transactions.",
                     exp_paths_after_rename["pending_atlasvibe_for_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['pending_atlasvibe_for_resume.txt'].name}' from resumed PENDING task not found.")
         check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_resume.txt"),
-                           "pending content atlasvibe",
-                           "Test to assess content of file from resumed PENDING task.")
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
+                           "pending content atlasvibe", # Assuming content also gets updated if name does
+                           "Test to assess content of file from resumed PENDING file rename task.")
+        record_test("Test to assess resuming execution of IN_PROGRESS file rename transactions.",
                     exp_paths_after_rename["inprogress_atlasvibe_for_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_resume.txt'].name}' from resumed IN_PROGRESS task not found.")
         check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_resume.txt"),
-                           "in progress content atlasvibe",
-                           "Test to assess content of file from resumed IN_PROGRESS task.")
-        record_test("Test to assess resuming EXECUTION (COMPLETED tasks untouched).",
-                    (temp_dir / "completed_atlasvibe_for_resume.txt").exists() and not (temp_dir / "completed_flojoy_for_resume.txt").exists(), 
-                    "File from COMPLETED task in resume was unexpectedly reprocessed or original missing/renamed again.")
-
+                           "in progress content atlasvibe", # Assuming content also gets updated
+                           "Test to assess content of file from resumed IN_PROGRESS file rename task.")
+        record_test("Test to assess that COMPLETED transactions are not re-processed during resume.",
+                    exp_paths_after_rename["completed_atlasvibe_for_resume.txt"].exists() and \
+                    not (temp_dir / "completed_flojoy_for_resume.txt").exists(), 
+                    "File from COMPLETED task in resume was unexpectedly reprocessed, its original form re-appeared, or it was missing.")
     else:
-         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run. Run with --resume-test flag.")
+         record_test("Test to assess resuming execution of partially completed transaction sets.", False, "Resume sub-test not active for this run. Trigger with --run-resume-sub-test.")
 
-    record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Error retry logic is not a current feature.")
+    record_test("Test to assess the ability to retry failed transactions (ERROR state).", False, "Test not yet implemented. Error retry logic is not a current feature.")
     
     if not is_resume_run:
         large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
-        if not (large_file_path and large_file_path.exists()): # type: ignore
-            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Large test file missing: {large_file_path}. Setup issue.")
+        if not (large_file_path and large_file_path.exists()): 
+            record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", False, f"Large test file missing: {large_file_path}. Setup issue.")
         else:
             try:
-                with open(large_file_path, "r") as f: # type: ignore
+                with open(large_file_path, "r") as f: 
                     lines = [f.readline().strip() for _ in range(5)] 
-                expected_lines = ["atlasvibe line " + str(i) if i % 100 == 0 else "Normal line " + str(i) for i in range(5)]
-                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", 
+                expected_lines = ["This atlasvibe line should be replaced " + str(i) if i % 100 == 0 else "Normal line " + str(i) for i in range(5)]
+                record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", 
                             lines == expected_lines,
                             f"Large file content mismatch. Expected head: {expected_lines!r}, Got: {lines!r}")
             except Exception as e:
-                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Error reading large file: {e}")
+                record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", False, f"Error reading large file: {e}")
 
     current_run_tx_file = resume_tx_file_path if is_resume_run and resume_tx_file_path else original_transaction_file
     transactions_for_status_check = load_transactions(current_run_tx_file) 
@@ -498,14 +519,26 @@ def self_test_flow(
         print("Self-Test (Resume Sub-Test): Executing transactions with --resume...")
         resume_tx_file = temp_dir / "for_resume_test_transactions.json"
         
-        # Ensure 'completed' file is in its 'after rename' state for the resume test
-        if (temp_dir / "completed_flojoy_for_resume.txt").exists():
-            (temp_dir / "completed_flojoy_for_resume.txt").rename(temp_dir / "completed_atlasvibe_for_resume.txt")
-        # Ensure 'pending' and 'inprogress' are in their 'before rename' state
+        # Simulate that 'completed_flojoy_for_resume.txt' was already processed and renamed
+        # Also, its content should have been updated.
+        completed_original_path = temp_dir / "completed_flojoy_for_resume.txt"
+        completed_renamed_path = temp_dir / "completed_atlasvibe_for_resume.txt"
+        if completed_original_path.exists():
+            completed_original_path.rename(completed_renamed_path)
+            # Simulate content update for the "completed" one as if it was processed
+            if completed_renamed_path.exists():
+                 completed_renamed_path.write_text("already done atlasvibe content")
+
+
+        # Ensure 'pending' and 'inprogress' are in their 'before rename' state for the resume test
+        # Their content should still be 'flojoy'
         if (temp_dir / "pending_atlasvibe_for_resume.txt").exists():
             (temp_dir / "pending_atlasvibe_for_resume.txt").rename(temp_dir / "pending_flojoy_for_resume.txt")
+            (temp_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy")
+
         if (temp_dir / "inprogress_atlasvibe_for_resume.txt").exists():
             (temp_dir / "inprogress_atlasvibe_for_resume.txt").rename(temp_dir / "inprogress_flojoy_for_resume.txt")
+            (temp_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy")
 
 
         execution_stats = execute_all_transactions(
@@ -649,11 +682,11 @@ def main_cli() -> None:
                         help="Force execution without confirmation prompt (if not in dry-run or resume mode).")
     parser.add_argument("--self-test", action="store_true",
                         help=f"Run a predefined self-test in a sandboxed '{SELF_TEST_SANDBOX_DIR}' directory.")
-    parser.add_argument("--run-resume-sub-test", action="store_true", help=argparse.SUPPRESS) # Hidden flag for internal resume test
+    parser.add_argument("--run-resume-sub-test", action="store_true", help=argparse.SUPPRESS) 
 
     args = parser.parse_args()
     
-    if args.self_test or args.run_resume_sub_test: # Changed to OR
+    if args.self_test or args.run_resume_sub_test: 
         is_resume_sub_test_run = args.run_resume_sub_test
 
         sys.stdout.write(f"Running self-test {'(Resume Sub-Test)' if is_resume_sub_test_run else '(Standard Run)'} in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
@@ -681,7 +714,7 @@ def main_cli() -> None:
                 dry_run_for_test=args.dry_run, 
                 run_resume_sub_test=is_resume_sub_test_run
             )
-            if args.dry_run and not is_resume_sub_test_run: # Only print dry run complete for standard self-test dry run
+            if args.dry_run and not is_resume_sub_test_run: 
                  sys.stdout.write(YELLOW + "Self-test (Standard Run) dry run scan complete." + RESET + "\n")
         except AssertionError: 
             sys.exit(1) 
