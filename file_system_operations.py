@@ -277,8 +277,8 @@ def scan_directory_for_occurrences(
 
             file_encoding = get_file_encoding(item_path) # Use detected or fallback
             try:
-                # Read lines carefully, preserving line endings
-                with open(item_path, 'r', encoding=file_encoding, errors='replace', newline=None) as f: # Use newline=None for universal line ending handling, errors='replace'
+                # Read lines carefully, preserving line endings and using surrogateescape
+                with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
                     lines = f.readlines() # Reads lines with their endings
 
                 for line_num_0_indexed, line_content in enumerate(lines):
@@ -301,7 +301,7 @@ def scan_directory_for_occurrences(
                             })
                             existing_transaction_ids.add(current_tx_id_tuple)
             except UnicodeDecodeError as ude:
-                 print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='replace'). Skipping content scan. Error: {ude}")
+                 print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='surrogateescape'). Skipping content scan. Error: {ude}")
             except Exception as e:
                 # Catch other potential errors during file read/processing
                 print(f"Warning: Could not read/process content of file {item_path} with encoding {file_encoding}: {e}")
@@ -566,8 +566,8 @@ def _execute_content_line_transaction(
 
         # Read all lines from the file using the detected encoding
         try:
-            # Use errors='replace' for reading
-            with open(current_abs_path, 'r', encoding=file_encoding, errors='replace', newline=None) as f:
+            # Use errors='surrogateescape' for reading
+            with open(current_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
                 lines = f.readlines() # Reads lines with original endings
         except Exception as read_err:
              return TransactionStatus.FAILED, f"Error reading file {current_abs_path} for update: {read_err}"
@@ -591,8 +591,8 @@ def _execute_content_line_transaction(
         try:
             with open(current_abs_path, 'wb') as f: # Open in binary mode
                 for line in lines:
-                    # Encode each line using the original encoding with errors='replace'
-                    f.write(line.encode(file_encoding, errors='replace'))
+                    # Encode each line using the original encoding with errors='surrogateescape'
+                    f.write(line.encode(file_encoding, errors='surrogateescape'))
         except Exception as write_err:
              return TransactionStatus.FAILED, f"Error writing updated content to file {current_abs_path}: {write_err}"
 
