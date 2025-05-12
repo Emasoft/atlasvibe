@@ -148,7 +148,7 @@ def _verify_self_test_results_task(
     validation_transaction_file: Optional[Path] = None, 
     is_resume_run: bool = False, 
     is_scan_resume_run: bool = False,
-    resume_tx_file_path: Optional[Path] = None # Added back
+    resume_tx_file_path: Optional[Path] = None 
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -205,7 +205,6 @@ def _verify_self_test_results_task(
         record_test("Test to assess renaming of top-level directories containing the target string.", 
                     exp_paths_after_rename["atlasvibe_root"].exists(), 
                     f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
-        # ... (all other standard path checks from previous version) ...
         record_test("Test to assess renaming of nested directories containing the target string.", 
                     exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
                     f"Renamed nested dir '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
@@ -268,7 +267,6 @@ def _verify_self_test_results_task(
         check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
                            "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
                            "Test to assess content replacement of all mapped target string variants in a deeply nested text file.")
-        # ... (all other standard content checks from previous version) ...
         check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
                            "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
                            "Test to assess content replacement of mixed-case mapped target string variants.")
@@ -387,14 +385,12 @@ def _verify_self_test_results_task(
         
         combined_scan_tx = load_transactions(original_transaction_file) 
         if combined_scan_tx:
-            # Check for expected number of transactions: 1 initial + 2 new (folder + file inside)
             expected_total_scan_resume_tx = 3
             actual_total_scan_resume_tx = len(combined_scan_tx)
             record_test("Test to assess scan resume correctly combines initial and new transactions to expected total.",
                         actual_total_scan_resume_tx == expected_total_scan_resume_tx,
                         f"Scan resume transaction count incorrect. Expected {expected_total_scan_resume_tx}, got {actual_total_scan_resume_tx}.")
             
-            # Check for no duplicates (more robustly than just count)
             unique_identifiers = set()
             for tx in combined_scan_tx:
                 identifier = (tx['PATH'], tx['TYPE'], tx.get('LINE_NUMBER', 0))
@@ -636,7 +632,7 @@ def self_test_flow(
                 temp_dir=temp_dir,
                 original_transaction_file=combined_scan_tx_file, 
                 is_scan_resume_run=True,
-                resume_tx_file_path=combined_scan_tx_file # Pass for backup check consistency
+                resume_tx_file_path=combined_scan_tx_file 
             )
         else:
             print("Self-Test (Scan Resume Sub-Test): Dry run selected. Skipping execution.")
