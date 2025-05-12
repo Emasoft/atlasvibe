@@ -358,19 +358,25 @@ def _verify_self_test_results_task(
                 (tx_file_for_backup_check.with_suffix(tx_file_for_backup_check.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists(), 
                 f"Backup file for '{tx_file_for_backup_check.name}' not found. Atomicity check via backup failed.")
 
-    if not is_exec_resume_run and not is_scan_resume_run and validation_transaction_file:
+    if not is_exec_resume_run and not is_scan_resume_run and validation_transaction_file and validation_transaction_file.exists():
         transactions1 = load_transactions(original_transaction_file)
         transactions2 = load_transactions(validation_transaction_file)
         if transactions1 is not None and transactions2 is not None:
-            comparable_tx1 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions1]])
-            comparable_tx2 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions2]])
+            # Normalize by removing 'id' and sorting keys within each dict, then sorting the list of dicts
+            def normalize_tx_list(tx_list):
+                return sorted([
+                    tuple(sorted(d.items())) for d in 
+                    [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in tx_list]
+                ])
+            comparable_tx1 = normalize_tx_list(transactions1)
+            comparable_tx2 = normalize_tx_list(transactions2)
             record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", 
                         comparable_tx1 == comparable_tx2,
-                        f"Scan determinism failed. Tx1 count: {len(comparable_tx1)}, Tx2 count: {len(comparable_tx2)}. Differences exist.")
+                        f"Scan determinism failed. Tx1 count: {len(comparable_tx1)}, Tx2 count: {len(comparable_tx2)}. Differences exist if counts differ or content mismatch.")
         else:
             record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Could not load one or both transaction files for comparison.")
     elif not is_exec_resume_run and not is_scan_resume_run:
-         record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Validation transaction file not provided for comparison.")
+         record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Validation transaction file not provided or not found for comparison.")
 
 
     if is_scan_resume_run:
@@ -432,7 +438,6 @@ def _verify_self_test_results_task(
          record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Execution resume sub-test not active for this run. Trigger with --run-exec-resume-sub-test.")
          record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Scan resume sub-test not active for this run. Trigger with --run-scan-resume-sub-test.")
 
-    # Error handling test (part of standard run)
     if not is_exec_resume_run and not is_scan_resume_run:
         error_file_original_path = temp_dir / "error_file_flojoy.txt"
         error_file_target_path = temp_dir / "error_file_atlasvibe.txt"
@@ -446,7 +451,7 @@ def _verify_self_test_results_task(
                     if tx["STATUS"] == TransactionStatus.FAILED.value:
                         error_tx_failed = True
                     break
-        record_test("Test to assess handling of file operation errors (e.g., permission denied during rename), ensuring transaction is marked FAILED.",
+        record_test("Test to assess the ability to handle file operation errors (e.g., permission denied during rename), ensuring transaction is marked FAILED.",
                     error_tx_found and error_tx_failed and error_file_original_path.exists() and not error_file_target_path.exists(),
                     f"Error handling test failed. TxFound: {error_tx_found}, TxFailed: {error_tx_failed}, OriginalExists: {error_file_original_path.exists()}, TargetNotExists: {not error_file_target_path.exists()}")
     
@@ -483,14 +488,12 @@ def _verify_self_test_results_task(
                     continue 
             
             is_excluded_item = "excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"
-            # Skip error_file_flojoy.txt for this general check as its FAILED status is checked separately
             is_error_scenario_item = tx["PATH"] == "error_file_flojoy.txt"
 
-            if not is_excluded_item and not (is_error_scenario_item and not is_scan_resume_run and not is_exec_resume_run) : # Don't check error file in standard run here
+            if not is_excluded_item and not (is_error_scenario_item and not is_scan_resume_run and not is_exec_resume_run) : 
                 if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                    # For scan resume, the initial item might still be PENDING if it was the only one and execution was skipped (dry_run)
                     if is_scan_resume_run and tx["id"] == "uuid_scan_resume_initial" and tx["STATUS"] == TransactionStatus.PENDING.value:
-                        pass # This is acceptable for a dry-run scan resume verification
+                        pass 
                     else:
                         all_relevant_tx_processed_correctly = False
                         record_test(f"Transaction Lifecycle (Tx ID: {tx['id']}): Verify non-excluded transaction reaches final state (COMPLETED/SKIPPED).", False,
@@ -699,7 +702,7 @@ def self_test_flow(
         print(f"Self-Test (Standard Run): Second scan complete. {len(transactions2)} transactions planned in {validation_transaction_file}")
 
         error_file_path = temp_dir / "error_file_flojoy.txt"
-        original_permissions = 0 # Placeholder
+        original_permissions = 0 
         if not dry_run_for_test and error_file_path.exists():
             print(f"Self-Test (Standard Run): Setting up error condition for {error_file_path.name}...")
             original_permissions = error_file_path.stat().st_mode
@@ -715,8 +718,11 @@ def self_test_flow(
             )
             print(f"Self-Test (Standard Run): Execution complete. Stats: {execution_stats}")
             
-            if error_file_path.exists(): # Restore permissions if changed
-                os.chmod(error_file_path, original_permissions if original_permissions else 0o664)
+            if error_file_path.exists() and original_permissions != 0: 
+                os.chmod(error_file_path, original_permissions)
+            elif error_file_path.exists() and original_permissions == 0: # If it was newly created and made read-only
+                os.chmod(error_file_path, 0o664)
+
 
             _verify_self_test_results_task(
                 temp_dir=temp_dir, 
@@ -769,7 +775,7 @@ def main_flow(
             sys.stdout.write("Operation cancelled by user.\n")
             return
 
-    if not skip_scan: # If not skipping scan, we might be resuming a scan or starting fresh
+    if not skip_scan: 
         print(f"Starting scan phase in '{root_dir}'...")
         current_transactions = None
         if resume: 
@@ -791,10 +797,10 @@ def main_flow(
         if not found_transactions:
             print("No occurrences found. Nothing to do.")
             return
-    elif not transaction_json_path.exists(): # --skip-scan is true, but file is missing
+    elif not transaction_json_path.exists(): 
         print(f"Error: --skip-scan was used, but '{transaction_json_path}' not found.")
         return
-    else: # --skip-scan is true, and file exists
+    else: 
         print(f"Using existing transaction file: '{transaction_json_path}'.")
 
     if dry_run:
@@ -803,7 +809,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=True,
-            resume=resume # This resume is for execution phase
+            resume=resume 
         )
         print(f"Dry run complete. Simulated stats: {stats}")
         print(f"Review '{transaction_json_path}' for transaction details and statuses (will show DRY_RUN).")
@@ -813,7 +819,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=False,
-            resume=resume # This resume is for execution phase
+            resume=resume 
         )
         print(f"Execution phase complete. Stats: {stats}")
         print(f"Review '{transaction_json_path}' for a log of applied changes and their statuses.")
