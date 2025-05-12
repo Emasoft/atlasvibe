@@ -23,7 +23,10 @@ def get_replacement_for_match(matched_text: str) -> str:
     If the exact matched text is not a key in REPLACEMENT_MAPPING, it returns the original matched text.
     This ensures that only defined variations of "flojoy" are replaced.
     """
-    return REPLACEMENT_MAPPING.get(matched_text, matched_text)
+    replacement = REPLACEMENT_MAPPING.get(matched_text, matched_text)
+    # Keep the trace log for debugging if needed during testing
+    # print(f"TRACE_REPLACE_LOGIC: Matched {repr(matched_text)}, Returning: {repr(replacement)}")
+    return replacement
 
 def replace_flojoy_occurrences(input_string: str) -> str:
     """
@@ -31,25 +34,16 @@ def replace_flojoy_occurrences(input_string: str) -> str:
     with its case-preserved 'atlasvibe' equivalent based on REPLACEMENT_MAPPING.
     """
     if not isinstance(input_string, str):
-        return input_string 
+        # Handle potential non-string inputs gracefully if necessary, though unlikely for file/folder names/lines
+        return input_string
 
-    def _get_internal_case_preserved_replacement(text_to_match: str) -> str:
-        print(f"TRACE_REPLACE_LOGIC: _get_internal_case_preserved_replacement ENTERED with text_to_match: {repr(text_to_match)}")
-        result_to_return = None
-
-        if text_to_match in REPLACEMENT_MAPPING:
-            result_to_return = REPLACEMENT_MAPPING[text_to_match]
-            print(f"TRACE_REPLACE_LOGIC: Matched key {repr(text_to_match)} in REPLACEMENT_MAPPING. Returning: {repr(result_to_return)}")
-        else:
-            result_to_return = text_to_match 
-            print(f"TRACE_REPLACE_LOGIC: No exact match for {repr(text_to_match)} in REPLACEMENT_MAPPING. Fallback returning original: {repr(result_to_return)}")
-        
-        return result_to_return
-
+    # Define the callback function directly using the helper
     def replace_callback(match_obj: re.Match[str]) -> str:
         actual_matched_text = match_obj.group(0)
-        return _get_internal_case_preserved_replacement(actual_matched_text)
-    
-    pattern = r'flojoy' 
+        # Use the existing helper function for the lookup logic
+        return get_replacement_for_match(actual_matched_text)
+
+    pattern = r'flojoy'
+    # Use the simplified callback
     return re.sub(pattern, replace_callback, input_string, flags=re.IGNORECASE)
 
