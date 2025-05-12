@@ -146,7 +146,7 @@ def _verify_self_test_results_task(
     temp_dir: Path, 
     original_transaction_file: Path, 
     validation_transaction_file: Optional[Path] = None, 
-    is_exec_resume_run: bool = False, # Renamed from is_resume_run for clarity
+    is_exec_resume_run: bool = False, 
     is_scan_resume_run: bool = False,
     resume_tx_file_path: Optional[Path] = None 
 ) -> bool:
@@ -595,7 +595,7 @@ def self_test_flow(
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=resume_tx_file, 
-            is_resume_run=True, 
+            is_exec_resume_run=True, # Corrected flag name
             resume_tx_file_path=resume_tx_file
         )
     elif run_scan_resume_sub_test:
@@ -682,7 +682,7 @@ def self_test_flow(
                 temp_dir=temp_dir, 
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file, 
-                is_resume_run=False,
+                is_exec_resume_run=False, # Corrected flag name
                 is_scan_resume_run=False
             )
         else:
@@ -691,7 +691,7 @@ def self_test_flow(
                 temp_dir=temp_dir,
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file,
-                is_resume_run=False,
+                is_exec_resume_run=False, # Corrected flag name
                 is_scan_resume_run=False
             )
 
