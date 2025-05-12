@@ -362,7 +362,6 @@ def _verify_self_test_results_task(
         transactions1 = load_transactions(original_transaction_file)
         transactions2 = load_transactions(validation_transaction_file)
         if transactions1 is not None and transactions2 is not None:
-            # Normalize by removing 'id' and sorting keys within each dict, then sorting the list of dicts
             def normalize_tx_list(tx_list):
                 return sorted([
                     tuple(sorted(d.items())) for d in 
@@ -720,7 +719,7 @@ def self_test_flow(
             
             if error_file_path.exists() and original_permissions != 0: 
                 os.chmod(error_file_path, original_permissions)
-            elif error_file_path.exists() and original_permissions == 0: # If it was newly created and made read-only
+            elif error_file_path.exists() and original_permissions == 0: 
                 os.chmod(error_file_path, 0o664)
 
 
