@@ -379,8 +379,8 @@ def _verify_self_test_results_task(
                 id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}"
                 outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
             else:
-                id_cell_str = f"{' ' * padding}{'':>{id_col_content_width}}{' ' * padding}" 
-                outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}" 
+                id_cell_str = " " * id_col_total_width 
+                outcome_cell_str = " " * outcome_col_total_width
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             sys.stdout.write(BLUE + DBL_VERTICAL + id_cell_str + DBL_VERTICAL + desc_cell_str + DBL_VERTICAL + outcome_cell_str + DBL_VERTICAL + RESET + "\n")
