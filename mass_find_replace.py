@@ -204,11 +204,11 @@ def _verify_self_test_results_task(
         "scan_resume_new_atlasvibe_folder": temp_dir / "scan_resume_new_atlasvibe_folder",
         "scan_resume_new_file_atlasvibe.txt": temp_dir / "scan_resume_new_atlasvibe_folder" / "scan_resume_new_file_atlasvibe.txt",
         # For error handling test
-        "error_file_flojoy.txt": temp_dir / "error_file_flojoy.txt", # Should not be renamed
-        "error_file_atlasvibe.txt": temp_dir / "error_file_atlasvibe.txt", # Should not exist
+        "error_file_flojoy.txt": temp_dir / "error_file_flojoy.txt", 
+        "error_file_atlasvibe.txt": temp_dir / "error_file_atlasvibe.txt", 
     }
 
-    if not is_exec_resume_run and not is_scan_resume_run: # Standard path checks
+    if not is_exec_resume_run and not is_scan_resume_run: 
         record_test("Test to assess renaming of top-level directories containing the target string.", 
                     exp_paths_after_rename["atlasvibe_root"].exists(), 
                     f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
@@ -379,63 +379,96 @@ def _verify_self_test_results_task(
 
 
     if is_scan_resume_run:
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (initial file processed).",
-                    exp_paths_after_rename["scan_resume_initial_atlasvibe.txt"].exists(),
-                    f"File '{exp_paths_after_rename['scan_resume_initial_atlasvibe.txt'].name}' from initial part of scan resume not found/renamed.")
-        check_file_content(exp_paths_after_rename.get("scan_resume_initial_atlasvibe.txt"),
-                           "initial atlasvibe item for scan resume",
-                           "Test to assess content of initial file after scan resume.")
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found folder processed).",
-                    exp_paths_after_rename["scan_resume_new_atlasvibe_folder"].exists(),
-                    f"Folder '{exp_paths_after_rename['scan_resume_new_atlasvibe_folder'].name}' discovered during scan resume not found/renamed.")
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found file processed).",
-                    exp_paths_after_rename["scan_resume_new_file_atlasvibe.txt"].exists(),
-                    f"File '{exp_paths_after_rename['scan_resume_new_file_atlasvibe.txt'].name}' discovered during scan resume not found/renamed.")
-        check_file_content(exp_paths_after_rename.get("scan_resume_new_file_atlasvibe.txt"),
-                           "new atlasvibe item for scan resume",
-                           "Test to assess content of newly found file after scan resume.")
+        scan_resume_test_description = "Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase."
+        scan_resume_conditions_met = True
+        scan_resume_failure_details = []
+
+        if not exp_paths_after_rename["scan_resume_initial_atlasvibe.txt"].exists():
+            scan_resume_conditions_met = False
+            scan_resume_failure_details.append(f"Initial file '{exp_paths_after_rename['scan_resume_initial_atlasvibe.txt'].name}' not found/renamed.")
+        else:
+            check_file_content(exp_paths_after_rename.get("scan_resume_initial_atlasvibe.txt"),
+                               "initial atlasvibe item for scan resume",
+                               "Sub-check: Content of initial file after scan resume.") # This will record its own pass/fail
+
+        if not exp_paths_after_rename["scan_resume_new_atlasvibe_folder"].exists():
+            scan_resume_conditions_met = False
+            scan_resume_failure_details.append(f"Newly found folder '{exp_paths_after_rename['scan_resume_new_atlasvibe_folder'].name}' not found/renamed.")
         
+        if not exp_paths_after_rename["scan_resume_new_file_atlasvibe.txt"].exists():
+            scan_resume_conditions_met = False
+            scan_resume_failure_details.append(f"Newly found file '{exp_paths_after_rename['scan_resume_new_file_atlasvibe.txt'].name}' not found/renamed.")
+        else:
+            check_file_content(exp_paths_after_rename.get("scan_resume_new_file_atlasvibe.txt"),
+                               "new atlasvibe item for scan resume",
+                               "Sub-check: Content of newly found file after scan resume.")
+
         combined_scan_tx = load_transactions(original_transaction_file) 
         if combined_scan_tx:
             expected_total_scan_resume_tx = 3
             actual_total_scan_resume_tx = len(combined_scan_tx)
-            record_test("Test to assess scan resume correctly combines initial and new transactions to expected total.",
-                        actual_total_scan_resume_tx == expected_total_scan_resume_tx,
-                        f"Scan resume transaction count incorrect. Expected {expected_total_scan_resume_tx}, got {actual_total_scan_resume_tx}.")
+            if actual_total_scan_resume_tx != expected_total_scan_resume_tx:
+                scan_resume_conditions_met = False
+                scan_resume_failure_details.append(f"Transaction count incorrect. Expected {expected_total_scan_resume_tx}, got {actual_total_scan_resume_tx}.")
             
             unique_identifiers = set()
             for tx in combined_scan_tx:
                 identifier = (tx['PATH'], tx['TYPE'], tx.get('LINE_NUMBER', 0))
                 unique_identifiers.add(identifier)
-            record_test("Test to assess scan resume results in unique transactions (no duplicates).",
-                        len(unique_identifiers) == actual_total_scan_resume_tx,
-                        f"Scan resume resulted in duplicate transactions. Total: {actual_total_scan_resume_tx}, Unique: {len(unique_identifiers)}")
+            if len(unique_identifiers) != actual_total_scan_resume_tx:
+                scan_resume_conditions_met = False
+                scan_resume_failure_details.append(f"Duplicate transactions found. Total: {actual_total_scan_resume_tx}, Unique: {len(unique_identifiers)}")
         else:
-            record_test("Test to assess scan resume transaction file integrity.", False, "Could not load combined transaction file for scan resume.")
+            scan_resume_conditions_met = False
+            scan_resume_failure_details.append("Could not load combined transaction file for scan resume.")
+        
+        record_test(scan_resume_test_description, scan_resume_conditions_met, "; ".join(scan_resume_failure_details))
+
 
     elif is_exec_resume_run: 
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
-                    exp_paths_after_rename["pending_atlasvibe_for_exec_resume.txt"].exists(), 
-                    f"File '{exp_paths_after_rename['pending_atlasvibe_for_exec_resume.txt'].name}' from resumed PENDING task not found.")
-        check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_exec_resume.txt"),
-                           "pending content atlasvibe", 
-                           "Test to assess content of file from resumed PENDING file rename task.")
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
-                    exp_paths_after_rename["inprogress_atlasvibe_for_exec_resume.txt"].exists(), 
-                    f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_exec_resume.txt'].name}' from resumed IN_PROGRESS task not found.")
-        check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_exec_resume.txt"),
-                           "in progress content atlasvibe", 
-                           "Test to assess content of file from resumed IN_PROGRESS file rename task.")
-        record_test("Test to assess that COMPLETED transactions are not re-processed during EXECUTION resume.",
-                    exp_paths_after_rename["completed_atlasvibe_for_exec_resume.txt"].exists() and \
-                    not (temp_dir / "completed_flojoy_for_exec_resume.txt").exists(), 
-                    "File from COMPLETED task in resume was unexpectedly reprocessed, its original form re-appeared, or it was missing.")
-        check_file_content(exp_paths_after_rename.get("completed_atlasvibe_for_exec_resume.txt"),
-                           "already done atlasvibe content", 
-                           "Test to assess content of pre-COMPLETED file after EXECUTION resume (should be untouched by resume).")
+        exec_resume_test_description = "Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions."
+        exec_resume_conditions_met = True
+        exec_resume_failure_details = []
+
+        if not exp_paths_after_rename["pending_atlasvibe_for_exec_resume.txt"].exists():
+            exec_resume_conditions_met = False
+            exec_resume_failure_details.append(f"File '{exp_paths_after_rename['pending_atlasvibe_for_exec_resume.txt'].name}' from PENDING task not found.")
+        else:
+            check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_exec_resume.txt"), "pending content atlasvibe", "Sub-check: Content of PENDING task file.")
+
+        if not exp_paths_after_rename["inprogress_atlasvibe_for_exec_resume.txt"].exists():
+            exec_resume_conditions_met = False
+            exec_resume_failure_details.append(f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_exec_resume.txt'].name}' from IN_PROGRESS task not found.")
+        else:
+            check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_exec_resume.txt"), "in progress content atlasvibe", "Sub-check: Content of IN_PROGRESS task file.")
+        
+        if not (exp_paths_after_rename["completed_atlasvibe_for_exec_resume.txt"].exists() and not (temp_dir / "completed_flojoy_for_exec_resume.txt").exists()):
+            exec_resume_conditions_met = False
+            exec_resume_failure_details.append("COMPLETED task file state incorrect (original reappeared or renamed missing).")
+        else:
+            check_file_content(exp_paths_after_rename.get("completed_atlasvibe_for_exec_resume.txt"), "already done atlasvibe content", "Sub-check: Content of pre-COMPLETED task file.")
+        
+        # Verify statuses in the transaction file for exec resume
+        exec_resume_transactions = load_transactions(resume_tx_file_path if resume_tx_file_path else original_transaction_file)
+        if exec_resume_transactions:
+            all_tx_completed_in_file = True
+            for tx in exec_resume_transactions:
+                if tx['STATUS'] != TransactionStatus.COMPLETED.value:
+                    all_tx_completed_in_file = False
+                    exec_resume_failure_details.append(f"Transaction ID {tx['id']} (Path: {tx['PATH']}) not COMPLETED. Status: {tx['STATUS']}.")
+                    break
+            if not all_tx_completed_in_file:
+                exec_resume_conditions_met = False
+        else:
+            exec_resume_conditions_met = False
+            exec_resume_failure_details.append("Could not load transaction file for exec resume status check.")
+
+        record_test(exec_resume_test_description, exec_resume_conditions_met, "; ".join(exec_resume_failure_details))
+
     else: 
          record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Execution resume sub-test not active for this run. Trigger with --run-exec-resume-sub-test.")
          record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Scan resume sub-test not active for this run. Trigger with --run-scan-resume-sub-test.")
+
 
     if not is_exec_resume_run and not is_scan_resume_run:
         error_file_original_path = temp_dir / "error_file_flojoy.txt"
