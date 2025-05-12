@@ -357,6 +357,9 @@ def _verify_self_test_results_task(
                     exp_paths_after_rename["completed_atlasvibe_for_resume.txt"].exists() and \
                     not (temp_dir / "completed_flojoy_for_resume.txt").exists(), 
                     "File from COMPLETED task in resume was unexpectedly reprocessed, its original form re-appeared, or it was missing.")
+        check_file_content(exp_paths_after_rename.get("completed_atlasvibe_for_resume.txt"),
+                           "already done atlasvibe content", 
+                           "Test to assess content of pre-COMPLETED file after resume (should be untouched by resume).")
     else:
          record_test("Test to assess resuming execution of partially completed transaction sets.", False, "Resume sub-test not active for this run. Trigger with --run-resume-sub-test.")
 
@@ -507,8 +510,9 @@ def self_test_flow(
         completed_original_path = temp_dir / "completed_flojoy_for_resume.txt"
         completed_renamed_path = temp_dir / "completed_atlasvibe_for_resume.txt"
         if completed_original_path.exists():
+            # Simulate rename and content update for the "completed" one
             completed_original_path.rename(completed_renamed_path)
-            if completed_renamed_path.exists(): # Simulate content update for the "completed" one
+            if completed_renamed_path.exists(): 
                  completed_renamed_path.write_text("already done atlasvibe content")
 
 
