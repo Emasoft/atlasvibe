@@ -9,6 +9,10 @@ Create a Python script using Prefect to find and replace all occurrences of "flo
 - `chardet`: For detecting file encodings.
 - Standard Python libraries: `os`, `pathlib`, `json`, `re`, `shutil`.
 
+## Development Process
+- **Test-Driven Development (TDD)**: Features and fixes are guided by tests, particularly the self-test suite.
+- **Checklist-Based Progress Tracking**: The "Self-Test Scenarios (Checklist)" (found at the end of this document) will be used to break down features into small steps/tasks. After each set of code changes, an updated version of this checklist will be provided to reflect the current status of each item.
+
 ## Key Requirements & Behaviors
 
 1.  **Target Strings & Replacements**:
