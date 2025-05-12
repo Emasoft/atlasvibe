@@ -312,7 +312,8 @@ def _verify_self_test_results_task(
                         f"Expected {expected_line_tx_count_deep_file} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count_deep_file}.")
             
             actual_file_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value and tx["ORIGINAL_NAME"] != replace_flojoy_occurrences(tx["ORIGINAL_NAME"]))
-            # Expected mapped file name changes: deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, 
+            # Expected mapped file name changes for standard run (excluding resume files):
+            # deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, 
             # unmapped_variant_flojoy_content, binary_flojoy_file, 
             # depth10_file_flojoy, gb18030_flojoy_file, large_flojoy_file = 9
             record_test("Test to assess the ability to create a transaction entry for each file name containing a mapped target string.",
