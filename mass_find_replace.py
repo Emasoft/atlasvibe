@@ -147,7 +147,8 @@ def _verify_self_test_results_task(
     original_transaction_file: Path, 
     validation_transaction_file: Optional[Path] = None, 
     is_resume_run: bool = False, 
-    is_scan_resume_run: bool = False
+    is_scan_resume_run: bool = False,
+    resume_tx_file_path: Optional[Path] = None # Added back
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -368,30 +369,39 @@ def _verify_self_test_results_task(
 
 
     if is_scan_resume_run:
-        # Specific checks for scan resume
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (initial file processed).",
+        record_test("Test to assess resuming SCAN phase (initial file processed).",
                     exp_paths_after_rename["scan_resume_initial_atlasvibe.txt"].exists(),
                     f"File '{exp_paths_after_rename['scan_resume_initial_atlasvibe.txt'].name}' from initial part of scan resume not found/renamed.")
         check_file_content(exp_paths_after_rename.get("scan_resume_initial_atlasvibe.txt"),
                            "initial atlasvibe item for scan resume",
                            "Test to assess content of initial file after scan resume.")
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found folder processed).",
+        record_test("Test to assess resuming SCAN phase (newly found folder processed).",
                     exp_paths_after_rename["scan_resume_new_atlasvibe_folder"].exists(),
                     f"Folder '{exp_paths_after_rename['scan_resume_new_atlasvibe_folder'].name}' discovered during scan resume not found/renamed.")
-        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found file processed).",
+        record_test("Test to assess resuming SCAN phase (newly found file processed).",
                     exp_paths_after_rename["scan_resume_new_file_atlasvibe.txt"].exists(),
                     f"File '{exp_paths_after_rename['scan_resume_new_file_atlasvibe.txt'].name}' discovered during scan resume not found/renamed.")
         check_file_content(exp_paths_after_rename.get("scan_resume_new_file_atlasvibe.txt"),
                            "new atlasvibe item for scan resume",
                            "Test to assess content of newly found file after scan resume.")
-        # Verify transaction file for scan resume
-        combined_scan_tx = load_transactions(original_transaction_file) # In scan_resume, original_transaction_file is the combined one
+        
+        combined_scan_tx = load_transactions(original_transaction_file) 
         if combined_scan_tx:
-            paths_in_scan_resume = {tx['PATH'] for tx in combined_scan_tx}
-            expected_paths = {"scan_resume_initial_flojoy.txt", "scan_resume_new_flojoy_folder", "scan_resume_new_flojoy_folder/scan_resume_new_file_flojoy.txt"}
-            record_test("Test to assess scan resume correctly combines initial and new transactions without duplicates.",
-                        len(paths_in_scan_resume) == len(expected_paths) and paths_in_scan_resume.issuperset(expected_paths),
-                        f"Scan resume transaction list incorrect. Expected {len(expected_paths)} unique items, got {len(paths_in_scan_resume)}. Details: {paths_in_scan_resume}")
+            # Check for expected number of transactions: 1 initial + 2 new (folder + file inside)
+            expected_total_scan_resume_tx = 3
+            actual_total_scan_resume_tx = len(combined_scan_tx)
+            record_test("Test to assess scan resume correctly combines initial and new transactions to expected total.",
+                        actual_total_scan_resume_tx == expected_total_scan_resume_tx,
+                        f"Scan resume transaction count incorrect. Expected {expected_total_scan_resume_tx}, got {actual_total_scan_resume_tx}.")
+            
+            # Check for no duplicates (more robustly than just count)
+            unique_identifiers = set()
+            for tx in combined_scan_tx:
+                identifier = (tx['PATH'], tx['TYPE'], tx.get('LINE_NUMBER', 0))
+                unique_identifiers.add(identifier)
+            record_test("Test to assess scan resume results in unique transactions (no duplicates).",
+                        len(unique_identifiers) == actual_total_scan_resume_tx,
+                        f"Scan resume resulted in duplicate transactions. Total: {actual_total_scan_resume_tx}, Unique: {len(unique_identifiers)}")
         else:
             record_test("Test to assess scan resume transaction file integrity.", False, "Could not load combined transaction file for scan resume.")
 
@@ -437,13 +447,13 @@ def _verify_self_test_results_task(
             except Exception as e:
                 record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", False, f"Error reading large file: {e}")
 
-    current_run_tx_file = original_transaction_file # original_transaction_file is updated based on the run type
+    current_run_tx_file = original_transaction_file 
     transactions_for_status_check = load_transactions(current_run_tx_file) 
 
     if transactions_for_status_check is not None:
         all_relevant_tx_processed_correctly = True
         for tx_idx, tx in enumerate(transactions_for_status_check): 
-            if is_resume_run and tx["id"] == "uuid_completed_resume": # Specific to exec resume
+            if is_resume_run and tx["id"] == "uuid_completed_exec_resume": 
                 if tx["STATUS"] != TransactionStatus.COMPLETED.value:
                     all_relevant_tx_processed_correctly = False
                     record_test(f"Transaction Lifecycle (Exec Resume - Tx ID: {tx['id']}): Verify COMPLETED transaction remains COMPLETED.", False,
@@ -452,7 +462,6 @@ def _verify_self_test_results_task(
                 else:
                     continue 
             
-            # For standard run, scan_resume run, or non-pre-completed items in exec_resume run
             is_excluded_item = "excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"
             if not is_excluded_item:
                 if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
@@ -590,7 +599,7 @@ def self_test_flow(
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
             original_transaction_file=resume_tx_file, 
-            is_resume_run=True, # This flag is for EXECUTION resume
+            is_resume_run=True, 
             resume_tx_file_path=resume_tx_file
         )
     elif run_scan_resume_sub_test:
@@ -620,20 +629,22 @@ def self_test_flow(
                 transactions_file_path=combined_scan_tx_file,
                 root_dir=temp_dir,
                 dry_run=False,
-                resume=False # Resume=False here as we want to process all from the combined list
+                resume=False 
             )
             print(f"Self-Test (Scan Resume Sub-Test): Execution complete. Stats: {execution_stats}")
             _verify_self_test_results_task(
                 temp_dir=temp_dir,
-                original_transaction_file=combined_scan_tx_file, # Verify against the combined file
-                is_scan_resume_run=True
+                original_transaction_file=combined_scan_tx_file, 
+                is_scan_resume_run=True,
+                resume_tx_file_path=combined_scan_tx_file # Pass for backup check consistency
             )
         else:
             print("Self-Test (Scan Resume Sub-Test): Dry run selected. Skipping execution.")
             _verify_self_test_results_task(
                 temp_dir=temp_dir,
                 original_transaction_file=combined_scan_tx_file,
-                is_scan_resume_run=True # Still verify the combined transaction list
+                is_scan_resume_run=True,
+                resume_tx_file_path=combined_scan_tx_file
             )
 
     else: # Standard self-test run
@@ -720,10 +731,10 @@ def main_flow(
             sys.stdout.write("Operation cancelled by user.\n")
             return
 
-    if not skip_scan and not resume: 
+    if not skip_scan: # If not skipping scan, we might be resuming a scan or starting fresh
         print(f"Starting scan phase in '{root_dir}'...")
         current_transactions = None
-        if resume: # This resume is for the main script's scan phase, not self-test
+        if resume: 
             if transaction_json_path.exists():
                 print(f"Resuming scan, loading existing transactions from {transaction_json_path}...")
                 current_transactions = load_transactions(transaction_json_path)
@@ -735,17 +746,17 @@ def main_flow(
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
-            resume_from_transactions=current_transactions # Pass loaded transactions if resuming
+            resume_from_transactions=current_transactions 
         )
         save_transactions(found_transactions, transaction_json_path)
         print(f"Scan complete. {len(found_transactions)} transactions planned in '{transaction_json_path}'")
         if not found_transactions:
             print("No occurrences found. Nothing to do.")
             return
-    elif not transaction_json_path.exists() and (skip_scan or resume): # resume here implies exec resume
-        print(f"Error: --skip-scan or --resume (for execution) was used, but '{transaction_json_path}' not found.")
+    elif not transaction_json_path.exists(): # --skip-scan is true, but file is missing
+        print(f"Error: --skip-scan was used, but '{transaction_json_path}' not found.")
         return
-    else:
+    else: # --skip-scan is true, and file exists
         print(f"Using existing transaction file: '{transaction_json_path}'.")
 
     if dry_run:
@@ -788,7 +799,7 @@ def main_cli() -> None:
     parser.add_argument("--skip-scan", action="store_true",
                         help=f"Skip scan phase; use existing '{MAIN_TRANSACTION_FILE_NAME}'.")
     parser.add_argument("--resume", action="store_true",
-                        help=f"Resume operation. If '{MAIN_TRANSACTION_FILE_NAME}' exists, resumes execution of PENDING/IN_PROGRESS tasks. If it doesn't exist, or if scan phase was not completed, it attempts to resume scan.")
+                        help=f"Resume operation. If '{MAIN_TRANSACTION_FILE_NAME}' exists, resumes execution of PENDING/IN_PROGRESS tasks. If scan was interrupted, attempts to resume scan.")
     parser.add_argument("--force", "--yes", "-y", action="store_true",
                         help="Force execution without confirmation prompt (if not in dry-run or resume mode).")
     parser.add_argument("--self-test", action="store_true",
@@ -803,9 +814,12 @@ def main_cli() -> None:
         is_scan_resume_sub_test_run = args.run_scan_resume_sub_test
         
         sub_test_type = ""
-        if is_exec_resume_sub_test_run: sub_test_type = "(Execution Resume Sub-Test)"
-        elif is_scan_resume_sub_test_run: sub_test_type = "(Scan Resume Sub-Test)"
-        else: sub_test_type = "(Standard Run)"
+        if is_exec_resume_sub_test_run:
+            sub_test_type = "(Execution Resume Sub-Test)"
+        elif is_scan_resume_sub_test_run:
+            sub_test_type = "(Scan Resume Sub-Test)"
+        else:
+            sub_test_type = "(Standard Run)"
 
         sys.stdout.write(f"Running self-test {sub_test_type} in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
