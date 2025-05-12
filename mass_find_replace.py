@@ -87,9 +87,15 @@ def _create_self_test_environment(base_dir: Path) -> None:
 
     # Setup for new tests (placeholders, actual file creation might be more complex)
     # Test for directory tree depth=10
-    deep_path = base_dir / "depth1_flojoy" / "depth2" / "depth3_flojoy" / "depth4" / "depth5" / "depth6_flojoy" / "depth7" / "depth8" / "depth9_flojoy" / "depth10_file_flojoy.txt"
-    deep_path.parent.mkdir(parents=True, exist_ok=True)
-    deep_path.write_text("flojoy deep content")
+    deep_path_parts = ["depth1_flojoy", "depth2", "depth3_flojoy", "depth4", "depth5", "depth6_flojoy", "depth7", "depth8", "depth9_flojoy", "depth10_file_flojoy.txt"]
+    current_path = base_dir
+    for part_idx, part in enumerate(deep_path_parts):
+        current_path = current_path / part
+        if part_idx < len(deep_path_parts) -1: # It's a directory
+            current_path.mkdir(parents=True, exist_ok=True)
+        else: # It's the file
+            current_path.write_text("flojoy deep content")
+
 
     # Test for GB18030 (simplified: create a file, actual encoding needs care)
     try:
@@ -99,30 +105,35 @@ def _create_self_test_environment(base_dir: Path) -> None:
 
 
     # Test for large file (simplified: create a moderately sized file)
-    # A true 10MB file might slow down tests; this is a placeholder concept.
-    # Actual large file testing might need specific strategies if memory becomes an issue.
-    large_file_content = ("flojoy line " + str(i) + "\n" for i in range(5000)) # Approx 100KB, not 10MB
-    (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content))
+    large_file_content_list = []
+    for i in range(5000): # Approx 100KB, not 10MB. True large file testing is complex for unit tests.
+        if i % 100 == 0: # Sprinkle some occurrences
+            large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
+        else:
+            large_file_content_list.append("Normal line " + str(i) + "\n")
+    (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list))
+
 
     # Test for resume execution (partially completed transaction file)
-    resume_tx_file = base_dir / "resume_transactions.json"
+    # This file will be used by a separate execution run if resume test is activated
+    resume_tx_file = base_dir / "for_resume_test_transactions.json" 
+    (base_dir / "completed_flojoy_for_resume.txt").write_text("already done") 
+    (base_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy")
+    (base_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy")
+    
     resume_transactions_data = [
-        {"id": "uuid_completed", "TYPE": "FILE_NAME", "PATH": "completed_flojoy.txt", "ORIGINAL_NAME": "completed_flojoy.txt", "STATUS": "COMPLETED"},
-        {"id": "uuid_pending", "TYPE": "FILE_NAME", "PATH": "pending_flojoy.txt", "ORIGINAL_NAME": "pending_flojoy.txt", "STATUS": "PENDING"},
-        {"id": "uuid_in_progress", "TYPE": "FILE_NAME", "PATH": "inprogress_flojoy.txt", "ORIGINAL_NAME": "inprogress_flojoy.txt", "STATUS": "IN_PROGRESS"}
+        {"id": "uuid_completed_resume", "TYPE": "FILE_NAME", "PATH": "completed_flojoy_for_resume.txt", "ORIGINAL_NAME": "completed_flojoy_for_resume.txt", "STATUS": "COMPLETED"},
+        {"id": "uuid_pending_resume", "TYPE": "FILE_NAME", "PATH": "pending_flojoy_for_resume.txt", "ORIGINAL_NAME": "pending_flojoy_for_resume.txt", "STATUS": "PENDING"},
+        {"id": "uuid_inprogress_resume", "TYPE": "FILE_NAME", "PATH": "inprogress_flojoy_for_resume.txt", "ORIGINAL_NAME": "inprogress_flojoy_for_resume.txt", "STATUS": "IN_PROGRESS"}
     ]
-    (base_dir / "completed_flojoy.txt").write_text("already done") # Will be atlasvibe_completed.txt
-    (base_dir / "pending_flojoy.txt").write_text("pending content")
-    (base_dir / "inprogress_flojoy.txt").write_text("in progress content")
     with open(resume_tx_file, 'w') as f:
         json.dump(resume_transactions_data, f)
 
 
 def _verify_self_test_results_task(
     temp_dir: Path, 
-    original_transaction_file: Path,
-    is_resume_test: bool = False, # Flag for specific resume test assertions
-    resume_tx_file_path: Optional[Path] = None # Path to the modified tx file for resume test
+    original_transaction_file: Path, # This is self_test_transactions.json for the main run
+    is_resume_run: bool = False # Flag to indicate if this verification is for a resume test run
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -147,7 +158,6 @@ def _verify_self_test_results_task(
             "details": details_on_fail if not condition else ""
         })
 
-    # --- Existing Test Verifications (Descriptions Updated) ---
     exp_paths_after_rename = {
         "atlasvibe_root": temp_dir / "atlasvibe_root",
         "sub_atlasvibe_folder": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder",
@@ -163,57 +173,61 @@ def _verify_self_test_results_task(
         "inner_flojoy_file.txt_in_excluded_dir": temp_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt",
         "binary_atlasvibe_file.bin": temp_dir / "binary_atlasvibe_file.bin",
         "binary_fLoJoY_name.bin": temp_dir / "binary_fLoJoY_name.bin",
-        # For new tests
         "depth10_file_atlasvibe.txt": temp_dir / "depth1_atlasvibe" / "depth2" / "depth3_atlasvibe" / "depth4" / "depth5" / "depth6_atlasvibe" / "depth7" / "depth8" / "depth9_atlasvibe" / "depth10_file_atlasvibe.txt",
         "gb18030_atlasvibe_file.txt": temp_dir / "gb18030_atlasvibe_file.txt",
         "large_atlasvibe_file.txt": temp_dir / "large_atlasvibe_file.txt",
+        # For resume test
+        "completed_atlasvibe_for_resume.txt": temp_dir / "completed_atlasvibe_for_resume.txt",
+        "pending_atlasvibe_for_resume.txt": temp_dir / "pending_atlasvibe_for_resume.txt",
+        "inprogress_atlasvibe_for_resume.txt": temp_dir / "inprogress_atlasvibe_for_resume.txt",
     }
 
-    record_test("Test to assess renaming of top-level directories containing the target string.", 
-                exp_paths_after_rename["atlasvibe_root"].exists(), 
-                f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess renaming of nested directories containing the target string.", 
-                exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
-                f"Renamed nested dir '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess renaming of deeply nested directories with case variations of the target string.", 
-                exp_paths_after_rename["another_ATLASVIBE_dir"].exists(), 
-                f"Renamed deep dir '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess renaming of files within transformed directory paths.", 
-                exp_paths_after_rename["deep_atlasvibe_file.txt"].exists(), 
-                f"Renamed file in transformed path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess file renaming at various levels of the directory tree.", 
-                exp_paths_after_rename["another_atlasvibe_file.py"].exists(), 
-                f"Renamed file '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess file renaming based solely on a target string match in the filename.", 
-                exp_paths_after_rename["only_name_atlasvibe.md"].exists(), 
-                f"Renamed file '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess file renaming when the target string in the filename has mixed casing.", 
-                exp_paths_after_rename["file_with_atlasVibe_lines.txt"].exists(), 
-                f"Renamed file '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess file renaming when the filename is mapped but content has unmapped variants.", 
-                exp_paths_after_rename["unmapped_variant_atlasvibe_content.txt"].exists(), 
-                f"Renamed file '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess that files without the target string in name or content remain unchanged.", 
-                exp_paths_after_rename["no_target_here.log"].exists(), 
-                f"Unchanged file '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess that explicitly excluded files are not renamed and persist.", 
-                exp_paths_after_rename["exclude_this_flojoy_file.txt"].exists(), 
-                f"Excluded file '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess that explicitly excluded directories are not renamed and persist.", 
-                exp_paths_after_rename["excluded_flojoy_dir"].exists(), 
-                f"Excluded dir '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess that files within excluded directories are not renamed and persist.", 
-                exp_paths_after_rename["inner_flojoy_file.txt_in_excluded_dir"].exists(), 
-                f"File in excluded dir '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess renaming of binary files when their names contain a mapped target string.", 
-                exp_paths_after_rename["binary_atlasvibe_file.bin"].exists(), 
-                f"Renamed binary file '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess that binary files with unmapped target string variants in their names are NOT renamed.", 
-                exp_paths_after_rename["binary_fLoJoY_name.bin"].exists(), 
-                f"Unrenamed binary file '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING.")
-    record_test("Test to assess removal of original directories after they are renamed.", 
-                not (temp_dir / "flojoy_root").exists(),
-                "Old 'flojoy_root' base directory STILL EXISTS.")
+    if not is_resume_run:
+        record_test("Test to assess renaming of top-level directories containing the target string.", 
+                    exp_paths_after_rename["atlasvibe_root"].exists(), 
+                    f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess renaming of nested directories containing the target string.", 
+                    exp_paths_after_rename["sub_atlasvibe_folder"].exists(), 
+                    f"Renamed nested dir '{exp_paths_after_rename['sub_atlasvibe_folder'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess renaming of deeply nested directories with case variations of the target string.", 
+                    exp_paths_after_rename["another_ATLASVIBE_dir"].exists(), 
+                    f"Renamed deep dir '{exp_paths_after_rename['another_ATLASVIBE_dir'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess renaming of files within transformed directory paths.", 
+                    exp_paths_after_rename["deep_atlasvibe_file.txt"].exists(), 
+                    f"Renamed file in transformed path '{exp_paths_after_rename['deep_atlasvibe_file.txt'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess file renaming at various levels of the directory tree.", 
+                    exp_paths_after_rename["another_atlasvibe_file.py"].exists(), 
+                    f"Renamed file '{exp_paths_after_rename['another_atlasvibe_file.py'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess file renaming based solely on a target string match in the filename.", 
+                    exp_paths_after_rename["only_name_atlasvibe.md"].exists(), 
+                    f"Renamed file '{exp_paths_after_rename['only_name_atlasvibe.md'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess file renaming when the target string in the filename has mixed casing.", 
+                    exp_paths_after_rename["file_with_atlasVibe_lines.txt"].exists(), 
+                    f"Renamed file '{exp_paths_after_rename['file_with_atlasVibe_lines.txt'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess file renaming when the filename is mapped but content has unmapped variants.", 
+                    exp_paths_after_rename["unmapped_variant_atlasvibe_content.txt"].exists(), 
+                    f"Renamed file '{exp_paths_after_rename['unmapped_variant_atlasvibe_content.txt'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess that files without the target string in name or content remain unchanged.", 
+                    exp_paths_after_rename["no_target_here.log"].exists(), 
+                    f"Unchanged file '{exp_paths_after_rename['no_target_here.log'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess that explicitly excluded files are not renamed and persist.", 
+                    exp_paths_after_rename["exclude_this_flojoy_file.txt"].exists(), 
+                    f"Excluded file '{exp_paths_after_rename['exclude_this_flojoy_file.txt'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess that explicitly excluded directories are not renamed and persist.", 
+                    exp_paths_after_rename["excluded_flojoy_dir"].exists(), 
+                    f"Excluded dir '{exp_paths_after_rename['excluded_flojoy_dir'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess that files within excluded directories are not renamed and persist.", 
+                    exp_paths_after_rename["inner_flojoy_file.txt_in_excluded_dir"].exists(), 
+                    f"File in excluded dir '{exp_paths_after_rename['inner_flojoy_file.txt_in_excluded_dir'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess renaming of binary files when their names contain a mapped target string.", 
+                    exp_paths_after_rename["binary_atlasvibe_file.bin"].exists(), 
+                    f"Renamed binary file '{exp_paths_after_rename['binary_atlasvibe_file.bin'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess that binary files with unmapped target string variants in their names are NOT renamed.", 
+                    exp_paths_after_rename["binary_fLoJoY_name.bin"].exists(), 
+                    f"Unrenamed binary file '{exp_paths_after_rename['binary_fLoJoY_name.bin'].relative_to(temp_dir)}' MISSING.")
+        record_test("Test to assess removal of original directories after they are renamed.", 
+                    not (temp_dir / "flojoy_root").exists(),
+                    "Old 'flojoy_root' base directory STILL EXISTS.")
 
     def check_file_content(file_path: Optional[Path], expected_content: Union[str, bytes], test_description_base: str, is_binary: bool = False):
         if not file_path or not file_path.exists():
@@ -230,113 +244,182 @@ def _verify_self_test_results_task(
             details = f"Expected (repr):\n{expected_content!r}\nGot (repr):\n{actual_content!r}" if not is_binary else f"Expected (bytes): {expected_content!r}\nGot (bytes): {actual_content!r}"
         record_test(test_description_base, condition, details)
 
-    check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
-                       "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
-                       "Test to assess content replacement of all mapped target string variants in a deeply nested text file.")
-    check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
-                       "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
-                       "Test to assess content replacement of mixed-case mapped target string variants.")
-    check_file_content(exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt"),
-                       "This has fLoJoY content, and also atlasvibe.",
-                       "Test to assess preservation of unmapped target string variants alongside replacement of mapped ones in content.")
-    check_file_content(exp_paths_after_rename.get("only_name_atlasvibe.md"),
-                       "Content without target string.",
-                       "Test to assess that file content remains unchanged if only the filename matched the target string.")
-    check_file_content(exp_paths_after_rename.get("exclude_this_flojoy_file.txt"),
-                       "flojoy content in explicitly excluded file",
-                       "Test to assess that content of explicitly excluded files remains untouched.")
-    check_file_content(exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir"),
-                       "flojoy inside excluded dir",
-                       "Test to assess that content of files within excluded directories remains untouched.")
-    check_file_content(exp_paths_after_rename.get("binary_atlasvibe_file.bin"),
-                       b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04",
-                       "Test to assess that binary file content remains untouched even if filename is renamed.", is_binary=True)
-    check_file_content(exp_paths_after_rename.get("binary_fLoJoY_name.bin"),
-                       b"unmapped_variant_binary_content" + b"\x00\xff",
-                       "Test to assess that binary file content remains untouched if filename is not mapped for rename.", is_binary=True)
+    if not is_resume_run:
+        check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
+                           "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
+                           "Test to assess content replacement of all mapped target string variants in a deeply nested text file.")
+        check_file_content(exp_paths_after_rename.get("file_with_atlasVibe_lines.txt"),
+                           "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.",
+                           "Test to assess content replacement of mixed-case mapped target string variants.")
+        check_file_content(exp_paths_after_rename.get("unmapped_variant_atlasvibe_content.txt"),
+                           "This has fLoJoY content, and also atlasvibe.",
+                           "Test to assess preservation of unmapped target string variants alongside replacement of mapped ones in content.")
+        check_file_content(exp_paths_after_rename.get("only_name_atlasvibe.md"),
+                           "Content without target string.",
+                           "Test to assess that file content remains unchanged if only the filename matched the target string.")
+        check_file_content(exp_paths_after_rename.get("exclude_this_flojoy_file.txt"),
+                           "flojoy content in explicitly excluded file",
+                           "Test to assess that content of explicitly excluded files remains untouched.")
+        check_file_content(exp_paths_after_rename.get("inner_flojoy_file.txt_in_excluded_dir"),
+                           "flojoy inside excluded dir",
+                           "Test to assess that content of files within excluded directories remains untouched.")
+        check_file_content(exp_paths_after_rename.get("binary_atlasvibe_file.bin"),
+                           b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04",
+                           "Test to assess that binary file content remains untouched even if filename is renamed.", is_binary=True)
+        check_file_content(exp_paths_after_rename.get("binary_fLoJoY_name.bin"),
+                           b"unmapped_variant_binary_content" + b"\x00\xff",
+                           "Test to assess that binary file content remains untouched if filename is not mapped for rename.", is_binary=True)
 
-    binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
-    if binary_file_renamed and binary_file_renamed.exists():
-        record_test(f"Test to assess that a renamed binary file ('{binary_file_renamed.name}') is still correctly identified as binary.",
-                    is_likely_binary_file(binary_file_renamed),
-                    f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
+        binary_file_renamed = exp_paths_after_rename.get("binary_atlasvibe_file.bin")
+        if binary_file_renamed and binary_file_renamed.exists():
+            record_test(f"Test to assess that a renamed binary file ('{binary_file_renamed.name}') is still correctly identified as binary.",
+                        is_likely_binary_file(binary_file_renamed),
+                        f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
     # --- New/Placeholder Tests based on user's list ---
-    record_test("Test to assess the ability to replace folder and file names in a directory tree of depth=10.",
-                exp_paths_after_rename["depth10_file_atlasvibe.txt"].exists(),
-                f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt']}' not found or not renamed correctly. Requires setup verification.")
-    
-    gb_file_path = exp_paths_after_rename.get("gb18030_atlasvibe_file.txt")
-    gb_expected_content = "你好 atlasvibe 世界"
-    if not (gb_file_path and gb_file_path.exists()): # type: ignore
-        record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"GB18030 test file missing: {gb_file_path}. Setup issue.")
-    else:
-        try:
-            gb_actual_content = gb_file_path.read_text(encoding="gb18030") # type: ignore
-            record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", 
-                        gb_actual_content == gb_expected_content,
-                        f"GB18030 content mismatch. Expected (repr): {gb_expected_content!r}, Got (repr): {gb_actual_content!r}")
-        except Exception as e:
-            record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
+    if not is_resume_run:
+        record_test("Test to assess the ability to replace folder and file names in a directory tree of depth=10.",
+                    exp_paths_after_rename["depth10_file_atlasvibe.txt"].exists(),
+                    f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt']}' not found or not renamed correctly. Requires setup verification.")
+        
+        gb_file_path = exp_paths_after_rename.get("gb18030_atlasvibe_file.txt")
+        gb_expected_content = "你好 atlasvibe 世界"
+        if not (gb_file_path and gb_file_path.exists()): # type: ignore
+            record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"GB18030 test file missing: {gb_file_path}. Setup issue.")
+        else:
+            try:
+                gb_actual_content = gb_file_path.read_text(encoding="gb18030") # type: ignore
+                record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", 
+                            gb_actual_content == gb_expected_content,
+                            f"GB18030 content mismatch. Expected (repr): {gb_expected_content!r}, Got (repr): {gb_actual_content!r}")
+            except Exception as e:
+                record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
 
     record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Implicitly covered by existing content replacement tests.")
     record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests.")
     record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by multi-line file content tests.")
-    record_test("Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences.", 
-                False, "Test not yet implemented. Requires parsing transactions.json to verify count and details.")
-    record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences.",
-                False, "Test not yet implemented. Requires parsing transactions.json.")
-    record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences.",
-                False, "Test not yet implemented. Requires parsing transactions.json.")
+
+    # Transaction generation tests - these need to load the *initial* transaction file
+    # For a resume run, these specific checks might not be relevant if we're only verifying the resumed execution.
+    if not is_resume_run:
+        initial_transactions = load_transactions(original_transaction_file) # Load self_test_transactions.json
+        if initial_transactions is not None:
+            # Count FILE_CONTENT_LINE transactions for deep_flojoy_file.txt (expected: 3 lines with "flojoy" variants)
+            # Note: The original file has 4 lines, 3 of which contain 'flojoy' variants.
+            # Line 1: flojoy content. -> atlasvibe content.
+            # Line 2: More Flojoy here. -> More Atlasvibe here.
+            # Line 4: FLOJOY project. -> ATLASVIBE project.
+            expected_line_tx_count = 3 
+            actual_line_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "deep_flojoy_file.txt" in tx["PATH"])
+            record_test("Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences.",
+                        actual_line_tx_count == expected_line_tx_count,
+                        f"Expected {expected_line_tx_count} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count}.")
+
+            # Count FILE_NAME transactions (example: deep_flojoy_file.txt, another_flojoy_file.py, etc.)
+            # This is a rough count, specific file names could be checked.
+            # Based on setup: deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, unmapped_variant_flojoy_content, binary_flojoy_file, binary_fLoJoY_name (unmapped), depth10_file_flojoy, gb18030_flojoy_file, large_flojoy_file
+            # Expected mapped file name changes: 9 (binary_fLoJoY_name is unmapped)
+            expected_file_name_tx_count = 9 
+            actual_file_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value and tx["ORIGINAL_NAME"] != replace_flojoy_occurrences(tx["ORIGINAL_NAME"]))
+            record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences.",
+                        actual_file_name_tx_count >= expected_file_name_tx_count, # Greater or equal to account for depth10 structure
+                        f"Expected at least {expected_file_name_tx_count} file name transactions, found {actual_file_name_tx_count}.")
+
+            # Count FOLDER_NAME transactions (flojoy_root, sub_flojoy_folder, another_FLOJOY_dir, depth1_flojoy etc.)
+            # Expected: flojoy_root, sub_flojoy_folder, another_FLOJOY_dir, depth1_flojoy, depth3_flojoy, depth6_flojoy, depth9_flojoy = 7
+            expected_folder_name_tx_count = 7
+            actual_folder_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FOLDER_NAME.value)
+            record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences.",
+                        actual_folder_name_tx_count == expected_folder_name_tx_count,
+                        f"Expected {expected_folder_name_tx_count} folder name transactions, found {actual_folder_name_tx_count}.")
+        else:
+            record_test("Test to assess transaction generation (prerequisite: load transaction file).", False, "Could not load initial transaction file for generation checks.")
+
+
     record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Implicitly covered by verifying final file content.")
     record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Implicitly covered by verifying final file names.")
     record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Implicitly covered by verifying final folder names.")
-    record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way.", 
-                (original_transaction_file.with_suffix(original_transaction_file.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists() if not is_resume_test else True, 
-                "Backup file creation for atomicity is checked. Real-time/secure aspects are harder to self-test here.")
+    
+    # For the main run, original_transaction_file is self_test_transactions.json
+    # For a resume run, it would be the for_resume_test_transactions.json
+    tx_file_for_backup_check = resume_tx_file_path if is_resume_run else original_transaction_file
+    record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way (via backup).", 
+                (tx_file_for_backup_check.with_suffix(tx_file_for_backup_check.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists(), 
+                f"Backup file for '{tx_file_for_backup_check.name}' not found. Atomicity check via backup failed.")
+
     record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Test not yet implemented. Requires significant new logic for dual scan and comparison.")
     record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Test not yet implemented. Current resume logic only applies to the execution phase, not scan phase.")
 
-    if is_resume_test and resume_tx_file_path:
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
-                    (temp_dir / "pending_atlasvibe.txt").exists(), 
-                    "Resumed PENDING task did not complete as expected. File 'pending_atlasvibe.txt' not found.")
-        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
-                    (temp_dir / "inprogress_atlasvibe.txt").exists(), 
-                    "Resumed IN_PROGRESS task did not complete as expected. File 'inprogress_atlasvibe.txt' not found.")
+    if is_resume_run:
+        record_test("Test to assess resuming EXECUTION (PENDING tasks processed).",
+                    exp_paths_after_rename["pending_atlasvibe_for_resume.txt"].exists(), 
+                    f"File '{exp_paths_after_rename['pending_atlasvibe_for_resume.txt'].name}' from resumed PENDING task not found.")
+        check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_resume.txt"),
+                           "pending content atlasvibe",
+                           "Test to assess content of file from resumed PENDING task.")
+        record_test("Test to assess resuming EXECUTION (IN_PROGRESS tasks processed).",
+                    exp_paths_after_rename["inprogress_atlasvibe_for_resume.txt"].exists(), 
+                    f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_resume.txt'].name}' from resumed IN_PROGRESS task not found.")
+        check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_resume.txt"),
+                           "in progress content atlasvibe",
+                           "Test to assess content of file from resumed IN_PROGRESS task.")
+        record_test("Test to assess resuming EXECUTION (COMPLETED tasks untouched).",
+                    (temp_dir / "completed_flojoy_for_resume.txt").exists() and not exp_paths_after_rename["completed_atlasvibe_for_resume.txt"].exists() , # Original should exist, renamed should not if truly skipped
+                    "File from COMPLETED task in resume was unexpectedly reprocessed or original missing.")
+
     else:
-         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run. Requires specific test invocation.")
+         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run. Run with --resume-test flag.")
 
     record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Error retry logic is not a current feature.")
     
-    large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
-    if not (large_file_path and large_file_path.exists()): # type: ignore
-        record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Large test file missing: {large_file_path}. Setup issue.")
-    else:
-        try:
-            with open(large_file_path, "r") as f: # type: ignore
-                lines = [f.readline().strip() for _ in range(5)] 
-            expected_lines = ["atlasvibe line " + str(i) for i in range(5)]
-            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", 
-                        lines == expected_lines,
-                        f"Large file content mismatch. Expected head: {expected_lines!r}, Got: {lines!r}")
-        except Exception as e:
-            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Error reading large file: {e}")
+    if not is_resume_run:
+        large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
+        if not (large_file_path and large_file_path.exists()): # type: ignore
+            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Large test file missing: {large_file_path}. Setup issue.")
+        else:
+            try:
+                with open(large_file_path, "r") as f: # type: ignore
+                    lines = [f.readline().strip() for _ in range(5)] 
+                expected_lines = ["atlasvibe line " + str(i) if i % 100 == 0 else "Normal line " + str(i) for i in range(5)]
+                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", 
+                            lines == expected_lines,
+                            f"Large file content mismatch. Expected head: {expected_lines!r}, Got: {lines!r}")
+            except Exception as e:
+                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Error reading large file: {e}")
 
-    transactions_for_status_check = load_transactions(original_transaction_file)
+    # --- Final Transaction Status Check ---
+    # Use the transaction file relevant to the current run (main or resume)
+    current_run_tx_file = resume_tx_file_path if is_resume_run else original_transaction_file
+    transactions_for_status_check = load_transactions(current_run_tx_file) 
+
     if transactions_for_status_check is not None:
-        all_non_excluded_processed_correctly = True
+        all_relevant_tx_processed_correctly = True
         for tx_idx, tx in enumerate(transactions_for_status_check): 
-             if not ("excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"): 
+            # For resume test, we only care about the PENDING and IN_PROGRESS ones becoming COMPLETED
+            if is_resume_run and tx["id"] == "uuid_completed_resume": # This one should remain COMPLETED
+                if tx["STATUS"] != TransactionStatus.COMPLETED.value:
+                    all_relevant_tx_processed_correctly = False
+                    record_test(f"Transaction Lifecycle (Resume - Tx ID: {tx['id']}): Verify COMPLETED transaction remains COMPLETED.", False,
+                                f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED.")
+                    break
+                else:
+                    continue # Skip further checks for this already completed one in resume context
+
+            # For normal run, or for non-COMPLETED items in resume run:
+            # Check if items that are NOT part of explicit exclusion patterns were processed.
+            is_excluded_item = "excluded_flojoy_dir/" in tx["PATH"] or tx["PATH"] == "exclude_this_flojoy_file.txt"
+            
+            if not is_excluded_item:
                 if tx["STATUS"] not in [TransactionStatus.COMPLETED.value, TransactionStatus.SKIPPED.value]:
-                    all_non_excluded_processed_correctly = False
+                    all_relevant_tx_processed_correctly = False
                     record_test(f"Transaction Lifecycle (Tx ID: {tx['id']}): Verify non-excluded transaction reaches final state (COMPLETED/SKIPPED).", False,
                                 f"Path: {tx['PATH']}, Status is {tx['STATUS']}, expected COMPLETED or SKIPPED.")
                     break 
-        if all_non_excluded_processed_correctly: 
-             record_test("Transaction Lifecycle: Verify all non-excluded transactions reach a final state (COMPLETED or SKIPPED).", True)
+        if all_relevant_tx_processed_correctly: 
+             record_test("Transaction Lifecycle: Verify all relevant transactions reach a final state (COMPLETED or SKIPPED).", True)
     else:
-        record_test(f"Transaction File Integrity: Verify main transaction file '{original_transaction_file.name}' can be loaded.", False, "Could not load main transaction file for final status verification.")
+        record_test(f"Transaction File Integrity: Verify transaction file '{current_run_tx_file.name}' can be loaded.", False, f"Could not load transaction file '{current_run_tx_file.name}' for final status verification.")
+
 
     # --- Table Formatting ---
     term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
@@ -357,7 +440,7 @@ def _verify_self_test_results_task(
 
     header_id = f"{'#':^{id_col_content_width}}"
     header_desc = f"{'Test Description':^{desc_col_content_width}}"
-    header_outcome = f"{'Outcome':<{outcome_col_content_width}}" # Left-align Outcome header
+    header_outcome = f"{'Outcome':<{outcome_col_content_width}}" 
 
     sys.stdout.write("\n")
     sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
@@ -422,67 +505,72 @@ def _verify_self_test_results_task(
 @flow(name="Self-Test Flow", log_prints=True)
 def self_test_flow(
     temp_dir_str: str, 
-    dry_run_for_test: bool
+    dry_run_for_test: bool,
+    run_resume_sub_test: bool = False # New flag to trigger resume sub-test
 ) -> None:
     temp_dir = Path(temp_dir_str) 
-    _create_self_test_environment(temp_dir)
+    _create_self_test_environment(temp_dir) # Creates all files, including for_resume_test_transactions.json
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt"]
     test_extensions = [".txt", ".py", ".md", ".bin", ".log"] 
 
-    transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
-
-    print("Self-Test: Scanning directory...")
-    transactions = scan_directory_for_occurrences(
-        root_dir=temp_dir,
-        excluded_dirs=test_excluded_dirs,
-        excluded_files=test_excluded_files,
-        file_extensions=test_extensions
-    )
-    save_transactions(transactions, transaction_file)
-    print(f"Self-Test: Scan complete. {len(transactions)} transactions planned in {transaction_file}")
-
-    if not dry_run_for_test:
-        print("Self-Test: Executing transactions...")
-        execution_stats = execute_all_transactions(
-            transactions_file_path=transaction_file,
-            root_dir=temp_dir, 
-            dry_run=False, 
-            resume=False   
-        )
-        print(f"Self-Test: Execution complete. Stats: {execution_stats}")
+    if run_resume_sub_test:
+        print("Self-Test (Resume Sub-Test): Executing transactions with --resume...")
+        resume_tx_file = temp_dir / "for_resume_test_transactions.json"
+        # Ensure files that should be processed by resume are in their 'before' state
+        # (e.g., if they were renamed by a previous full run, revert them for the resume test)
+        # This part is tricky if the main self-test already modified these.
+        # For a true isolated resume test, it might need its own sandbox or careful state reset.
+        # For now, we assume _create_self_test_environment sets them up as 'flojoy' named.
         
+        # Simulate that 'completed_flojoy_for_resume.txt' was already processed and renamed
+        if (temp_dir / "completed_flojoy_for_resume.txt").exists():
+            (temp_dir / "completed_flojoy_for_resume.txt").rename(temp_dir / "completed_atlasvibe_for_resume.txt")
+
+
+        execution_stats = execute_all_transactions(
+            transactions_file_path=resume_tx_file,
+            root_dir=temp_dir, 
+            dry_run=False, # Must be false to actually test resume execution
+            resume=True   
+        )
+        print(f"Self-Test (Resume Sub-Test): Execution complete. Stats: {execution_stats}")
         _verify_self_test_results_task(
             temp_dir=temp_dir, 
-            original_transaction_file=transaction_file
+            original_transaction_file=resume_tx_file, # Verify against the resume tx file
+            is_resume_run=True
         )
-        
-        # Example of how a resume test might be structured (run separately or conditionally)
-        # print("Self-Test: Simulating and verifying RESUME EXECUTION capability...")
-        # resume_tx_file_for_test = temp_dir / "resume_transactions.json" # Created by _create_self_test_environment
-        # if resume_tx_file_for_test.exists():
-        #     # Ensure target files for resume test are in their 'before resume' state
-        #     (temp_dir / "pending_atlasvibe.txt").unlink(missing_ok=True)
-        #     (temp_dir / "inprogress_atlasvibe.txt").unlink(missing_ok=True)
-            
-        #     execute_all_transactions(
-        #         transactions_file_path=resume_tx_file_for_test, # Use the specially prepared tx file
-        #         root_dir=temp_dir,
-        #         dry_run=False,
-        #         resume=True # CRITICAL: Test the resume flag
-        #     )
-        #     _verify_self_test_results_task(
-        #         temp_dir=temp_dir,
-        #         original_transaction_file=resume_tx_file_for_test, # Verify against this file
-        #         is_resume_test=True,
-        #         resume_tx_file_path=resume_tx_file_for_test
-        #     )
-        # else:
-        #     print(YELLOW + "Resume test transaction file not found, skipping resume execution test." + RESET)
-
     else:
-        print("Self-Test: Dry run selected. Skipping execution and verification of changes.")
+        # Standard self-test run
+        transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
+        print("Self-Test (Standard Run): Scanning directory...")
+        transactions = scan_directory_for_occurrences(
+            root_dir=temp_dir,
+            excluded_dirs=test_excluded_dirs,
+            excluded_files=test_excluded_files,
+            file_extensions=test_extensions
+        )
+        save_transactions(transactions, transaction_file)
+        print(f"Self-Test (Standard Run): Scan complete. {len(transactions)} transactions planned in {transaction_file}")
+
+        if not dry_run_for_test:
+            print("Self-Test (Standard Run): Executing transactions...")
+            execution_stats = execute_all_transactions(
+                transactions_file_path=transaction_file,
+                root_dir=temp_dir, 
+                dry_run=False, 
+                resume=False   
+            )
+            print(f"Self-Test (Standard Run): Execution complete. Stats: {execution_stats}")
+            
+            _verify_self_test_results_task(
+                temp_dir=temp_dir, 
+                original_transaction_file=transaction_file,
+                is_resume_run=False # Explicitly false for standard run
+            )
+        else:
+            print("Self-Test (Standard Run): Dry run selected. Skipping execution and verification of changes.")
 
 
 # --- Main CLI Orchestration ---
@@ -582,11 +670,14 @@ def main_cli() -> None:
                         help="Force execution without confirmation prompt (if not in dry-run or resume mode).")
     parser.add_argument("--self-test", action="store_true",
                         help=f"Run a predefined self-test in a sandboxed '{SELF_TEST_SANDBOX_DIR}' directory.")
+    parser.add_argument("--resume-test", action="store_true", help=argparse.SUPPRESS) # Hidden flag for internal resume test
 
     args = parser.parse_args()
     
-    if args.self_test:
-        sys.stdout.write(f"Running self-test in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
+    if args.self_test or args.resume_test:
+        is_resume_sub_test = args.resume_test
+
+        sys.stdout.write(f"Running self-test {'(Resume Sub-Test)' if is_resume_sub_test else '(Standard Run)'} in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         
         if self_test_sandbox.exists():
@@ -608,12 +699,13 @@ def main_cli() -> None:
         try:
             self_test_flow(
                 temp_dir_str=str(self_test_sandbox), 
-                dry_run_for_test=args.dry_run
+                dry_run_for_test=args.dry_run, # Dry run applies to the main execution part
+                run_resume_sub_test=is_resume_sub_test
             )
-            if not args.dry_run:
+            if not args.dry_run or is_resume_sub_test: # Verification happens if not dry_run OR if it's a resume test (which runs non-dry)
                  pass
-            else:
-                 sys.stdout.write(YELLOW + "Self-test dry run scan complete." + RESET + "\n")
+            else: # This case is for a dry-run of the standard self-test
+                 sys.stdout.write(YELLOW + "Self-test (Standard Run) dry run scan complete." + RESET + "\n")
         except AssertionError: 
             sys.exit(1) 
         except Exception as e:
