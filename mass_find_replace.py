@@ -146,7 +146,7 @@ def _verify_self_test_results_task(
     temp_dir: Path, 
     original_transaction_file: Path, 
     validation_transaction_file: Optional[Path] = None, 
-    is_resume_run: bool = False, 
+    is_exec_resume_run: bool = False, # Renamed from is_resume_run for clarity
     is_scan_resume_run: bool = False,
     resume_tx_file_path: Optional[Path] = None 
 ) -> bool:
@@ -201,7 +201,7 @@ def _verify_self_test_results_task(
         "scan_resume_new_file_atlasvibe.txt": temp_dir / "scan_resume_new_atlasvibe_folder" / "scan_resume_new_file_atlasvibe.txt",
     }
 
-    if not is_resume_run and not is_scan_resume_run: # Standard path checks
+    if not is_exec_resume_run and not is_scan_resume_run: # Standard path checks
         record_test("Test to assess renaming of top-level directories containing the target string.", 
                     exp_paths_after_rename["atlasvibe_root"].exists(), 
                     f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
@@ -263,7 +263,7 @@ def _verify_self_test_results_task(
             details = f"Expected (repr):\n{expected_content!r}\nGot (repr):\n{actual_content!r}" if not is_binary else f"Expected (bytes): {expected_content!r}\nGot (bytes): {actual_content!r}"
         record_test(test_description_base, condition, details)
 
-    if not is_resume_run and not is_scan_resume_run:
+    if not is_exec_resume_run and not is_scan_resume_run:
         check_file_content(exp_paths_after_rename.get("deep_atlasvibe_file.txt"),
                            "Line 1: atlasvibe content.\nLine 2: More AtlasVibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
                            "Test to assess content replacement of all mapped target string variants in a deeply nested text file.")
@@ -295,7 +295,7 @@ def _verify_self_test_results_task(
                         is_likely_binary_file(binary_file_renamed),
                         f"File '{binary_file_renamed.name}' NOT detected as binary after rename.")
 
-    if not is_resume_run and not is_scan_resume_run:
+    if not is_exec_resume_run and not is_scan_resume_run:
         record_test("Test to assess the ability to replace folder and file names in a directory tree of depth=10.",
                     exp_paths_after_rename["depth10_file_atlasvibe.txt"].exists(),
                     f"Deeply nested file '{exp_paths_after_rename['depth10_file_atlasvibe.txt'].relative_to(temp_dir)}' not found or not renamed correctly.")
@@ -320,63 +320,63 @@ def _verify_self_test_results_task(
     record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests (name & content).")
     record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by 'deep_atlasvibe_file.txt' content checks which has multiple occurrences.")
 
-    if not is_resume_run and not is_scan_resume_run: 
+    if not is_exec_resume_run and not is_scan_resume_run: 
         initial_transactions = load_transactions(original_transaction_file) 
         if initial_transactions is not None:
             expected_line_tx_count_deep_file = 3 
             actual_line_tx_count_deep_file = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "deep_flojoy_file.txt" in tx["PATH"])
-            record_test("Test to assess the ability to create a transaction entry for each line occurrence in a multi-occurrence file.",
+            record_test("Test to assess the ability to create a transaction entry for each line of a file containing the string occurrences.",
                         actual_line_tx_count_deep_file == expected_line_tx_count_deep_file,
                         f"Expected {expected_line_tx_count_deep_file} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count_deep_file}.")
             
             actual_file_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value and tx["ORIGINAL_NAME"] != replace_flojoy_occurrences(tx["ORIGINAL_NAME"]))
-            record_test("Test to assess the ability to create a transaction entry for each file name containing a mapped target string.",
+            record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing a mapped target string.",
                         actual_file_name_tx_count >= 9, 
                         f"Expected at least 9 mapped file name transactions, found {actual_file_name_tx_count}.")
 
             actual_folder_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FOLDER_NAME.value)
-            record_test("Test to assess the ability to create a transaction entry for each folder name containing a mapped target string.",
+            record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing a mapped target string.",
                         actual_folder_name_tx_count == 7,
                         f"Expected 7 folder name transactions, found {actual_folder_name_tx_count}.")
         else:
             record_test("Test to assess transaction generation for line/file/folder occurrences (prerequisite: load transaction file).", False, "Could not load initial transaction file for generation checks.")
 
 
-    record_test("Test to assess the ability to execute a transaction for line content modification.", True, "Implicitly covered by verifying final file content after changes.")
-    record_test("Test to assess the ability to execute a transaction for file name replacement.", True, "Implicitly covered by verifying final file names/paths after changes.")
-    record_test("Test to assess the ability to execute a transaction for folder name replacement.", True, "Implicitly covered by verifying final folder names/paths after changes.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Implicitly covered by verifying final file content after changes.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Implicitly covered by verifying final file names/paths after changes.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Implicitly covered by verifying final folder names/paths after changes.")
     
-    tx_file_for_backup_check = resume_tx_file_path if (is_resume_run or is_scan_resume_run) and resume_tx_file_path else original_transaction_file
-    record_test("Test to assess the atomicity of transaction file updates via backup creation.", 
+    tx_file_for_backup_check = resume_tx_file_path if (is_exec_resume_run or is_scan_resume_run) and resume_tx_file_path else original_transaction_file
+    record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way (via backup).", 
                 (tx_file_for_backup_check.with_suffix(tx_file_for_backup_check.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists(), 
                 f"Backup file for '{tx_file_for_backup_check.name}' not found. Atomicity check via backup failed.")
 
-    if not is_resume_run and not is_scan_resume_run and validation_transaction_file:
+    if not is_exec_resume_run and not is_scan_resume_run and validation_transaction_file:
         transactions1 = load_transactions(original_transaction_file)
         transactions2 = load_transactions(validation_transaction_file)
         if transactions1 is not None and transactions2 is not None:
             comparable_tx1 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions1]])
             comparable_tx2 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions2]])
-            record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation (ignoring UUIDs).", 
+            record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", 
                         comparable_tx1 == comparable_tx2,
                         f"Scan determinism failed. Tx1 count: {len(comparable_tx1)}, Tx2 count: {len(comparable_tx2)}. Differences exist.")
         else:
-            record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation.", False, "Could not load one or both transaction files for comparison.")
-    elif not is_resume_run and not is_scan_resume_run:
-         record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation.", False, "Validation transaction file not provided for comparison.")
+            record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Could not load one or both transaction files for comparison.")
+    elif not is_exec_resume_run and not is_scan_resume_run:
+         record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Validation transaction file not provided for comparison.")
 
 
     if is_scan_resume_run:
-        record_test("Test to assess resuming SCAN phase (initial file processed).",
+        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (initial file processed).",
                     exp_paths_after_rename["scan_resume_initial_atlasvibe.txt"].exists(),
                     f"File '{exp_paths_after_rename['scan_resume_initial_atlasvibe.txt'].name}' from initial part of scan resume not found/renamed.")
         check_file_content(exp_paths_after_rename.get("scan_resume_initial_atlasvibe.txt"),
                            "initial atlasvibe item for scan resume",
                            "Test to assess content of initial file after scan resume.")
-        record_test("Test to assess resuming SCAN phase (newly found folder processed).",
+        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found folder processed).",
                     exp_paths_after_rename["scan_resume_new_atlasvibe_folder"].exists(),
                     f"Folder '{exp_paths_after_rename['scan_resume_new_atlasvibe_folder'].name}' discovered during scan resume not found/renamed.")
-        record_test("Test to assess resuming SCAN phase (newly found file processed).",
+        record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase (newly found file processed).",
                     exp_paths_after_rename["scan_resume_new_file_atlasvibe.txt"].exists(),
                     f"File '{exp_paths_after_rename['scan_resume_new_file_atlasvibe.txt'].name}' discovered during scan resume not found/renamed.")
         check_file_content(exp_paths_after_rename.get("scan_resume_new_file_atlasvibe.txt"),
@@ -401,14 +401,14 @@ def _verify_self_test_results_task(
         else:
             record_test("Test to assess scan resume transaction file integrity.", False, "Could not load combined transaction file for scan resume.")
 
-    elif is_resume_run: # EXECUTION phase resume
-        record_test("Test to assess resuming EXECUTION of PENDING file rename transactions.",
+    elif is_exec_resume_run: 
+        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
                     exp_paths_after_rename["pending_atlasvibe_for_exec_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['pending_atlasvibe_for_exec_resume.txt'].name}' from resumed PENDING task not found.")
         check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_exec_resume.txt"),
                            "pending content atlasvibe", 
                            "Test to assess content of file from resumed PENDING file rename task.")
-        record_test("Test to assess resuming EXECUTION of IN_PROGRESS file rename transactions.",
+        record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
                     exp_paths_after_rename["inprogress_atlasvibe_for_exec_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_exec_resume.txt'].name}' from resumed IN_PROGRESS task not found.")
         check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_exec_resume.txt"),
@@ -421,27 +421,27 @@ def _verify_self_test_results_task(
         check_file_content(exp_paths_after_rename.get("completed_atlasvibe_for_exec_resume.txt"),
                            "already done atlasvibe content", 
                            "Test to assess content of pre-COMPLETED file after EXECUTION resume (should be untouched by resume).")
-    else: # Standard run, neither resume type
-         record_test("Test to assess resuming EXECUTION of partially completed transaction sets.", False, "Execution resume sub-test not active for this run. Trigger with --run-exec-resume-sub-test.")
-         record_test("Test to assess resuming SCAN phase from an incomplete transaction file.", False, "Scan resume sub-test not active for this run. Trigger with --run-scan-resume-sub-test.")
+    else: 
+         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Execution resume sub-test not active for this run. Trigger with --run-exec-resume-sub-test.")
+         record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Scan resume sub-test not active for this run. Trigger with --run-scan-resume-sub-test.")
 
 
-    record_test("Test to assess the ability to retry failed transactions (ERROR state).", False, "Test not yet implemented. Error retry logic is not a current feature.")
+    record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Error retry logic is not a current feature.")
     
-    if not is_resume_run and not is_scan_resume_run:
+    if not is_exec_resume_run and not is_scan_resume_run:
         large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
         if not (large_file_path and large_file_path.exists()): 
-            record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", False, f"Large test file missing: {large_file_path}. Setup issue.")
+            record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Large test file missing: {large_file_path}. Setup issue.")
         else:
             try:
                 with open(large_file_path, "r") as f: 
                     lines = [f.readline().strip() for _ in range(5)] 
                 expected_lines = ["This atlasvibe line should be replaced " + str(i) if i % 100 == 0 else "Normal line " + str(i) for i in range(5)]
-                record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", 
+                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", 
                             lines == expected_lines,
                             f"Large file content mismatch. Expected head: {expected_lines!r}, Got: {lines!r}")
             except Exception as e:
-                record_test("Test to assess processing of large text files (simulated >10MB) for string replacement.", False, f"Error reading large file: {e}")
+                record_test("Test to assess the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage.", False, f"Error reading large file: {e}")
 
     current_run_tx_file = original_transaction_file 
     transactions_for_status_check = load_transactions(current_run_tx_file) 
@@ -449,7 +449,7 @@ def _verify_self_test_results_task(
     if transactions_for_status_check is not None:
         all_relevant_tx_processed_correctly = True
         for tx_idx, tx in enumerate(transactions_for_status_check): 
-            if is_resume_run and tx["id"] == "uuid_completed_exec_resume": 
+            if is_exec_resume_run and tx["id"] == "uuid_completed_exec_resume": 
                 if tx["STATUS"] != TransactionStatus.COMPLETED.value:
                     all_relevant_tx_processed_correctly = False
                     record_test(f"Transaction Lifecycle (Exec Resume - Tx ID: {tx['id']}): Verify COMPLETED transaction remains COMPLETED.", False,
@@ -682,7 +682,8 @@ def self_test_flow(
                 temp_dir=temp_dir, 
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file, 
-                is_resume_run=False 
+                is_resume_run=False,
+                is_scan_resume_run=False
             )
         else:
             print("Self-Test (Standard Run): Dry run selected. Skipping execution and verification of changes.")
@@ -690,7 +691,8 @@ def self_test_flow(
                 temp_dir=temp_dir,
                 original_transaction_file=transaction_file,
                 validation_transaction_file=validation_transaction_file,
-                is_resume_run=False
+                is_resume_run=False,
+                is_scan_resume_run=False
             )
 
 
