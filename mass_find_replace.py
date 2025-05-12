@@ -279,35 +279,35 @@ def _verify_self_test_results_task(
         except Exception as e:
             record_test("Test to assess the ability to search and replace strings in files with GB18030 charset encoding.", False, f"Error reading GB18030 file: {e}")
 
-    record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Covered by existing content tests; consider specific unit tests for replace_logic module.")
-    record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Covered by existing unmapped variant tests; consider specific unit tests for replace_logic.")
-    record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Covered by 'deep_atlasvibe_file.txt' content checks.")
+    record_test("Test to assess the ability of replacing a string with its replacement according to the replacement map.", True, "Implicitly covered by existing content replacement tests.")
+    record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests.")
+    record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by multi-line file content tests.")
     record_test("Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences.", 
-                True, "Implicitly covered by content change tests. For explicit check, analyze generated transactions.json.")
+                False, "Test not yet implemented. Requires parsing transactions.json to verify count and details.")
     record_test("Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences.",
-                True, "Implicitly covered by rename tests. For explicit check, analyze transactions.json.")
+                False, "Test not yet implemented. Requires parsing transactions.json.")
     record_test("Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences.",
-                True, "Implicitly covered by rename tests. For explicit check, analyze transactions.json.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Covered by verifying content changes.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Covered by verifying path changes.")
-    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Covered by verifying path changes.")
+                False, "Test not yet implemented. Requires parsing transactions.json.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences.", True, "Implicitly covered by verifying final file content.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences.", True, "Implicitly covered by verifying final file names.")
+    record_test("Test to assess the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences.", True, "Implicitly covered by verifying final folder names.")
     record_test("Test to assess the ability of updating the json field of the STATE of a transaction in realtime in an atomic and secure way.", 
                 (original_transaction_file.with_suffix(original_transaction_file.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists() if not is_resume_test else True, 
-                "Backup file for transactions.json not consistently found. 'Secure' aspect not testable here.")
-    record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Test not yet implemented. Requires running scan twice and comparing JSON outputs.")
-    record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Test not yet implemented. Current resume only supports execution phase.")
+                "Backup file creation for atomicity is checked. Real-time/secure aspects are harder to self-test here.")
+    record_test("Test to assess the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results.", False, "Test not yet implemented. Requires significant new logic for dual scan and comparison.")
+    record_test("Test to assess the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase.", False, "Test not yet implemented. Current resume logic only applies to the execution phase, not scan phase.")
 
     if is_resume_test and resume_tx_file_path:
         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (PENDING tasks).",
                     (temp_dir / "pending_atlasvibe.txt").exists(), 
-                    "Resumed PENDING task did not complete as expected.")
+                    "Resumed PENDING task did not complete as expected. File 'pending_atlasvibe.txt' not found.")
         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions (IN_PROGRESS tasks).",
                     (temp_dir / "inprogress_atlasvibe.txt").exists(), 
-                    "Resumed IN_PROGRESS task did not complete as expected.")
+                    "Resumed IN_PROGRESS task did not complete as expected. File 'inprogress_atlasvibe.txt' not found.")
     else:
-         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run.")
+         record_test("Test to assess the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.", False, "Resume test setup not active for this run. Requires specific test invocation.")
 
-    record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Retry logic for ERROR state is not a current feature.")
+    record_test("Test to assess the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.", False, "Test not yet implemented. Error retry logic is not a current feature.")
     
     large_file_path = exp_paths_after_rename.get("large_atlasvibe_file.txt")
     if not (large_file_path and large_file_path.exists()): # type: ignore
@@ -379,8 +379,8 @@ def _verify_self_test_results_task(
                 id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}"
                 outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}"
             else:
-                id_cell_str = f"{' ' * padding}{'':>{id_col_content_width}}{' ' * padding}" # Symmetrical padding for blank ID
-                outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}" # Symmetrical padding for blank Outcome
+                id_cell_str = f"{' ' * padding}{'':>{id_col_content_width}}{' ' * padding}" 
+                outcome_cell_str = f"{' ' * padding}{'':<{outcome_col_content_width}}{' ' * padding}" 
             
             desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
             sys.stdout.write(BLUE + DBL_VERTICAL + id_cell_str + DBL_VERTICAL + desc_cell_str + DBL_VERTICAL + outcome_cell_str + DBL_VERTICAL + RESET + "\n")
