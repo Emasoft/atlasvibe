@@ -34,6 +34,7 @@ from replace_logic import replace_flojoy_occurrences # Import for use in self-te
 # --- Constants ---
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json" 
 SELF_TEST_PRIMARY_TRANSACTION_FILE = "self_test_transactions.json"
+SELF_TEST_SCAN_VALIDATION_FILE = "self_test_scan_validation_transactions.json"
 SELF_TEST_SANDBOX_DIR = "./tests/temp" # Defined sandbox for self-tests
 
 # ANSI Color Codes & Unicode Symbols for formatted output
@@ -133,6 +134,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
 def _verify_self_test_results_task(
     temp_dir: Path, 
     original_transaction_file: Path, 
+    validation_transaction_file: Optional[Path] = None, # For deterministic scan test
     is_resume_run: bool = False, 
     resume_tx_file_path: Optional[Path] = None 
 ) -> bool:
@@ -183,7 +185,7 @@ def _verify_self_test_results_task(
         "inprogress_atlasvibe_for_resume.txt": temp_dir / "inprogress_atlasvibe_for_resume.txt",
     }
 
-    if not is_resume_run:
+    if not is_resume_run: # These path checks are for the standard run
         record_test("Test to assess renaming of top-level directories containing the target string.", 
                     exp_paths_after_rename["atlasvibe_root"].exists(), 
                     f"Renamed top-level dir '{exp_paths_after_rename['atlasvibe_root'].relative_to(temp_dir)}' MISSING.")
@@ -302,7 +304,7 @@ def _verify_self_test_results_task(
     record_test("Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map.", True, "Implicitly covered by unmapped variant tests (name & content).")
     record_test("Test to assess the ability to find in text files multiple lines with the string occurrences.", True, "Implicitly covered by 'deep_atlasvibe_file.txt' content checks which has multiple occurrences.")
 
-    if not is_resume_run:
+    if not is_resume_run: # Transaction generation checks are for the initial scan
         initial_transactions = load_transactions(original_transaction_file) 
         if initial_transactions is not None:
             expected_line_tx_count_deep_file = 3 
@@ -338,7 +340,23 @@ def _verify_self_test_results_task(
                 (tx_file_for_backup_check.with_suffix(tx_file_for_backup_check.suffix + TRANSACTION_FILE_BACKUP_EXT)).exists(), 
                 f"Backup file for '{tx_file_for_backup_check.name}' not found. Atomicity check via backup failed.")
 
-    record_test("Test to assess the deterministic nature of scan results by comparing two separate scans.", False, "Test not yet implemented. Requires significant new logic for dual scan and comparison of JSON outputs.")
+    if not is_resume_run and validation_transaction_file:
+        transactions1 = load_transactions(original_transaction_file)
+        transactions2 = load_transactions(validation_transaction_file)
+        if transactions1 is not None and transactions2 is not None:
+            # Compare lists of dicts, ignoring 'id' and 'STATUS' (as status might differ if one is a dry run vs actual)
+            # For deterministic scan, only content prior to execution matters.
+            comparable_tx1 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions1]])
+            comparable_tx2 = sorted([tuple(sorted(d.items())) for d in [{k:v for k,v in tx.items() if k not in ['id', 'STATUS']} for tx in transactions2]])
+            record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation (ignoring UUIDs).", 
+                        comparable_tx1 == comparable_tx2,
+                        f"Scan determinism failed. Tx1 count: {len(comparable_tx1)}, Tx2 count: {len(comparable_tx2)}. Differences exist.")
+        else:
+            record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation.", False, "Could not load one or both transaction files for comparison.")
+    elif not is_resume_run:
+         record_test("Test to assess the ability to compare two scan outputs for deterministic transaction generation.", False, "Validation transaction file not provided for comparison.")
+
+
     record_test("Test to assess the ability to resume the scan phase from an incomplete transaction file.", False, "Test not yet implemented. Current resume logic only applies to the execution phase.")
 
     if is_resume_run:
@@ -503,7 +521,7 @@ def self_test_flow(
     test_extensions = [".txt", ".py", ".md", ".bin", ".log"] 
 
     if run_resume_sub_test:
-        print("Self-Test (Resume Sub-Test): Executing transactions with --resume...")
+        print("Self-Test (Resume Sub-Test): Setting up and executing transactions with --resume...")
         resume_tx_file = temp_dir / "for_resume_test_transactions.json"
         
         # Simulate that 'completed_flojoy_for_resume.txt' was already processed and renamed
@@ -511,7 +529,6 @@ def self_test_flow(
         completed_original_path = temp_dir / "completed_flojoy_for_resume.txt"
         completed_renamed_path = temp_dir / "completed_atlasvibe_for_resume.txt"
         if completed_original_path.exists():
-            # Simulate rename and content update for the "completed" one
             completed_original_path.rename(completed_renamed_path)
             if completed_renamed_path.exists(): 
                  completed_renamed_path.write_text("already done atlasvibe content")
@@ -521,11 +538,11 @@ def self_test_flow(
         # Their content should still be 'flojoy'
         if (temp_dir / "pending_atlasvibe_for_resume.txt").exists():
             (temp_dir / "pending_atlasvibe_for_resume.txt").rename(temp_dir / "pending_flojoy_for_resume.txt")
-        (temp_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy") # Ensure original content
+        (temp_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy") 
 
         if (temp_dir / "inprogress_atlasvibe_for_resume.txt").exists():
             (temp_dir / "inprogress_atlasvibe_for_resume.txt").rename(temp_dir / "inprogress_flojoy_for_resume.txt")
-        (temp_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy") # Ensure original content
+        (temp_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy") 
 
 
         execution_stats = execute_all_transactions(
@@ -542,21 +559,35 @@ def self_test_flow(
             resume_tx_file_path=resume_tx_file
         )
     else:
+        # Standard self-test run
         transaction_file = temp_dir / SELF_TEST_PRIMARY_TRANSACTION_FILE
-        print("Self-Test (Standard Run): Scanning directory...")
-        transactions = scan_directory_for_occurrences(
+        validation_transaction_file = temp_dir / SELF_TEST_SCAN_VALIDATION_FILE
+
+        print("Self-Test (Standard Run): Scanning directory (first pass)...")
+        transactions1 = scan_directory_for_occurrences(
             root_dir=temp_dir,
             excluded_dirs=test_excluded_dirs,
             excluded_files=test_excluded_files,
             file_extensions=test_extensions
         )
-        save_transactions(transactions, transaction_file)
-        print(f"Self-Test (Standard Run): Scan complete. {len(transactions)} transactions planned in {transaction_file}")
+        save_transactions(transactions1, transaction_file)
+        print(f"Self-Test (Standard Run): First scan complete. {len(transactions1)} transactions planned in {transaction_file}")
+
+        print("Self-Test (Standard Run): Scanning directory (second pass for determinism check)...")
+        transactions2 = scan_directory_for_occurrences(
+            root_dir=temp_dir, # Scan the same, unchanged directory
+            excluded_dirs=test_excluded_dirs,
+            excluded_files=test_excluded_files,
+            file_extensions=test_extensions
+        )
+        save_transactions(transactions2, validation_transaction_file)
+        print(f"Self-Test (Standard Run): Second scan complete. {len(transactions2)} transactions planned in {validation_transaction_file}")
+
 
         if not dry_run_for_test:
-            print("Self-Test (Standard Run): Executing transactions...")
+            print("Self-Test (Standard Run): Executing transactions from first scan...")
             execution_stats = execute_all_transactions(
-                transactions_file_path=transaction_file,
+                transactions_file_path=transaction_file, # Execute based on the first scan
                 root_dir=temp_dir, 
                 dry_run=False, 
                 resume=False   
@@ -566,10 +597,18 @@ def self_test_flow(
             _verify_self_test_results_task(
                 temp_dir=temp_dir, 
                 original_transaction_file=transaction_file,
+                validation_transaction_file=validation_transaction_file, # Pass for comparison
                 is_resume_run=False 
             )
         else:
             print("Self-Test (Standard Run): Dry run selected. Skipping execution and verification of changes.")
+            # Still run verification for scan determinism in dry run
+            _verify_self_test_results_task(
+                temp_dir=temp_dir,
+                original_transaction_file=transaction_file,
+                validation_transaction_file=validation_transaction_file,
+                is_resume_run=False
+            )
 
 
 # --- Main CLI Orchestration ---
