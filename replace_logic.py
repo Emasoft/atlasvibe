@@ -11,7 +11,7 @@ from typing import Dict
 
 REPLACEMENT_MAPPING: Dict[str, str] = {
     'flojoy': 'atlasvibe',
-    'Flojoy': 'Atlasvibe',
+    'Flojoy': 'AtlasVibe', # Corrected casing
     'floJoy': 'atlasVibe',
     'FloJoy': 'AtlasVibe',
     'FLOJOY': 'ATLASVIBE',

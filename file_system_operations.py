@@ -209,7 +209,6 @@ def scan_directory_for_occurrences(
     else:
         processed_transactions = []
 
-    find_target_lower = "flojoy" # The base string to search for case-insensitively
     abs_excluded_files = [root_dir.joinpath(f).resolve(strict=False) for f in excluded_files]
 
     # Normalize file extensions for case-insensitive comparison
@@ -246,7 +245,8 @@ def scan_directory_for_occurrences(
 
 
         # Check for name-based transactions (FILE_NAME or FOLDER_NAME)
-        if find_target_lower in original_name.lower():
+        # Use replace_flojoy_occurrences to determine if a change would occur
+        if replace_flojoy_occurrences(original_name) != original_name:
             tx_type_val = TransactionType.FOLDER_NAME.value if item_path.is_dir() else TransactionType.FILE_NAME.value
             current_tx_id_tuple = (relative_path_str, tx_type_val, 0) # Line number is 0 for name transactions
 
@@ -282,7 +282,8 @@ def scan_directory_for_occurrences(
                     lines = f.readlines() # Reads lines with their endings
 
                 for line_num_0_indexed, line_content in enumerate(lines):
-                    if find_target_lower in line_content.lower():
+                    # Use replace_flojoy_occurrences to determine if a change would occur
+                    if replace_flojoy_occurrences(line_content) != line_content:
                         line_number_1_indexed = line_num_0_indexed + 1
                         current_tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_number_1_indexed)
 

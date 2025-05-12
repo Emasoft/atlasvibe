@@ -1,4 +1,3 @@
-# Mass Find and Replace Script - Notes
 
 ## Project Goal
 Create a Python script using Prefect to find and replace all occurrences of "flojoy" (and its case variants) with "atlasvibe" (and its corresponding case variants) across a directory. This includes file names, folder names, and content within text files. The script must be robust, handle various file encodings, and allow for dry runs and resumability.
@@ -19,7 +18,7 @@ Create a Python script using Prefect to find and replace all occurrences of "flo
     *   The primary target is "flojoy".
     *   Replacements must be case-preserving based on a predefined mapping:
         *   `flojoy` -> `atlasvibe`
-        *   `Flojoy` -> `Atlasvibe`
+        *   `Flojoy` -> `AtlasVibe`
         *   `floJoy` -> `atlasVibe`
         *   `FloJoy` -> `AtlasVibe`
         *   `FLOJOY` -> `ATLASVIBE`
