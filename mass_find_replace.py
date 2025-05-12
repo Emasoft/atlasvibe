@@ -117,7 +117,7 @@ def _create_self_test_environment(base_dir: Path) -> None:
     # Test for resume execution (partially completed transaction file)
     # This file will be used by a separate execution run if resume test is activated
     resume_tx_file = base_dir / "for_resume_test_transactions.json" 
-    (base_dir / "completed_flojoy_for_resume.txt").write_text("already done flojoy content") # Content should also change if name changes
+    (base_dir / "completed_flojoy_for_resume.txt").write_text("already done flojoy content") 
     (base_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy")
     (base_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy")
     
@@ -310,28 +310,11 @@ def _verify_self_test_results_task(
             record_test("Test to assess the ability to create a transaction entry for each line occurrence in a multi-occurrence file.",
                         actual_line_tx_count_deep_file == expected_line_tx_count_deep_file,
                         f"Expected {expected_line_tx_count_deep_file} line transactions for 'deep_flojoy_file.txt', found {actual_line_tx_count_deep_file}.")
-
-            # Count all file name transactions that should result in a rename
-            expected_file_name_tx_count = 0
-            for key, path_obj in exp_paths_after_rename.items():
-                original_name_part = Path(key).name # e.g., "atlasvibe_root" -> "atlasvibe_root"
-                # Heuristic: if it ends with common extension or doesn't have one, it might be a file/folder name
-                # This is a bit fragile; better to check against the original setup structure if possible
-                if "." in original_name_part or "dir" in original_name_part or "folder" in original_name_part or "root" in original_name_part:
-                     # Attempt to reconstruct original name based on replacement logic
-                     if "atlasvibe" in original_name_part.lower(): # If it was renamed
-                        # This count is tricky without knowing the exact original names that were mapped
-                        pass # Placeholder for a more accurate count if needed
-            # Using a known count from previous implementation for mapped names
-            # This counts transactions where ORIGINAL_NAME would change after replacement
+            
             actual_file_name_tx_count = sum(1 for tx in initial_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value and tx["ORIGINAL_NAME"] != replace_flojoy_occurrences(tx["ORIGINAL_NAME"]))
-            # Expected: deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, 
+            # Expected mapped file name changes: deep_flojoy_file, another_flojoy_file, only_name_flojoy, file_with_floJoy_lines, 
             # unmapped_variant_flojoy_content, binary_flojoy_file, 
             # depth10_file_flojoy, gb18030_flojoy_file, large_flojoy_file = 9
-            # Plus files for resume test setup: completed_flojoy_for_resume, pending_flojoy_for_resume, inprogress_flojoy_for_resume = 3
-            # Total = 12
-            # However, the scan for the main self-test doesn't include the "for_resume_test" files in its transaction list.
-            # So, expected is 9.
             record_test("Test to assess the ability to create a transaction entry for each file name containing a mapped target string.",
                         actual_file_name_tx_count >= 9, 
                         f"Expected at least 9 mapped file name transactions, found {actual_file_name_tx_count}.")
@@ -362,13 +345,13 @@ def _verify_self_test_results_task(
                     exp_paths_after_rename["pending_atlasvibe_for_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['pending_atlasvibe_for_resume.txt'].name}' from resumed PENDING task not found.")
         check_file_content(exp_paths_after_rename.get("pending_atlasvibe_for_resume.txt"),
-                           "pending content atlasvibe", # Assuming content also gets updated if name does
+                           "pending content atlasvibe", 
                            "Test to assess content of file from resumed PENDING file rename task.")
         record_test("Test to assess resuming execution of IN_PROGRESS file rename transactions.",
                     exp_paths_after_rename["inprogress_atlasvibe_for_resume.txt"].exists(), 
                     f"File '{exp_paths_after_rename['inprogress_atlasvibe_for_resume.txt'].name}' from resumed IN_PROGRESS task not found.")
         check_file_content(exp_paths_after_rename.get("inprogress_atlasvibe_for_resume.txt"),
-                           "in progress content atlasvibe", # Assuming content also gets updated
+                           "in progress content atlasvibe", 
                            "Test to assess content of file from resumed IN_PROGRESS file rename task.")
         record_test("Test to assess that COMPLETED transactions are not re-processed during resume.",
                     exp_paths_after_rename["completed_atlasvibe_for_resume.txt"].exists() and \
@@ -525,8 +508,7 @@ def self_test_flow(
         completed_renamed_path = temp_dir / "completed_atlasvibe_for_resume.txt"
         if completed_original_path.exists():
             completed_original_path.rename(completed_renamed_path)
-            # Simulate content update for the "completed" one as if it was processed
-            if completed_renamed_path.exists():
+            if completed_renamed_path.exists(): # Simulate content update for the "completed" one
                  completed_renamed_path.write_text("already done atlasvibe content")
 
 
@@ -534,11 +516,11 @@ def self_test_flow(
         # Their content should still be 'flojoy'
         if (temp_dir / "pending_atlasvibe_for_resume.txt").exists():
             (temp_dir / "pending_atlasvibe_for_resume.txt").rename(temp_dir / "pending_flojoy_for_resume.txt")
-            (temp_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy")
+        (temp_dir / "pending_flojoy_for_resume.txt").write_text("pending content flojoy") # Ensure original content
 
         if (temp_dir / "inprogress_atlasvibe_for_resume.txt").exists():
             (temp_dir / "inprogress_atlasvibe_for_resume.txt").rename(temp_dir / "inprogress_flojoy_for_resume.txt")
-            (temp_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy")
+        (temp_dir / "inprogress_flojoy_for_resume.txt").write_text("in progress content flojoy") # Ensure original content
 
 
         execution_stats = execute_all_transactions(
