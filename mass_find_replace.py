@@ -29,7 +29,8 @@ from file_system_operations import (
     TransactionStatus,
     TransactionType,
     TRANSACTION_FILE_BACKUP_EXT,
-    is_likely_binary_file # For self-test verification
+    is_likely_binary_file, # For self-test verification
+    SELF_TEST_ERROR_FILE_BASENAME
 )
 # Import specific functions from replace_logic, or the module itself
 import replace_logic # To call its loading function or access its state
@@ -43,6 +44,7 @@ SELF_TEST_SANDBOX_DIR = "./tests/temp" # Defined sandbox for self-tests
 SELF_TEST_COMPLEX_MAP_FILE = "self_test_complex_mapping.json"
 SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
+SELF_TEST_RESUME_TRANSACTION_FILE = "self_test_resume_transactions.json"
 
 
 # ANSI Color Codes & Unicode Symbols for formatted output
@@ -72,54 +74,55 @@ DBL_CROSS = "╬"
 def _create_self_test_environment(
     base_dir: Path,
     use_complex_map: bool = False,
-    use_edge_case_map: bool = False
+    use_edge_case_map: bool = False,
+    for_resume_test_phase_2: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
-    # Standard "flojoy" test files (always created for context, specific tests will verify their interaction)
-    (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
-    (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
-        "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
-    )
-    (base_dir / "flojoy_root" / "another_flojoy_file.py").write_text(
-        "import flojoy_lib\n# class MyFlojoyClass: pass"
-    )
-    (base_dir / "only_name_flojoy.md").write_text("Content without target string.")
-    (base_dir / "file_with_floJoy_lines.txt").write_text(
-        "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
-    )
-    (base_dir / "unmapped_variant_flojoy_content.txt").write_text(
-        "This has fLoJoY content, and also flojoy." 
-    )
-    (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
-    (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff")
+    if not for_resume_test_phase_2: # Create initial set of files
+        (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
+        (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
+            "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
+        )
+        (base_dir / "flojoy_root" / "another_flojoy_file.py").write_text(
+            "import flojoy_lib\n# class MyFlojoyClass: pass"
+        )
+        (base_dir / "only_name_flojoy.md").write_text("Content without target string.")
+        (base_dir / "file_with_floJoy_lines.txt").write_text(
+            "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
+        )
+        (base_dir / "unmapped_variant_flojoy_content.txt").write_text(
+            "This has fLoJoY content, and also flojoy." 
+        )
+        (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
+        (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff")
 
-    (base_dir / "excluded_flojoy_dir").mkdir(exist_ok=True)
-    (base_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt").write_text("flojoy inside excluded dir")
-    (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
-    (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
+        (base_dir / "excluded_flojoy_dir").mkdir(exist_ok=True)
+        (base_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt").write_text("flojoy inside excluded dir")
+        (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
+        (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
 
-    deep_path_parts = ["depth1_flojoy", "depth2", "depth3_flojoy", "depth4", "depth5", "depth6_flojoy", "depth7", "depth8", "depth9_flojoy", "depth10_file_flojoy.txt"]
-    current_path = base_dir
-    for part_idx, part in enumerate(deep_path_parts):
-        current_path = current_path / part
-        if part_idx < len(deep_path_parts) -1:
-            current_path.mkdir(parents=True, exist_ok=True)
-        else:
-            current_path.write_text("flojoy deep content")
+        deep_path_parts = ["depth1_flojoy", "depth2", "depth3_flojoy", "depth4", "depth5", "depth6_flojoy", "depth7", "depth8", "depth9_flojoy", "depth10_file_flojoy.txt"]
+        current_path = base_dir
+        for part_idx, part in enumerate(deep_path_parts):
+            current_path = current_path / part
+            if part_idx < len(deep_path_parts) -1:
+                current_path.mkdir(parents=True, exist_ok=True)
+            else:
+                current_path.write_text("flojoy deep content")
 
-    try:
-        (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
-    except Exception:
-        (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
+        try:
+            (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
+        except Exception:
+            (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
 
-    large_file_content_list = []
-    for i in range(1000): # Reduced for faster tests
-        if i % 50 == 0:
-            large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
-        else:
-            large_file_content_list.append("Normal line " + str(i) + "\n")
-    (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list), encoding='utf-8')
-    (base_dir / "error_file_flojoy.txt").write_text("This file will cause an error.")
+        large_file_content_list = []
+        for i in range(1000): 
+            if i % 50 == 0:
+                large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
+            else:
+                large_file_content_list.append("Normal line " + str(i) + "\n")
+        (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list), encoding='utf-8')
+        (base_dir / SELF_TEST_ERROR_FILE_BASENAME).write_text("This file will cause a rename error during tests.")
 
     if use_complex_map:
         (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").mkdir(parents=True, exist_ok=True)
@@ -134,7 +137,6 @@ def _create_self_test_environment(
         (base_dir / "special_chars_in_content_test.txt").write_text(
             "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
         )
-        # For testing key "key_with\tcontrol\nchars" (processed to "key_withcontrolchars")
         (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text( 
             "Content for complex map control key filename test."
         )
@@ -142,17 +144,21 @@ def _create_self_test_environment(
              "Line with key_with\tcontrol\nchars to replace."
         )
 
-
     if use_edge_case_map:
-        # For control character regression. Key in map: "My\nKey" (processed: "MyKey")
         (base_dir / "edge_case_MyKey_original_name.txt").write_text("Initial content for control key name test (MyKey).")
         (base_dir / "edge_case_content_with_MyKey_controls.txt").write_text("Line with My\nKey to replace.")
-        
-        # For empty key after stripping. Key in map: "\t" (processed: "")
         (base_dir / "edge_case_empty_stripped_key_target.txt").write_text("This should not be changed by an empty key.")
-        
-        # For shorter vs. longer key prioritization. Keys: "foo", "foo bar"
         (base_dir / "edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
+
+    if for_resume_test_phase_2:
+        # Add a new file that should be picked up by the resume scan
+        (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
+        # Optionally, modify an existing file to test if content changes are picked up correctly on resume
+        # For example, if "only_name_atlasvibe.md" (after initial run) exists, add flojoy to its content.
+        # This part needs careful consideration of how resume scan handles already processed items.
+        # For now, focusing on new item detection.
+        if (base_dir / "only_name_atlasvibe.md").exists():
+             (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
 
 
 def check_file_content_for_test( 
@@ -189,12 +195,12 @@ def _verify_self_test_results_task(
     temp_dir: Path,
     original_transaction_file: Path,
     validation_transaction_file: Optional[Path] = None,
-    is_exec_resume_run: bool = False,
-    is_scan_resume_run: bool = False,
-    resume_tx_file_path: Optional[Path] = None,
+    is_exec_resume_run: bool = False, # Retained for compatibility, but new flag is_resume_test is more general
+    is_scan_resume_run: bool = False, # Retained for compatibility
     is_complex_map_test: bool = False,
     is_edge_case_test: bool = False,
-    is_empty_map_test: bool = False
+    is_empty_map_test: bool = False,
+    is_resume_test: bool = False # New flag for resume specific checks
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -215,12 +221,49 @@ def _verify_self_test_results_task(
     if is_empty_map_test:
         transactions = load_transactions(original_transaction_file)
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
+    
+    elif is_resume_test:
+        final_transactions = load_transactions(original_transaction_file)
+        record_test("[Resume Test] Final transaction log loaded", final_transactions is not None)
+        if final_transactions:
+            # Check for newly added file
+            new_file_processed = any(
+                tx["PATH"] == "newly_added_flojoy_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
+                for tx in final_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value
+            )
+            new_file_content_processed = any(
+                tx["PATH"] == "newly_added_flojoy_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
+                for tx in final_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
+            )
+            record_test("[Resume Test] Newly added file name processed", new_file_processed)
+            record_test("[Resume Test] Newly added file content processed", new_file_content_processed)
+            check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt", # Expected renamed
+                                   "This atlasvibe content is new for resume.",
+                                   "[Resume Test] Content of newly added file after resume", record_test_func=record_test)
+
+            # Check initially PENDING item (e.g., large_flojoy_file.txt content)
+            large_file_tx_found_completed = any(
+                "large_flojoy_file.txt" in tx["PATH"] and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value
+                for tx in final_transactions
+            )
+            record_test("[Resume Test] Initially PENDING content transaction completed", large_file_tx_found_completed)
+            
+            # Check initially FAILED item (error_file_flojoy.txt)
+            error_file_tx_status = ""
+            for tx in final_transactions:
+                if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
+                    error_file_tx_status = tx["STATUS"]
+                    break
+            record_test("[Resume Test] Error file transaction re-attempted and FAILED again", error_file_tx_status == TransactionStatus.FAILED.value)
+            record_test("[Resume Test] Original error file still exists after failed resume attempt", (temp_dir / SELF_TEST_ERROR_FILE_BASENAME).exists())
+
+
     elif is_edge_case_test:
         exp_edge_paths = {
-            "control_key_renamed_file": temp_dir / "MyKeyValue_VAL.txt", # Original: edge_case_MyKey_original_name.txt
-            "control_key_content_file": temp_dir / "edge_case_content_with_MyKey_controls.txt", # Name unchanged
-            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt", # Name unchanged
-            "key_priority_file": temp_dir / "edge_case_key_priority.txt" # Name unchanged
+            "control_key_renamed_file": temp_dir / "MyKeyValue_VAL.txt", 
+            "control_key_content_file": temp_dir / "edge_case_content_with_MyKey_controls.txt", 
+            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt", 
+            "key_priority_file": temp_dir / "edge_case_key_priority.txt" 
         }
         record_test("[Edge Case] Control char key ('My\\nKey') - filename rename", exp_edge_paths["control_key_renamed_file"].exists(), f"File missing: {exp_edge_paths['control_key_renamed_file']}")
         check_file_content_for_test(exp_edge_paths["control_key_content_file"],
@@ -242,9 +285,9 @@ def _verify_self_test_results_task(
             "file_with_spaces_replaced_name": temp_dir / "The control characters \n will be ignored_VAL.md",
             "my_love_story_replaced_name": temp_dir / "_My_Story&Love_VAL.log", 
             "coco4_replaced_name": temp_dir / "MOCO4_ip-N_VAL.data", 
-            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt", # Name unchanged
-            "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt", # Original: complex_map_key_withcontrolchars_original_name.txt
-            "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt" # Name unchanged
+            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt", 
+            "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt", 
+            "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt" 
         }
         record_test("[Complex] Diacritic folder rename", exp_paths_complex_map["diacritic_folder_replaced"].exists(), f"Dir missing: {exp_paths_complex_map['diacritic_folder_replaced']}")
         record_test("[Complex] File in diacritic folder rename", exp_paths_complex_map["file_in_diacritic_folder_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['file_in_diacritic_folder_replaced_name']}")
@@ -262,7 +305,7 @@ def _verify_self_test_results_task(
                            "This file has The control characters \n will be ignored_VAL in its name and content.",
                            "[Complex] Key with spaces, value with newline replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("my_love_story_replaced_name"),
-                           "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.", # "And My_Love&Story" remains as it's not a key
+                           "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.", 
                            "[Complex] Key with '&' and case variants replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("coco4_replaced_name"),
                            "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.", 
@@ -273,7 +316,6 @@ def _verify_self_test_results_task(
         check_file_content_for_test(exp_paths_complex_map.get("control_chars_key_content_file"), 
                            "Line with Value_for_key_with_controls_VAL to replace.", 
                            "[Complex] Key with control chars in key - content replacement", record_test_func=record_test)
-
 
     elif not is_exec_resume_run and not is_scan_resume_run: # Standard self-test run
         exp_paths_std_map = {
@@ -354,16 +396,19 @@ def _verify_self_test_results_task(
 def self_test_flow(
     temp_dir_str: str,
     dry_run_for_test: bool,
-    run_exec_resume_sub_test: bool = False,
-    run_scan_resume_sub_test: bool = False,
+    run_exec_resume_sub_test: bool = False, # Retained for future, not fully implemented
+    run_scan_resume_sub_test: bool = False, # Retained for future, not fully implemented
     run_complex_map_sub_test: bool = False,
     run_edge_case_sub_test: bool = False,
-    run_empty_map_sub_test: bool = False
+    run_empty_map_sub_test: bool = False,
+    run_resume_test: bool = False # New flag for combined resume test
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
     current_mapping_file_for_test: Path
     test_scenario_name = "Standard"
+    is_verification_resume_test = False
+
 
     if run_complex_map_sub_test:
         test_scenario_name = "Complex Map"
@@ -387,11 +432,11 @@ def self_test_flow(
         current_mapping_file_for_test = temp_dir / SELF_TEST_EDGE_CASE_MAP_FILE
         edge_case_map_data = {
             "REPLACEMENT_MAPPING": {
-                "My\nKey": "MyKeyValue_VAL", # For control char in key (filename test)
-                "Key\nWith\tControls": "ControlValue_VAL", # For control char in key (content test)
-                "\t": "ShouldBeSkipped_VAL",             # Key becomes empty after stripping
+                "My\nKey": "MyKeyValue_VAL", 
+                "Key\nWith\tControls": "ControlValue_VAL", 
+                "\t": "ShouldBeSkipped_VAL",             
                 "foo": "Foo_VAL",
-                "foo bar": "FooBar_VAL"                   # For key priority
+                "foo bar": "FooBar_VAL"                   
             }
         }
         with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
@@ -402,7 +447,19 @@ def self_test_flow(
         empty_map_data = {"REPLACEMENT_MAPPING": {}}
         with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
             json.dump(empty_map_data, f, indent=2)
-    else: 
+    elif run_resume_test:
+        test_scenario_name = "Resume"
+        is_verification_resume_test = True # For _verify_self_test_results_task
+        current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE # Resume test uses default map
+        default_map_data = { 
+            "REPLACEMENT_MAPPING": {
+                "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
+                "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
+            }
+        }
+        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
+            json.dump(default_map_data, f, indent=2)
+    else: # Standard test
         current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE
         default_map_data = { 
             "REPLACEMENT_MAPPING": {
@@ -426,6 +483,7 @@ def self_test_flow(
 
     print(f"Self-Test ({test_scenario_name}): Successfully initialized replacement map from {current_mapping_file_for_test}")
 
+    # Create initial environment; for resume test, this is phase 1
     _create_self_test_environment(temp_dir, use_complex_map=run_complex_map_sub_test, use_edge_case_map=run_edge_case_sub_test)
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
@@ -439,57 +497,108 @@ def self_test_flow(
         transaction_file_name_base = "edge_case_transactions"
     elif run_empty_map_sub_test:
         transaction_file_name_base = "empty_map_transactions"
-    else:
+    elif run_resume_test:
+        transaction_file_name_base = SELF_TEST_RESUME_TRANSACTION_FILE.stem
+    else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
-    validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not run_empty_map_sub_test else None
+    # Validation file is not strictly needed for resume test's core logic, but can be used for initial scan part
+    validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test) else None
     
-    transactions1 = scan_directory_for_occurrences(
-        root_dir=temp_dir,
-        excluded_dirs=test_excluded_dirs,
-        excluded_files=test_excluded_files,
-        file_extensions=test_extensions,
-    )
-    save_transactions(transactions1, transaction_file)
-    print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
+    if run_resume_test:
+        print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
+        initial_transactions = scan_directory_for_occurrences(temp_dir, test_excluded_dirs, test_excluded_files, test_extensions)
+        
+        # Modify some transactions to simulate a partial run
+        if initial_transactions:
+            # Mark first file name transaction as COMPLETED (if any)
+            fn_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_NAME.value]
+            if fn_tx_indices:
+                initial_transactions[fn_tx_indices[0]]["STATUS"] = TransactionStatus.COMPLETED.value
+                if len(fn_tx_indices) > 1: # Mark another as IN_PROGRESS
+                     initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
+            
+            # Mark one content transaction as FAILED (e.g. from error_file_flojoy.txt if it has content tx)
+            # For simplicity, let's assume error_file_flojoy.txt's rename tx is what we make fail.
+            for tx in initial_transactions:
+                if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
+                    tx["STATUS"] = TransactionStatus.FAILED.value
+                    tx["ERROR_MESSAGE"] = "Simulated failure from initial run"
+                    break
+            # Mark some content lines as PENDING (they are by default)
+        
+        save_transactions(initial_transactions, transaction_file) # This is the file we'll resume FROM
+        print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
+        
+        # Simulate partial execution (dry_run=True to just update statuses based on mock logic)
+        # In a real scenario, some would complete, some might fail.
+        # Here, we rely on the manual status changes above.
+        # execute_all_transactions(transaction_file, temp_dir, dry_run=True, resume=False) # Not needed as we manually set statuses
 
-    if run_empty_map_sub_test:
-        if len(transactions1) != 0:
-            raise AssertionError(f"[Empty Map Test] Expected 0 transactions, got {len(transactions1)}")
-        print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
-    elif validation_file: 
-        transactions2 = scan_directory_for_occurrences(
+        print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True) # Add new files
+
+        print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
+        # The main_flow will call scan (which should load existing tx and add new)
+        # and then execute (which should process PENDING/IN_PROGRESS and re-attempt FAILED)
+        main_flow(
+            directory=str(temp_dir),
+            mapping_file=str(current_mapping_file_for_test),
+            extensions=test_extensions,
+            exclude_dirs=test_excluded_dirs,
+            exclude_files=test_excluded_files,
+            dry_run=dry_run_for_test, # Use the test's dry_run flag
+            skip_scan=False, # Must scan to pick up new files
+            resume=True,     # CRITICAL: This enables resume logic
+            force_execution=True # Avoid prompt in self-test
+        )
+        # Verification will use the final state of `transaction_file`
+    else: # Standard, Complex, Edge, Empty map tests
+        transactions1 = scan_directory_for_occurrences(
             root_dir=temp_dir,
             excluded_dirs=test_excluded_dirs,
             excluded_files=test_excluded_files,
-            file_extensions=test_extensions
+            file_extensions=test_extensions,
         )
-        save_transactions(transactions2, validation_file)
-        print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
+        save_transactions(transactions1, transaction_file)
+        print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
 
-    if not dry_run_for_test and not run_empty_map_sub_test: 
-        print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
-        execute_all_transactions(
-            transactions_file_path=transaction_file,
-            root_dir=temp_dir,
-            dry_run=False,
-            resume=False 
-        )
-        print(f"Self-Test ({test_scenario_name}): Execution phase complete.")
-    elif dry_run_for_test and not run_empty_map_sub_test:
-        print(f"Self-Test ({test_scenario_name}): Dry run. Simulating execution from {transaction_file}.")
-        execute_all_transactions(transaction_file, temp_dir, dry_run=True, resume=False)
+        if run_empty_map_sub_test:
+            if len(transactions1) != 0:
+                raise AssertionError(f"[Empty Map Test] Expected 0 transactions, got {len(transactions1)}")
+            print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
+        elif validation_file: 
+            transactions2 = scan_directory_for_occurrences(
+                root_dir=temp_dir,
+                excluded_dirs=test_excluded_dirs,
+                excluded_files=test_excluded_files,
+                file_extensions=test_extensions
+            )
+            save_transactions(transactions2, validation_file)
+            print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
+
+        if not dry_run_for_test and not run_empty_map_sub_test: 
+            print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
+            execute_all_transactions(
+                transactions_file_path=transaction_file,
+                root_dir=temp_dir,
+                dry_run=False,
+                resume=False 
+            )
+            print(f"Self-Test ({test_scenario_name}): Execution phase complete.")
+        elif dry_run_for_test and not run_empty_map_sub_test:
+            print(f"Self-Test ({test_scenario_name}): Dry run. Simulating execution from {transaction_file}.")
+            execute_all_transactions(transaction_file, temp_dir, dry_run=True, resume=False)
 
     _verify_self_test_results_task(
         temp_dir=temp_dir,
-        original_transaction_file=transaction_file,
-        validation_transaction_file=validation_file, 
-        is_exec_resume_run=run_exec_resume_sub_test, 
-        is_scan_resume_run=run_scan_resume_sub_test,
+        original_transaction_file=transaction_file, # This is the key file to verify
+        validation_transaction_file=validation_file if not run_resume_test else None, 
         is_complex_map_test=run_complex_map_sub_test,
         is_edge_case_test=run_edge_case_sub_test,
-        is_empty_map_test=run_empty_map_sub_test
+        is_empty_map_test=run_empty_map_sub_test,
+        is_resume_test=is_verification_resume_test 
     )
 
 
@@ -526,7 +635,7 @@ def main_flow(
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
     
-    if not dry_run and not force_execution and not resume:
+    if not dry_run and not force_execution and not resume: # Prompt for confirmation only on a fresh, non-dry run
         sys.stdout.write("--- Proposed Operation ---\n")
         sys.stdout.write(f"Root Directory: {root_dir}\n")
         sys.stdout.write(f"Replacement Map File: {mapping_file_path}\n")
@@ -549,26 +658,23 @@ def main_flow(
 
     if not skip_scan:
         print(f"Starting scan phase in '{root_dir}' using map '{mapping_file_path}'...")
-        current_transactions = None
-        if resume:
-            if transaction_json_path.exists():
-                print(f"Resuming scan, loading existing transactions from {transaction_json_path}...")
-                current_transactions = load_transactions(transaction_json_path)
-                if current_transactions is None:
-                     print(f"{YELLOW}Warning: Could not load transactions from {transaction_json_path} for resume. Starting fresh scan.{RESET}")
-            else:
-                print(f"Resume requested but {transaction_json_path} not found. Starting fresh scan.")
-
+        current_transactions_for_resume_scan = None
+        if resume and transaction_json_path.exists(): # For resume, load existing to augment
+            print(f"Resume mode: Loading existing transactions from {transaction_json_path} for scan augmentation...")
+            current_transactions_for_resume_scan = load_transactions(transaction_json_path)
+            if current_transactions_for_resume_scan is None:
+                 print(f"{YELLOW}Warning: Could not load transactions from {transaction_json_path} for resume scan. Starting fresh scan.{RESET}")
+        
         found_transactions = scan_directory_for_occurrences(
             root_dir=root_dir,
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
-            resume_from_transactions=current_transactions
+            resume_from_transactions=current_transactions_for_resume_scan # Pass loaded for augmentation
         )
         save_transactions(found_transactions, transaction_json_path)
         print(f"Scan complete. {len(found_transactions)} transactions planned in '{transaction_json_path}'")
-        if not found_transactions and replace_logic._REPLACEMENT_MAPPING_CONFIG: # Only print if map wasn't empty
+        if not found_transactions and replace_logic._REPLACEMENT_MAPPING_CONFIG: 
             print("No occurrences found matching the replacement map. Nothing to do.")
             return
         elif not found_transactions and not replace_logic._REPLACEMENT_MAPPING_CONFIG:
@@ -581,7 +687,7 @@ def main_flow(
     else:
         print(f"Using existing transaction file: '{transaction_json_path}'. Ensure it was generated with the correct replacement map.")
 
-    if not replace_logic._REPLACEMENT_MAPPING_CONFIG:
+    if not replace_logic._REPLACEMENT_MAPPING_CONFIG: # If map is empty, no execution needed
         print("Map is empty. No execution will be performed.")
         return
 
@@ -591,7 +697,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=True,
-            resume=resume 
+            resume=resume # Pass resume flag to execution as well
         )
         print(f"Dry run complete. Simulated stats: {stats}")
     else:
@@ -600,7 +706,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=False,
-            resume=resume
+            resume=resume # Pass resume flag to execution
         )
         print(f"Execution phase complete. Stats: {stats}")
     print(f"Review '{transaction_json_path}' for a log of changes and their statuses.")
@@ -639,14 +745,19 @@ def main_cli() -> None:
                                  help=f"Run self-tests for edge case scenarios in '{SELF_TEST_SANDBOX_DIR}'.")
     self_test_group.add_argument("--self-test-empty-map", dest="run_empty_map_self_test", action="store_true",
                                  help=f"Run self-test with an empty replacement map in '{SELF_TEST_SANDBOX_DIR}'.")
+    self_test_group.add_argument("--self-test-resume", dest="run_resume_self_test", action="store_true",
+                                 help=f"Run self-test for resume functionality in '{SELF_TEST_SANDBOX_DIR}'.")
 
 
     args = parser.parse_args()
 
-    if args.run_standard_self_test or args.run_complex_map_self_test or args.run_edge_case_self_test or args.run_empty_map_self_test:
+    if args.run_standard_self_test or args.run_complex_map_self_test or \
+       args.run_edge_case_self_test or args.run_empty_map_self_test or args.run_resume_self_test:
+        
         is_complex_run = args.run_complex_map_self_test
         is_edge_case_run = args.run_edge_case_self_test
         is_empty_map_run = args.run_empty_map_self_test
+        is_resume_run = args.run_resume_self_test
         
         test_type_msg = "Standard"
         if is_complex_run:
@@ -655,6 +766,8 @@ def main_cli() -> None:
             test_type_msg = "Edge Cases"
         elif is_empty_map_run:
             test_type_msg = "Empty Map"
+        elif is_resume_run:
+            test_type_msg = "Resume Functionality"
         
         sys.stdout.write(f"Running self-test ({test_type_msg} scenario) in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         
@@ -671,7 +784,8 @@ def main_cli() -> None:
                 dry_run_for_test=args.dry_run, 
                 run_complex_map_sub_test=is_complex_run,
                 run_edge_case_sub_test=is_edge_case_run,
-                run_empty_map_sub_test=is_empty_map_run
+                run_empty_map_sub_test=is_empty_map_run,
+                run_resume_test=is_resume_run
             )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
