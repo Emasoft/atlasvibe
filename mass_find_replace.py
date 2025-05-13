@@ -45,6 +45,10 @@ SELF_TEST_COMPLEX_MAP_FILE = "self_test_complex_mapping.json"
 SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
 SELF_TEST_RESUME_TRANSACTION_FILE = "self_test_resume_transactions.json"
+VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
+VERY_LARGE_FILE_NAME_REPLACED = "very_large_atlasvibe_file.txt"
+VERY_LARGE_FILE_LINES = 200 * 1000 # Approx 15-20MB for typical line lengths
+VERY_LARGE_FILE_MATCH_INTERVAL = 10000
 
 
 # ANSI Color Codes & Unicode Symbols for formatted output
@@ -75,7 +79,8 @@ def _create_self_test_environment(
     base_dir: Path,
     use_complex_map: bool = False,
     use_edge_case_map: bool = False,
-    for_resume_test_phase_2: bool = False
+    for_resume_test_phase_2: bool = False,
+    include_very_large_file: bool = False # New flag
 ) -> None:
     """Creates a directory structure and files for self-testing."""
     if not for_resume_test_phase_2: # Create initial set of files
@@ -115,6 +120,7 @@ def _create_self_test_environment(
         except Exception:
             (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
 
+        # Standard large file (smaller than VERY_LARGE_FILE)
         large_file_content_list = []
         for i in range(1000): 
             if i % 50 == 0:
@@ -123,6 +129,18 @@ def _create_self_test_environment(
                 large_file_content_list.append("Normal line " + str(i) + "\n")
         (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list), encoding='utf-8')
         (base_dir / SELF_TEST_ERROR_FILE_BASENAME).write_text("This file will cause a rename error during tests.")
+
+    if include_very_large_file:
+        print(f"Generating very large file: {VERY_LARGE_FILE_NAME_ORIG}...")
+        with open(base_dir / VERY_LARGE_FILE_NAME_ORIG, 'w', encoding='utf-8') as f:
+            for i in range(VERY_LARGE_FILE_LINES):
+                if i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or \
+                   i % VERY_LARGE_FILE_MATCH_INTERVAL == 0:
+                    f.write(f"Line {i+1}: This is a flojoy line that should be replaced.\n")
+                else:
+                    f.write(f"Line {i+1}: This is a standard non-matching line with some padding to make it longer.\n")
+        print("Very large file generated.")
+
 
     if use_complex_map:
         (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").mkdir(parents=True, exist_ok=True)
@@ -151,13 +169,8 @@ def _create_self_test_environment(
         (base_dir / "edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
 
     if for_resume_test_phase_2:
-        # Add a new file that should be picked up by the resume scan
         (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
-        # Optionally, modify an existing file to test if content changes are picked up correctly on resume
-        # For example, if "only_name_atlasvibe.md" (after initial run) exists, add flojoy to its content.
-        # This part needs careful consideration of how resume scan handles already processed items.
-        # For now, focusing on new item detection.
-        if (base_dir / "only_name_atlasvibe.md").exists():
+        if (base_dir / "only_name_atlasvibe.md").exists(): # Assuming it was renamed in phase 1
              (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
 
 
@@ -195,12 +208,13 @@ def _verify_self_test_results_task(
     temp_dir: Path,
     original_transaction_file: Path,
     validation_transaction_file: Optional[Path] = None,
-    is_exec_resume_run: bool = False, # Retained for compatibility, but new flag is_resume_test is more general
-    is_scan_resume_run: bool = False, # Retained for compatibility
+    is_exec_resume_run: bool = False, 
+    is_scan_resume_run: bool = False, 
     is_complex_map_test: bool = False,
     is_edge_case_test: bool = False,
     is_empty_map_test: bool = False,
-    is_resume_test: bool = False # New flag for resume specific checks
+    is_resume_test: bool = False, 
+    standard_test_includes_large_file: bool = False # New flag
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -226,7 +240,6 @@ def _verify_self_test_results_task(
         final_transactions = load_transactions(original_transaction_file)
         record_test("[Resume Test] Final transaction log loaded", final_transactions is not None)
         if final_transactions:
-            # Check for newly added file
             new_file_processed = any(
                 tx["PATH"] == "newly_added_flojoy_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
                 for tx in final_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value
@@ -237,18 +250,16 @@ def _verify_self_test_results_task(
             )
             record_test("[Resume Test] Newly added file name processed", new_file_processed)
             record_test("[Resume Test] Newly added file content processed", new_file_content_processed)
-            check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt", # Expected renamed
+            check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt", 
                                    "This atlasvibe content is new for resume.",
                                    "[Resume Test] Content of newly added file after resume", record_test_func=record_test)
 
-            # Check initially PENDING item (e.g., large_flojoy_file.txt content)
             large_file_tx_found_completed = any(
                 "large_flojoy_file.txt" in tx["PATH"] and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value
                 for tx in final_transactions
             )
             record_test("[Resume Test] Initially PENDING content transaction completed", large_file_tx_found_completed)
             
-            # Check initially FAILED item (error_file_flojoy.txt)
             error_file_tx_status = ""
             for tx in final_transactions:
                 if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
@@ -256,7 +267,6 @@ def _verify_self_test_results_task(
                     break
             record_test("[Resume Test] Error file transaction re-attempted and FAILED again", error_file_tx_status == TransactionStatus.FAILED.value)
             record_test("[Resume Test] Original error file still exists after failed resume attempt", (temp_dir / SELF_TEST_ERROR_FILE_BASENAME).exists())
-
 
     elif is_edge_case_test:
         exp_edge_paths = {
@@ -321,12 +331,28 @@ def _verify_self_test_results_task(
         exp_paths_std_map = {
             "atlasvibe_root": temp_dir / "atlasvibe_root",
             "deep_atlasvibe_file.txt": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt",
+            "very_large_atlasvibe_file.txt": temp_dir / VERY_LARGE_FILE_NAME_REPLACED
         }
         record_test("Top-level dir rename", exp_paths_std_map["atlasvibe_root"].exists(), f"Dir missing: {exp_paths_std_map['atlasvibe_root']}")
         record_test("Original top-level dir removed", not (temp_dir / "flojoy_root").exists(), "Old 'flojoy_root' dir STILL EXISTS.")
         check_file_content_for_test(exp_paths_std_map.get("deep_atlasvibe_file.txt"),
                            "Line 1: atlasvibe content.\nLine 2: More Atlasvibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
                            "Content replacement (deeply nested, mixed case, Test #16 target)", record_test_func=record_test)
+        if standard_test_includes_large_file:
+            record_test("[Standard Test] Very large file renamed", exp_paths_std_map["very_large_atlasvibe_file.txt"].exists())
+            # Spot check content of very large file
+            if exp_paths_std_map["very_large_atlasvibe_file.txt"].exists():
+                with open(exp_paths_std_map["very_large_atlasvibe_file.txt"], 'r', encoding='utf-8') as f:
+                    line_0 = f.readline().strip()
+                    expected_line_0 = "Line 1: This is a atlasvibe line that should be replaced."
+                    record_test("[Standard Test] Very large file - line 0 content", line_0 == expected_line_0, f"Expected: '{expected_line_0}', Got: '{line_0}'")
+                    
+                    # Read to middle line (approx)
+                    for _ in range(VERY_LARGE_FILE_LINES // 2 -1):
+                        f.readline()
+                    line_mid = f.readline().strip()
+                    expected_line_mid = f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
+                    record_test("[Standard Test] Very large file - middle line content", line_mid == expected_line_mid, f"Expected: '{expected_line_mid}', Got: '{line_mid}'")
     
     # Common verification logic (table printing, summary)
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
@@ -396,18 +422,19 @@ def _verify_self_test_results_task(
 def self_test_flow(
     temp_dir_str: str,
     dry_run_for_test: bool,
-    run_exec_resume_sub_test: bool = False, # Retained for future, not fully implemented
-    run_scan_resume_sub_test: bool = False, # Retained for future, not fully implemented
+    run_exec_resume_sub_test: bool = False, 
+    run_scan_resume_sub_test: bool = False, 
     run_complex_map_sub_test: bool = False,
     run_edge_case_sub_test: bool = False,
     run_empty_map_sub_test: bool = False,
-    run_resume_test: bool = False # New flag for combined resume test
+    run_resume_test: bool = False 
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
     current_mapping_file_for_test: Path
     test_scenario_name = "Standard"
     is_verification_resume_test = False
+    standard_test_includes_large_file = not (run_complex_map_sub_test or run_edge_case_sub_test or run_empty_map_sub_test or run_resume_test)
 
 
     if run_complex_map_sub_test:
@@ -449,8 +476,8 @@ def self_test_flow(
             json.dump(empty_map_data, f, indent=2)
     elif run_resume_test:
         test_scenario_name = "Resume"
-        is_verification_resume_test = True # For _verify_self_test_results_task
-        current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE # Resume test uses default map
+        is_verification_resume_test = True 
+        current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE 
         default_map_data = { 
             "REPLACEMENT_MAPPING": {
                 "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
@@ -483,8 +510,12 @@ def self_test_flow(
 
     print(f"Self-Test ({test_scenario_name}): Successfully initialized replacement map from {current_mapping_file_for_test}")
 
-    # Create initial environment; for resume test, this is phase 1
-    _create_self_test_environment(temp_dir, use_complex_map=run_complex_map_sub_test, use_edge_case_map=run_edge_case_sub_test)
+    _create_self_test_environment(
+        temp_dir, 
+        use_complex_map=run_complex_map_sub_test, 
+        use_edge_case_map=run_edge_case_sub_test,
+        include_very_large_file=standard_test_includes_large_file # Only for standard test
+    )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt", current_mapping_file_for_test.name] 
@@ -498,63 +529,49 @@ def self_test_flow(
     elif run_empty_map_sub_test:
         transaction_file_name_base = "empty_map_transactions"
     elif run_resume_test:
-        transaction_file_name_base = SELF_TEST_RESUME_TRANSACTION_FILE.stem
+        transaction_file_name_base = Path(SELF_TEST_RESUME_TRANSACTION_FILE).stem
     else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
-    # Validation file is not strictly needed for resume test's core logic, but can be used for initial scan part
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test) else None
     
     if run_resume_test:
         print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
         initial_transactions = scan_directory_for_occurrences(temp_dir, test_excluded_dirs, test_excluded_files, test_extensions)
         
-        # Modify some transactions to simulate a partial run
         if initial_transactions:
-            # Mark first file name transaction as COMPLETED (if any)
             fn_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_NAME.value]
             if fn_tx_indices:
                 initial_transactions[fn_tx_indices[0]]["STATUS"] = TransactionStatus.COMPLETED.value
-                if len(fn_tx_indices) > 1: # Mark another as IN_PROGRESS
+                if len(fn_tx_indices) > 1: 
                      initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
             
-            # Mark one content transaction as FAILED (e.g. from error_file_flojoy.txt if it has content tx)
-            # For simplicity, let's assume error_file_flojoy.txt's rename tx is what we make fail.
             for tx in initial_transactions:
                 if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
                     tx["STATUS"] = TransactionStatus.FAILED.value
                     tx["ERROR_MESSAGE"] = "Simulated failure from initial run"
                     break
-            # Mark some content lines as PENDING (they are by default)
         
-        save_transactions(initial_transactions, transaction_file) # This is the file we'll resume FROM
+        save_transactions(initial_transactions, transaction_file) 
         print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
         
-        # Simulate partial execution (dry_run=True to just update statuses based on mock logic)
-        # In a real scenario, some would complete, some might fail.
-        # Here, we rely on the manual status changes above.
-        # execute_all_transactions(transaction_file, temp_dir, dry_run=True, resume=False) # Not needed as we manually set statuses
-
         print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
-        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True) # Add new files
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True) 
 
         print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
-        # The main_flow will call scan (which should load existing tx and add new)
-        # and then execute (which should process PENDING/IN_PROGRESS and re-attempt FAILED)
         main_flow(
             directory=str(temp_dir),
             mapping_file=str(current_mapping_file_for_test),
             extensions=test_extensions,
             exclude_dirs=test_excluded_dirs,
             exclude_files=test_excluded_files,
-            dry_run=dry_run_for_test, # Use the test's dry_run flag
-            skip_scan=False, # Must scan to pick up new files
-            resume=True,     # CRITICAL: This enables resume logic
-            force_execution=True # Avoid prompt in self-test
+            dry_run=dry_run_for_test, 
+            skip_scan=False, 
+            resume=True,     
+            force_execution=True 
         )
-        # Verification will use the final state of `transaction_file`
-    else: # Standard, Complex, Edge, Empty map tests
+    else: 
         transactions1 = scan_directory_for_occurrences(
             root_dir=temp_dir,
             excluded_dirs=test_excluded_dirs,
@@ -593,12 +610,13 @@ def self_test_flow(
 
     _verify_self_test_results_task(
         temp_dir=temp_dir,
-        original_transaction_file=transaction_file, # This is the key file to verify
+        original_transaction_file=transaction_file, 
         validation_transaction_file=validation_file if not run_resume_test else None, 
         is_complex_map_test=run_complex_map_sub_test,
         is_edge_case_test=run_edge_case_sub_test,
         is_empty_map_test=run_empty_map_sub_test,
-        is_resume_test=is_verification_resume_test 
+        is_resume_test=is_verification_resume_test,
+        standard_test_includes_large_file=standard_test_includes_large_file
     )
 
 
@@ -635,7 +653,7 @@ def main_flow(
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
     
-    if not dry_run and not force_execution and not resume: # Prompt for confirmation only on a fresh, non-dry run
+    if not dry_run and not force_execution and not resume: 
         sys.stdout.write("--- Proposed Operation ---\n")
         sys.stdout.write(f"Root Directory: {root_dir}\n")
         sys.stdout.write(f"Replacement Map File: {mapping_file_path}\n")
@@ -659,7 +677,7 @@ def main_flow(
     if not skip_scan:
         print(f"Starting scan phase in '{root_dir}' using map '{mapping_file_path}'...")
         current_transactions_for_resume_scan = None
-        if resume and transaction_json_path.exists(): # For resume, load existing to augment
+        if resume and transaction_json_path.exists(): 
             print(f"Resume mode: Loading existing transactions from {transaction_json_path} for scan augmentation...")
             current_transactions_for_resume_scan = load_transactions(transaction_json_path)
             if current_transactions_for_resume_scan is None:
@@ -670,7 +688,7 @@ def main_flow(
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
-            resume_from_transactions=current_transactions_for_resume_scan # Pass loaded for augmentation
+            resume_from_transactions=current_transactions_for_resume_scan 
         )
         save_transactions(found_transactions, transaction_json_path)
         print(f"Scan complete. {len(found_transactions)} transactions planned in '{transaction_json_path}'")
@@ -687,7 +705,7 @@ def main_flow(
     else:
         print(f"Using existing transaction file: '{transaction_json_path}'. Ensure it was generated with the correct replacement map.")
 
-    if not replace_logic._REPLACEMENT_MAPPING_CONFIG: # If map is empty, no execution needed
+    if not replace_logic._REPLACEMENT_MAPPING_CONFIG: 
         print("Map is empty. No execution will be performed.")
         return
 
@@ -697,7 +715,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=True,
-            resume=resume # Pass resume flag to execution as well
+            resume=resume 
         )
         print(f"Dry run complete. Simulated stats: {stats}")
     else:
@@ -706,7 +724,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=False,
-            resume=resume # Pass resume flag to execution
+            resume=resume 
         )
         print(f"Execution phase complete. Stats: {stats}")
     print(f"Review '{transaction_json_path}' for a log of changes and their statuses.")

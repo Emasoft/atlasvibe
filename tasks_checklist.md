@@ -50,15 +50,16 @@
 7.  **Task 4.7: Scan Determinism.**
     *   **Status**: COMPLETED (Covered by existing validation scan in self-tests)
 8.  **Task 4.8: Resume Scan Phase.**
-    *   **Status**: IN PROGRESS (Current commit adds framework for this test)
+    *   **Status**: COMPLETED (Commit: Current changes)
     *   **Details**: Test resuming from an incomplete transaction log (search phase).
 9.  **Task 4.9: Resume Execution Phase.**
-    *   **Status**: IN PROGRESS (Current commit adds framework for this test)
+    *   **Status**: COMPLETED (Commit: Current changes)
     *   **Details**: Test resuming from a partially executed transaction log (PENDING/IN_PROGRESS transactions).
 10. **Task 4.10: Error Handling and Retries (Simulated).**
-    *   **Status**: COMPLETED (Simulated permission error for rename is tested in standard self-test)
+    *   **Status**: COMPLETED (Simulated permission error for rename is tested in standard self-test and resume test)
 11. **Task 4.11: Large File Processing (>10MB).**
-    *   **Status**: PENDING (Current large file is ~50KB-100KB, not >10MB. Line-by-line processing is used, so should scale, but explicit test for >10MB is missing).
+    *   **Status**: COMPLETED (Commit: Current changes - added very large file generation and scan/verification logic)
+    *   **Details**: Test search/replace in a large file using line-by-line approach.
 12. **Task 4.12: `replacement_mapping.json` Parsing Rules Verification.**
     *   **Status**: COMPLETED (Covered by complex map and edge case tests for diacritics, control chars, spaces, special chars in keys).
 13. **Task 4.13: "Surgeon-like" Precision - Strict Byte Preservation.**
@@ -74,7 +75,7 @@
 
 ## Phase 5: Final Review and Self-Test Execution
 
-1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, and new tests from Phase 4).**
+1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, Resume, and new tests from Phase 4).**
     *   **Status**: PENDING
     *   **Action**: Execute all self-test suites.
     *   Iteratively fix any remaining issues until all tests pass.
@@ -85,4 +86,4 @@
 ---
 
 This plan will be updated as tasks are completed.
-**Current Focus: Phase 4 - Implementing Resume Tests (Tasks 4.8, 4.9).**
+**Current Focus: Phase 4 - Implementing remaining PENDING tests (Surgeon-like precision, Symlinks).**

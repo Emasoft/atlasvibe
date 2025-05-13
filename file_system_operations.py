@@ -16,7 +16,7 @@ from enum import Enum
 import chardet
 import time # For retry delay
 
-from replace_logic import replace_occurrences # Updated import name
+from replace_logic import replace_occurrences 
 
 # --- Custom Exception ---
 class SandboxViolationError(Exception):
@@ -213,22 +213,21 @@ def scan_directory_for_occurrences(
             file_encoding = get_file_encoding(item_path) 
             try:
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
-                    lines = f.readlines() 
+                    # Read and process line by line for memory efficiency with large files
+                    for line_num_0_indexed, line_content in enumerate(f):
+                        if replace_occurrences(line_content) != line_content: 
+                            line_number_1_indexed = line_num_0_indexed + 1
+                            current_tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_number_1_indexed)
 
-                for line_num_0_indexed, line_content in enumerate(lines):
-                    if replace_occurrences(line_content) != line_content: 
-                        line_number_1_indexed = line_num_0_indexed + 1
-                        current_tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_number_1_indexed)
-
-                        if current_tx_id_tuple not in existing_transaction_ids:
-                            processed_transactions.append({
-                                "id": str(uuid.uuid4()), "TYPE": TransactionType.FILE_CONTENT_LINE.value,
-                                "PATH": relative_path_str, "ORIGINAL_NAME": None, 
-                                "LINE_NUMBER": line_number_1_indexed, "ORIGINAL_LINE_CONTENT": line_content, 
-                                "PROPOSED_LINE_CONTENT": None, "ORIGINAL_ENCODING": file_encoding,
-                                "STATUS": TransactionStatus.PENDING.value, "ERROR_MESSAGE": None
-                            })
-                            existing_transaction_ids.add(current_tx_id_tuple)
+                            if current_tx_id_tuple not in existing_transaction_ids:
+                                processed_transactions.append({
+                                    "id": str(uuid.uuid4()), "TYPE": TransactionType.FILE_CONTENT_LINE.value,
+                                    "PATH": relative_path_str, "ORIGINAL_NAME": None, 
+                                    "LINE_NUMBER": line_number_1_indexed, "ORIGINAL_LINE_CONTENT": line_content, 
+                                    "PROPOSED_LINE_CONTENT": None, "ORIGINAL_ENCODING": file_encoding,
+                                    "STATUS": TransactionStatus.PENDING.value, "ERROR_MESSAGE": None
+                                })
+                                existing_transaction_ids.add(current_tx_id_tuple)
             except UnicodeDecodeError as ude:
                  print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='surrogateescape'). Skipping content scan. Error: {ude}")
             except Exception as e:
@@ -444,6 +443,9 @@ def _execute_content_line_transaction(
         if not (0 <= line_number_1_indexed - 1 < len(lines)):
             return TransactionStatus.FAILED, f"Line number {line_number_1_indexed} out of bounds for file {current_abs_path} (len: {len(lines)})."
 
+        # Verify the line content hasn't changed since scan, only if it's not a dry run from a previous actual run
+        # For self-tests, this check is important. For real resume, it might be too strict if user edited file.
+        # However, the transaction stores ORIGINAL_LINE_CONTENT, so this check is valid.
         if lines[line_number_1_indexed - 1] != original_line_content:
              return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
 
@@ -515,25 +517,31 @@ def execute_all_transactions(
                      path_cache.pop(original_rel_path, None)
             continue
         if current_status == TransactionStatus.FAILED:
-            stats["failed"] +=1
-            continue
+            if not resume: # If not resuming, a FAILED state is final for this run
+                stats["failed"] +=1
+                continue
+            else: # If resuming, FAILED items are re-attempted (treated like PENDING)
+                print(f"Resuming FAILED transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
+                current_status = TransactionStatus.PENDING 
+        
         if current_status == TransactionStatus.SKIPPED:
             stats["skipped"] +=1
             continue
 
         if current_status == TransactionStatus.IN_PROGRESS:
-            if not resume:
+            if not resume: # If not resuming, an IN_PROGRESS from a previous crash is reset to PENDING
                 tx_item["STATUS"] = TransactionStatus.PENDING.value
                 current_status = TransactionStatus.PENDING
-            else:
+            else: # If resuming, continue IN_PROGRESS items
                  print(f"Resuming IN_PROGRESS transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
 
         if current_status == TransactionStatus.PENDING or \
-           (resume and current_status == TransactionStatus.IN_PROGRESS):
+           (resume and current_status == TransactionStatus.IN_PROGRESS): # Also re-attempt FAILED on resume
 
             print(f"Processing transaction {i+1}/{total_transactions}: {tx_id} ({tx_item.get('TYPE')}: {tx_item.get('PATH')}:{tx_item.get('LINE_NUMBER', '')})")
             update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-            save_transactions(transactions, transactions_file_path)
+            # Save transactions immediately after marking IN_PROGRESS for better resume state
+            save_transactions(transactions, transactions_file_path) 
 
             new_status: TransactionStatus
             error_msg: Optional[str] = None
@@ -558,7 +566,7 @@ def execute_all_transactions(
                 print(error_msg)
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg, proposed_content_update)
-            save_transactions(transactions, transactions_file_path)
+            save_transactions(transactions, transactions_file_path) # Save final status
             
             if new_status == TransactionStatus.COMPLETED:
                 stats["completed"] += 1
@@ -566,7 +574,7 @@ def execute_all_transactions(
                 stats["failed"] += 1
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
-        else:
+        else: # Should only be PENDING if not resume, or already handled states
              stats["pending"] +=1
 
     final_pending = sum(1 for t in transactions if t.get("STATUS") == TransactionStatus.PENDING.value)
