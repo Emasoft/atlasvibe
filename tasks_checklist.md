@@ -17,9 +17,9 @@
 ## Phase 3: Systematic Code Review and Refinement (All Python Files)
 
 1.  **Task 3.1: Syntax and Basic Structure.**
-    *   **Status**: COMPLETED (Commits: `9d620f5`, `97aa327`)
+    *   **Status**: COMPLETED (Commits: `9d620f5`, `97aa327`, `0926e95`)
 2.  **Task 3.2: References, Scope, and Definitions.**
-    *   **Status**: COMPLETED (Reviewed)
+    *   **Status**: COMPLETED (Reviewed; `args` scope fixed in `0926e95`)
 3.  **Task 3.3: Control Flow and Logic.**
     *   **Status**: COMPLETED (Reviewed)
 4.  **Task 3.4: Type Checking and Annotations.**
@@ -68,7 +68,7 @@
 14. **Task 4.14: Non-Matching Files/Folders Untouched.**
     *   **Status**: COMPLETED (Implicitly covered by all self-tests; files like `no_target_here.log` are verified to be untouched).
 15. **Task 4.15: Symlink Handling (Default: No Follow).**
-    *   **Status**: COMPLETED (Commits: `abdc200` for logic, `669aa3c` for test integration, current changes for `--ignore-symlinks` flag and test updates)
+    *   **Status**: COMPLETED (Commits: `abdc200` for logic, `669aa3c` for test integration, `e5887f6` for `--ignore-symlinks` flag and test updates, `355897b` for scan logic fix, `0926e95` for self-test logic fix)
 16. **Task 4.16: Deep Directory Tree Operations (depth=10).**
     *   **Status**: COMPLETED (Covered by existing deep path tests in `_create_self_test_environment` and verified by standard self-test).
 17. **Task 4.17: GB18030 Encoding Test.**
@@ -77,14 +77,14 @@
 ## Phase 5: Final Review and Self-Test Execution
 
 1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, Resume, Precision, and new tests from Phase 4).**
-    *   **Status**: IN PROGRESS (This is the current step - all tests are expected to pass now)
+    *   **Status**: COMPLETED (All self-tests passed as of commit `3e77888` and subsequent fixes like `1f2d97f`)
     *   **Action**: Execute all self-test suites.
     *   Iteratively fix any remaining issues until all tests pass.
 2.  **Task 5.2: Final Code Read-Through.**
-    *   **Status**: PENDING
-    *   **Action**: One last check for any missed items or inconsistencies after all other phases.
+    *   **Status**: COMPLETED
+    *   **Action**: One last check for any missed items or inconsistencies after all other phases. (No further issues identified).
 
 ---
 
 This plan will be updated as tasks are completed.
-**Current Focus: Phase 5, Task 5.1 - Confirming all self-tests pass.**
+**Current Focus: All planned tasks are complete.**
