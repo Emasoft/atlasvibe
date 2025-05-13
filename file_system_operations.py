@@ -150,7 +150,7 @@ def scan_directory_for_occurrences(
     excluded_dirs: List[str],
     excluded_files: List[str],
     file_extensions: Optional[List[str]],
-    ignore_symlinks: bool, # New parameter
+    ignore_symlinks: bool, 
     resume_from_transactions: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
 
@@ -182,7 +182,6 @@ def scan_directory_for_occurrences(
             print(f"Warning: Could not get relative path for {item_path}. Skipping.")
             continue
 
-        # Handle symlink ignorance
         if ignore_symlinks and item_path.is_symlink():
             print(f"Ignoring symlink (per --ignore-symlinks): {item_path}")
             continue
@@ -214,7 +213,7 @@ def scan_directory_for_occurrences(
                 })
                 existing_transaction_ids.add(current_tx_id_tuple)
 
-        if item_path.is_file() and not item_path.is_symlink(): # Content processing only for actual files
+        if item_path.is_file() and not item_path.is_symlink(): 
             if is_likely_binary_file(item_path): 
                 continue
             if normalized_extensions and item_path.suffix.lower() not in normalized_extensions:
