@@ -262,7 +262,7 @@ def _verify_self_test_results_task(
     standard_test_includes_large_file: bool = False,
     is_precision_test: bool = False,
     standard_test_includes_symlinks: bool = False,
-    symlinks_were_ignored_in_scan: bool = False # New flag for verification
+    symlinks_were_ignored_in_scan: bool = False 
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -319,7 +319,7 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
@@ -551,7 +551,7 @@ def self_test_flow(
     run_empty_map_sub_test: bool = False,
     run_resume_test: bool = False,
     run_precision_test: bool = False,
-    ignore_symlinks_for_this_test_run: bool = False # New parameter for specific test invocations
+    ignore_symlinks_for_this_test_run: bool = False 
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
@@ -564,7 +564,6 @@ def self_test_flow(
         run_complex_map_sub_test or run_edge_case_sub_test or 
         run_empty_map_sub_test or run_resume_test or run_precision_test
     )
-    # Symlinks are included in standard, precision, and resume tests by default (unless ignore_symlinks_for_this_test_run is True)
     standard_test_includes_symlinks = standard_test_includes_large_file or run_precision_test or run_resume_test
 
 
@@ -662,7 +661,7 @@ def self_test_flow(
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
         include_precision_test_file=run_precision_test,
-        include_symlink_tests=standard_test_includes_symlinks and not ignore_symlinks_for_this_test_run
+        include_symlink_tests=standard_test_includes_symlinks # This flag controls creation
     )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
@@ -682,7 +681,7 @@ def self_test_flow(
         transaction_file_name_base = "precision_test_transactions"
     else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
-        if ignore_symlinks_for_this_test_run:
+        if ignore_symlinks_for_this_test_run: # Append to name if standard test is ignoring symlinks
             transaction_file_name_base += "_ignore_symlinks"
 
 
@@ -696,7 +695,7 @@ def self_test_flow(
             test_excluded_dirs, 
             test_excluded_files, 
             test_extensions,
-            ignore_symlinks=False 
+            ignore_symlinks=False # For resume setup, process symlinks initially
         )
         
         if initial_transactions:
@@ -716,7 +715,7 @@ def self_test_flow(
         print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
         
         print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
-        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True) # Ensure symlinks are there for resume
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True) 
 
         print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
         main_flow(
@@ -977,19 +976,19 @@ def main_cli() -> None:
                 print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
-                    run_standard_self_test=True, # Internal flag for _verify_self_test_results_task
-                    ignore_symlinks_for_this_test_run=False # Explicitly process symlinks
+                    run_standard_self_test=True, 
+                    ignore_symlinks_for_this_test_run=False 
                 )
-                # Re-create sandbox for the ignored symlink run
-                if self_test_sandbox.exists(): shutil.rmtree(self_test_sandbox)
+                if self_test_sandbox.exists():
+                    shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
                     run_standard_self_test=True,
-                    ignore_symlinks_for_this_test_run=True # Explicitly ignore symlinks
+                    ignore_symlinks_for_this_test_run=True 
                 )
-            else: # For other specific tests, use the CLI's --ignore-symlinks value
+            else: 
                  self_test_flow(
                     temp_dir_str=str(self_test_sandbox),
                     dry_run_for_test=args.dry_run, 
@@ -998,7 +997,7 @@ def main_cli() -> None:
                     run_empty_map_sub_test=is_empty_map_run,
                     run_resume_test=is_resume_run,
                     run_precision_test=is_precision_run,
-                    ignore_symlinks_for_this_test_run=args.ignore_symlinks
+                    ignore_symlinks_for_this_test_run=args.ignore_symlinks # Use CLI arg for other tests
                 )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
