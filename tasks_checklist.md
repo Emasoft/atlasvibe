@@ -50,20 +50,21 @@
 7.  **Task 4.7: Scan Determinism.**
     *   **Status**: COMPLETED (Covered by existing validation scan in self-tests)
 8.  **Task 4.8: Resume Scan Phase.**
-    *   **Status**: COMPLETED (Commit: Current changes)
+    *   **Status**: COMPLETED (Commit: `91a8ac2`)
     *   **Details**: Test resuming from an incomplete transaction log (search phase).
 9.  **Task 4.9: Resume Execution Phase.**
-    *   **Status**: COMPLETED (Commit: Current changes)
+    *   **Status**: COMPLETED (Commit: `91a8ac2`)
     *   **Details**: Test resuming from a partially executed transaction log (PENDING/IN_PROGRESS transactions).
 10. **Task 4.10: Error Handling and Retries (Simulated).**
     *   **Status**: COMPLETED (Simulated permission error for rename is tested in standard self-test and resume test)
 11. **Task 4.11: Large File Processing (>10MB).**
-    *   **Status**: COMPLETED (Commit: Current changes - added very large file generation and scan/verification logic)
+    *   **Status**: COMPLETED (Commit: `91a8ac2` - added very large file generation and scan/verification logic; `file_system_operations.py` updated for line-by-line scan in current changes)
     *   **Details**: Test search/replace in a large file using line-by-line approach.
 12. **Task 4.12: `replacement_mapping.json` Parsing Rules Verification.**
     *   **Status**: COMPLETED (Covered by complex map and edge case tests for diacritics, control chars, spaces, special chars in keys).
 13. **Task 4.13: "Surgeon-like" Precision - Strict Byte Preservation.**
-    *   **Status**: PENDING (Partially covered by encoding tests like GB18030 and `surrogateescape` usage, but dedicated tests with malformed/mixed content would be more thorough).
+    *   **Status**: IN PROGRESS (Current commit adds framework and initial files/checks for this test)
+    *   **Details**: Create diverse test files with mixed encodings, various line endings, control characters, diacritics, malformed/illegal/corrupt characters, trailing spaces, etc. Verify that only mapped strings are changed and everything else is byte-for-byte identical.
 14. **Task 4.14: Non-Matching Files/Folders Untouched.**
     *   **Status**: COMPLETED (Implicitly covered by all self-tests; files like `no_target_here.log` are verified to be untouched).
 15. **Task 4.15: Symlink Handling (Default: No Follow).**
@@ -75,7 +76,7 @@
 
 ## Phase 5: Final Review and Self-Test Execution
 
-1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, Resume, and new tests from Phase 4).**
+1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, Resume, Precision, and new tests from Phase 4).**
     *   **Status**: PENDING
     *   **Action**: Execute all self-test suites.
     *   Iteratively fix any remaining issues until all tests pass.
@@ -86,4 +87,4 @@
 ---
 
 This plan will be updated as tasks are completed.
-**Current Focus: Phase 4 - Implementing remaining PENDING tests (Surgeon-like precision, Symlinks).**
+**Current Focus: Phase 4 - Implementing Precision Test (Task 4.13).**

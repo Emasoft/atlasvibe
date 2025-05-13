@@ -45,9 +45,10 @@ SELF_TEST_COMPLEX_MAP_FILE = "self_test_complex_mapping.json"
 SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
 SELF_TEST_RESUME_TRANSACTION_FILE = "self_test_resume_transactions.json"
+SELF_TEST_PRECISION_MAP_FILE = "self_test_precision_mapping.json"
 VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
 VERY_LARGE_FILE_NAME_REPLACED = "very_large_atlasvibe_file.txt"
-VERY_LARGE_FILE_LINES = 200 * 1000 # Approx 15-20MB for typical line lengths
+VERY_LARGE_FILE_LINES = 200 * 1000 
 VERY_LARGE_FILE_MATCH_INTERVAL = 10000
 
 
@@ -80,10 +81,11 @@ def _create_self_test_environment(
     use_complex_map: bool = False,
     use_edge_case_map: bool = False,
     for_resume_test_phase_2: bool = False,
-    include_very_large_file: bool = False # New flag
+    include_very_large_file: bool = False,
+    include_precision_test_file: bool = False # New flag
 ) -> None:
     """Creates a directory structure and files for self-testing."""
-    if not for_resume_test_phase_2: # Create initial set of files
+    if not for_resume_test_phase_2: 
         (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
         (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
             "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
@@ -120,7 +122,6 @@ def _create_self_test_environment(
         except Exception:
             (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
 
-        # Standard large file (smaller than VERY_LARGE_FILE)
         large_file_content_list = []
         for i in range(1000): 
             if i % 50 == 0:
@@ -140,6 +141,29 @@ def _create_self_test_environment(
                 else:
                     f.write(f"Line {i+1}: This is a standard non-matching line with some padding to make it longer.\n")
         print("Very large file generated.")
+
+    if include_precision_test_file:
+        precision_content = [
+            "Standard flojoy here.\n",
+            "flöjoy with diacritics.\r\n", # Mixed line ending
+            "  flojoy   with spaces around.\n",
+            "你好flojoy世界 (Chinese chars).\n",
+            "emoji😊flojoy test.\n",
+            "A line with flo\tjoy (tab control char).\n",
+            "A line with flo\rjoy (CR control char).\n", # Note: \r might be normalized by text mode
+            "  flojoy  \n", # To test space-inclusive key
+            "unrelated content\n"
+        ]
+        # Add a line with a byte that might be problematic if not handled by surrogateescape
+        # This byte \xff is invalid in UTF-8 if it's not part of a multi-byte sequence.
+        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
+        
+        (base_dir / "precision_test_flojoy_source.txt").write_text("".join(precision_content), encoding='utf-8', errors='surrogateescape')
+        with open(base_dir / "precision_test_flojoy_source.txt", "ab") as f: # Append bytes
+            f.write(problematic_bytes_line)
+        
+        # File whose name contains "flojoy" for precision rename test
+        (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
 
     if use_complex_map:
@@ -170,7 +194,7 @@ def _create_self_test_environment(
 
     if for_resume_test_phase_2:
         (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
-        if (base_dir / "only_name_atlasvibe.md").exists(): # Assuming it was renamed in phase 1
+        if (base_dir / "only_name_atlasvibe.md").exists(): 
              (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
 
 
@@ -214,7 +238,8 @@ def _verify_self_test_results_task(
     is_edge_case_test: bool = False,
     is_empty_map_test: bool = False,
     is_resume_test: bool = False, 
-    standard_test_includes_large_file: bool = False # New flag
+    standard_test_includes_large_file: bool = False,
+    is_precision_test: bool = False # New flag
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -236,6 +261,50 @@ def _verify_self_test_results_task(
         transactions = load_transactions(original_transaction_file)
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
     
+    elif is_precision_test:
+        precision_source_path = temp_dir / "precision_test_flojoy_source.txt" # Original name
+        precision_replaced_path = temp_dir / "precision_test_atlasvibe_source.txt" # Expected new name
+        
+        record_test("[Precision Test] Filename replaced", precision_replaced_path.exists())
+        record_test("[Precision Test] Original filename removed", not precision_source_path.exists())
+
+        if precision_replaced_path.exists():
+            # Expected content after replacements (using default map + "  flojoy  " -> "  atlasvibe_spaced  ")
+            expected_lines = [
+                "Standard atlasvibe here.\n",
+                "atlasvibe with diacritics.\r\n", # Line endings are tricky, Python text mode might normalize to \n on read.
+                                                 # The key is that the *replacement* doesn't add/remove \r if it wasn't part of the value.
+                                                 # For this test, we'll assume \n for comparison after read.
+                "  atlasvibe   with spaces around.\n", # Assuming "flojoy" key matches, spaces preserved
+                "你好atlasvibe世界 (Chinese chars).\n",
+                "emoji😊atlasvibe test.\n",
+                "A line with atlasvibe (tab control char).\n", # Assuming "flo\tjoy" key (processed to "flojoy") maps to "atlasvibe"
+                "A line with atlasvibe (CR control char).\n", # Assuming "flo\rjoy" key (processed to "flojoy") maps to "atlasvibe"
+                "  atlasvibe_spaced  \n", # From "  flojoy  " -> "  atlasvibe_spaced  "
+                "unrelated content\n",
+                b"malformed-\xff-atlasvibe-bytes\n" # Byte string for the line with problematic byte
+            ]
+            
+            actual_lines_bytes = precision_replaced_path.read_bytes().splitlines(keepends=True)
+            
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(expected_lines), f"Expected {len(expected_lines)} lines, got {len(actual_lines_bytes)}")
+
+            for i, expected_item in enumerate(expected_lines):
+                if i < len(actual_lines_bytes):
+                    actual_line_bytes = actual_lines_bytes[i]
+                    if isinstance(expected_item, str): # Text line
+                        # Decode actual line for comparison, preserving surrogates
+                        actual_line_str = actual_line_bytes.decode('utf-8', errors='surrogateescape')
+                        # Normalize line endings for comparison
+                        normalized_actual_line_str = actual_line_str.replace("\r\n", "\n").replace("\r", "\n")
+                        normalized_expected_line_str = expected_item.replace("\r\n", "\n").replace("\r", "\n")
+                        record_test(f"[Precision Test] Line {i+1} content", normalized_actual_line_str == normalized_expected_line_str, f"Expected: '{normalized_expected_line_str!r}', Got: '{normalized_actual_line_str!r}'")
+                    else: # Byte line
+                        record_test(f"[Precision Test] Line {i+1} byte content", actual_line_bytes == expected_item, f"Expected: {expected_item!r}, Got: {actual_line_bytes!r}")
+                else:
+                    record_test(f"[Precision Test] Line {i+1} missing", False)
+
+
     elif is_resume_test:
         final_transactions = load_transactions(original_transaction_file)
         record_test("[Resume Test] Final transaction log loaded", final_transactions is not None)
@@ -340,15 +409,13 @@ def _verify_self_test_results_task(
                            "Content replacement (deeply nested, mixed case, Test #16 target)", record_test_func=record_test)
         if standard_test_includes_large_file:
             record_test("[Standard Test] Very large file renamed", exp_paths_std_map["very_large_atlasvibe_file.txt"].exists())
-            # Spot check content of very large file
             if exp_paths_std_map["very_large_atlasvibe_file.txt"].exists():
                 with open(exp_paths_std_map["very_large_atlasvibe_file.txt"], 'r', encoding='utf-8') as f:
                     line_0 = f.readline().strip()
                     expected_line_0 = "Line 1: This is a atlasvibe line that should be replaced."
                     record_test("[Standard Test] Very large file - line 0 content", line_0 == expected_line_0, f"Expected: '{expected_line_0}', Got: '{line_0}'")
                     
-                    # Read to middle line (approx)
-                    for _ in range(VERY_LARGE_FILE_LINES // 2 -1):
+                    for i in range(1, VERY_LARGE_FILE_LINES // 2): # Read up to mid-point
                         f.readline()
                     line_mid = f.readline().strip()
                     expected_line_mid = f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
@@ -427,14 +494,21 @@ def self_test_flow(
     run_complex_map_sub_test: bool = False,
     run_edge_case_sub_test: bool = False,
     run_empty_map_sub_test: bool = False,
-    run_resume_test: bool = False 
+    run_resume_test: bool = False,
+    run_precision_test: bool = False # New flag
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
     current_mapping_file_for_test: Path
     test_scenario_name = "Standard"
     is_verification_resume_test = False
-    standard_test_includes_large_file = not (run_complex_map_sub_test or run_edge_case_sub_test or run_empty_map_sub_test or run_resume_test)
+    is_verification_precision_test = False
+    # Determine if the standard test should include the very large file
+    # It should if no other specific test type (complex, edge, empty, resume, precision) is active.
+    standard_test_includes_large_file = not (
+        run_complex_map_sub_test or run_edge_case_sub_test or 
+        run_empty_map_sub_test or run_resume_test or run_precision_test
+    )
 
 
     if run_complex_map_sub_test:
@@ -486,6 +560,22 @@ def self_test_flow(
         }
         with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
             json.dump(default_map_data, f, indent=2)
+    elif run_precision_test:
+        test_scenario_name = "Precision"
+        is_verification_precision_test = True
+        current_mapping_file_for_test = temp_dir / SELF_TEST_PRECISION_MAP_FILE
+        precision_map_data = {
+            "REPLACEMENT_MAPPING": {
+                "flojoy": "atlasvibe", # Standard
+                "Flojoy": "Atlasvibe", # Standard
+                "flöjoy": "atlasvibe_diacritic", # Test diacritic source
+                "flo\tjoy": "atlasvibe_tab", # Test control char in source (processed to "flojoy")
+                "  flojoy  ": "  atlasvibe_spaced  ", # Test spaces in key
+                "flo\rjoy": "atlasvibe_cr" # Test CR control char in source (processed to "flojoy")
+            }
+        }
+        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
+            json.dump(precision_map_data, f, indent=2)
     else: # Standard test
         current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE
         default_map_data = { 
@@ -514,7 +604,8 @@ def self_test_flow(
         temp_dir, 
         use_complex_map=run_complex_map_sub_test, 
         use_edge_case_map=run_edge_case_sub_test,
-        include_very_large_file=standard_test_includes_large_file # Only for standard test
+        include_very_large_file=standard_test_includes_large_file,
+        include_precision_test_file=run_precision_test
     )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
@@ -530,11 +621,13 @@ def self_test_flow(
         transaction_file_name_base = "empty_map_transactions"
     elif run_resume_test:
         transaction_file_name_base = Path(SELF_TEST_RESUME_TRANSACTION_FILE).stem
+    elif run_precision_test:
+        transaction_file_name_base = "precision_test_transactions"
     else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
-    validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test) else None
+    validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test or run_precision_test) else None
     
     if run_resume_test:
         print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
@@ -611,12 +704,13 @@ def self_test_flow(
     _verify_self_test_results_task(
         temp_dir=temp_dir,
         original_transaction_file=transaction_file, 
-        validation_transaction_file=validation_file if not run_resume_test else None, 
+        validation_transaction_file=validation_file if not (run_resume_test or run_precision_test) else None, 
         is_complex_map_test=run_complex_map_sub_test,
         is_edge_case_test=run_edge_case_sub_test,
         is_empty_map_test=run_empty_map_sub_test,
         is_resume_test=is_verification_resume_test,
-        standard_test_includes_large_file=standard_test_includes_large_file
+        standard_test_includes_large_file=standard_test_includes_large_file,
+        is_precision_test=run_precision_test
     )
 
 
@@ -765,17 +859,21 @@ def main_cli() -> None:
                                  help=f"Run self-test with an empty replacement map in '{SELF_TEST_SANDBOX_DIR}'.")
     self_test_group.add_argument("--self-test-resume", dest="run_resume_self_test", action="store_true",
                                  help=f"Run self-test for resume functionality in '{SELF_TEST_SANDBOX_DIR}'.")
+    self_test_group.add_argument("--self-test-precision", dest="run_precision_self_test", action="store_true",
+                                 help=f"Run self-test for 'surgeon-like' precision in '{SELF_TEST_SANDBOX_DIR}'.")
 
 
     args = parser.parse_args()
 
     if args.run_standard_self_test or args.run_complex_map_self_test or \
-       args.run_edge_case_self_test or args.run_empty_map_self_test or args.run_resume_self_test:
+       args.run_edge_case_self_test or args.run_empty_map_self_test or \
+       args.run_resume_self_test or args.run_precision_self_test:
         
         is_complex_run = args.run_complex_map_self_test
         is_edge_case_run = args.run_edge_case_self_test
         is_empty_map_run = args.run_empty_map_self_test
         is_resume_run = args.run_resume_self_test
+        is_precision_run = args.run_precision_self_test
         
         test_type_msg = "Standard"
         if is_complex_run:
@@ -786,6 +884,8 @@ def main_cli() -> None:
             test_type_msg = "Empty Map"
         elif is_resume_run:
             test_type_msg = "Resume Functionality"
+        elif is_precision_run:
+            test_type_msg = "Precision"
         
         sys.stdout.write(f"Running self-test ({test_type_msg} scenario) in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         
@@ -803,7 +903,8 @@ def main_cli() -> None:
                 run_complex_map_sub_test=is_complex_run,
                 run_edge_case_sub_test=is_edge_case_run,
                 run_empty_map_sub_test=is_empty_map_run,
-                run_resume_test=is_resume_run
+                run_resume_test=is_resume_run,
+                run_precision_test=is_precision_run
             )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
