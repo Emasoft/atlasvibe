@@ -314,7 +314,7 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
@@ -420,7 +420,7 @@ def _verify_self_test_results_task(
                            "Line with Value_for_key_with_controls_VAL to replace.", 
                            "[Complex] Key with control chars in key - content replacement", record_test_func=record_test)
 
-    elif not is_exec_resume_run and not is_scan_resume_run: # Standard self-test run
+    elif not is_resume_test and not is_precision_test: # Standard self-test run (catches all other non-specific flags)
         exp_paths_std_map = {
             "atlasvibe_root": temp_dir / "atlasvibe_root",
             "deep_atlasvibe_file.txt": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt",
@@ -974,7 +974,7 @@ def main_cli() -> None:
                     run_standard_self_test=True, 
                     ignore_symlinks_for_this_test_run=False 
                 )
-                if self_test_sandbox.exists(): # Re-create sandbox for the ignored symlink run
+                if self_test_sandbox.exists(): 
                     shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
