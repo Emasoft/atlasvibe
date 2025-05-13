@@ -126,22 +126,26 @@ def replace_occurrences(input_string: str) -> str:
         actual_matched_text_on_disk = match_obj.group(0) 
         
         key_after_diacritics = strip_diacritics(actual_matched_text_on_disk)
-        processed_match_for_lookup = strip_control_characters(key_after_diacritics)
+        processed_match_for_lookup = strip_control_characters(key_after_diacritics) # This preserves case from disk
         
-        # Prioritize direct (case-sensitive after stripping) match with map keys
+        # Prioritize direct (case-sensitive after stripping) match with map keys.
         # The keys in _REPLACEMENT_MAPPING_CONFIG are already stripped of diacritics and control chars,
         # but retain their original casing from the JSON.
         if processed_match_for_lookup in _REPLACEMENT_MAPPING_CONFIG:
             return _REPLACEMENT_MAPPING_CONFIG[processed_match_for_lookup]
 
-        # Fallback for case-insensitive matching if direct case match wasn't found
-        # (e.g., map has "flojoy":"atlasvibe", input is "FLOJOY")
+        # Fallback for case-insensitive matching if direct case match wasn't found.
         # This is necessary because the main regex is re.IGNORECASE.
-        for processed_config_key, original_config_value in _REPLACEMENT_MAPPING_CONFIG.items():
-            if processed_config_key.lower() == processed_match_for_lookup.lower():
-                return original_config_value
+        # An input of "floJOY" (matched by regex) might not be a direct key in _REPLACEMENT_MAPPING_CONFIG
+        # if the original JSON keys were "flojoy", "Flojoy", etc., and "floJOY" itself wasn't a key.
+        # This loop ensures that if the IGNORECASE regex matched, we find *a* corresponding rule.
+        processed_match_for_lookup_lower = processed_match_for_lookup.lower()
+        for config_key_processed, config_value_original in _REPLACEMENT_MAPPING_CONFIG.items():
+            if config_key_processed.lower() == processed_match_for_lookup_lower:
+                return config_value_original
         
-        # Should not be reached if the regex matched something that was derived from a config key.
+        # Should not be reached if the regex matched something that was derived from a config key
+        # and the map loading/callback logic is perfectly aligned.
         return actual_matched_text_on_disk 
 
     return _COMPILED_PATTERN.sub(replace_callback, input_string)
