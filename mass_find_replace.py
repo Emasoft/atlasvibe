@@ -314,7 +314,7 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
@@ -420,7 +420,7 @@ def _verify_self_test_results_task(
                            "Line with Value_for_key_with_controls_VAL to replace.", 
                            "[Complex] Key with control chars in key - content replacement", record_test_func=record_test)
 
-    elif not is_resume_test and not is_precision_test: # Standard self-test run (catches all other non-specific flags)
+    elif not is_resume_test and not is_precision_test: # Standard self-test run
         exp_paths_std_map = {
             "atlasvibe_root": temp_dir / "atlasvibe_root",
             "deep_atlasvibe_file.txt": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt",
@@ -970,8 +970,8 @@ def main_cli() -> None:
             if args.run_standard_self_test:
                 print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
                 self_test_flow(
-                    temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
-                    run_standard_self_test=True, 
+                    temp_dir_str=str(self_test_sandbox), 
+                    dry_run_for_test=args.dry_run,
                     ignore_symlinks_for_this_test_run=False 
                 )
                 if self_test_sandbox.exists(): 
@@ -979,8 +979,8 @@ def main_cli() -> None:
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
                 self_test_flow(
-                    temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
-                    run_standard_self_test=True,
+                    temp_dir_str=str(self_test_sandbox), 
+                    dry_run_for_test=args.dry_run,
                     ignore_symlinks_for_this_test_run=True 
                 )
             else: 

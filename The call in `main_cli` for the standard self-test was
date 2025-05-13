@@ -1,0 +1,5 @@
+                self_test_flow(
+                    temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
+                    run_standard_self_test=True, # <<< THIS IS THE PROBLEM
+                    ignore_symlinks_for_this_test_run=False 
+                )
