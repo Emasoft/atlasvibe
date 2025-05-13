@@ -265,7 +265,7 @@ def _verify_self_test_results_task(
                            "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.", # "And My_Love&Story" remains as it's not a key
                            "[Complex] Key with '&' and case variants replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("coco4_replaced_name"),
-                           "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.", # Corrected: "coco4_ep-m" should also be replaced
+                           "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.", 
                            "[Complex] Key with '-' and mixed case replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("special_chars_content_file"),
                            "This line contains SpecialCharsKeyMatched_VAL to be replaced.",
@@ -440,7 +440,7 @@ def self_test_flow(
     elif run_empty_map_sub_test:
         transaction_file_name_base = "empty_map_transactions"
     else:
-        transaction_file_name_base = SELF_TEST_PRIMARY_TRANSACTION_FILE.stem
+        transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not run_empty_map_sub_test else None
