@@ -1,6 +1,0 @@
-            if symlinks_were_ignored_in_scan:
-                # ...
-            else: # Symlinks were processed
-                record_test("[Symlink Test - Processed] Renamed file symlink exists", os.path.lexists(link_file_renamed_path))
-                if os.path.lexists(link_file_renamed_path):
-                    record_test("[Symlink Test - Processed] Renamed file symlink is a symlink", link_file_renamed_path.is_symlink())

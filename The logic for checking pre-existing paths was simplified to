@@ -1,2 +1,0 @@
-            if os.path.lexists(new_abs_path):
-                return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists."

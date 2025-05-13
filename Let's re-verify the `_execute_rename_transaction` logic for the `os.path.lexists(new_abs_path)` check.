@@ -1,3 +1,0 @@
-            if os.path.lexists(new_abs_path):
-                # If the target path for the new link name already exists, skip to avoid overwrite.
-                return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists."
