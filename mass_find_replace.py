@@ -197,7 +197,7 @@ def _create_self_test_environment(
              (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
     
     if include_symlink_tests:
-        symlink_target_dir = base_dir / "symlink_targets_outside" # Keep distinct from main test area
+        symlink_target_dir = base_dir / "symlink_targets_outside" 
         symlink_target_dir.mkdir(parents=True, exist_ok=True)
         (symlink_target_dir / "target_file_flojoy.txt").write_text("flojoy in symlink target file")
         target_subdir_flojoy = symlink_target_dir / "target_dir_flojoy"
@@ -208,14 +208,15 @@ def _create_self_test_environment(
         link_to_dir = base_dir / "link_to_dir_flojoy"
         
         try:
-            if not link_to_file.exists(): # os.symlink errors if link_name exists
+            # Use os.path.lexists to check if the link itself exists, not what it points to
+            if not os.path.lexists(link_to_file): 
                 os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
-            if not link_to_dir.exists():
+            if not os.path.lexists(link_to_dir):
                 os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
-            print("Symlinks created for testing.")
+            print("Symlinks created (or already existed) for testing.")
         except OSError as e:
             print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
-        except Exception as e: # Catch any other exception during symlink creation
+        except Exception as e: 
             print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
 
 
@@ -261,7 +262,7 @@ def _verify_self_test_results_task(
     is_resume_test: bool = False, 
     standard_test_includes_large_file: bool = False,
     is_precision_test: bool = False,
-    standard_test_includes_symlinks: bool = False # New flag
+    standard_test_includes_symlinks: bool = False 
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -285,7 +286,7 @@ def _verify_self_test_results_task(
     
     elif is_precision_test:
         precision_source_orig_name = "precision_test_flojoy_source.txt"
-        precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" # Based on "flojoy" -> "atlasvibe_plain"
+        precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" 
         
         precision_renamed_path = temp_dir / precision_source_renamed_name
         
@@ -300,8 +301,6 @@ def _verify_self_test_results_task(
 
         if precision_renamed_path.exists():
             original_content_bytes_list = []
-            # Reconstruct original content bytes as written by _create_self_test_environment
-            # This is crucial for byte-for-byte comparison of non-replaced parts
             _orig_precision_content_lines = [
                 "Standard flojoy here.\n",
                 "Another Flojoy for title case.\r\n",
@@ -313,20 +312,19 @@ def _verify_self_test_results_task(
                 "你好flojoy世界 (Chinese chars).\n",
                 "emoji😊flojoy test.\n",
             ]
-            _orig_problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
+            _orig_problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
             for line_str in _orig_precision_content_lines:
                 original_content_bytes_list.append(line_str.encode('utf-8', errors='surrogateescape'))
             original_content_bytes_list.append(_orig_problematic_bytes_line)
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
                     actual_line_bytes_from_file = actual_lines_bytes[i]
                     
-                    # Determine expected processed line
                     original_line_str_for_processing = original_line_bytes.decode('utf-8', errors='surrogateescape')
                     expected_processed_line_str = replace_logic.replace_occurrences(original_line_str_for_processing)
                     expected_processed_line_bytes = expected_processed_line_str.encode('utf-8', errors='surrogateescape')
@@ -453,10 +451,17 @@ def _verify_self_test_results_task(
                     record_test("[Standard Test] Very large file - middle line content", line_mid == expected_line_mid, f"Expected: '{expected_line_mid}', Got: '{line_mid}'")
         
         if standard_test_includes_symlinks:
-            link_file_renamed = temp_dir / "link_to_file_atlasvibe.txt"
-            link_dir_renamed = temp_dir / "link_to_dir_atlasvibe"
-            record_test("[Symlink Test] File symlink renamed", link_file_renamed.is_symlink() and link_file_renamed.exists(follow_symlinks=False))
-            record_test("[Symlink Test] Dir symlink renamed", link_dir_renamed.is_symlink() and link_dir_renamed.exists(follow_symlinks=False))
+            link_file_renamed_path = temp_dir / "link_to_file_atlasvibe.txt"
+            link_dir_renamed_path = temp_dir / "link_to_dir_atlasvibe"
+            
+            record_test("[Symlink Test] Renamed file symlink exists", os.path.lexists(link_file_renamed_path))
+            if os.path.lexists(link_file_renamed_path):
+                record_test("[Symlink Test] Renamed file symlink is a symlink", link_file_renamed_path.is_symlink())
+            
+            record_test("[Symlink Test] Renamed dir symlink exists", os.path.lexists(link_dir_renamed_path))
+            if os.path.lexists(link_dir_renamed_path):
+                record_test("[Symlink Test] Renamed dir symlink is a symlink", link_dir_renamed_path.is_symlink())
+
 
             target_file = temp_dir / "symlink_targets_outside" / "target_file_flojoy.txt"
             target_dir_file = temp_dir / "symlink_targets_outside" / "target_dir_flojoy" / "another_flojoy_file.txt"
@@ -551,7 +556,7 @@ def self_test_flow(
         run_complex_map_sub_test or run_edge_case_sub_test or 
         run_empty_map_sub_test or run_resume_test or run_precision_test
     )
-    standard_test_includes_symlinks = standard_test_includes_large_file # Symlinks tested with standard run
+    standard_test_includes_symlinks = standard_test_includes_large_file 
 
 
     if run_complex_map_sub_test:
@@ -651,7 +656,7 @@ def self_test_flow(
         include_symlink_tests=standard_test_includes_symlinks
     )
 
-    test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] # Exclude symlink target dir
+    test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt", current_mapping_file_for_test.name] 
     test_extensions = [".txt", ".py", ".md", ".bin", ".log", ".data"] 
 
