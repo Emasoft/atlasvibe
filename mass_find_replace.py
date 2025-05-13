@@ -10,7 +10,7 @@ import argparse
 import tempfile
 from pathlib import Path
 import sys
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union, Callable # Added Callable
 import shutil # For shutil.rmtree and shutil.get_terminal_size
 import textwrap # Added for text wrapping
 import json # Added to resolve F821
@@ -156,7 +156,7 @@ def _create_self_test_environment(base_dir: Path, use_complex_map: bool = False)
             "Content for key_with\tcontrol\nchars here."
         )
 
-def check_file_content_for_test( # Renamed to avoid conflict if imported elsewhere
+def check_file_content_for_test( 
     file_path: Optional[Path],
     expected_content: Union[str, bytes],
     test_description: str,
@@ -206,8 +206,10 @@ def _verify_self_test_results_task(
         nonlocal passed_checks, failed_checks, test_counter
         test_counter += 1
         status = "PASS" if condition else "FAIL"
-        if condition: passed_checks += 1
-        else: failed_checks += 1
+        if condition:
+            passed_checks += 1
+        else:
+            failed_checks += 1
         test_results.append({"id": test_counter, "description": description, "status": status, "details": details_on_fail if not condition else ""})
 
     exp_paths_std_map = {
@@ -295,25 +297,35 @@ def _verify_self_test_results_task(
                            "Content replacement (deeply nested, mixed case, Test #16 target)", record_test_func=record_test)
     
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
-    padding = 1; id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3
+    padding = 1
+    id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3
     id_col_total_width = id_col_content_width + 2 * padding
-    outcome_text_pass = f"{PASS_SYMBOL} PASS"; outcome_text_fail = f"{FAIL_SYMBOL} FAIL"
+    outcome_text_pass = f"{PASS_SYMBOL} PASS"
+    outcome_text_fail = f"{FAIL_SYMBOL} FAIL"
     outcome_col_content_width = max(len(outcome_text_pass), len(outcome_text_fail))
     outcome_col_total_width = outcome_col_content_width + 2 * padding
     desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4) 
     min_desc_col_content_width = 30 
-    if desc_col_total_width - 2 * padding < min_desc_col_content_width: desc_col_content_width = min_desc_col_content_width
-    else: desc_col_content_width = desc_col_total_width - 2 * padding
-    header_id = f"{'#':^{id_col_content_width}}"; header_desc = f"{'Test Description':^{desc_col_content_width}}"; header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
-    sys.stdout.write("\n"); sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
+    if desc_col_total_width - 2 * padding < min_desc_col_content_width:
+        desc_col_content_width = min_desc_col_content_width
+    else:
+        desc_col_content_width = desc_col_total_width - 2 * padding
+    header_id = f"{'#':^{id_col_content_width}}"
+    header_desc = f"{'Test Description':^{desc_col_content_width}}"
+    header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
+    sys.stdout.write("\n")
+    sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
     sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
     sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
     failed_test_details_print_buffer = []
     for result in test_results:
-        status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL; color = GREEN if result["status"] == "PASS" else RED
-        outcome_text_content = f"{status_symbol} {result['status']}"; id_text_content = str(result['id'])
+        status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
+        color = GREEN if result["status"] == "PASS" else RED
+        outcome_text_content = f"{status_symbol} {result['status']}"
+        id_text_content = str(result['id'])
         wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width, drop_whitespace=False, replace_whitespace=False)
-        if not wrapped_desc_lines: wrapped_desc_lines = ['']
+        if not wrapped_desc_lines:
+            wrapped_desc_lines = ['']
         for i, line_frag in enumerate(wrapped_desc_lines):
             id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}" if i == 0 else ' ' * (id_col_total_width)
             outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}" if i == 0 else ' ' * (outcome_col_total_width)
@@ -321,20 +333,29 @@ def _verify_self_test_results_task(
             sys.stdout.write(BLUE + DBL_VERTICAL + RESET + id_cell_str + BLUE + DBL_VERTICAL + RESET + desc_cell_str + BLUE + DBL_VERTICAL + RESET + outcome_cell_str + BLUE + DBL_VERTICAL + RESET + "\n")
         if result["status"] == "FAIL" and result["details"]:
             failed_test_details_print_buffer.append(RED + f"\nDetails for Test #{result['id']}: {result['description']}" + RESET)
-            for detail_line in result["details"].split('\n'): failed_test_details_print_buffer.append(RED + f"  -> {detail_line}" + RESET)
+            for detail_line in result["details"].split('\n'):
+                failed_test_details_print_buffer.append(RED + f"  -> {detail_line}" + RESET)
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
     if failed_test_details_print_buffer:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
-        for line in failed_test_details_print_buffer: sys.stdout.write(line + "\n")
-    sys.stdout.write(YELLOW + "\n--- Self-Test Summary ---" + RESET + "\n"); total_tests_run = passed_checks + failed_checks
+        for line in failed_test_details_print_buffer:
+            sys.stdout.write(line + "\n")
+    sys.stdout.write(YELLOW + "\n--- Self-Test Summary ---" + RESET + "\n")
+    total_tests_run = passed_checks + failed_checks
     if total_tests_run > 0:
-        percentage_passed = (passed_checks / total_tests_run) * 100; summary_color = GREEN if failed_checks == 0 else RED; summary_emoji = PASS_SYMBOL if failed_checks == 0 else FAIL_SYMBOL
+        percentage_passed = (passed_checks / total_tests_run) * 100
+        summary_color = GREEN if failed_checks == 0 else RED
+        summary_emoji = PASS_SYMBOL if failed_checks == 0 else FAIL_SYMBOL
         sys.stdout.write(f"Total Tests Run: {total_tests_run}\nPassed: {GREEN}{passed_checks}{RESET}\nFailed: {RED if failed_checks > 0 else GREEN}{failed_checks}{RESET}\nSuccess Rate: {summary_color}{percentage_passed:.2f}% {summary_emoji}{RESET}\n")
-        if failed_checks == 0: sys.stdout.write(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET + "\n")
-        else: sys.stdout.write(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET + "\n")
-    else: sys.stdout.write(YELLOW + "No self-test checks were recorded." + RESET + "\n")
+        if failed_checks == 0:
+            sys.stdout.write(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET + "\n")
+        else:
+            sys.stdout.write(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET + "\n")
+    else:
+        sys.stdout.write(YELLOW + "No self-test checks were recorded." + RESET + "\n")
     sys.stdout.flush()
-    if failed_checks > 0: raise AssertionError(f"Self-test failed with {failed_checks} assertion(s). Review output for details.")
+    if failed_checks > 0:
+        raise AssertionError(f"Self-test failed with {failed_checks} assertion(s). Review output for details.")
     return True
 
 
@@ -634,10 +655,14 @@ def main_cli() -> None:
 if __name__ == "__main__":
     try:
         missing_deps = []
-        try: import prefect
-        except ImportError: missing_deps.append("prefect") 
-        try: import chardet
-        except ImportError: missing_deps.append("chardet") 
+        try:
+            import prefect
+        except ImportError:
+            missing_deps.append("prefect") 
+        try:
+            import chardet
+        except ImportError:
+            missing_deps.append("chardet") 
 
         if missing_deps: 
              raise ImportError(f"Missing dependencies: {', '.join(missing_deps)}")
