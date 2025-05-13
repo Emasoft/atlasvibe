@@ -1,8 +1,0 @@
-        try:
-            if not link_to_file.exists(): # os.symlink errors if link_name exists
-                os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
-            if not link_to_dir.exists():
-                os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
-            print("Symlinks created for testing.")
-        except OSError as e:
-            print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
