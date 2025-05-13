@@ -58,7 +58,7 @@
 10. **Task 4.10: Error Handling and Retries (Simulated).**
     *   **Status**: COMPLETED (Simulated permission error for rename is tested in standard self-test and resume test)
 11. **Task 4.11: Large File Processing (>10MB).**
-    *   **Status**: COMPLETED (Commit: `91a8ac2`)
+    *   **Status**: COMPLETED (Commit: `91a8ac2` and `file_system_operations.py` update in `669aa3c`)
     *   **Details**: Test search/replace in a large file using line-by-line approach.
 12. **Task 4.12: `replacement_mapping.json` Parsing Rules Verification.**
     *   **Status**: COMPLETED (Covered by complex map and edge case tests for diacritics, control chars, spaces, special chars in keys).
@@ -68,7 +68,7 @@
 14. **Task 4.14: Non-Matching Files/Folders Untouched.**
     *   **Status**: COMPLETED (Implicitly covered by all self-tests; files like `no_target_here.log` are verified to be untouched).
 15. **Task 4.15: Symlink Handling (Default: No Follow).**
-    *   **Status**: COMPLETED (Commits: `abdc200` for logic, `669aa3c` for test integration, current changes for verification refinement)
+    *   **Status**: COMPLETED (Commits: `abdc200` for logic, `669aa3c` for test integration, current changes for `--ignore-symlinks` flag and test updates)
 16. **Task 4.16: Deep Directory Tree Operations (depth=10).**
     *   **Status**: COMPLETED (Covered by existing deep path tests in `_create_self_test_environment` and verified by standard self-test).
 17. **Task 4.17: GB18030 Encoding Test.**

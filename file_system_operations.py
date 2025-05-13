@@ -81,9 +81,6 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
 def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
     """Heuristic to check if a file is likely binary."""
     try:
-        # Important: Check if it's a symlink first. If so, check the target.
-        # However, for binary detection, we should operate on what open() would operate on.
-        # If it's a broken symlink, open() will fail.
         with open(file_path, 'rb') as f:
             sample = f.read(sample_size)
         if not sample:
@@ -104,24 +101,20 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     By default, Path.rglob does not follow symlinks for directory traversal.
     """
     abs_excluded_dirs = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
-    for item_path in root_dir.rglob("*"): # rglob itself does not follow symlinks into dirs
+    for item_path in root_dir.rglob("*"): 
         is_excluded = False
         try:
-            resolved_item_path = item_path.resolve(strict=False) # Resolves symlinks for comparison
+            resolved_item_path = item_path.resolve(strict=False) 
             for excluded_dir in abs_excluded_dirs:
-                # Check if the resolved path is the excluded dir or within an excluded dir
                 if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
                     is_excluded = True
                     break
         except (ValueError, OSError, FileNotFoundError): 
-            # Fallback for paths that might be problematic to resolve (e.g., very long, broken symlinks)
             item_path_str = str(item_path)
             if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
                  is_excluded = True
         
         if is_excluded:
-            # If a directory is excluded, rglob would have already skipped its contents.
-            # This primarily handles cases where an excluded item is directly yielded by rglob.
             continue 
         yield item_path
 
@@ -157,6 +150,7 @@ def scan_directory_for_occurrences(
     excluded_dirs: List[str],
     excluded_files: List[str],
     file_extensions: Optional[List[str]],
+    ignore_symlinks: bool, # New parameter
     resume_from_transactions: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
 
@@ -188,29 +182,24 @@ def scan_directory_for_occurrences(
             print(f"Warning: Could not get relative path for {item_path}. Skipping.")
             continue
 
+        # Handle symlink ignorance
+        if ignore_symlinks and item_path.is_symlink():
+            print(f"Ignoring symlink (per --ignore-symlinks): {item_path}")
+            continue
+
         original_name = item_path.name
 
         try:
-            # For exclusion, we need to check the resolved path if it's a symlink
-            # However, item_path itself is what rglob yields (the link, not target for dirs)
             path_to_check_exclusion = item_path.resolve(strict=False) if item_path.is_symlink() else item_path
             if path_to_check_exclusion in abs_excluded_files:
                 continue
-        except (OSError, FileNotFoundError): # Handle broken symlinks or other resolution issues
+        except (OSError, FileNotFoundError): 
              item_path_str = str(item_path)
-             if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files): # Check original path string
+             if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files): 
                   continue
         
-        # Process name of the item (file, dir, or symlink itself)
         if replace_occurrences(original_name) != original_name: 
-            # Use lstat to determine type without following symlinks for this decision
-            # item_path.is_dir() / is_file() would follow symlinks.
-            # For transaction type, we care about what the item *is* in the listing, not what it points to.
-            is_dir = item_path.is_dir() and not item_path.is_symlink() # True directory
-            is_file = item_path.is_file() and not item_path.is_symlink() # True file
-            # Symlinks themselves are neither is_dir() nor is_file() in a strict sense if we use lstat-like checks.
-            # However, for naming, they act like files.
-            
+            is_dir = item_path.is_dir() and not item_path.is_symlink() 
             tx_type_val = TransactionType.FOLDER_NAME.value if is_dir else TransactionType.FILE_NAME.value
             
             current_tx_id_tuple = (relative_path_str, tx_type_val, 0) 
@@ -225,9 +214,8 @@ def scan_directory_for_occurrences(
                 })
                 existing_transaction_ids.add(current_tx_id_tuple)
 
-        # Content processing: only for actual files, not symlinks to files, and not directories.
-        if item_path.is_file() and not item_path.is_symlink():
-            if is_likely_binary_file(item_path): # This will open the actual file
+        if item_path.is_file() and not item_path.is_symlink(): # Content processing only for actual files
+            if is_likely_binary_file(item_path): 
                 continue
             if normalized_extensions and item_path.suffix.lower() not in normalized_extensions:
                 continue
@@ -352,16 +340,13 @@ def _execute_rename_transaction(
     except Exception as e:
          return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
-    # For symlinks, current_abs_path is the link itself. os.rename works on the link.
-    # We must ensure the link exists, not necessarily its target for the rename op itself.
-    if not current_abs_path.exists() and not current_abs_path.is_symlink(): # For symlinks, exists() checks target. lexists() checks link.
-        if not os.path.lexists(current_abs_path): # Check if link itself is missing
-            potential_new_name = replace_occurrences(original_name) 
-            potential_new_path = current_abs_path.with_name(potential_new_name)
-            if os.path.lexists(potential_new_path): # Check if new link name exists
-                return TransactionStatus.SKIPPED, f"Original link '{current_abs_path}' not found, but target link name '{potential_new_path}' exists (already processed?)."
-            else:
-                return TransactionStatus.SKIPPED, f"Original link '{current_abs_path}' not found and target link name does not exist either."
+    if not os.path.lexists(current_abs_path): 
+        potential_new_name = replace_occurrences(original_name) 
+        potential_new_path = current_abs_path.with_name(potential_new_name)
+        if os.path.lexists(potential_new_path): 
+            return TransactionStatus.SKIPPED, f"Original item '{current_abs_path}' not found, but target name '{potential_new_path}' exists (already processed?)."
+        else:
+            return TransactionStatus.SKIPPED, f"Original item '{current_abs_path}' not found and target name does not exist either."
 
     new_name = replace_occurrences(original_name) 
     if new_name == original_name:
@@ -384,25 +369,10 @@ def _execute_rename_transaction(
             _ensure_within_sandbox(current_abs_path, root_dir, f"rename source for {original_name}")
             _ensure_within_sandbox(new_abs_path, root_dir, f"rename destination for {new_name}")
 
-            if os.path.lexists(new_abs_path): # Use lstat to check if new link name exists
-                 try:
-                     # If current_abs_path is a symlink, resolve() follows it.
-                     # We need to compare if the new_abs_path would overwrite a *different* existing file/dir/link.
-                     # This logic might need refinement if new_abs_path could be a dir and current_abs_path a file or vice-versa.
-                     # For now, simple check: if new_abs_path exists and isn't the same inode as current_abs_path (if not a symlink)
-                     if not current_abs_path.is_symlink() and not new_abs_path.is_symlink():
-                         if not current_abs_path.resolve().samefile(new_abs_path.resolve()): 
-                             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists and is a different item."
-                     # If new_abs_path exists and is a symlink, it's complex. For now, assume skip if exists.
-                     elif os.path.lexists(new_abs_path) and not (current_abs_path.is_symlink() and os.readlink(current_abs_path) == os.readlink(new_abs_path)):
-                          return TransactionStatus.SKIPPED, f"Target symlink path '{new_abs_path}' already exists and points to a different target or is a different type of item."
+            if os.path.lexists(new_abs_path):
+                return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists."
 
-                 except FileNotFoundError: # Can happen if current_abs_path is a broken symlink
-                      pass 
-                 except OSError as ose:
-                      return TransactionStatus.FAILED, f"Error checking if paths are same file: {ose}"
-
-            os.rename(current_abs_path, new_abs_path) # os.rename renames the symlink itself, not the target
+            os.rename(current_abs_path, new_abs_path) 
             path_translation_map[original_relative_path_str] = new_name
             path_cache[original_relative_path_str] = new_abs_path 
             return TransactionStatus.COMPLETED, None 
@@ -446,7 +416,6 @@ def _execute_content_line_transaction(
     except Exception as e:
          return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
-    # Content modification should only happen on actual files, not symlinks.
     if current_abs_path.is_symlink():
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' is a symlink; content modification skipped."
     if not current_abs_path.is_file():

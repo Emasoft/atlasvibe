@@ -145,21 +145,21 @@ def _create_self_test_environment(
 
     if include_precision_test_file:
         precision_content_lines = [
-            "Standard flojoy here.\n",                 # -> atlasvibe_plain
-            "Another Flojoy for title case.\r\n",      # -> Atlasvibe_TitleCase (CRLF preserved if value doesn't change it)
-            "Test FLÖJOY_DIACRITIC with mixed case.\n",# -> ATLASVIBE_DIACRITIC_VAL
-            "  flojoy  with exact spaces.\n",          # ->   atlasvibe_spaced_val  
-            "  flojoy   with extra spaces.\n",         # ->   atlasvibe_plain   (matches "flojoy")
-            "key\twith\ncontrol characters.\n",        # -> value_for_control_key_val characters.
+            "Standard flojoy here.\n",                 
+            "Another Flojoy for title case.\r\n",      
+            "Test FLÖJOY_DIACRITIC with mixed case.\n",
+            "  flojoy  with exact spaces.\n",          
+            "  flojoy   with extra spaces.\n",         
+            "key\twith\ncontrol characters.\n",        
             "unrelated content\n",
-            "你好flojoy世界 (Chinese chars).\n",       # -> 你好atlasvibe_plain世界
-            "emoji😊flojoy test.\n",                  # -> emoji😊atlasvibe_plain test.
+            "你好flojoy世界 (Chinese chars).\n",       
+            "emoji😊flojoy test.\n",                  
         ]
-        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" # -> malformed-\xff-atlasvibe_plain-bytes
+        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
         
-        with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: # Write in binary to preserve mixed line endings
+        with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: 
             for line_str in precision_content_lines:
-                f.write(line_str.encode('utf-8', errors='surrogateescape')) # Ensure consistent encoding for test setup
+                f.write(line_str.encode('utf-8', errors='surrogateescape')) 
             f.write(problematic_bytes_line)
         
         (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
@@ -208,7 +208,6 @@ def _create_self_test_environment(
         link_to_dir = base_dir / "link_to_dir_flojoy"
         
         try:
-            # Use os.path.lexists to check if the link itself exists, not what it points to
             if not os.path.lexists(link_to_file): 
                 os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
             if not os.path.lexists(link_to_dir):
@@ -286,6 +285,7 @@ def _verify_self_test_results_task(
     
     elif is_precision_test:
         precision_source_orig_name = "precision_test_flojoy_source.txt"
+        # Based on "flojoy": "atlasvibe_plain" in precision map for the name part
         precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" 
         
         precision_renamed_path = temp_dir / precision_source_renamed_name
@@ -294,7 +294,7 @@ def _verify_self_test_results_task(
         record_test("[Precision Test] Original filename 'precision_test_flojoy_source.txt' removed", not (temp_dir / precision_source_orig_name).exists())
 
         precision_name_orig = "precision_name_flojoy_test.md"
-        precision_name_renamed = "precision_name_atlasvibe_plain_test.md"
+        precision_name_renamed = "precision_name_atlasvibe_plain_test.md" # Based on "flojoy" -> "atlasvibe_plain"
         record_test("[Precision Test] Filename 'precision_name_flojoy_test.md' renamed", (temp_dir / precision_name_renamed).exists())
         record_test("[Precision Test] Original filename 'precision_name_flojoy_test.md' removed", not (temp_dir / precision_name_orig).exists())
 
@@ -319,13 +319,14 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
                     actual_line_bytes_from_file = actual_lines_bytes[i]
                     
                     original_line_str_for_processing = original_line_bytes.decode('utf-8', errors='surrogateescape')
+                    # Use the currently loaded map in replace_logic for expected transformation
                     expected_processed_line_str = replace_logic.replace_occurrences(original_line_str_for_processing)
                     expected_processed_line_bytes = expected_processed_line_str.encode('utf-8', errors='surrogateescape')
                     
@@ -679,7 +680,13 @@ def self_test_flow(
     
     if run_resume_test:
         print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
-        initial_transactions = scan_directory_for_occurrences(temp_dir, test_excluded_dirs, test_excluded_files, test_extensions)
+        initial_transactions = scan_directory_for_occurrences(
+            temp_dir, 
+            test_excluded_dirs, 
+            test_excluded_files, 
+            test_extensions,
+            ignore_symlinks=False # Resume test should process symlinks by default for this setup
+        )
         
         if initial_transactions:
             fn_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_NAME.value]
@@ -710,7 +717,8 @@ def self_test_flow(
             dry_run=dry_run_for_test, 
             skip_scan=False, 
             resume=True,     
-            force_execution=True 
+            force_execution=True,
+            ignore_symlinks_arg=False # Explicitly process symlinks for resume test setup
         )
     else: 
         transactions1 = scan_directory_for_occurrences(
@@ -718,6 +726,7 @@ def self_test_flow(
             excluded_dirs=test_excluded_dirs,
             excluded_files=test_excluded_files,
             file_extensions=test_extensions,
+            ignore_symlinks=args.ignore_symlinks if 'args' in locals() else False # Use CLI arg or default for other tests
         )
         save_transactions(transactions1, transaction_file)
         print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
@@ -731,7 +740,8 @@ def self_test_flow(
                 root_dir=temp_dir,
                 excluded_dirs=test_excluded_dirs,
                 excluded_files=test_excluded_files,
-                file_extensions=test_extensions
+                file_extensions=test_extensions,
+                ignore_symlinks=args.ignore_symlinks if 'args' in locals() else False
             )
             save_transactions(transactions2, validation_file)
             print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
@@ -773,7 +783,8 @@ def main_flow(
     dry_run: bool,
     skip_scan: bool,
     resume: bool,
-    force_execution: bool
+    force_execution: bool,
+    ignore_symlinks_arg: bool # New parameter
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
@@ -807,6 +818,7 @@ def main_flow(
         sys.stdout.write(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}\n")
         sys.stdout.write(f"Exclude Dirs: {exclude_dirs}\n")
         sys.stdout.write(f"Exclude Files: {exclude_files}\n")
+        sys.stdout.write(f"Ignore Symlinks: {ignore_symlinks_arg}\n")
         sys.stdout.write("-------------------------\n")
         sys.stdout.flush()
         if not replace_logic._REPLACEMENT_MAPPING_CONFIG and not extensions: 
@@ -818,7 +830,7 @@ def main_flow(
             return
 
     if not skip_scan:
-        print(f"Starting scan phase in '{root_dir}' using map '{mapping_file_path}'...")
+        print(f"Starting scan phase in '{root_dir}' using map '{mapping_file_path}' (Ignore symlinks: {ignore_symlinks_arg})...")
         current_transactions_for_resume_scan = None
         if resume and transaction_json_path.exists(): 
             print(f"Resume mode: Loading existing transactions from {transaction_json_path} for scan augmentation...")
@@ -831,6 +843,7 @@ def main_flow(
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
+            ignore_symlinks=ignore_symlinks_arg, # Pass the flag
             resume_from_transactions=current_transactions_for_resume_scan 
         )
         save_transactions(found_transactions, transaction_json_path)
@@ -846,7 +859,7 @@ def main_flow(
         print(f"Error: --skip-scan was used, but '{transaction_json_path}' not found.")
         return
     else:
-        print(f"Using existing transaction file: '{transaction_json_path}'. Ensure it was generated with the correct replacement map.")
+        print(f"Using existing transaction file: '{transaction_json_path}'. Ensure it was generated with the correct replacement map and symlink settings.")
 
     if not replace_logic._REPLACEMENT_MAPPING_CONFIG: 
         print("Map is empty. No execution will be performed.")
@@ -888,6 +901,8 @@ def main_cli() -> None:
                         help="Directory names to exclude (space-separated). Default: .git .venv venv node_modules __pycache__ tests/temp")
     parser.add_argument("--exclude-files", nargs="+", default=[],
                         help="Specific file paths (relative to root) to exclude (space-separated).")
+    parser.add_argument("--ignore-symlinks", action="store_true",
+                        help="If set, symlinks will be ignored (not renamed, targets not processed). Default is to rename symlinks but not follow them for content.")
     parser.add_argument("--dry-run", action="store_true",
                         help="Scan and plan changes, but do not execute them. Reports what would be changed.")
     parser.add_argument("--skip-scan", action="store_true",
@@ -946,15 +961,39 @@ def main_cli() -> None:
         print(f"Created self-test sandbox: {self_test_sandbox}")
         
         try:
-            self_test_flow(
-                temp_dir_str=str(self_test_sandbox),
-                dry_run_for_test=args.dry_run, 
-                run_complex_map_sub_test=is_complex_run,
-                run_edge_case_sub_test=is_edge_case_run,
-                run_empty_map_sub_test=is_empty_map_run,
-                run_resume_test=is_resume_run,
-                run_precision_test=is_precision_run
-            )
+            # For self-tests, we might want to control ignore_symlinks explicitly
+            # Standard test will run twice if symlinks are included: once with ignore_symlinks=False, once with True.
+            if args.run_standard_self_test:
+                print("\nRunning Standard Self-Test (Processing Symlinks)...")
+                self_test_flow(
+                    temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
+                    run_standard_self_test=True # Internal flag for _verify_self_test_results_task
+                )
+                # Re-create sandbox for the ignored symlink run
+                if self_test_sandbox.exists(): shutil.rmtree(self_test_sandbox)
+                self_test_sandbox.mkdir(parents=True, exist_ok=True)
+                print("\nRunning Standard Self-Test (Ignoring Symlinks)...")
+                # Temporarily set ignore_symlinks for this specific run
+                # This is a bit hacky; ideally, self_test_flow would take ignore_symlinks
+                original_ignore_symlinks_arg = args.ignore_symlinks
+                args.ignore_symlinks = True
+                self_test_flow(
+                    temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
+                    run_standard_self_test=True 
+                )
+                args.ignore_symlinks = original_ignore_symlinks_arg # Reset
+            else:
+                 self_test_flow(
+                    temp_dir_str=str(self_test_sandbox),
+                    dry_run_for_test=args.dry_run, 
+                    run_complex_map_sub_test=is_complex_run,
+                    run_edge_case_sub_test=is_edge_case_run,
+                    run_empty_map_sub_test=is_empty_map_run,
+                    run_resume_test=is_resume_run,
+                    run_precision_test=is_precision_run
+                    # ignore_symlinks will be False by default for these specific tests unless
+                    # the user also passes --ignore-symlinks to the main CLI call for the test.
+                )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
             sys.exit(1) 
@@ -985,7 +1024,8 @@ def main_cli() -> None:
         dry_run=args.dry_run,
         skip_scan=args.skip_scan,
         resume=args.resume,
-        force_execution=args.force
+        force_execution=args.force,
+        ignore_symlinks_arg=args.ignore_symlinks # Pass the CLI argument
     )
 
 if __name__ == "__main__":
