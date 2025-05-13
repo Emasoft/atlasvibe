@@ -261,7 +261,8 @@ def _verify_self_test_results_task(
     is_resume_test: bool = False, 
     standard_test_includes_large_file: bool = False,
     is_precision_test: bool = False,
-    standard_test_includes_symlinks: bool = False 
+    standard_test_includes_symlinks: bool = False,
+    symlinks_were_ignored_in_scan: bool = False # New flag for verification
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -285,7 +286,6 @@ def _verify_self_test_results_task(
     
     elif is_precision_test:
         precision_source_orig_name = "precision_test_flojoy_source.txt"
-        # Based on "flojoy": "atlasvibe_plain" in precision map for the name part
         precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" 
         
         precision_renamed_path = temp_dir / precision_source_renamed_name
@@ -294,7 +294,7 @@ def _verify_self_test_results_task(
         record_test("[Precision Test] Original filename 'precision_test_flojoy_source.txt' removed", not (temp_dir / precision_source_orig_name).exists())
 
         precision_name_orig = "precision_name_flojoy_test.md"
-        precision_name_renamed = "precision_name_atlasvibe_plain_test.md" # Based on "flojoy" -> "atlasvibe_plain"
+        precision_name_renamed = "precision_name_atlasvibe_plain_test.md" 
         record_test("[Precision Test] Filename 'precision_name_flojoy_test.md' renamed", (temp_dir / precision_name_renamed).exists())
         record_test("[Precision Test] Original filename 'precision_name_flojoy_test.md' removed", not (temp_dir / precision_name_orig).exists())
 
@@ -319,14 +319,13 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
                     actual_line_bytes_from_file = actual_lines_bytes[i]
                     
                     original_line_str_for_processing = original_line_bytes.decode('utf-8', errors='surrogateescape')
-                    # Use the currently loaded map in replace_logic for expected transformation
                     expected_processed_line_str = replace_logic.replace_occurrences(original_line_str_for_processing)
                     expected_processed_line_bytes = expected_processed_line_str.encode('utf-8', errors='surrogateescape')
                     
@@ -452,22 +451,29 @@ def _verify_self_test_results_task(
                     record_test("[Standard Test] Very large file - middle line content", line_mid == expected_line_mid, f"Expected: '{expected_line_mid}', Got: '{line_mid}'")
         
         if standard_test_includes_symlinks:
+            link_file_orig = temp_dir / "link_to_file_flojoy.txt"
+            link_dir_orig = temp_dir / "link_to_dir_flojoy"
             link_file_renamed_path = temp_dir / "link_to_file_atlasvibe.txt"
             link_dir_renamed_path = temp_dir / "link_to_dir_atlasvibe"
             
-            record_test("[Symlink Test] Renamed file symlink exists", os.path.lexists(link_file_renamed_path))
-            if os.path.lexists(link_file_renamed_path):
-                record_test("[Symlink Test] Renamed file symlink is a symlink", link_file_renamed_path.is_symlink())
-            
-            record_test("[Symlink Test] Renamed dir symlink exists", os.path.lexists(link_dir_renamed_path))
-            if os.path.lexists(link_dir_renamed_path):
-                record_test("[Symlink Test] Renamed dir symlink is a symlink", link_dir_renamed_path.is_symlink())
-
+            if symlinks_were_ignored_in_scan:
+                record_test("[Symlink Test - Ignored] Original file symlink exists", os.path.lexists(link_file_orig))
+                record_test("[Symlink Test - Ignored] Renamed file symlink does NOT exist", not os.path.lexists(link_file_renamed_path))
+                record_test("[Symlink Test - Ignored] Original dir symlink exists", os.path.lexists(link_dir_orig))
+                record_test("[Symlink Test - Ignored] Renamed dir symlink does NOT exist", not os.path.lexists(link_dir_renamed_path))
+            else:
+                record_test("[Symlink Test - Processed] Renamed file symlink exists", os.path.lexists(link_file_renamed_path))
+                if os.path.lexists(link_file_renamed_path):
+                    record_test("[Symlink Test - Processed] Renamed file symlink is a symlink", link_file_renamed_path.is_symlink())
+                
+                record_test("[Symlink Test - Processed] Renamed dir symlink exists", os.path.lexists(link_dir_renamed_path))
+                if os.path.lexists(link_dir_renamed_path):
+                    record_test("[Symlink Test - Processed] Renamed dir symlink is a symlink", link_dir_renamed_path.is_symlink())
 
             target_file = temp_dir / "symlink_targets_outside" / "target_file_flojoy.txt"
             target_dir_file = temp_dir / "symlink_targets_outside" / "target_dir_flojoy" / "another_flojoy_file.txt"
-            check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged", record_test_func=record_test)
-            check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged", record_test_func=record_test)
+            check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged (regardless of ignore flag)", record_test_func=record_test)
+            check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test)
 
 
     # Common verification logic (table printing, summary)
@@ -544,7 +550,8 @@ def self_test_flow(
     run_edge_case_sub_test: bool = False,
     run_empty_map_sub_test: bool = False,
     run_resume_test: bool = False,
-    run_precision_test: bool = False 
+    run_precision_test: bool = False,
+    ignore_symlinks_for_this_test_run: bool = False # New parameter for specific test invocations
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
@@ -557,7 +564,8 @@ def self_test_flow(
         run_complex_map_sub_test or run_edge_case_sub_test or 
         run_empty_map_sub_test or run_resume_test or run_precision_test
     )
-    standard_test_includes_symlinks = standard_test_includes_large_file 
+    # Symlinks are included in standard, precision, and resume tests by default (unless ignore_symlinks_for_this_test_run is True)
+    standard_test_includes_symlinks = standard_test_includes_large_file or run_precision_test or run_resume_test
 
 
     if run_complex_map_sub_test:
@@ -654,7 +662,7 @@ def self_test_flow(
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
         include_precision_test_file=run_precision_test,
-        include_symlink_tests=standard_test_includes_symlinks
+        include_symlink_tests=standard_test_includes_symlinks and not ignore_symlinks_for_this_test_run
     )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
@@ -674,6 +682,9 @@ def self_test_flow(
         transaction_file_name_base = "precision_test_transactions"
     else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
+        if ignore_symlinks_for_this_test_run:
+            transaction_file_name_base += "_ignore_symlinks"
+
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test or run_precision_test) else None
@@ -685,7 +696,7 @@ def self_test_flow(
             test_excluded_dirs, 
             test_excluded_files, 
             test_extensions,
-            ignore_symlinks=False # Resume test should process symlinks by default for this setup
+            ignore_symlinks=False 
         )
         
         if initial_transactions:
@@ -705,7 +716,7 @@ def self_test_flow(
         print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
         
         print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
-        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True) 
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True) # Ensure symlinks are there for resume
 
         print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
         main_flow(
@@ -718,7 +729,7 @@ def self_test_flow(
             skip_scan=False, 
             resume=True,     
             force_execution=True,
-            ignore_symlinks_arg=False # Explicitly process symlinks for resume test setup
+            ignore_symlinks_arg=ignore_symlinks_for_this_test_run 
         )
     else: 
         transactions1 = scan_directory_for_occurrences(
@@ -726,7 +737,7 @@ def self_test_flow(
             excluded_dirs=test_excluded_dirs,
             excluded_files=test_excluded_files,
             file_extensions=test_extensions,
-            ignore_symlinks=args.ignore_symlinks if 'args' in locals() else False # Use CLI arg or default for other tests
+            ignore_symlinks=ignore_symlinks_for_this_test_run 
         )
         save_transactions(transactions1, transaction_file)
         print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
@@ -741,7 +752,7 @@ def self_test_flow(
                 excluded_dirs=test_excluded_dirs,
                 excluded_files=test_excluded_files,
                 file_extensions=test_extensions,
-                ignore_symlinks=args.ignore_symlinks if 'args' in locals() else False
+                ignore_symlinks=ignore_symlinks_for_this_test_run
             )
             save_transactions(transactions2, validation_file)
             print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
@@ -769,7 +780,8 @@ def self_test_flow(
         is_resume_test=is_verification_resume_test,
         standard_test_includes_large_file=standard_test_includes_large_file,
         is_precision_test=is_verification_precision_test,
-        standard_test_includes_symlinks=standard_test_includes_symlinks
+        standard_test_includes_symlinks=standard_test_includes_symlinks,
+        symlinks_were_ignored_in_scan=ignore_symlinks_for_this_test_run
     )
 
 
@@ -784,7 +796,7 @@ def main_flow(
     skip_scan: bool,
     resume: bool,
     force_execution: bool,
-    ignore_symlinks_arg: bool # New parameter
+    ignore_symlinks_arg: bool 
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
@@ -843,7 +855,7 @@ def main_flow(
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
-            ignore_symlinks=ignore_symlinks_arg, # Pass the flag
+            ignore_symlinks=ignore_symlinks_arg, 
             resume_from_transactions=current_transactions_for_resume_scan 
         )
         save_transactions(found_transactions, transaction_json_path)
@@ -961,28 +973,23 @@ def main_cli() -> None:
         print(f"Created self-test sandbox: {self_test_sandbox}")
         
         try:
-            # For self-tests, we might want to control ignore_symlinks explicitly
-            # Standard test will run twice if symlinks are included: once with ignore_symlinks=False, once with True.
             if args.run_standard_self_test:
-                print("\nRunning Standard Self-Test (Processing Symlinks)...")
+                print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
-                    run_standard_self_test=True # Internal flag for _verify_self_test_results_task
+                    run_standard_self_test=True, # Internal flag for _verify_self_test_results_task
+                    ignore_symlinks_for_this_test_run=False # Explicitly process symlinks
                 )
                 # Re-create sandbox for the ignored symlink run
                 if self_test_sandbox.exists(): shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
-                print("\nRunning Standard Self-Test (Ignoring Symlinks)...")
-                # Temporarily set ignore_symlinks for this specific run
-                # This is a bit hacky; ideally, self_test_flow would take ignore_symlinks
-                original_ignore_symlinks_arg = args.ignore_symlinks
-                args.ignore_symlinks = True
+                print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), dry_run_for_test=args.dry_run,
-                    run_standard_self_test=True 
+                    run_standard_self_test=True,
+                    ignore_symlinks_for_this_test_run=True # Explicitly ignore symlinks
                 )
-                args.ignore_symlinks = original_ignore_symlinks_arg # Reset
-            else:
+            else: # For other specific tests, use the CLI's --ignore-symlinks value
                  self_test_flow(
                     temp_dir_str=str(self_test_sandbox),
                     dry_run_for_test=args.dry_run, 
@@ -990,9 +997,8 @@ def main_cli() -> None:
                     run_edge_case_sub_test=is_edge_case_run,
                     run_empty_map_sub_test=is_empty_map_run,
                     run_resume_test=is_resume_run,
-                    run_precision_test=is_precision_run
-                    # ignore_symlinks will be False by default for these specific tests unless
-                    # the user also passes --ignore-symlinks to the main CLI call for the test.
+                    run_precision_test=is_precision_run,
+                    ignore_symlinks_for_this_test_run=args.ignore_symlinks
                 )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
@@ -1025,7 +1031,7 @@ def main_cli() -> None:
         skip_scan=args.skip_scan,
         resume=args.resume,
         force_execution=args.force,
-        ignore_symlinks_arg=args.ignore_symlinks # Pass the CLI argument
+        ignore_symlinks_arg=args.ignore_symlinks 
     )
 
 if __name__ == "__main__":
