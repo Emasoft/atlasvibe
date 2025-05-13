@@ -324,7 +324,7 @@ def _verify_self_test_results_task(
             for detail_line in result["details"].split('\n'): failed_test_details_print_buffer.append(RED + f"  -> {detail_line}" + RESET)
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
     if failed_test_details_print_buffer:
-        sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n"); 
+        sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
         for line in failed_test_details_print_buffer: sys.stdout.write(line + "\n")
     sys.stdout.write(YELLOW + "\n--- Self-Test Summary ---" + RESET + "\n"); total_tests_run = passed_checks + failed_checks
     if total_tests_run > 0:
@@ -468,7 +468,7 @@ def main_flow(
         sys.stderr.write(f"Critical Error: Replacement map from {mapping_file_path} was not loaded successfully.\n")
         return
     if not replace_logic._COMPILED_PATTERN and bool(replace_logic._REPLACEMENT_MAPPING_CONFIG):
-        sys.stderr.write(f"Critical Error: Replacement map loaded but regex pattern compilation failed.\n")
+        sys.stderr.write("Critical Error: Replacement map loaded but regex pattern compilation failed.\n")
         return
     if not replace_logic._REPLACEMENT_MAPPING_CONFIG: 
         print(f"Warning: The replacement mapping from {mapping_file_path} is empty. No replacements will be made.")
@@ -482,7 +482,7 @@ def main_flow(
         if replace_logic._REPLACEMENT_MAPPING_CONFIG:
              sys.stdout.write(f"Loaded {len(replace_logic._REPLACEMENT_MAPPING_CONFIG)} replacement rules.\n")
         else:
-             sys.stdout.write(f"Replacement map is empty. No string replacements will occur.\n")
+             sys.stdout.write("Replacement map is empty. No string replacements will occur.\n")
         sys.stdout.write(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}\n")
         sys.stdout.write(f"Exclude Dirs: {exclude_dirs}\n")
         sys.stdout.write(f"Exclude Files: {exclude_files}\n")
