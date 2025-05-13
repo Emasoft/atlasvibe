@@ -82,7 +82,8 @@ def _create_self_test_environment(
     use_edge_case_map: bool = False,
     for_resume_test_phase_2: bool = False,
     include_very_large_file: bool = False,
-    include_precision_test_file: bool = False # New flag
+    include_precision_test_file: bool = False,
+    include_symlink_tests: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
     if not for_resume_test_phase_2: 
@@ -143,26 +144,24 @@ def _create_self_test_environment(
         print("Very large file generated.")
 
     if include_precision_test_file:
-        precision_content = [
-            "Standard flojoy here.\n",
-            "flöjoy with diacritics.\r\n", # Mixed line ending
-            "  flojoy   with spaces around.\n",
-            "你好flojoy世界 (Chinese chars).\n",
-            "emoji😊flojoy test.\n",
-            "A line with flo\tjoy (tab control char).\n",
-            "A line with flo\rjoy (CR control char).\n", # Note: \r might be normalized by text mode
-            "  flojoy  \n", # To test space-inclusive key
-            "unrelated content\n"
+        precision_content_lines = [
+            "Standard flojoy here.\n",                 # -> atlasvibe_plain
+            "Another Flojoy for title case.\r\n",      # -> Atlasvibe_TitleCase (CRLF preserved if value doesn't change it)
+            "Test FLÖJOY_DIACRITIC with mixed case.\n",# -> ATLASVIBE_DIACRITIC_VAL
+            "  flojoy  with exact spaces.\n",          # ->   atlasvibe_spaced_val  
+            "  flojoy   with extra spaces.\n",         # ->   atlasvibe_plain   (matches "flojoy")
+            "key\twith\ncontrol characters.\n",        # -> value_for_control_key_val characters.
+            "unrelated content\n",
+            "你好flojoy世界 (Chinese chars).\n",       # -> 你好atlasvibe_plain世界
+            "emoji😊flojoy test.\n",                  # -> emoji😊atlasvibe_plain test.
         ]
-        # Add a line with a byte that might be problematic if not handled by surrogateescape
-        # This byte \xff is invalid in UTF-8 if it's not part of a multi-byte sequence.
-        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
+        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" # -> malformed-\xff-atlasvibe_plain-bytes
         
-        (base_dir / "precision_test_flojoy_source.txt").write_text("".join(precision_content), encoding='utf-8', errors='surrogateescape')
-        with open(base_dir / "precision_test_flojoy_source.txt", "ab") as f: # Append bytes
+        with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: # Write in binary to preserve mixed line endings
+            for line_str in precision_content_lines:
+                f.write(line_str.encode('utf-8', errors='surrogateescape')) # Ensure consistent encoding for test setup
             f.write(problematic_bytes_line)
         
-        # File whose name contains "flojoy" for precision rename test
         (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
 
@@ -196,6 +195,28 @@ def _create_self_test_environment(
         (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
         if (base_dir / "only_name_atlasvibe.md").exists(): 
              (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
+    
+    if include_symlink_tests:
+        symlink_target_dir = base_dir / "symlink_targets_outside" # Keep distinct from main test area
+        symlink_target_dir.mkdir(parents=True, exist_ok=True)
+        (symlink_target_dir / "target_file_flojoy.txt").write_text("flojoy in symlink target file")
+        target_subdir_flojoy = symlink_target_dir / "target_dir_flojoy"
+        target_subdir_flojoy.mkdir(exist_ok=True)
+        (target_subdir_flojoy / "another_flojoy_file.txt").write_text("flojoy content in symlinked dir target")
+
+        link_to_file = base_dir / "link_to_file_flojoy.txt"
+        link_to_dir = base_dir / "link_to_dir_flojoy"
+        
+        try:
+            if not link_to_file.exists(): # os.symlink errors if link_name exists
+                os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
+            if not link_to_dir.exists():
+                os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
+            print("Symlinks created for testing.")
+        except OSError as e:
+            print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
+        except Exception as e: # Catch any other exception during symlink creation
+            print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
 
 
 def check_file_content_for_test( 
@@ -239,7 +260,8 @@ def _verify_self_test_results_task(
     is_empty_map_test: bool = False,
     is_resume_test: bool = False, 
     standard_test_includes_large_file: bool = False,
-    is_precision_test: bool = False # New flag
+    is_precision_test: bool = False,
+    standard_test_includes_symlinks: bool = False # New flag
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -262,47 +284,56 @@ def _verify_self_test_results_task(
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
     
     elif is_precision_test:
-        precision_source_path = temp_dir / "precision_test_flojoy_source.txt" # Original name
-        precision_replaced_path = temp_dir / "precision_test_atlasvibe_source.txt" # Expected new name
+        precision_source_orig_name = "precision_test_flojoy_source.txt"
+        precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" # Based on "flojoy" -> "atlasvibe_plain"
         
-        record_test("[Precision Test] Filename replaced", precision_replaced_path.exists())
-        record_test("[Precision Test] Original filename removed", not precision_source_path.exists())
+        precision_renamed_path = temp_dir / precision_source_renamed_name
+        
+        record_test("[Precision Test] Filename 'precision_test_flojoy_source.txt' renamed", precision_renamed_path.exists())
+        record_test("[Precision Test] Original filename 'precision_test_flojoy_source.txt' removed", not (temp_dir / precision_source_orig_name).exists())
 
-        if precision_replaced_path.exists():
-            # Expected content after replacements (using default map + "  flojoy  " -> "  atlasvibe_spaced  ")
-            expected_lines = [
-                "Standard atlasvibe here.\n",
-                "atlasvibe with diacritics.\r\n", # Line endings are tricky, Python text mode might normalize to \n on read.
-                                                 # The key is that the *replacement* doesn't add/remove \r if it wasn't part of the value.
-                                                 # For this test, we'll assume \n for comparison after read.
-                "  atlasvibe   with spaces around.\n", # Assuming "flojoy" key matches, spaces preserved
-                "你好atlasvibe世界 (Chinese chars).\n",
-                "emoji😊atlasvibe test.\n",
-                "A line with atlasvibe (tab control char).\n", # Assuming "flo\tjoy" key (processed to "flojoy") maps to "atlasvibe"
-                "A line with atlasvibe (CR control char).\n", # Assuming "flo\rjoy" key (processed to "flojoy") maps to "atlasvibe"
-                "  atlasvibe_spaced  \n", # From "  flojoy  " -> "  atlasvibe_spaced  "
+        precision_name_orig = "precision_name_flojoy_test.md"
+        precision_name_renamed = "precision_name_atlasvibe_plain_test.md"
+        record_test("[Precision Test] Filename 'precision_name_flojoy_test.md' renamed", (temp_dir / precision_name_renamed).exists())
+        record_test("[Precision Test] Original filename 'precision_name_flojoy_test.md' removed", not (temp_dir / precision_name_orig).exists())
+
+
+        if precision_renamed_path.exists():
+            original_content_bytes_list = []
+            # Reconstruct original content bytes as written by _create_self_test_environment
+            # This is crucial for byte-for-byte comparison of non-replaced parts
+            _orig_precision_content_lines = [
+                "Standard flojoy here.\n",
+                "Another Flojoy for title case.\r\n",
+                "Test FLÖJOY_DIACRITIC with mixed case.\n",
+                "  flojoy  with exact spaces.\n",
+                "  flojoy   with extra spaces.\n",
+                "key\twith\ncontrol characters.\n",
                 "unrelated content\n",
-                b"malformed-\xff-atlasvibe-bytes\n" # Byte string for the line with problematic byte
+                "你好flojoy世界 (Chinese chars).\n",
+                "emoji😊flojoy test.\n",
             ]
-            
-            actual_lines_bytes = precision_replaced_path.read_bytes().splitlines(keepends=True)
-            
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(expected_lines), f"Expected {len(expected_lines)} lines, got {len(actual_lines_bytes)}")
+            _orig_problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
+            for line_str in _orig_precision_content_lines:
+                original_content_bytes_list.append(line_str.encode('utf-8', errors='surrogateescape'))
+            original_content_bytes_list.append(_orig_problematic_bytes_line)
 
-            for i, expected_item in enumerate(expected_lines):
+            actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
+            
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+
+            for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
-                    actual_line_bytes = actual_lines_bytes[i]
-                    if isinstance(expected_item, str): # Text line
-                        # Decode actual line for comparison, preserving surrogates
-                        actual_line_str = actual_line_bytes.decode('utf-8', errors='surrogateescape')
-                        # Normalize line endings for comparison
-                        normalized_actual_line_str = actual_line_str.replace("\r\n", "\n").replace("\r", "\n")
-                        normalized_expected_line_str = expected_item.replace("\r\n", "\n").replace("\r", "\n")
-                        record_test(f"[Precision Test] Line {i+1} content", normalized_actual_line_str == normalized_expected_line_str, f"Expected: '{normalized_expected_line_str!r}', Got: '{normalized_actual_line_str!r}'")
-                    else: # Byte line
-                        record_test(f"[Precision Test] Line {i+1} byte content", actual_line_bytes == expected_item, f"Expected: {expected_item!r}, Got: {actual_line_bytes!r}")
+                    actual_line_bytes_from_file = actual_lines_bytes[i]
+                    
+                    # Determine expected processed line
+                    original_line_str_for_processing = original_line_bytes.decode('utf-8', errors='surrogateescape')
+                    expected_processed_line_str = replace_logic.replace_occurrences(original_line_str_for_processing)
+                    expected_processed_line_bytes = expected_processed_line_str.encode('utf-8', errors='surrogateescape')
+                    
+                    record_test(f"[Precision Test] Line {i+1} byte-for-byte content", actual_line_bytes_from_file == expected_processed_line_bytes, f"Line {i+1}:\nExpected: {expected_processed_line_bytes!r}\nActual:   {actual_line_bytes_from_file!r}")
                 else:
-                    record_test(f"[Precision Test] Line {i+1} missing", False)
+                    record_test(f"[Precision Test] Line {i+1} missing in actual output", False)
 
 
     elif is_resume_test:
@@ -415,12 +446,24 @@ def _verify_self_test_results_task(
                     expected_line_0 = "Line 1: This is a atlasvibe line that should be replaced."
                     record_test("[Standard Test] Very large file - line 0 content", line_0 == expected_line_0, f"Expected: '{expected_line_0}', Got: '{line_0}'")
                     
-                    for i in range(1, VERY_LARGE_FILE_LINES // 2): # Read up to mid-point
+                    for i in range(1, VERY_LARGE_FILE_LINES // 2): 
                         f.readline()
                     line_mid = f.readline().strip()
                     expected_line_mid = f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
                     record_test("[Standard Test] Very large file - middle line content", line_mid == expected_line_mid, f"Expected: '{expected_line_mid}', Got: '{line_mid}'")
-    
+        
+        if standard_test_includes_symlinks:
+            link_file_renamed = temp_dir / "link_to_file_atlasvibe.txt"
+            link_dir_renamed = temp_dir / "link_to_dir_atlasvibe"
+            record_test("[Symlink Test] File symlink renamed", link_file_renamed.is_symlink() and link_file_renamed.exists(follow_symlinks=False))
+            record_test("[Symlink Test] Dir symlink renamed", link_dir_renamed.is_symlink() and link_dir_renamed.exists(follow_symlinks=False))
+
+            target_file = temp_dir / "symlink_targets_outside" / "target_file_flojoy.txt"
+            target_dir_file = temp_dir / "symlink_targets_outside" / "target_dir_flojoy" / "another_flojoy_file.txt"
+            check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged", record_test_func=record_test)
+            check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged", record_test_func=record_test)
+
+
     # Common verification logic (table printing, summary)
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
     padding = 1
@@ -495,7 +538,7 @@ def self_test_flow(
     run_edge_case_sub_test: bool = False,
     run_empty_map_sub_test: bool = False,
     run_resume_test: bool = False,
-    run_precision_test: bool = False # New flag
+    run_precision_test: bool = False 
 ) -> None:
     temp_dir = Path(temp_dir_str)
     
@@ -503,12 +546,12 @@ def self_test_flow(
     test_scenario_name = "Standard"
     is_verification_resume_test = False
     is_verification_precision_test = False
-    # Determine if the standard test should include the very large file
-    # It should if no other specific test type (complex, edge, empty, resume, precision) is active.
+    
     standard_test_includes_large_file = not (
         run_complex_map_sub_test or run_edge_case_sub_test or 
         run_empty_map_sub_test or run_resume_test or run_precision_test
     )
+    standard_test_includes_symlinks = standard_test_includes_large_file # Symlinks tested with standard run
 
 
     if run_complex_map_sub_test:
@@ -566,12 +609,11 @@ def self_test_flow(
         current_mapping_file_for_test = temp_dir / SELF_TEST_PRECISION_MAP_FILE
         precision_map_data = {
             "REPLACEMENT_MAPPING": {
-                "flojoy": "atlasvibe", # Standard
-                "Flojoy": "Atlasvibe", # Standard
-                "flöjoy": "atlasvibe_diacritic", # Test diacritic source
-                "flo\tjoy": "atlasvibe_tab", # Test control char in source (processed to "flojoy")
-                "  flojoy  ": "  atlasvibe_spaced  ", # Test spaces in key
-                "flo\rjoy": "atlasvibe_cr" # Test CR control char in source (processed to "flojoy")
+                "flojoy": "atlasvibe_plain",      
+                "Flojoy": "Atlasvibe_TitleCase",  
+                "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL", 
+                "  flojoy  ": "  atlasvibe_spaced_val  ", 
+                "key\twith\ncontrol": "value_for_control_key_val" 
             }
         }
         with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
@@ -605,10 +647,11 @@ def self_test_flow(
         use_complex_map=run_complex_map_sub_test, 
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
-        include_precision_test_file=run_precision_test
+        include_precision_test_file=run_precision_test,
+        include_symlink_tests=standard_test_includes_symlinks
     )
 
-    test_excluded_dirs: List[str] = ["excluded_flojoy_dir"] 
+    test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] # Exclude symlink target dir
     test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt", current_mapping_file_for_test.name] 
     test_extensions = [".txt", ".py", ".md", ".bin", ".log", ".data"] 
 
@@ -710,7 +753,8 @@ def self_test_flow(
         is_empty_map_test=run_empty_map_sub_test,
         is_resume_test=is_verification_resume_test,
         standard_test_includes_large_file=standard_test_includes_large_file,
-        is_precision_test=run_precision_test
+        is_precision_test=is_verification_precision_test,
+        standard_test_includes_symlinks=standard_test_includes_symlinks
     )
 
 

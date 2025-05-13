@@ -58,17 +58,17 @@
 10. **Task 4.10: Error Handling and Retries (Simulated).**
     *   **Status**: COMPLETED (Simulated permission error for rename is tested in standard self-test and resume test)
 11. **Task 4.11: Large File Processing (>10MB).**
-    *   **Status**: COMPLETED (Commit: `91a8ac2` - added very large file generation and scan/verification logic; `file_system_operations.py` updated for line-by-line scan in current changes)
+    *   **Status**: COMPLETED (Commit: `91a8ac2` and current changes to `file_system_operations.py`)
     *   **Details**: Test search/replace in a large file using line-by-line approach.
 12. **Task 4.12: `replacement_mapping.json` Parsing Rules Verification.**
     *   **Status**: COMPLETED (Covered by complex map and edge case tests for diacritics, control chars, spaces, special chars in keys).
 13. **Task 4.13: "Surgeon-like" Precision - Strict Byte Preservation.**
-    *   **Status**: IN PROGRESS (Current commit adds framework and initial files/checks for this test)
+    *   **Status**: IN PROGRESS (Current commit implements test setup and verification logic)
     *   **Details**: Create diverse test files with mixed encodings, various line endings, control characters, diacritics, malformed/illegal/corrupt characters, trailing spaces, etc. Verify that only mapped strings are changed and everything else is byte-for-byte identical.
 14. **Task 4.14: Non-Matching Files/Folders Untouched.**
     *   **Status**: COMPLETED (Implicitly covered by all self-tests; files like `no_target_here.log` are verified to be untouched).
 15. **Task 4.15: Symlink Handling (Default: No Follow).**
-    *   **Status**: PENDING
+    *   **Status**: IN PROGRESS (Current commit implements symlink handling in `file_system_operations.py` and test setup/verification in `mass_find_replace.py`)
 16. **Task 4.16: Deep Directory Tree Operations (depth=10).**
     *   **Status**: COMPLETED (Covered by existing deep path tests in `_create_self_test_environment` and verified by standard self-test).
 17. **Task 4.17: GB18030 Encoding Test.**
@@ -87,4 +87,4 @@
 ---
 
 This plan will be updated as tasks are completed.
-**Current Focus: Phase 4 - Implementing Precision Test (Task 4.13).**
+**Current Focus: Phase 4 - Implementing Precision Test (Task 4.13) and Symlink Test (Task 4.15).**
