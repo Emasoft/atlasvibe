@@ -117,7 +117,6 @@ def replace_occurrences(input_string: str) -> str:
     Values are used as-is.
     """
     if not _MAPPING_LOADED or _COMPILED_PATTERN is None:
-        # This can happen if mapping file was empty or keys resulted in no pattern.
         return input_string
 
     if not isinstance(input_string, str):
@@ -126,25 +125,23 @@ def replace_occurrences(input_string: str) -> str:
     def replace_callback(match_obj: re.Match[str]) -> str:
         actual_matched_text_on_disk = match_obj.group(0) 
         
-        # Process the matched text in the same way keys were processed for lookup:
-        # 1. Strip diacritics
-        # 2. Strip control characters
         key_after_diacritics = strip_diacritics(actual_matched_text_on_disk)
         processed_match_for_lookup = strip_control_characters(key_after_diacritics)
         
-        # Find the corresponding original value from our _REPLACEMENT_MAPPING_CONFIG.
-        # The keys of _REPLACEMENT_MAPPING_CONFIG are already processed (diacritics and control chars stripped).
-        # The regex match was case-insensitive.
+        # Prioritize direct (case-sensitive after stripping) match with map keys
+        # The keys in _REPLACEMENT_MAPPING_CONFIG are already stripped of diacritics and control chars,
+        # but retain their original casing from the JSON.
+        if processed_match_for_lookup in _REPLACEMENT_MAPPING_CONFIG:
+            return _REPLACEMENT_MAPPING_CONFIG[processed_match_for_lookup]
+
+        # Fallback for case-insensitive matching if direct case match wasn't found
+        # (e.g., map has "flojoy":"atlasvibe", input is "FLOJOY")
+        # This is necessary because the main regex is re.IGNORECASE.
         for processed_config_key, original_config_value in _REPLACEMENT_MAPPING_CONFIG.items():
             if processed_config_key.lower() == processed_match_for_lookup.lower():
-                # Found the rule. Return the original value from JSON, used as-is.
                 return original_config_value
         
-        # Fallback: Should ideally not be reached if the regex is built from the keys
-        # of _REPLACEMENT_MAPPING_CONFIG.
+        # Should not be reached if the regex matched something that was derived from a config key.
         return actual_matched_text_on_disk 
 
     return _COMPILED_PATTERN.sub(replace_callback, input_string)
-
-# Automatic loading at import time is REMOVED.
-# The main script (`mass_find_replace.py`) is now responsible for calling `load_replacement_map`.

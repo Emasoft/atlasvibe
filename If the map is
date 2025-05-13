@@ -1,0 +1,5 @@
+{
+  "flojoy": "atlasvibe",  // original_key_from_json: "flojoy"
+  "Flojoy": "Atlasvibe",  // original_key_from_json: "Flojoy"
+  "FLOJOY": "ATLASVIBE" // original_key_from_json: "FLOJOY"
+}
