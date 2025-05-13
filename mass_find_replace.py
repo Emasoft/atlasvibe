@@ -134,23 +134,24 @@ def _create_self_test_environment(
         (base_dir / "special_chars_in_content_test.txt").write_text(
             "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
         )
-        (base_dir / "file_with_key_with\tcontrol\nchars_in_name.txt").write_text( # Name for control char key test
-            "Content for key_with\tcontrol\nchars here."
+        # For testing key "key_with\tcontrol\nchars" (processed to "key_withcontrolchars")
+        (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text( 
+            "Content for complex map control key filename test."
         )
-        (base_dir / "content_with_key_with_controls.txt").write_text( # Content for control char key test
-             "Line with Key\nWith\tControls to replace."
+        (base_dir / "complex_map_content_with_key_with_controls.txt").write_text(
+             "Line with key_with\tcontrol\nchars to replace."
         )
 
 
     if use_edge_case_map:
-        # For control character regression (name and content)
-        (base_dir / "edge_case_Key\nWith\tControls_in_name.txt").write_text("Initial content for control key name test.")
-        (base_dir / "edge_case_content_with_controls.txt").write_text("Line with Key\nWith\tControls to replace.")
+        # For control character regression. Key in map: "My\nKey" (processed: "MyKey")
+        (base_dir / "edge_case_MyKey_original_name.txt").write_text("Initial content for control key name test (MyKey).")
+        (base_dir / "edge_case_content_with_MyKey_controls.txt").write_text("Line with My\nKey to replace.")
         
-        # For empty key after stripping
+        # For empty key after stripping. Key in map: "\t" (processed: "")
         (base_dir / "edge_case_empty_stripped_key_target.txt").write_text("This should not be changed by an empty key.")
         
-        # For shorter vs. longer key prioritization
+        # For shorter vs. longer key prioritization. Keys: "foo", "foo bar"
         (base_dir / "edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
 
 
@@ -214,31 +215,25 @@ def _verify_self_test_results_task(
     if is_empty_map_test:
         transactions = load_transactions(original_transaction_file)
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
-        # Further checks for warnings printed by replace_logic.load_replacement_map would require capturing stdout,
-        # which is beyond current test structure. We rely on visual inspection or future logging enhancements.
     elif is_edge_case_test:
-        # Edge Case Verifications
-        # Key: "Key\nWith\tControls", Value: "ControlValue_VAL"
         exp_edge_paths = {
-            "control_key_renamed_file": temp_dir / "ControlValue_VAL.txt", # Original: edge_case_Key\nWith\tControls_in_name.txt
-            "control_key_content_file": temp_dir / "edge_case_content_with_controls.txt",
-            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt",
-            "key_priority_file": temp_dir / "edge_case_key_priority.txt"
+            "control_key_renamed_file": temp_dir / "MyKeyValue_VAL.txt", # Original: edge_case_MyKey_original_name.txt
+            "control_key_content_file": temp_dir / "edge_case_content_with_MyKey_controls.txt", # Name unchanged
+            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt", # Name unchanged
+            "key_priority_file": temp_dir / "edge_case_key_priority.txt" # Name unchanged
         }
-        record_test("[Edge Case] Control char key - filename rename", exp_edge_paths["control_key_renamed_file"].exists(), f"File missing: {exp_edge_paths['control_key_renamed_file']}")
+        record_test("[Edge Case] Control char key ('My\\nKey') - filename rename", exp_edge_paths["control_key_renamed_file"].exists(), f"File missing: {exp_edge_paths['control_key_renamed_file']}")
         check_file_content_for_test(exp_edge_paths["control_key_content_file"],
-                               "Line with ControlValue_VAL to replace.",
-                               "[Edge Case] Control char key - content replacement", record_test_func=record_test)
+                               "Line with MyKeyValue_VAL to replace.",
+                               "[Edge Case] Control char key ('My\\nKey') - content replacement", record_test_func=record_test)
         
-        # Key: "\t", Value: "ShouldBeSkipped_VAL" (should be skipped as key becomes empty after control char stripping)
         check_file_content_for_test(exp_edge_paths["empty_stripped_key_file"],
                                "This should not be changed by an empty key.",
-                               "[Edge Case] Empty stripped key - content unchanged", record_test_func=record_test)
+                               "[Edge Case] Empty stripped key ('\\t') - content unchanged", record_test_func=record_test)
 
-        # Keys: "foo": "Foo_VAL", "foo bar": "FooBar_VAL"
         check_file_content_for_test(exp_edge_paths["key_priority_file"],
-                               "test FooBar_VAL test and also Foo_VAL.", # "foo bar" takes precedence, then "foo"
-                               "[Edge Case] Key priority (longer key first)", record_test_func=record_test)
+                               "test FooBar_VAL test and also Foo_VAL.", 
+                               "[Edge Case] Key priority ('foo bar' vs 'foo')", record_test_func=record_test)
 
     elif is_complex_map_test:
         exp_paths_complex_map = {
@@ -247,8 +242,9 @@ def _verify_self_test_results_task(
             "file_with_spaces_replaced_name": temp_dir / "The control characters \n will be ignored_VAL.md",
             "my_love_story_replaced_name": temp_dir / "_My_Story&Love_VAL.log", 
             "coco4_replaced_name": temp_dir / "MOCO4_ip-N_VAL.data", 
-            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt", 
-            "file_with_control_chars_key_replaced_name": temp_dir / "Value_for_key_with_controls_VAL.txt" 
+            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt", # Name unchanged
+            "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt", # Original: complex_map_key_withcontrolchars_original_name.txt
+            "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt" # Name unchanged
         }
         record_test("[Complex] Diacritic folder rename", exp_paths_complex_map["diacritic_folder_replaced"].exists(), f"Dir missing: {exp_paths_complex_map['diacritic_folder_replaced']}")
         record_test("[Complex] File in diacritic folder rename", exp_paths_complex_map["file_in_diacritic_folder_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['file_in_diacritic_folder_replaced_name']}")
@@ -256,7 +252,7 @@ def _verify_self_test_results_task(
         record_test("[Complex] File with '&' in name rename", exp_paths_complex_map["my_love_story_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['my_love_story_replaced_name']}")
         record_test("[Complex] File with '-' and mixed case in name rename", exp_paths_complex_map["coco4_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['coco4_replaced_name']}")
         record_test("[Complex] File for special chars in content (name unchanged)", exp_paths_complex_map["special_chars_content_file"].exists(), f"File missing: {exp_paths_complex_map['special_chars_content_file']}")
-        record_test("[Complex] File with control chars in key rename", exp_paths_complex_map["file_with_control_chars_key_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['file_with_control_chars_key_replaced_name']}")
+        record_test("[Complex] Control char key ('key_with\\tcontrol\\nchars') - filename rename", exp_paths_complex_map["control_chars_key_renamed_file"].exists(), f"File missing: {exp_paths_complex_map['control_chars_key_renamed_file']}")
         record_test("[Complex] Original diacritic folder removed", not (temp_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").exists(), "Original diacritic folder still exists.")
         
         check_file_content_for_test(exp_paths_complex_map.get("file_in_diacritic_folder_replaced_name"),
@@ -274,7 +270,7 @@ def _verify_self_test_results_task(
         check_file_content_for_test(exp_paths_complex_map.get("special_chars_content_file"),
                            "This line contains SpecialCharsKeyMatched_VAL to be replaced.",
                            "[Complex] Special chars key replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(temp_dir / "content_with_key_with_controls.txt", # Original name for this content test file
+        check_file_content_for_test(exp_paths_complex_map.get("control_chars_key_content_file"), 
                            "Line with Value_for_key_with_controls_VAL to replace.", 
                            "[Complex] Key with control chars in key - content replacement", record_test_func=record_test)
 
@@ -391,7 +387,8 @@ def self_test_flow(
         current_mapping_file_for_test = temp_dir / SELF_TEST_EDGE_CASE_MAP_FILE
         edge_case_map_data = {
             "REPLACEMENT_MAPPING": {
-                "Key\nWith\tControls": "ControlValue_VAL", # For control char in key test
+                "My\nKey": "MyKeyValue_VAL", # For control char in key (filename test)
+                "Key\nWith\tControls": "ControlValue_VAL", # For control char in key (content test)
                 "\t": "ShouldBeSkipped_VAL",             # Key becomes empty after stripping
                 "foo": "Foo_VAL",
                 "foo bar": "FooBar_VAL"                   # For key priority
@@ -419,7 +416,7 @@ def self_test_flow(
     print(f"Self-Test ({test_scenario_name}): Using mapping file {current_mapping_file_for_test.name}")
 
     load_success = replace_logic.load_replacement_map(current_mapping_file_for_test)
-    if not load_success: # Handles file not found, JSON error, regex compile error
+    if not load_success: 
         if run_empty_map_sub_test and not replace_logic._REPLACEMENT_MAPPING_CONFIG and replace_logic._COMPILED_PATTERN is None:
              print(f"Self-Test ({test_scenario_name}): Successfully loaded an empty map as expected.")
         else:
@@ -461,7 +458,7 @@ def self_test_flow(
         if len(transactions1) != 0:
             raise AssertionError(f"[Empty Map Test] Expected 0 transactions, got {len(transactions1)}")
         print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
-    elif validation_file: # For non-empty map tests, do a second scan for determinism
+    elif validation_file: 
         transactions2 = scan_directory_for_occurrences(
             root_dir=temp_dir,
             excluded_dirs=test_excluded_dirs,
@@ -471,7 +468,7 @@ def self_test_flow(
         save_transactions(transactions2, validation_file)
         print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
 
-    if not dry_run_for_test and not run_empty_map_sub_test: # No execution for empty map
+    if not dry_run_for_test and not run_empty_map_sub_test: 
         print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
         execute_all_transactions(
             transactions_file_path=transaction_file,
