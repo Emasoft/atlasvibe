@@ -1,0 +1,1 @@
+    standard_test_includes_symlinks = standard_test_includes_large_file or run_precision_test or run_resume_test

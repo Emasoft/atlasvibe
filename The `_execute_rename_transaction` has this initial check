@@ -1,0 +1,3 @@
+    if not os.path.lexists(current_abs_path): # Use lexists for symlinks and regular files/dirs
+        # ...
+        return TransactionStatus.SKIPPED, f"Original item '{current_abs_path}' not found and target name does not exist either."
