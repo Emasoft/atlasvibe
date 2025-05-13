@@ -436,10 +436,14 @@ def self_test_flow(
     test_extensions = [".txt", ".py", ".md", ".bin", ".log", ".data"] 
 
     transaction_file_name_base = "transactions"
-    if run_complex_map_sub_test: transaction_file_name_base = "complex_map_transactions"
-    elif run_edge_case_sub_test: transaction_file_name_base = "edge_case_transactions"
-    elif run_empty_map_sub_test: transaction_file_name_base = "empty_map_transactions"
-    else: transaction_file_name_base = SELF_TEST_PRIMARY_TRANSACTION_FILE.stem
+    if run_complex_map_sub_test:
+        transaction_file_name_base = "complex_map_transactions"
+    elif run_edge_case_sub_test:
+        transaction_file_name_base = "edge_case_transactions"
+    elif run_empty_map_sub_test:
+        transaction_file_name_base = "empty_map_transactions"
+    else:
+        transaction_file_name_base = SELF_TEST_PRIMARY_TRANSACTION_FILE.stem
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not run_empty_map_sub_test else None
@@ -648,9 +652,12 @@ def main_cli() -> None:
         is_empty_map_run = args.run_empty_map_self_test
         
         test_type_msg = "Standard"
-        if is_complex_run: test_type_msg = "Complex Map"
-        elif is_edge_case_run: test_type_msg = "Edge Cases"
-        elif is_empty_map_run: test_type_msg = "Empty Map"
+        if is_complex_run:
+            test_type_msg = "Complex Map"
+        elif is_edge_case_run:
+            test_type_msg = "Edge Cases"
+        elif is_empty_map_run:
+            test_type_msg = "Empty Map"
         
         sys.stdout.write(f"Running self-test ({test_type_msg} scenario) in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
         
