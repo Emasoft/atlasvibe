@@ -68,7 +68,7 @@
 14. **Task 4.14: Non-Matching Files/Folders Untouched.**
     *   **Status**: COMPLETED (Implicitly covered by all self-tests; files like `no_target_here.log` are verified to be untouched).
 15. **Task 4.15: Symlink Handling (Default: No Follow).**
-    *   **Status**: COMPLETED (Commit: `abdc200` for logic, `669aa3c` for test integration)
+    *   **Status**: COMPLETED (Commits: `abdc200` for logic, `669aa3c` for test integration, current changes for verification refinement)
 16. **Task 4.16: Deep Directory Tree Operations (depth=10).**
     *   **Status**: COMPLETED (Covered by existing deep path tests in `_create_self_test_environment` and verified by standard self-test).
 17. **Task 4.17: GB18030 Encoding Test.**
@@ -77,7 +77,7 @@
 ## Phase 5: Final Review and Self-Test Execution
 
 1.  **Task 5.1: Run All Self-Tests (Standard, Complex Map, Edge Cases, Empty Map, Resume, Precision, and new tests from Phase 4).**
-    *   **Status**: IN PROGRESS (This is the current step)
+    *   **Status**: IN PROGRESS (This is the current step - all tests are expected to pass now)
     *   **Action**: Execute all self-test suites.
     *   Iteratively fix any remaining issues until all tests pass.
 2.  **Task 5.2: Final Code Read-Through.**
@@ -87,4 +87,4 @@
 ---
 
 This plan will be updated as tasks are completed.
-**Current Focus: Phase 5, Task 5.1 - Running all self-tests.**
+**Current Focus: Phase 5, Task 5.1 - Confirming all self-tests pass.**
