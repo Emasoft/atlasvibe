@@ -10,17 +10,15 @@ import argparse
 import tempfile
 from pathlib import Path
 import sys
-from typing import List, Dict, Any, Optional, Union, Callable # Added Callable
-import shutil # For shutil.rmtree and shutil.get_terminal_size
-import textwrap # Added for text wrapping
-import json # Added to resolve F821
-import os # For os.chmod
-import operator # For sorting transactions
+from typing import List, Dict, Any, Optional, Union, Callable 
+import shutil 
+import textwrap 
+import json 
+import os 
+import operator 
 
-# Prefect integration - now a hard dependency
 from prefect import task, flow
 
-# Local module imports
 from file_system_operations import (
     scan_directory_for_occurrences,
     save_transactions,
@@ -29,18 +27,17 @@ from file_system_operations import (
     TransactionStatus,
     TransactionType,
     TRANSACTION_FILE_BACKUP_EXT,
-    is_likely_binary_file, # For self-test verification
+    is_likely_binary_file, 
     SELF_TEST_ERROR_FILE_BASENAME
 )
-# Import specific functions from replace_logic, or the module itself
-import replace_logic # To call its loading function or access its state
+import replace_logic 
 
 # --- Constants ---
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
-DEFAULT_REPLACEMENT_MAPPING_FILE = "replacement_mapping.json" # Default name
+DEFAULT_REPLACEMENT_MAPPING_FILE = "replacement_mapping.json" 
 SELF_TEST_PRIMARY_TRANSACTION_FILE = "self_test_transactions.json"
 SELF_TEST_SCAN_VALIDATION_FILE = "self_test_scan_validation_transactions.json"
-SELF_TEST_SANDBOX_DIR = "./tests/temp" # Defined sandbox for self-tests
+SELF_TEST_SANDBOX_DIR = "./tests/temp" 
 SELF_TEST_COMPLEX_MAP_FILE = "self_test_complex_mapping.json"
 SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
@@ -57,7 +54,7 @@ GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
 YELLOW = "\033[93m"
-BLUE = "\033[94m" # For table borders
+BLUE = "\033[94m" 
 PASS_SYMBOL = "✅"
 FAIL_SYMBOL = "❌"
 
@@ -253,8 +250,6 @@ def _verify_self_test_results_task(
     temp_dir: Path,
     original_transaction_file: Path,
     validation_transaction_file: Optional[Path] = None,
-    is_exec_resume_run: bool = False, 
-    is_scan_resume_run: bool = False, 
     is_complex_map_test: bool = False,
     is_edge_case_test: bool = False,
     is_empty_map_test: bool = False,
@@ -319,7 +314,7 @@ def _verify_self_test_results_task(
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
             
-            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
+            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
@@ -661,7 +656,7 @@ def self_test_flow(
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
         include_precision_test_file=run_precision_test,
-        include_symlink_tests=standard_test_includes_symlinks # This flag controls creation
+        include_symlink_tests=standard_test_includes_symlinks 
     )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
@@ -681,7 +676,7 @@ def self_test_flow(
         transaction_file_name_base = "precision_test_transactions"
     else: # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
-        if ignore_symlinks_for_this_test_run: # Append to name if standard test is ignoring symlinks
+        if ignore_symlinks_for_this_test_run: 
             transaction_file_name_base += "_ignore_symlinks"
 
 
@@ -695,7 +690,7 @@ def self_test_flow(
             test_excluded_dirs, 
             test_excluded_files, 
             test_extensions,
-            ignore_symlinks=False # For resume setup, process symlinks initially
+            ignore_symlinks=False 
         )
         
         if initial_transactions:
@@ -979,7 +974,7 @@ def main_cli() -> None:
                     run_standard_self_test=True, 
                     ignore_symlinks_for_this_test_run=False 
                 )
-                if self_test_sandbox.exists():
+                if self_test_sandbox.exists(): # Re-create sandbox for the ignored symlink run
                     shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
@@ -997,7 +992,7 @@ def main_cli() -> None:
                     run_empty_map_sub_test=is_empty_map_run,
                     run_resume_test=is_resume_run,
                     run_precision_test=is_precision_run,
-                    ignore_symlinks_for_this_test_run=args.ignore_symlinks # Use CLI arg for other tests
+                    ignore_symlinks_for_this_test_run=args.ignore_symlinks 
                 )
         except AssertionError as e: 
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
