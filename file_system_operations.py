@@ -81,6 +81,9 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
 def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
     """Heuristic to check if a file is likely binary."""
     try:
+        # Important: Check if it's a symlink first. If so, check the target.
+        # However, for binary detection, we should operate on what open() would operate on.
+        # If it's a broken symlink, open() will fail.
         with open(file_path, 'rb') as f:
             sample = f.read(sample_size)
         if not sample:
@@ -96,23 +99,29 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
         return True 
 
 def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
-    """Yields paths for scanning, respecting exclusions."""
+    """
+    Yields paths for scanning, respecting exclusions.
+    By default, Path.rglob does not follow symlinks for directory traversal.
+    """
     abs_excluded_dirs = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
-    for item_path in root_dir.rglob("*"):
+    for item_path in root_dir.rglob("*"): # rglob itself does not follow symlinks into dirs
         is_excluded = False
         try:
-            resolved_item_path = item_path.resolve(strict=False)
+            resolved_item_path = item_path.resolve(strict=False) # Resolves symlinks for comparison
             for excluded_dir in abs_excluded_dirs:
+                # Check if the resolved path is the excluded dir or within an excluded dir
                 if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
                     is_excluded = True
                     break
         except (ValueError, OSError, FileNotFoundError): 
+            # Fallback for paths that might be problematic to resolve (e.g., very long, broken symlinks)
             item_path_str = str(item_path)
             if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
                  is_excluded = True
+        
         if is_excluded:
-            if item_path.is_dir():
-                 pass 
+            # If a directory is excluded, rglob would have already skipped its contents.
+            # This primarily handles cases where an excluded item is directly yielded by rglob.
             continue 
         yield item_path
 
@@ -182,16 +191,28 @@ def scan_directory_for_occurrences(
         original_name = item_path.name
 
         try:
-            resolved_item_path = item_path.resolve(strict=False)
-            if resolved_item_path in abs_excluded_files:
+            # For exclusion, we need to check the resolved path if it's a symlink
+            # However, item_path itself is what rglob yields (the link, not target for dirs)
+            path_to_check_exclusion = item_path.resolve(strict=False) if item_path.is_symlink() else item_path
+            if path_to_check_exclusion in abs_excluded_files:
                 continue
-        except (OSError, FileNotFoundError):
+        except (OSError, FileNotFoundError): # Handle broken symlinks or other resolution issues
              item_path_str = str(item_path)
-             if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files):
+             if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files): # Check original path string
                   continue
-
+        
+        # Process name of the item (file, dir, or symlink itself)
         if replace_occurrences(original_name) != original_name: 
-            tx_type_val = TransactionType.FOLDER_NAME.value if item_path.is_dir() else TransactionType.FILE_NAME.value
+            # Use lstat to determine type without following symlinks for this decision
+            # item_path.is_dir() / is_file() would follow symlinks.
+            # For transaction type, we care about what the item *is* in the listing, not what it points to.
+            is_dir = item_path.is_dir() and not item_path.is_symlink() # True directory
+            is_file = item_path.is_file() and not item_path.is_symlink() # True file
+            # Symlinks themselves are neither is_dir() nor is_file() in a strict sense if we use lstat-like checks.
+            # However, for naming, they act like files.
+            
+            tx_type_val = TransactionType.FOLDER_NAME.value if is_dir else TransactionType.FILE_NAME.value
+            
             current_tx_id_tuple = (relative_path_str, tx_type_val, 0) 
 
             if current_tx_id_tuple not in existing_transaction_ids:
@@ -204,8 +225,9 @@ def scan_directory_for_occurrences(
                 })
                 existing_transaction_ids.add(current_tx_id_tuple)
 
-        if item_path.is_file():
-            if is_likely_binary_file(item_path):
+        # Content processing: only for actual files, not symlinks to files, and not directories.
+        if item_path.is_file() and not item_path.is_symlink():
+            if is_likely_binary_file(item_path): # This will open the actual file
                 continue
             if normalized_extensions and item_path.suffix.lower() not in normalized_extensions:
                 continue
@@ -213,7 +235,6 @@ def scan_directory_for_occurrences(
             file_encoding = get_file_encoding(item_path) 
             try:
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
-                    # Read and process line by line for memory efficiency with large files
                     for line_num_0_indexed, line_content in enumerate(f):
                         if replace_occurrences(line_content) != line_content: 
                             line_number_1_indexed = line_num_0_indexed + 1
@@ -331,14 +352,16 @@ def _execute_rename_transaction(
     except Exception as e:
          return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
-
-    if not current_abs_path.exists():
-        potential_new_name = replace_occurrences(original_name) 
-        potential_new_path = current_abs_path.with_name(potential_new_name)
-        if potential_new_path.exists():
-             return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found, but target '{potential_new_path}' exists (already processed?)."
-        else:
-             return TransactionStatus.SKIPPED, f"Original path '{current_abs_path}' not found and target name does not exist either."
+    # For symlinks, current_abs_path is the link itself. os.rename works on the link.
+    # We must ensure the link exists, not necessarily its target for the rename op itself.
+    if not current_abs_path.exists() and not current_abs_path.is_symlink(): # For symlinks, exists() checks target. lexists() checks link.
+        if not os.path.lexists(current_abs_path): # Check if link itself is missing
+            potential_new_name = replace_occurrences(original_name) 
+            potential_new_path = current_abs_path.with_name(potential_new_name)
+            if os.path.lexists(potential_new_path): # Check if new link name exists
+                return TransactionStatus.SKIPPED, f"Original link '{current_abs_path}' not found, but target link name '{potential_new_path}' exists (already processed?)."
+            else:
+                return TransactionStatus.SKIPPED, f"Original link '{current_abs_path}' not found and target link name does not exist either."
 
     new_name = replace_occurrences(original_name) 
     if new_name == original_name:
@@ -361,16 +384,25 @@ def _execute_rename_transaction(
             _ensure_within_sandbox(current_abs_path, root_dir, f"rename source for {original_name}")
             _ensure_within_sandbox(new_abs_path, root_dir, f"rename destination for {new_name}")
 
-            if new_abs_path.exists():
+            if os.path.lexists(new_abs_path): # Use lstat to check if new link name exists
                  try:
-                     if not current_abs_path.resolve().samefile(new_abs_path.resolve()):
-                         return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists and is a different item."
-                 except FileNotFoundError:
-                      return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists, but source resolve failed."
+                     # If current_abs_path is a symlink, resolve() follows it.
+                     # We need to compare if the new_abs_path would overwrite a *different* existing file/dir/link.
+                     # This logic might need refinement if new_abs_path could be a dir and current_abs_path a file or vice-versa.
+                     # For now, simple check: if new_abs_path exists and isn't the same inode as current_abs_path (if not a symlink)
+                     if not current_abs_path.is_symlink() and not new_abs_path.is_symlink():
+                         if not current_abs_path.resolve().samefile(new_abs_path.resolve()): 
+                             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' already exists and is a different item."
+                     # If new_abs_path exists and is a symlink, it's complex. For now, assume skip if exists.
+                     elif os.path.lexists(new_abs_path) and not (current_abs_path.is_symlink() and os.readlink(current_abs_path) == os.readlink(new_abs_path)):
+                          return TransactionStatus.SKIPPED, f"Target symlink path '{new_abs_path}' already exists and points to a different target or is a different type of item."
+
+                 except FileNotFoundError: # Can happen if current_abs_path is a broken symlink
+                      pass 
                  except OSError as ose:
                       return TransactionStatus.FAILED, f"Error checking if paths are same file: {ose}"
 
-            os.rename(current_abs_path, new_abs_path) 
+            os.rename(current_abs_path, new_abs_path) # os.rename renames the symlink itself, not the target
             path_translation_map[original_relative_path_str] = new_name
             path_cache[original_relative_path_str] = new_abs_path 
             return TransactionStatus.COMPLETED, None 
@@ -414,6 +446,9 @@ def _execute_content_line_transaction(
     except Exception as e:
          return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
+    # Content modification should only happen on actual files, not symlinks.
+    if current_abs_path.is_symlink():
+        return TransactionStatus.SKIPPED, f"File '{current_abs_path}' is a symlink; content modification skipped."
     if not current_abs_path.is_file():
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' not found or not a file."
 
@@ -442,10 +477,7 @@ def _execute_content_line_transaction(
 
         if not (0 <= line_number_1_indexed - 1 < len(lines)):
             return TransactionStatus.FAILED, f"Line number {line_number_1_indexed} out of bounds for file {current_abs_path} (len: {len(lines)})."
-
-        # Verify the line content hasn't changed since scan, only if it's not a dry run from a previous actual run
-        # For self-tests, this check is important. For real resume, it might be too strict if user edited file.
-        # However, the transaction stores ORIGINAL_LINE_CONTENT, so this check is valid.
+        
         if lines[line_number_1_indexed - 1] != original_line_content:
              return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
 
@@ -517,10 +549,10 @@ def execute_all_transactions(
                      path_cache.pop(original_rel_path, None)
             continue
         if current_status == TransactionStatus.FAILED:
-            if not resume: # If not resuming, a FAILED state is final for this run
+            if not resume: 
                 stats["failed"] +=1
                 continue
-            else: # If resuming, FAILED items are re-attempted (treated like PENDING)
+            else: 
                 print(f"Resuming FAILED transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
                 current_status = TransactionStatus.PENDING 
         
@@ -529,18 +561,17 @@ def execute_all_transactions(
             continue
 
         if current_status == TransactionStatus.IN_PROGRESS:
-            if not resume: # If not resuming, an IN_PROGRESS from a previous crash is reset to PENDING
+            if not resume: 
                 tx_item["STATUS"] = TransactionStatus.PENDING.value
                 current_status = TransactionStatus.PENDING
-            else: # If resuming, continue IN_PROGRESS items
+            else: 
                  print(f"Resuming IN_PROGRESS transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
 
         if current_status == TransactionStatus.PENDING or \
-           (resume and current_status == TransactionStatus.IN_PROGRESS): # Also re-attempt FAILED on resume
+           (resume and current_status == TransactionStatus.IN_PROGRESS): 
 
             print(f"Processing transaction {i+1}/{total_transactions}: {tx_id} ({tx_item.get('TYPE')}: {tx_item.get('PATH')}:{tx_item.get('LINE_NUMBER', '')})")
             update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-            # Save transactions immediately after marking IN_PROGRESS for better resume state
             save_transactions(transactions, transactions_file_path) 
 
             new_status: TransactionStatus
@@ -566,7 +597,7 @@ def execute_all_transactions(
                 print(error_msg)
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg, proposed_content_update)
-            save_transactions(transactions, transactions_file_path) # Save final status
+            save_transactions(transactions, transactions_file_path) 
             
             if new_status == TransactionStatus.COMPLETED:
                 stats["completed"] += 1
@@ -574,7 +605,7 @@ def execute_all_transactions(
                 stats["failed"] += 1
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
-        else: # Should only be PENDING if not resume, or already handled states
+        else: 
              stats["pending"] +=1
 
     final_pending = sum(1 for t in transactions if t.get("STATUS") == TransactionStatus.PENDING.value)
