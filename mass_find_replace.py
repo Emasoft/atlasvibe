@@ -287,7 +287,7 @@ def _verify_self_test_results_task(
             
             actual_lines_bytes = precision_replaced_path.read_bytes().splitlines(keepends=True)
             
-            record_test(f"[Precision Test] Line count check", len(actual_lines_bytes) == len(expected_lines), f"Expected {len(expected_lines)} lines, got {len(actual_lines_bytes)}")
+            record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(expected_lines), f"Expected {len(expected_lines)} lines, got {len(actual_lines_bytes)}")
 
             for i, expected_item in enumerate(expected_lines):
                 if i < len(actual_lines_bytes):
