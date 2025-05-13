@@ -129,8 +129,8 @@ def _create_self_test_environment(
         (base_dir / "file_with_spaces_The spaces will not be ignored.md").write_text(
             "This file has The spaces will not be ignored in its name and content."
         )
-        (base_dir / "_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story.")
-        (base_dir / "filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M.")
+        (base_dir / "_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story. And My_Love&Story.")
+        (base_dir / "filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M. Also coco4_ep-m.")
         (base_dir / "special_chars_in_content_test.txt").write_text(
             "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
         )
@@ -262,10 +262,10 @@ def _verify_self_test_results_task(
                            "This file has The control characters \n will be ignored_VAL in its name and content.",
                            "[Complex] Key with spaces, value with newline replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("my_love_story_replaced_name"),
-                           "Log for _My_Story&Love_VAL and _my_story&love_VAL.",
+                           "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.", # "And My_Love&Story" remains as it's not a key
                            "[Complex] Key with '&' and case variants replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("coco4_replaced_name"),
-                           "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL.",
+                           "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.", # Corrected: "coco4_ep-m" should also be replaced
                            "[Complex] Key with '-' and mixed case replacement in content.", record_test_func=record_test)
         check_file_content_for_test(exp_paths_complex_map.get("special_chars_content_file"),
                            "This line contains SpecialCharsKeyMatched_VAL to be replaced.",
