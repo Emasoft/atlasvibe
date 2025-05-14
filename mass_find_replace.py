@@ -210,14 +210,18 @@ def _create_self_test_environment(
                     os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
                 if not os.path.lexists(link_to_dir):
                     os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
-                print("Symlinks created (or already existed) for testing.")
+                if verbose:
+                    print("Symlinks created (or already existed) for testing.")
             except OSError as e:
-                print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
+                if verbose:
+                    print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
             except Exception as e: 
-                print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
+                if verbose:
+                    print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
 
     except Exception as e:
-        print(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
+        if verbose:
+            print(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
 
 
 def check_file_content_for_test( 
@@ -226,7 +230,8 @@ def check_file_content_for_test(
     test_description: str,
     record_test_func: Callable, 
     encoding: Optional[str] = 'utf-8',
-    is_binary: bool = False
+    is_binary: bool = False,
+    verbose: bool = False
 ) -> None:
     """Helper to check file content for self-tests, normalizing line endings for strings."""
     if file_path is None or not file_path.exists():
@@ -242,7 +247,10 @@ def check_file_content_for_test(
             if isinstance(expected_content, str):
                 actual_content_normalized = actual_content.replace("\r\n", "\n").replace("\r", "\n")
                 expected_content_normalized = expected_content.replace("\r\n", "\n").replace("\r", "\n")
-                record_test_func(test_description, actual_content_normalized == expected_content_normalized, f"Expected content mismatch for {file_path}.\nExpected:\n'''{expected_content_normalized!r}'''\nGot:\n'''{actual_content_normalized!r}'''")
+                record_test_func(test_description, actual_content_normalized == expected_content_normalized, f"Expected content mismatch for {file_path}.")
+                if not actual_content_normalized == expected_content_normalized and verbose:
+                    print(f"Expected: {expected_content_normalized!r}")
+                    print(f"Got: {actual_content_normalized!r}")
             else: 
                  record_test_func(test_description, False, f"Type mismatch for expected content (should be str) for {file_path}")
 
@@ -289,7 +297,7 @@ def _verify_self_test_results_task(
             record_test(f"[{test_type}] {key} - exists", path.exists())
         if is_content_check:
             for key, path in expected_paths.items():
-                check_file_content_for_test(path, "Expected content", f"[{test_type}] {key} - content check", record_test)
+                check_file_content_for_test(path, "Expected content", f"[{test_type}] {key} - content check", record_test, verbose=verbose)
 
     if is_empty_map_test:
         transactions = load_transactions(original_transaction_file)
@@ -359,7 +367,7 @@ def _verify_self_test_results_task(
             record_test("[Resume Test] Newly added file content processed", new_file_content_processed)
             check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt", 
                                    "This atlasvibe content is new for resume.",
-                                   "[Resume Test] Content of newly added file after resume", record_test_func=record_test)
+                                   "[Resume Test] Content of newly added file after resume", record_test_func=record_test, verbose=verbose)
 
             large_file_tx_found_completed = any(
                 "large_flojoy_file.txt" in tx["PATH"] and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value
@@ -441,8 +449,8 @@ def _verify_self_test_results_task(
 
             target_file = temp_dir / "symlink_targets_outside" / "target_file_flojoy.txt"
             target_dir_file = temp_dir / "symlink_targets_outside" / "target_dir_flojoy" / "another_flojoy_file.txt"
-            check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged (regardless of ignore flag)", record_test_func=record_test)
-            check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test)
+            check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged (regardless of ignore flag)", record_test_func=record_test, verbose=verbose)
+            check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test, verbose=verbose)
 
     # Common verification logic (table printing, summary)
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
@@ -488,7 +496,7 @@ def _verify_self_test_results_task(
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
 
     # Print failure details if verbose or any failures
-    if failed_checks > 0:
+    if failed_checks > 0 and verbose:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
         for line in failed_test_details_print_buffer:
             sys.stdout.write(line + "\n")
@@ -623,18 +631,21 @@ def self_test_flow(
         test_scenario_name = "Standard"
         current_mapping_file_for_test = create_mapping_file("standard")
 
-    print(f"Self-Test ({test_scenario_name}): Using mapping file {current_mapping_file_for_test.name}")
+    if verbose:
+        print(f"Self-Test ({test_scenario_name}): Using mapping file {current_mapping_file_for_test.name}")
 
     load_success = replace_logic.load_replacement_map(current_mapping_file_for_test)
     if not load_success: 
         if run_empty_map_sub_test and not replace_logic._REPLACEMENT_MAPPING_CONFIG and replace_logic._COMPILED_PATTERN is None:
-             print(f"Self-Test ({test_scenario_name}): Successfully loaded an empty map as expected.")
+             if verbose:
+                 print(f"Self-Test ({test_scenario_name}): Successfully loaded an empty map as expected.")
         else:
             raise RuntimeError(f"Self-Test FATAL: Could not load or process replacement map {current_mapping_file_for_test} for test run.")
     elif run_empty_map_sub_test and replace_logic._REPLACEMENT_MAPPING_CONFIG:
         raise RuntimeError(f"Self-Test FATAL: Expected empty map for {test_scenario_name}, but found rules.")
 
-    print(f"Self-Test ({test_scenario_name}): Successfully initialized replacement map from {current_mapping_file_for_test}")
+    if verbose:
+        print(f"Self-Test ({test_scenario_name}): Successfully initialized replacement map from {current_mapping_file_for_test}")
 
     _create_self_test_environment(
         temp_dir, 
@@ -642,7 +653,8 @@ def self_test_flow(
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
         include_precision_test_file=run_precision_test,
-        include_symlink_tests=standard_test_includes_symlinks 
+        include_symlink_tests=standard_test_includes_symlinks,
+        verbose=verbose
     )
 
     test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
@@ -670,7 +682,8 @@ def self_test_flow(
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test or run_precision_test) else None
     
     if run_resume_test:
-        print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
+        if verbose:
+            print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
         initial_transactions = scan_directory_for_occurrences(
             temp_dir, 
             test_excluded_dirs, 
@@ -693,12 +706,15 @@ def self_test_flow(
                     break
         
         save_transactions(initial_transactions, transaction_file) 
-        print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
+        if verbose:
+            print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
         
-        print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
-        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True) 
+        if verbose:
+            print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True, verbose=verbose) 
 
-        print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
+        if verbose:
+            print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
         main_flow(
             directory=str(temp_dir),
             mapping_file=str(current_mapping_file_for_test),
@@ -720,12 +736,14 @@ def self_test_flow(
             ignore_symlinks=ignore_symlinks_for_this_test_run 
         )
         save_transactions(transactions1, transaction_file)
-        print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
+        if verbose:
+            print(f"Self-Test ({test_scenario_name}): First scan complete. {len(transactions1)} transactions planned in {transaction_file}.")
 
         if run_empty_map_sub_test:
             if len(transactions1) != 0:
                 raise AssertionError(f"[Empty Map Test] Expected 0 transactions, got {len(transactions1)}")
-            print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
         elif validation_file: 
             transactions2 = scan_directory_for_occurrences(
                 root_dir=temp_dir,
@@ -735,19 +753,23 @@ def self_test_flow(
                 ignore_symlinks=ignore_symlinks_for_this_test_run
             )
             save_transactions(transactions2, validation_file)
-            print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
 
         if not dry_run_for_test and not run_empty_map_sub_test: 
-            print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
             execute_all_transactions(
                 transactions_file_path=transaction_file,
                 root_dir=temp_dir,
                 dry_run=False,
                 resume=False 
             )
-            print(f"Self-Test ({test_scenario_name}): Execution phase complete.")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Execution phase complete.")
         elif dry_run_for_test and not run_empty_map_sub_test:
-            print(f"Self-Test ({test_scenario_name}): Dry run. Simulating execution from {transaction_file}.")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Dry run. Simulating execution from {transaction_file}.")
             execute_all_transactions(transaction_file, temp_dir, dry_run=True, resume=False)
 
     _verify_self_test_results_task(
@@ -950,14 +972,17 @@ def main_cli() -> None:
         
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         if self_test_sandbox.exists():
-            print(f"Removing existing self-test sandbox: {self_test_sandbox}")
+            if args.verbose:
+                print(f"Removing existing self-test sandbox: {self_test_sandbox}")
             shutil.rmtree(self_test_sandbox)
         self_test_sandbox.mkdir(parents=True, exist_ok=True)
-        print(f"Created self-test sandbox: {self_test_sandbox}")
+        if args.verbose:
+            print(f"Created self-test sandbox: {self_test_sandbox}")
         
         try:
             if args.run_standard_self_test:
-                print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
+                if args.verbose:
+                    print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), 
                     dry_run_for_test=args.dry_run,
@@ -967,7 +992,8 @@ def main_cli() -> None:
                 if self_test_sandbox.exists(): 
                     shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
-                print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
+                if args.verbose:
+                    print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), 
                     dry_run_for_test=args.dry_run,
@@ -975,7 +1001,7 @@ def main_cli() -> None:
                     ignore_symlinks_for_this_test_run=True 
                 )
             else: 
-                 self_test_flow(
+                self_test_flow(
                     temp_dir_str=str(self_test_sandbox),
                     dry_run_for_test=args.dry_run, 
                     run_complex_map_sub_test=is_complex_run,
@@ -998,9 +1024,11 @@ def main_cli() -> None:
             if self_test_sandbox.exists():
                 try:
                     shutil.rmtree(self_test_sandbox)
-                    print(f"Cleaned up self-test sandbox: {self_test_sandbox}")
+                    if args.verbose:
+                        print(f"Cleaned up self-test sandbox: {self_test_sandbox}")
                 except Exception as e: 
-                    print(f"{YELLOW}Warning: Could not remove self-test sandbox {self_test_sandbox}: {e}{RESET}")
+                    if args.verbose:
+                        print(f"{YELLOW}Warning: Could not remove self-test sandbox {self_test_sandbox}: {e}{RESET}")
         return 
 
     auto_excluded_files = [MAIN_TRANSACTION_FILE_NAME, Path(args.mapping_file).name]
