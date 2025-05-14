@@ -463,13 +463,32 @@ def _verify_self_test_results_task(
     header_id = f"{'#':^{id_col_content_width}}"
     header_desc = f"{'Test Description':^{desc_col_content_width}}"
     header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
+
+    # Always print the table, regardless of verbose flag
     sys.stdout.write("\n")
     sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
     sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
     sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
+
+    for test in test_results:
+        test_id = test["id"]
+        desc = test["description"]
+        status = test["status"]
+        details = test["details"]
+        status_color = GREEN if status == "PASS" else RED
+        desc_display = (desc[:desc_col_content_width-3] + "...") if len(desc) > desc_col_content_width else desc
+        sys.stdout.write(BLUE + DBL_VERTICAL + RESET)
+        sys.stdout.write(f"{' ' * padding}{test_id:^{id_col_content_width}}{' ' * padding}")
+        sys.stdout.write(BLUE + DBL_VERTICAL + RESET)
+        sys.stdout.write(f"{' ' * padding}{desc_display:<{desc_col_content_width}}{' ' * padding}")
+        sys.stdout.write(BLUE + DBL_VERTICAL + RESET)
+        sys.stdout.write(f"{' ' * padding}{status_color}{status:^{outcome_col_content_width}}{RESET}{' ' * padding}")
+        sys.stdout.write(BLUE + DBL_VERTICAL + RESET + "\n")
+
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
 
-    if failed_checks > 0 and verbose:
+    # Print failure details if verbose or any failures
+    if failed_checks > 0:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
         for line in failed_test_details_print_buffer:
             sys.stdout.write(line + "\n")
