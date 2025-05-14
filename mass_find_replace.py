@@ -261,7 +261,8 @@ def _verify_self_test_results_task(
     standard_test_includes_large_file: bool = False,
     is_precision_test: bool = False,
     standard_test_includes_symlinks: bool = False,
-    symlinks_were_ignored_in_scan: bool = False 
+    symlinks_were_ignored_in_scan: bool = False,
+    verbose: bool = False
 ) -> bool:
     sys.stdout.write(BLUE + "--- Verifying Self-Test Results ---" + RESET + "\n")
     passed_checks = 0
@@ -441,6 +442,9 @@ def _verify_self_test_results_task(
             check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test)
 
     # Common verification logic (table printing, summary)
+    if not verbose:
+        return True
+
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
     padding = 1
     id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3
@@ -462,42 +466,11 @@ def _verify_self_test_results_task(
     sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
     sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
     sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
-    failed_test_details_print_buffer = []
-    for result in test_results:
-        status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
-        color = GREEN if result["status"] == "PASS" else RED
-        outcome_text_content = f"{status_symbol} {result["status"]}"
-        id_text_content = str(result['id'])
-        wrapped_desc_lines = textwrap.wrap(result["description"], width=desc_col_content_width, drop_whitespace=False, replace_whitespace=False)
-        if not wrapped_desc_lines:
-            wrapped_desc_lines = ['']
-        for i, line_frag in enumerate(wrapped_desc_lines):
-            id_cell_str = f"{' ' * padding}{id_text_content:>{id_col_content_width}}{' ' * padding}" if i == 0 else ' ' * (id_col_total_width)
-            outcome_cell_str = f"{' ' * padding}{color}{outcome_text_content:<{outcome_col_content_width}}{RESET}{' ' * padding}" if i == 0 else ' ' * (outcome_col_total_width)
-            desc_cell_str = f"{' ' * padding}{line_frag:<{desc_col_content_width}}{' ' * padding}"
-            sys.stdout.write(BLUE + DBL_VERTICAL + RESET + id_cell_str + BLUE + DBL_VERTICAL + RESET + desc_cell_str + BLUE + DBL_VERTICAL + RESET + outcome_cell_str + BLUE + DBL_VERTICAL + RESET + "\n")
-        if result["status"] == "FAIL" and result["details"]:
-            failed_test_details_print_buffer.append(RED + f"\nDetails for Test #{result['id']}: {result['description']}" + RESET)
-            for detail_line in result["details"].split('\n'):
-                failed_test_details_print_buffer.append(RED + f"  -> {detail_line}" + RESET)
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
     if failed_test_details_print_buffer:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
         for line in failed_test_details_print_buffer:
             sys.stdout.write(line + "\n")
-    sys.stdout.write(YELLOW + "\n--- Self-Test Summary ---" + RESET + "\n")
-    total_tests_run = passed_checks + failed_checks
-    if total_tests_run > 0:
-        percentage_passed = (passed_checks / total_tests_run) * 100
-        summary_color = GREEN if failed_checks == 0 else RED
-        summary_emoji = PASS_SYMBOL if failed_checks == 0 else FAIL_SYMBOL
-        sys.stdout.write(f"Total Tests Run: {total_tests_run}\nPassed: {GREEN}{passed_checks}{RESET}\nFailed: {RED if failed_checks > 0 else GREEN}{failed_checks}{RESET}\nSuccess Rate: {summary_color}{percentage_passed:.2f}% {summary_emoji}{RESET}\n")
-        if failed_checks == 0:
-            sys.stdout.write(GREEN + "All self-test checks passed successfully! " + PASS_SYMBOL + RESET + "\n")
-        else:
-            sys.stdout.write(RED + f"Self-test FAILED with {failed_checks} error(s). " + FAIL_SYMBOL + RESET + "\n")
-    else:
-        sys.stdout.write(YELLOW + "No self-test checks were recorded." + RESET + "\n")
     sys.stdout.flush()
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s). Review output for details.")
@@ -508,6 +481,7 @@ def _verify_self_test_results_task(
 def self_test_flow(
     temp_dir_str: str,
     dry_run_for_test: bool,
+    verbose: bool = False,  # new parameter
     run_exec_resume_sub_test: bool = False, 
     run_scan_resume_sub_test: bool = False, 
     run_complex_map_sub_test: bool = False,
@@ -765,7 +739,8 @@ def self_test_flow(
         standard_test_includes_large_file=standard_test_includes_large_file,
         is_precision_test=is_verification_precision_test,
         standard_test_includes_symlinks=standard_test_includes_symlinks,
-        symlinks_were_ignored_in_scan=ignore_symlinks_for_this_test_run
+        symlinks_were_ignored_in_scan=ignore_symlinks_for_this_test_run,
+        verbose=verbose  # pass verbose flag
     )
 
 
@@ -907,7 +882,9 @@ def main_cli() -> None:
                         help="Resume operation from existing transaction file, attempting to complete pending/failed items and scan for new ones.")
     parser.add_argument("--force", "--yes", "-y", action="store_true",
                         help="Force execution without confirmation prompt (use with caution).")
-    
+    parser.add_argument("--verbose", action="store_true",
+                        help="Enable verbose output during self-tests.")
+
     self_test_group = parser.add_argument_group('Self-Test Options')
     self_test_group.add_argument("--self-test", dest="run_standard_self_test", action="store_true",
                                  help=f"Run the standard self-test suite in '{SELF_TEST_SANDBOX_DIR}'. Uses default mappings.")
@@ -962,6 +939,7 @@ def main_cli() -> None:
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), 
                     dry_run_for_test=args.dry_run,
+                    verbose=args.verbose,  # pass verbose flag
                     ignore_symlinks_for_this_test_run=False 
                 )
                 if self_test_sandbox.exists(): 
@@ -971,6 +949,7 @@ def main_cli() -> None:
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox), 
                     dry_run_for_test=args.dry_run,
+                    verbose=args.verbose,  # pass verbose flag
                     ignore_symlinks_for_this_test_run=True 
                 )
             else: 
@@ -982,6 +961,7 @@ def main_cli() -> None:
                     run_empty_map_sub_test=is_empty_map_run,
                     run_resume_test=is_resume_run,
                     run_precision_test=is_precision_run,
+                    verbose=args.verbose,  # pass verbose flag
                     ignore_symlinks_for_this_test_run=args.ignore_symlinks 
                 )
         except AssertionError as e: 
