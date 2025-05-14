@@ -2,6 +2,35 @@
 ## Project Goal
 Create a Python script using Prefect to find and replace all occurrences of specified strings with their corresponding replacements across a directory. This includes file names, folder names, and content within text files. The script must be robust, handle various file encodings, allow for dry runs, resumability, and load its replacement rules from an external JSON configuration file.
 
+## General Development Guidelines
+- be extremely meticulous and accurate. always check twice any line of code for errors before output the code.
+- never remove unused code or variables unless they are wrong, since the program is a WIP and those unused parts are likely going to be developed and used in the future. The only exception is if the user explicitly tells you to do it.
+- Don't worry about functions imported from external modules, since those dependencies cannot be always included in the chat for your context limit. Do not remove them or implement them just because you can''t find the module or source file they are imported from. You just assume that the imported modules and imported functions work as expected. If you need to change them, ask the user to include them in the chat.
+- spend a long time thinking deeply to understand completely the code flow and inner working of the program before writing any code or making any change. 
+- always preserve comments and add them when writing new code.
+- always write the docstrings of all functions and improve the existing ones. 
+- only use google style docstrings, but do not use markdown. 
+- never use markdown in comments. 
+- always add the following shebang at the beginning of each python file: 
+
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+```
+- always add a short changelog before the imports in of the source code to document all the changes you made to it.
+
+```python
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# <your changelog here…>
+# 
+```
+- always use a TDD methodology (tests first, implementation later) when implementing new features or change the existing ones. But first check that the existing tests are written correctly.
+- always plan in advance your actions, and break down your plan into very small tasks. Save a file named `tasks_checklist.md` and write all tasks inside it. Update it with the status of each tasks after any changes.
+- commit often. 
+
+
+
+
 ## Core Technologies
 - Python 3.10+
 - Prefect: For workflow orchestration, task management, and logging.
