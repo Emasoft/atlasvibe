@@ -4,7 +4,7 @@ Create a Python script using Prefect to find and replace all occurrences of spec
 
 ## General Development Guidelines
 - be extremely meticulous and accurate. always check twice any line of code for errors before output the code.
-- never output code that is abridged or with parts replaced by placeholder comments like `# ... rest of the code ...` or similar. You are not chatting. The code you output is going to be saved and linted, so omitting parts of it will cause errors and broken files.
+- never output code that is abridged or with parts replaced by placeholder comments like `# ... rest of the code ...`, `# ... rest of the function as before ...`, or similar. You are not chatting. The code you output is going to be saved and linted, so omitting parts of it will cause errors and broken files.
 - be conservative. only change the code that it is strictly necessary to change to implement a feature or fix an issue. Do not change anything else. You must report the user if there is a way to improve certain parts of the code, but do not attempt to do it unless the user explicitly asks you to. 
 - when fixing the code, if you find that there are multiple possible solutions, do not start immediately but first present the user all the options and ask him to choose the one to try. For trivial bugs you don't need to, of course.
 - never remove unused code or variables unless they are wrong, since the program is a WIP and those unused parts are likely going to be developed and used in the future. The only exception is if the user explicitly tells you to do it.
