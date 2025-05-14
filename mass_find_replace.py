@@ -269,6 +269,7 @@ def _verify_self_test_results_task(
     failed_checks = 0
     test_results: List[Dict[str, Any]] = []
     test_counter = 0
+    failed_test_details_print_buffer: List[str] = []
 
     def record_test(description: str, condition: bool, details_on_fail: str = "") -> None:
         nonlocal passed_checks, failed_checks, test_counter
@@ -278,6 +279,8 @@ def _verify_self_test_results_task(
             passed_checks += 1
         else:
             failed_checks += 1
+            if details_on_fail:
+                failed_test_details_print_buffer.append(f"{description}: {details_on_fail}")
         test_results.append({"id": test_counter, "description": description, "status": status, "details": details_on_fail if not condition else ""})
 
     def verify_test_case(test_type: str, expected_paths: Dict[str, Path], is_content_check: bool = True) -> None:
@@ -442,9 +445,6 @@ def _verify_self_test_results_task(
             check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test)
 
     # Common verification logic (table printing, summary)
-    if not verbose:
-        return True
-
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
     padding = 1
     id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3
@@ -459,6 +459,7 @@ def _verify_self_test_results_task(
         desc_col_content_width = min_desc_col_content_width
     else:
         desc_col_content_width = desc_col_total_width - 2 * padding
+
     header_id = f"{'#':^{id_col_content_width}}"
     header_desc = f"{'Test Description':^{desc_col_content_width}}"
     header_outcome = f"{'Outcome':^{outcome_col_content_width}}"
@@ -467,10 +468,12 @@ def _verify_self_test_results_task(
     sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
     sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
     sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
-    if failed_test_details_print_buffer:
+
+    if failed_checks > 0 and verbose:
         sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
         for line in failed_test_details_print_buffer:
             sys.stdout.write(line + "\n")
+
     sys.stdout.flush()
     if failed_checks > 0:
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s). Review output for details.")
