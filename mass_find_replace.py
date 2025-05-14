@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -43,11 +44,11 @@ SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
 SELF_TEST_RESUME_TRANSACTION_FILE = "self_test_resume_transactions.json"
 SELF_TEST_PRECISION_MAP_FILE = "self_test_precision_mapping.json"
+
 VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
 VERY_LARGE_FILE_NAME_REPLACED = "very_large_atlasvibe_file.txt"
 VERY_LARGE_FILE_LINES = 200 * 1000 
 VERY_LARGE_FILE_MATCH_INTERVAL = 10000
-
 
 # ANSI Color Codes & Unicode Symbols for formatted output
 GREEN = "\033[92m"
@@ -83,137 +84,140 @@ def _create_self_test_environment(
     include_symlink_tests: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
-    if not for_resume_test_phase_2: 
-        (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
-        (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
-            "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
-        )
-        (base_dir / "flojoy_root" / "another_flojoy_file.py").write_text(
-            "import flojoy_lib\n# class MyFlojoyClass: pass"
-        )
-        (base_dir / "only_name_flojoy.md").write_text("Content without target string.")
-        (base_dir / "file_with_floJoy_lines.txt").write_text(
-            "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
-        )
-        (base_dir / "unmapped_variant_flojoy_content.txt").write_text(
-            "This has fLoJoY content, and also flojoy." 
-        )
-        (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
-        (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff")
+    try:
+        if not for_resume_test_phase_2: 
+            (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
+            (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
+                "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
+            )
+            (base_dir / "flojoy_root" / "another_flojoy_file.py").write_text(
+                "import flojoy_lib\n# class MyFlojoyClass: pass"
+            )
+            (base_dir / "only_name_flojoy.md").write_text("Content without target string.")
+            (base_dir / "file_with_floJoy_lines.txt").write_text(
+                "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
+            )
+            (base_dir / "unmapped_variant_flojoy_content.txt").write_text(
+                "This has fLoJoY content, and also flojoy." 
+            )
+            (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
+            (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff")
 
-        (base_dir / "excluded_flojoy_dir").mkdir(exist_ok=True)
-        (base_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt").write_text("flojoy inside excluded dir")
-        (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
-        (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
+            (base_dir / "excluded_flojoy_dir").mkdir(exist_ok=True)
+            (base_dir / "excluded_flojoy_dir" / "inner_flojoy_file.txt").write_text("flojoy inside excluded dir")
+            (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
+            (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
 
-        deep_path_parts = ["depth1_flojoy", "depth2", "depth3_flojoy", "depth4", "depth5", "depth6_flojoy", "depth7", "depth8", "depth9_flojoy", "depth10_file_flojoy.txt"]
-        current_path = base_dir
-        for part_idx, part in enumerate(deep_path_parts):
-            current_path = current_path / part
-            if part_idx < len(deep_path_parts) -1:
-                current_path.mkdir(parents=True, exist_ok=True)
-            else:
-                current_path.write_text("flojoy deep content")
-
-        try:
-            (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
-        except Exception:
-            (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
-
-        large_file_content_list = []
-        for i in range(1000): 
-            if i % 50 == 0:
-                large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
-            else:
-                large_file_content_list.append("Normal line " + str(i) + "\n")
-        (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list), encoding='utf-8')
-        (base_dir / SELF_TEST_ERROR_FILE_BASENAME).write_text("This file will cause a rename error during tests.")
-
-    if include_very_large_file:
-        print(f"Generating very large file: {VERY_LARGE_FILE_NAME_ORIG}...")
-        with open(base_dir / VERY_LARGE_FILE_NAME_ORIG, 'w', encoding='utf-8') as f:
-            for i in range(VERY_LARGE_FILE_LINES):
-                if i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or \
-                   i % VERY_LARGE_FILE_MATCH_INTERVAL == 0:
-                    f.write(f"Line {i+1}: This is a flojoy line that should be replaced.\n")
+            deep_path_parts = ["depth1_flojoy", "depth2", "depth3_flojoy", "depth4", "depth5", "depth6_flojoy", "depth7", "depth8", "depth9_flojoy", "depth10_file_flojoy.txt"]
+            current_path = base_dir
+            for part_idx, part in enumerate(deep_path_parts):
+                current_path = current_path / part
+                if part_idx < len(deep_path_parts) -1:
+                    current_path.mkdir(parents=True, exist_ok=True)
                 else:
-                    f.write(f"Line {i+1}: This is a standard non-matching line with some padding to make it longer.\n")
-        print("Very large file generated.")
+                    current_path.write_text("flojoy deep content")
 
-    if include_precision_test_file:
-        precision_content_lines = [
-            "Standard flojoy here.\n",                 
-            "Another Flojoy for title case.\r\n",      
-            "Test FLÖJOY_DIACRITIC with mixed case.\n",
-            "  flojoy  with exact spaces.\n",          
-            "  flojoy   with extra spaces.\n",         
-            "key\twith\ncontrol characters.\n",        
-            "unrelated content\n",
-            "你好flojoy世界 (Chinese chars).\n",       
-            "emoji😊flojoy test.\n",                  
-        ]
-        problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
+            try:
+                (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
+            except Exception:
+                (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
+
+            large_file_content_list = []
+            for i in range(1000): 
+                if i % 50 == 0:
+                    large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
+                else:
+                    large_file_content_list.append("Normal line " + str(i) + "\n")
+            (base_dir / "large_flojoy_file.txt").write_text("".join(large_file_content_list), encoding='utf-8')
+            (base_dir / SELF_TEST_ERROR_FILE_BASENAME).write_text("This file will cause a rename error during tests.")
+
+        if include_very_large_file:
+            print(f"Generating very large file: {VERY_LARGE_FILE_NAME_ORIG}...")
+            with open(base_dir / VERY_LARGE_FILE_NAME_ORIG, 'w', encoding='utf-8') as f:
+                for i in range(VERY_LARGE_FILE_LINES):
+                    if i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or \
+                       i % VERY_LARGE_FILE_MATCH_INTERVAL == 0:
+                        f.write(f"Line {i+1}: This is a flojoy line that should be replaced.\n")
+                    else:
+                        f.write(f"Line {i+1}: This is a standard non-matching line with some padding to make it longer.\n")
+            print("Very large file generated.")
+
+        if include_precision_test_file:
+            precision_content_lines = [
+                "Standard flojoy here.\n",                 
+                "Another Flojoy for title case.\r\n",      
+                "Test FLÖJOY_DIACRITIC with mixed case.\n",
+                "  flojoy  with exact spaces.\n",          
+                "  flojoy   with extra spaces.\n",         
+                "key\twith\ncontrol characters.\n",        
+                "unrelated content\n",
+                "你好flojoy世界 (Chinese chars).\n",       
+                "emoji😊flojoy test.\n",                  
+            ]
+            problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
+
+            with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: 
+                for line_str in precision_content_lines:
+                    f.write(line_str.encode('utf-8', errors='surrogateescape')) 
+                f.write(problematic_bytes_line)
+            
+            (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
+
+        if use_complex_map:
+            (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").mkdir(parents=True, exist_ok=True)
+            (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS" / "file_with_diacritics_ȕsele̮Ss_diá͡cRiti̅cS.txt").write_text(
+                "Content with ȕsele̮Ss_diá͡cRiti̅cS and also useless_diacritics.\nAnd another Flojoy for good measure (should remain if not in complex map)."
+            )
+            (base_dir / "file_with_spaces_The spaces will not be ignored.md").write_text(
+                "This file has The spaces will not be ignored in its name and content."
+            )
+            (base_dir / "_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story. And My_Love&Story.")
+            (base_dir / "filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M. Also coco4_ep-m.")
+            (base_dir / "special_chars_in_content_test.txt").write_text(
+                "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
+            )
+            (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text( 
+                "Content for complex map control key filename test."
+            )
+            (base_dir / "complex_map_content_with_key_with_controls.txt").write_text(
+                 "Line with key_with\tcontrol\nchars to replace."
+            )
+
+        if use_edge_case_map:
+            (base_dir / "edge_case_MyKey_original_name.txt").write_text("Initial content for control key name test (MyKey).")
+            (base_dir / "edge_case_content_with_MyKey_controls.txt").write_text("Line with My\nKey to replace.")
+            (base_dir / "edge_case_empty_stripped_key_target.txt").write_text("This should not be changed by an empty key.")
+            (base_dir / "edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
+
+        if for_resume_test_phase_2:
+            (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
+            if (base_dir / "only_name_atlasvibe.md").exists(): 
+                 (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
         
-        with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: 
-            for line_str in precision_content_lines:
-                f.write(line_str.encode('utf-8', errors='surrogateescape')) 
-            f.write(problematic_bytes_line)
-        
-        (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
+        if include_symlink_tests:
+            symlink_target_dir = base_dir / "symlink_targets_outside" 
+            symlink_target_dir.mkdir(parents=True, exist_ok=True)
+            (symlink_target_dir / "target_file_flojoy.txt").write_text("flojoy in symlink target file")
+            target_subdir_flojoy = symlink_target_dir / "target_dir_flojoy"
+            target_subdir_flojoy.mkdir(exist_ok=True)
+            (target_subdir_flojoy / "another_flojoy_file.txt").write_text("flojoy content in symlinked dir target")
 
+            link_to_file = base_dir / "link_to_file_flojoy.txt"
+            link_to_dir = base_dir / "link_to_dir_flojoy"
+            
+            try:
+                if not os.path.lexists(link_to_file): 
+                    os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
+                if not os.path.lexists(link_to_dir):
+                    os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
+                print("Symlinks created (or already existed) for testing.")
+            except OSError as e:
+                print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
+            except Exception as e: 
+                print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
 
-    if use_complex_map:
-        (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").mkdir(parents=True, exist_ok=True)
-        (base_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS" / "file_with_diacritics_ȕsele̮Ss_diá͡cRiti̅cS.txt").write_text(
-            "Content with ȕsele̮Ss_diá͡cRiti̅cS and also useless_diacritics.\nAnd another Flojoy for good measure (should remain if not in complex map)."
-        )
-        (base_dir / "file_with_spaces_The spaces will not be ignored.md").write_text(
-            "This file has The spaces will not be ignored in its name and content."
-        )
-        (base_dir / "_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story. And My_Love&Story.")
-        (base_dir / "filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M. Also coco4_ep-m.")
-        (base_dir / "special_chars_in_content_test.txt").write_text(
-            "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
-        )
-        (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text( 
-            "Content for complex map control key filename test."
-        )
-        (base_dir / "complex_map_content_with_key_with_controls.txt").write_text(
-             "Line with key_with\tcontrol\nchars to replace."
-        )
-
-    if use_edge_case_map:
-        (base_dir / "edge_case_MyKey_original_name.txt").write_text("Initial content for control key name test (MyKey).")
-        (base_dir / "edge_case_content_with_MyKey_controls.txt").write_text("Line with My\nKey to replace.")
-        (base_dir / "edge_case_empty_stripped_key_target.txt").write_text("This should not be changed by an empty key.")
-        (base_dir / "edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
-
-    if for_resume_test_phase_2:
-        (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
-        if (base_dir / "only_name_atlasvibe.md").exists(): 
-             (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
-    
-    if include_symlink_tests:
-        symlink_target_dir = base_dir / "symlink_targets_outside" 
-        symlink_target_dir.mkdir(parents=True, exist_ok=True)
-        (symlink_target_dir / "target_file_flojoy.txt").write_text("flojoy in symlink target file")
-        target_subdir_flojoy = symlink_target_dir / "target_dir_flojoy"
-        target_subdir_flojoy.mkdir(exist_ok=True)
-        (target_subdir_flojoy / "another_flojoy_file.txt").write_text("flojoy content in symlinked dir target")
-
-        link_to_file = base_dir / "link_to_file_flojoy.txt"
-        link_to_dir = base_dir / "link_to_dir_flojoy"
-        
-        try:
-            if not os.path.lexists(link_to_file): 
-                os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
-            if not os.path.lexists(link_to_dir):
-                os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
-            print("Symlinks created (or already existed) for testing.")
-        except OSError as e:
-            print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
-        except Exception as e: 
-            print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
+    except Exception as e:
+        print(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
 
 
 def check_file_content_for_test( 
@@ -275,6 +279,14 @@ def _verify_self_test_results_task(
             failed_checks += 1
         test_results.append({"id": test_counter, "description": description, "status": status, "details": details_on_fail if not condition else ""})
 
+    def verify_test_case(test_type: str, expected_paths: Dict[str, Path], is_content_check: bool = True) -> None:
+        """Helper to verify test case logic."""
+        for key, path in expected_paths.items():
+            record_test(f"[{test_type}] {key} - exists", path.exists())
+        if is_content_check:
+            for key, path in expected_paths.items():
+                check_file_content_for_test(path, "Expected content", f"[{test_type}] {key} - content check", record_test)
+
     if is_empty_map_test:
         transactions = load_transactions(original_transaction_file)
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
@@ -292,7 +304,6 @@ def _verify_self_test_results_task(
         precision_name_renamed = "precision_name_atlasvibe_plain_test.md" 
         record_test("[Precision Test] Filename 'precision_name_flojoy_test.md' renamed", (temp_dir / precision_name_renamed).exists())
         record_test("[Precision Test] Original filename 'precision_name_flojoy_test.md' removed", not (temp_dir / precision_name_orig).exists())
-
 
         if precision_renamed_path.exists():
             original_content_bytes_list = []
@@ -328,17 +339,16 @@ def _verify_self_test_results_task(
                 else:
                     record_test(f"[Precision Test] Line {i+1} missing in actual output", False)
 
-
     elif is_resume_test:
         final_transactions = load_transactions(original_transaction_file)
         record_test("[Resume Test] Final transaction log loaded", final_transactions is not None)
         if final_transactions:
             new_file_processed = any(
-                tx["PATH"] == "newly_added_flojoy_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
+                tx["PATH"] == "newly_added_atlasvibe_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
                 for tx in final_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value
             )
             new_file_content_processed = any(
-                tx["PATH"] == "newly_added_flojoy_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
+                tx["PATH"] == "newly_added_atlasvibe_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value
                 for tx in final_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
             )
             record_test("[Resume Test] Newly added file name processed", new_file_processed)
@@ -368,23 +378,12 @@ def _verify_self_test_results_task(
             "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt", 
             "key_priority_file": temp_dir / "edge_case_key_priority.txt" 
         }
-        record_test("[Edge Case] Control char key ('My\\nKey') - filename rename", exp_edge_paths["control_key_renamed_file"].exists(), f"File missing: {exp_edge_paths['control_key_renamed_file']}")
-        check_file_content_for_test(exp_edge_paths["control_key_content_file"],
-                               "Line with MyKeyValue_VAL to replace.",
-                               "[Edge Case] Control char key ('My\\nKey') - content replacement", record_test_func=record_test)
-        
-        check_file_content_for_test(exp_edge_paths["empty_stripped_key_file"],
-                               "This should not be changed by an empty key.",
-                               "[Edge Case] Empty stripped key ('\\t') - content unchanged", record_test_func=record_test)
-
-        check_file_content_for_test(exp_edge_paths["key_priority_file"],
-                               "test FooBar_VAL test and also Foo_VAL.", 
-                               "[Edge Case] Key priority ('foo bar' vs 'foo')", record_test_func=record_test)
+        verify_test_case("Edge Case", exp_edge_paths, is_content_check=True)
 
     elif is_complex_map_test:
         exp_paths_complex_map = {
-            "diacritic_folder_replaced": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL", 
-            "file_in_diacritic_folder_replaced_name": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL" / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.txt", 
+            "diacritic_folder_replaced": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL", 
+            "file_in_diacritic_folder_replaced_name": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL" / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.txt", 
             "file_with_spaces_replaced_name": temp_dir / "The control characters \n will be ignored_VAL.md",
             "my_love_story_replaced_name": temp_dir / "_My_Story&Love_VAL.log", 
             "coco4_replaced_name": temp_dir / "MOCO4_ip-N_VAL.data", 
@@ -392,33 +391,7 @@ def _verify_self_test_results_task(
             "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt", 
             "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt" 
         }
-        record_test("[Complex] Diacritic folder rename", exp_paths_complex_map["diacritic_folder_replaced"].exists(), f"Dir missing: {exp_paths_complex_map['diacritic_folder_replaced']}")
-        record_test("[Complex] File in diacritic folder rename", exp_paths_complex_map["file_in_diacritic_folder_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['file_in_diacritic_folder_replaced_name']}")
-        record_test("[Complex] File with spaces in name rename (value has newline)", exp_paths_complex_map["file_with_spaces_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['file_with_spaces_replaced_name']}")
-        record_test("[Complex] File with '&' in name rename", exp_paths_complex_map["my_love_story_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['my_love_story_replaced_name']}")
-        record_test("[Complex] File with '-' and mixed case in name rename", exp_paths_complex_map["coco4_replaced_name"].exists(), f"File missing: {exp_paths_complex_map['coco4_replaced_name']}")
-        record_test("[Complex] File for special chars in content (name unchanged)", exp_paths_complex_map["special_chars_content_file"].exists(), f"File missing: {exp_paths_complex_map['special_chars_content_file']}")
-        record_test("[Complex] Control char key ('key_with\\tcontrol\\nchars') - filename rename", exp_paths_complex_map["control_chars_key_renamed_file"].exists(), f"File missing: {exp_paths_complex_map['control_chars_key_renamed_file']}")
-        record_test("[Complex] Original diacritic folder removed", not (temp_dir / "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").exists(), "Original diacritic folder still exists.")
-        
-        check_file_content_for_test(exp_paths_complex_map.get("file_in_diacritic_folder_replaced_name"),
-                           "Content with dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL and also dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.\nAnd another Flojoy for good measure (should remain if not in complex map).", 
-                           "[Complex] Diacritic key replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(exp_paths_complex_map.get("file_with_spaces_replaced_name"),
-                           "This file has The control characters \n will be ignored_VAL in its name and content.",
-                           "[Complex] Key with spaces, value with newline replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(exp_paths_complex_map.get("my_love_story_replaced_name"),
-                           "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.", 
-                           "[Complex] Key with '&' and case variants replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(exp_paths_complex_map.get("coco4_replaced_name"),
-                           "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.", 
-                           "[Complex] Key with '-' and mixed case replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(exp_paths_complex_map.get("special_chars_content_file"),
-                           "This line contains SpecialCharsKeyMatched_VAL to be replaced.",
-                           "[Complex] Special chars key replacement in content.", record_test_func=record_test)
-        check_file_content_for_test(exp_paths_complex_map.get("control_chars_key_content_file"), 
-                           "Line with Value_for_key_with_controls_VAL to replace.", 
-                           "[Complex] Key with control chars in key - content replacement", record_test_func=record_test)
+        verify_test_case("Complex", exp_paths_complex_map, is_content_check=True)
 
     elif not is_resume_test and not is_precision_test: # Standard self-test run
         exp_paths_std_map = {
@@ -426,11 +399,8 @@ def _verify_self_test_results_task(
             "deep_atlasvibe_file.txt": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt",
             "very_large_atlasvibe_file.txt": temp_dir / VERY_LARGE_FILE_NAME_REPLACED
         }
-        record_test("Top-level dir rename", exp_paths_std_map["atlasvibe_root"].exists(), f"Dir missing: {exp_paths_std_map['atlasvibe_root']}")
-        record_test("Original top-level dir removed", not (temp_dir / "flojoy_root").exists(), "Old 'flojoy_root' dir STILL EXISTS.")
-        check_file_content_for_test(exp_paths_std_map.get("deep_atlasvibe_file.txt"),
-                           "Line 1: atlasvibe content.\nLine 2: More Atlasvibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.",
-                           "Content replacement (deeply nested, mixed case, Test #16 target)", record_test_func=record_test)
+        verify_test_case("Standard", exp_paths_std_map, is_content_check=True)
+
         if standard_test_includes_large_file:
             record_test("[Standard Test] Very large file renamed", exp_paths_std_map["very_large_atlasvibe_file.txt"].exists())
             if exp_paths_std_map["very_large_atlasvibe_file.txt"].exists():
@@ -470,7 +440,6 @@ def _verify_self_test_results_task(
             check_file_content_for_test(target_file, "flojoy in symlink target file", "[Symlink Test] Target file content unchanged (regardless of ignore flag)", record_test_func=record_test)
             check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test)
 
-
     # Common verification logic (table printing, summary)
     term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
     padding = 1
@@ -497,9 +466,9 @@ def _verify_self_test_results_task(
     for result in test_results:
         status_symbol = PASS_SYMBOL if result["status"] == "PASS" else FAIL_SYMBOL
         color = GREEN if result["status"] == "PASS" else RED
-        outcome_text_content = f"{status_symbol} {result['status']}"
+        outcome_text_content = f"{status_symbol} {result["status"]}"
         id_text_content = str(result['id'])
-        wrapped_desc_lines = textwrap.wrap(result['description'], width=desc_col_content_width, drop_whitespace=False, replace_whitespace=False)
+        wrapped_desc_lines = textwrap.wrap(result["description"], width=desc_col_content_width, drop_whitespace=False, replace_whitespace=False)
         if not wrapped_desc_lines:
             wrapped_desc_lines = ['']
         for i, line_frag in enumerate(wrapped_desc_lines):
@@ -561,82 +530,103 @@ def self_test_flow(
     )
     standard_test_includes_symlinks = standard_test_includes_large_file or run_precision_test or run_resume_test
 
+    def create_mapping_file(test_type: str) -> Path:
+        """Helper to generate mapping files based on test type."""
+        if test_type == "complex":
+            complex_map_data = { 
+                "REPLACEMENT_MAPPING": {
+                    "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL",
+                    "The spaces will not be ignored": "The control characters \n will be ignored_VAL",
+                    "key_with\tcontrol\nchars": "Value_for_key_with_controls_VAL", 
+                    "_My_Love&Story": "_My_Story&Love_VAL",
+                    "_my_love&story": "_my_story&love_VAL", 
+                    "COCO4_ep-m": "MOCO4_ip-N_VAL",
+                    "Coco4_ep-M" : "Moco4_ip-N_VAL",
+                    "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames": "SpecialCharsKeyMatched_VAL"
+                }
+            }
+            mapping_path = temp_dir / SELF_TEST_COMPLEX_MAP_FILE
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(complex_map_data, f, indent=2)
+            return mapping_path
+        elif test_type == "edge_case":
+            edge_case_map_data = {
+                "REPLACEMENT_MAPPING": {
+                    "My\nKey": "MyKeyValue_VAL", 
+                    "Key\nWith\tControls": "ControlValue_VAL", 
+                    "\t": "ShouldBeSkipped_VAL",             
+                    "foo": "Foo_VAL",
+                    "foo bar": "FooBar_VAL"                   
+                }
+            }
+            mapping_path = temp_dir / SELF_TEST_EDGE_CASE_MAP_FILE
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(edge_case_map_data, f, indent=2)
+            return mapping_path
+        elif test_type == "empty":
+            empty_map_data = {"REPLACEMENT_MAPPING": {}}
+            mapping_path = temp_dir / SELF_TEST_EMPTY_MAP_FILE
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(empty_map_data, f, indent=2)
+            return mapping_path
+        elif test_type == "resume":
+            default_map_data = { 
+                "REPLACEMENT_MAPPING": {
+                    "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
+                    "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
+                }
+            }
+            mapping_path = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE 
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(default_map_data, f, indent=2)
+            return mapping_path
+        elif test_type == "precision":
+            precision_map_data = {
+                "REPLACEMENT_MAPPING": {
+                    "flojoy": "atlasvibe_plain",      
+                    "Flojoy": "Atlasvibe_TitleCase",  
+                    "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL", 
+                    "  flojoy  ": "  atlasvibe_spaced_val  ", 
+                    "key\twith\ncontrol": "value_for_control_key_val" 
+                }
+            }
+            mapping_path = temp_dir / SELF_TEST_PRECISION_MAP_FILE
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(precision_map_data, f, indent=2)
+            return mapping_path
+        else:
+            default_map_data = { 
+                "REPLACEMENT_MAPPING": {
+                    "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
+                    "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
+                }
+            }
+            mapping_path = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(default_map_data, f, indent=2)
+            return mapping_path
 
     if run_complex_map_sub_test:
         test_scenario_name = "Complex Map"
-        current_mapping_file_for_test = temp_dir / SELF_TEST_COMPLEX_MAP_FILE
-        complex_map_data = { 
-            "REPLACEMENT_MAPPING": {
-                "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL",
-                "The spaces will not be ignored": "The control characters \n will be ignored_VAL",
-                "key_with\tcontrol\nchars": "Value_for_key_with_controls_VAL", 
-                "_My_Love&Story": "_My_Story&Love_VAL",
-                "_my_love&story": "_my_story&love_VAL", 
-                "COCO4_ep-m": "MOCO4_ip-N_VAL",
-                "Coco4_ep-M" : "Moco4_ip-N_VAL",
-                "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames": "SpecialCharsKeyMatched_VAL"
-            }
-        }
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(complex_map_data, f, indent=2)
+        current_mapping_file_for_test = create_mapping_file("complex")
     elif run_edge_case_sub_test:
         test_scenario_name = "Edge Case"
-        current_mapping_file_for_test = temp_dir / SELF_TEST_EDGE_CASE_MAP_FILE
-        edge_case_map_data = {
-            "REPLACEMENT_MAPPING": {
-                "My\nKey": "MyKeyValue_VAL", 
-                "Key\nWith\tControls": "ControlValue_VAL", 
-                "\t": "ShouldBeSkipped_VAL",             
-                "foo": "Foo_VAL",
-                "foo bar": "FooBar_VAL"                   
-            }
-        }
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(edge_case_map_data, f, indent=2)
+        current_mapping_file_for_test = create_mapping_file("edge_case")
     elif run_empty_map_sub_test:
         test_scenario_name = "Empty Map"
-        current_mapping_file_for_test = temp_dir / SELF_TEST_EMPTY_MAP_FILE
-        empty_map_data = {"REPLACEMENT_MAPPING": {}}
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(empty_map_data, f, indent=2)
+        current_mapping_file_for_test = create_mapping_file("empty")
     elif run_resume_test:
         test_scenario_name = "Resume"
         is_verification_resume_test = True 
-        current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE 
-        default_map_data = { 
-            "REPLACEMENT_MAPPING": {
-                "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
-                "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
-            }
-        }
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(default_map_data, f, indent=2)
+        current_mapping_file_for_test = create_mapping_file("resume")
     elif run_precision_test:
         test_scenario_name = "Precision"
         is_verification_precision_test = True
-        current_mapping_file_for_test = temp_dir / SELF_TEST_PRECISION_MAP_FILE
-        precision_map_data = {
-            "REPLACEMENT_MAPPING": {
-                "flojoy": "atlasvibe_plain",      
-                "Flojoy": "Atlasvibe_TitleCase",  
-                "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL", 
-                "  flojoy  ": "  atlasvibe_spaced_val  ", 
-                "key\twith\ncontrol": "value_for_control_key_val" 
-            }
-        }
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(precision_map_data, f, indent=2)
-    else: # Standard test
-        current_mapping_file_for_test = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE
-        default_map_data = { 
-            "REPLACEMENT_MAPPING": {
-                "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
-                "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
-            }
-        }
-        with open(current_mapping_file_for_test, 'w', encoding='utf-8') as f:
-            json.dump(default_map_data, f, indent=2)
-    
+        current_mapping_file_for_test = create_mapping_file("precision")
+    else:
+        test_scenario_name = "Standard"
+        current_mapping_file_for_test = create_mapping_file("standard")
+
     print(f"Self-Test ({test_scenario_name}): Using mapping file {current_mapping_file_for_test.name}")
 
     load_success = replace_logic.load_replacement_map(current_mapping_file_for_test)
