@@ -81,7 +81,8 @@ def _create_self_test_environment(
     for_resume_test_phase_2: bool = False,
     include_very_large_file: bool = False,
     include_precision_test_file: bool = False,
-    include_symlink_tests: bool = False
+    include_symlink_tests: bool = False,
+    verbose: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
     try:
@@ -721,19 +722,19 @@ def self_test_flow(
             extensions=test_extensions,
             exclude_dirs=test_excluded_dirs,
             exclude_files=test_excluded_files,
-            dry_run=dry_run_for_test, 
-            skip_scan=False, 
-            resume=True,     
+            dry_run=dry_run_for_test,
+            skip_scan=False,
+            resume=True,
             force_execution=True,
-            ignore_symlinks_arg=ignore_symlinks_for_this_test_run 
+            ignore_symlinks_arg=ignore_symlinks_for_this_test_run
         )
-    else: 
+    else:
         transactions1 = scan_directory_for_occurrences(
             root_dir=temp_dir,
             excluded_dirs=test_excluded_dirs,
             excluded_files=test_excluded_files,
             file_extensions=test_extensions,
-            ignore_symlinks=ignore_symlinks_for_this_test_run 
+            ignore_symlinks=ignore_symlinks_for_this_test_run
         )
         save_transactions(transactions1, transaction_file)
         if verbose:
@@ -744,7 +745,7 @@ def self_test_flow(
                 raise AssertionError(f"[Empty Map Test] Expected 0 transactions, got {len(transactions1)}")
             if verbose:
                 print(f"Self-Test ({test_scenario_name}): Verified 0 transactions as expected.")
-        elif validation_file: 
+        elif validation_file:
             transactions2 = scan_directory_for_occurrences(
                 root_dir=temp_dir,
                 excluded_dirs=test_excluded_dirs,
@@ -756,14 +757,14 @@ def self_test_flow(
             if verbose:
                 print(f"Self-Test ({test_scenario_name}): Second scan (for validation) complete. {len(transactions2)} transactions planned in {validation_file}.")
 
-        if not dry_run_for_test and not run_empty_map_sub_test: 
+        if not dry_run_for_test and not run_empty_map_sub_test:
             if verbose:
                 print(f"Self-Test ({test_scenario_name}): Executing transactions from {transaction_file} (Dry Run = False)...")
             execute_all_transactions(
                 transactions_file_path=transaction_file,
                 root_dir=temp_dir,
                 dry_run=False,
-                resume=False 
+                resume=False
             )
             if verbose:
                 print(f"Self-Test ({test_scenario_name}): Execution phase complete.")
@@ -774,8 +775,8 @@ def self_test_flow(
 
     _verify_self_test_results_task(
         temp_dir=temp_dir,
-        original_transaction_file=transaction_file, 
-        validation_transaction_file=validation_file if not (run_resume_test or run_precision_test) else None, 
+        original_transaction_file=transaction_file,
+        validation_transaction_file=validation_file if not (run_resume_test or run_precision_test) else None,
         is_complex_map_test=run_complex_map_sub_test,
         is_edge_case_test=run_edge_case_sub_test,
         is_empty_map_test=run_empty_map_sub_test,
@@ -791,7 +792,7 @@ def self_test_flow(
 @flow(name="Mass Find and Replace Orchestration Flow", log_prints=True)
 def main_flow(
     directory: str,
-    mapping_file: str, 
+    mapping_file: str,
     extensions: Optional[List[str]],
     exclude_dirs: List[str],
     exclude_files: List[str],
@@ -799,7 +800,7 @@ def main_flow(
     skip_scan: bool,
     resume: bool,
     force_execution: bool,
-    ignore_symlinks_arg: bool 
+    ignore_symlinks_arg: bool
 ):
     root_dir = Path(directory).resolve()
     if not root_dir.is_dir():
@@ -810,35 +811,35 @@ def main_flow(
     if not replace_logic.load_replacement_map(mapping_file_path):
         sys.stderr.write(f"Aborting due to issues with replacement mapping file: {mapping_file_path}\n")
         return
-    
-    if not replace_logic._MAPPING_LOADED: 
+
+    if not replace_logic._MAPPING_LOADED:
         sys.stderr.write(f"Critical Error: Replacement map from {mapping_file_path} was not loaded successfully.\n")
         return
     if not replace_logic._COMPILED_PATTERN and bool(replace_logic._REPLACEMENT_MAPPING_CONFIG):
         sys.stderr.write("Critical Error: Replacement map loaded but regex pattern compilation failed.\n")
         return
-    if not replace_logic._REPLACEMENT_MAPPING_CONFIG: 
+    if not replace_logic._REPLACEMENT_MAPPING_CONFIG:
         print(f"Warning: The replacement mapping from {mapping_file_path} is empty. No replacements will be made.")
 
     transaction_json_path = root_dir / MAIN_TRANSACTION_FILE_NAME
-    
-    if not dry_run and not force_execution and not resume: 
+
+    if not dry_run and not force_execution and not resume:
         sys.stdout.write("--- Proposed Operation ---\n")
         sys.stdout.write(f"Root Directory: {root_dir}\n")
         sys.stdout.write(f"Replacement Map File: {mapping_file_path}\n")
         if replace_logic._REPLACEMENT_MAPPING_CONFIG:
-             sys.stdout.write(f"Loaded {len(replace_logic._REPLACEMENT_MAPPING_CONFIG)} replacement rules.\n")
+            sys.stdout.write(f"Loaded {len(replace_logic._REPLACEMENT_MAPPING_CONFIG)} replacement rules.\n")
         else:
-             sys.stdout.write("Replacement map is empty. No string replacements will occur.\n")
+            sys.stdout.write("Replacement map is empty. No string replacements will occur.\n")
         sys.stdout.write(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}\n")
         sys.stdout.write(f"Exclude Dirs: {exclude_dirs}\n")
         sys.stdout.write(f"Exclude Files: {exclude_files}\n")
         sys.stdout.write(f"Ignore Symlinks: {ignore_symlinks_arg}\n")
         sys.stdout.write("-------------------------\n")
         sys.stdout.flush()
-        if not replace_logic._REPLACEMENT_MAPPING_CONFIG and not extensions: 
+        if not replace_logic._REPLACEMENT_MAPPING_CONFIG and not extensions:
             print("No replacement rules loaded and no specific extensions to process. Likely no operations will be performed.")
-        
+
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes':
             sys.stdout.write("Operation cancelled by user.\n")
@@ -847,23 +848,23 @@ def main_flow(
     if not skip_scan:
         print(f"Starting scan phase in '{root_dir}' using map '{mapping_file_path}' (Ignore symlinks: {ignore_symlinks_arg})...")
         current_transactions_for_resume_scan = None
-        if resume and transaction_json_path.exists(): 
+        if resume and transaction_json_path.exists():
             print(f"Resume mode: Loading existing transactions from {transaction_json_path} for scan augmentation...")
             current_transactions_for_resume_scan = load_transactions(transaction_json_path)
             if current_transactions_for_resume_scan is None:
-                 print(f"{YELLOW}Warning: Could not load transactions from {transaction_json_path} for resume scan. Starting fresh scan.{RESET}")
-        
+                print(f"{YELLOW}Warning: Could not load transactions from {transaction_json_path} for resume scan. Starting fresh scan.{RESET}")
+
         found_transactions = scan_directory_for_occurrences(
             root_dir=root_dir,
             excluded_dirs=exclude_dirs,
             excluded_files=exclude_files,
             file_extensions=extensions,
-            ignore_symlinks=ignore_symlinks_arg, 
-            resume_from_transactions=current_transactions_for_resume_scan 
+            ignore_symlinks=ignore_symlinks_arg,
+            resume_from_transactions=current_transactions_for_resume_scan
         )
         save_transactions(found_transactions, transaction_json_path)
         print(f"Scan complete. {len(found_transactions)} transactions planned in '{transaction_json_path}'")
-        if not found_transactions and replace_logic._REPLACEMENT_MAPPING_CONFIG: 
+        if not found_transactions and replace_logic._REPLACEMENT_MAPPING_CONFIG:
             print("No occurrences found matching the replacement map. Nothing to do.")
             return
         elif not found_transactions and not replace_logic._REPLACEMENT_MAPPING_CONFIG:
@@ -876,7 +877,7 @@ def main_flow(
     else:
         print(f"Using existing transaction file: '{transaction_json_path}'. Ensure it was generated with the correct replacement map and symlink settings.")
 
-    if not replace_logic._REPLACEMENT_MAPPING_CONFIG: 
+    if not replace_logic._REPLACEMENT_MAPPING_CONFIG:
         print("Map is empty. No execution will be performed.")
         return
 
@@ -886,7 +887,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=True,
-            resume=resume 
+            resume=resume
         )
         print(f"Dry run complete. Simulated stats: {stats}")
     else:
@@ -895,7 +896,7 @@ def main_flow(
             transactions_file_path=transaction_json_path,
             root_dir=root_dir,
             dry_run=False,
-            resume=resume 
+            resume=resume
         )
         print(f"Execution phase complete. Stats: {stats}")
     print(f"Review '{transaction_json_path}' for a log of changes and their statuses.")
