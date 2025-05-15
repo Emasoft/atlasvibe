@@ -249,13 +249,17 @@ def _create_self_test_environment(
                     os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
                 if not os.path.lexists(link_to_dir):
                     os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
-                if verbose: logger("Symlinks created (or already existed) for testing.")
+                if verbose:
+                    logger("Symlinks created (or already existed) for testing.")
             except OSError as e:
-                if verbose: logger(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
+                if verbose:
+                    logger(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
             except Exception as e: # Catch other potential errors like AttributeError if os.symlink is not available
-                if verbose: logger(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
+                if verbose:
+                    logger(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
     except Exception as e:
-        if verbose: logger(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
+        if verbose:
+            logger(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
 
 
 def check_file_content_for_test(
@@ -555,7 +559,7 @@ def _verify_self_test_results_task(
         logger.info(f"{BLUE}--- Verifying Standard Self-Test Results (Symlinks Ignored in Scan: {symlinks_were_ignored_in_scan}) ---{RESET}")
         
         # Directory structure
-        expected_root_name = "atlasvibe_root" if not symlinks_were_ignored_in_scan or replace_occurrences("flojoy_root") == "atlasvibe_root" else "flojoy_root"
+        expected_root_name = "atlasvibe_root" if not symlinks_were_ignored_in_scan else "flojoy_root"
         processed_root_dir = temp_dir / expected_root_name
         record_test(f"[Standard] '{expected_root_name}' directory exists", processed_root_dir.is_dir())
         
@@ -746,7 +750,8 @@ def _verify_self_test_results_task(
         status_color = GREEN if status == "PASS" else RED
         
         wrapped_desc_lines = textwrap.wrap(desc, width=desc_col_content_width, drop_whitespace=False, replace_whitespace=False)
-        if not wrapped_desc_lines: wrapped_desc_lines = [""] # Handle empty description case
+        if not wrapped_desc_lines:
+            wrapped_desc_lines = [""] # Handle empty description case
         
         for line_idx, desc_line in enumerate(wrapped_desc_lines):
             id_display = test_id_str if line_idx == 0 else ""
@@ -934,11 +939,16 @@ def self_test_flow(
 
     # Define transaction file name based on the specific test being run
     transaction_file_name_stem = "transactions"
-    if run_complex_map_sub_test: transaction_file_name_stem = Path(SELF_TEST_COMPLEX_MAP_FILE).stem
-    elif run_edge_case_sub_test: transaction_file_name_stem = Path(SELF_TEST_EDGE_CASE_MAP_FILE).stem
-    elif run_empty_map_sub_test: transaction_file_name_stem = Path(SELF_TEST_EMPTY_MAP_FILE).stem
-    elif run_resume_test: transaction_file_name_stem = Path(SELF_TEST_RESUME_TRANSACTION_FILE).stem
-    elif run_precision_test: transaction_file_name_stem = Path(SELF_TEST_PRECISION_MAP_FILE).stem
+    if run_complex_map_sub_test:
+        transaction_file_name_stem = Path(SELF_TEST_COMPLEX_MAP_FILE).stem
+    elif run_edge_case_sub_test:
+        transaction_file_name_stem = Path(SELF_TEST_EDGE_CASE_MAP_FILE).stem
+    elif run_empty_map_sub_test:
+        transaction_file_name_stem = Path(SELF_TEST_EMPTY_MAP_FILE).stem
+    elif run_resume_test:
+        transaction_file_name_stem = Path(SELF_TEST_RESUME_TRANSACTION_FILE).stem
+    elif run_precision_test:
+        transaction_file_name_stem = Path(SELF_TEST_PRECISION_MAP_FILE).stem
     else: # Standard test
         transaction_file_name_stem = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
         if ignore_symlinks_for_this_test_run: # Differentiate if symlinks are ignored for standard test
@@ -964,12 +974,15 @@ def self_test_flow(
             # Simulate some states
             # Mark first file name transaction as completed
             fn_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_NAME.value]
-            if fn_tx_indices: initial_transactions[fn_tx_indices[0]]["STATUS"] = TransactionStatus.COMPLETED.value
-            if len(fn_tx_indices) > 1: initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
+            if fn_tx_indices:
+                initial_transactions[fn_tx_indices[0]]["STATUS"] = TransactionStatus.COMPLETED.value
+            if len(fn_tx_indices) > 1:
+                initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
             
             # Mark a content transaction from large_file as PENDING
             content_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "large_flojoy_file.txt" in tx["PATH"]]
-            if content_tx_indices: initial_transactions[content_tx_indices[0]]["STATUS"] = TransactionStatus.PENDING.value
+            if content_tx_indices:
+                initial_transactions[content_tx_indices[0]]["STATUS"] = TransactionStatus.PENDING.value
 
             # Simulate a FAILED transaction for the error file
             for tx in initial_transactions:
@@ -1226,12 +1239,18 @@ def main_cli() -> None:
         is_precision_run = args.run_precision_self_test
         
         test_type_msg = "Unknown"
-        if args.run_standard_self_test: test_type_msg = "Standard"
-        elif is_complex_run: test_type_msg = "Complex Map"
-        elif is_edge_case_run: test_type_msg = "Edge Cases"
-        elif is_empty_map_run: test_type_msg = "Empty Map"
-        elif is_resume_run: test_type_msg = "Resume Functionality"
-        elif is_precision_run: test_type_msg = "Precision"
+        if args.run_standard_self_test:
+            test_type_msg = "Standard"
+        elif is_complex_run:
+            test_type_msg = "Complex Map"
+        elif is_edge_case_run:
+            test_type_msg = "Edge Cases"
+        elif is_empty_map_run:
+            test_type_msg = "Empty Map"
+        elif is_resume_run:
+            test_type_msg = "Resume Functionality"
+        elif is_precision_run:
+            test_type_msg = "Precision"
         
         # For self-tests, dry_run is often False to see actual changes.
         # The --dry-run CLI flag can override this for self-test execution if needed.
@@ -1241,10 +1260,12 @@ def main_cli() -> None:
 
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         if self_test_sandbox.exists():
-            if args.verbose: print(f"Removing existing self-test sandbox: {self_test_sandbox}")
+            if args.verbose:
+                print(f"Removing existing self-test sandbox: {self_test_sandbox}")
             shutil.rmtree(self_test_sandbox)
         self_test_sandbox.mkdir(parents=True, exist_ok=True)
-        if args.verbose: print(f"Created self-test sandbox: {self_test_sandbox}")
+        if args.verbose:
+            print(f"Created self-test sandbox: {self_test_sandbox}")
 
         try:
             if args.run_standard_self_test:
@@ -1256,7 +1277,8 @@ def main_cli() -> None:
                     ignore_symlinks_for_this_test_run=False
                 )
                 
-                if self_test_sandbox.exists(): shutil.rmtree(self_test_sandbox)
+                if self_test_sandbox.exists():
+                    shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 print(f"\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True, dry_run={effective_dry_run_for_test})...")
                 self_test_flow(
@@ -1292,9 +1314,11 @@ def main_cli() -> None:
             if self_test_sandbox.exists():
                 try:
                     shutil.rmtree(self_test_sandbox)
-                    if args.verbose: print(f"Cleaned up self-test sandbox: {self_test_sandbox}")
+                    if args.verbose:
+                        print(f"Cleaned up self-test sandbox: {self_test_sandbox}")
                 except Exception as e:
-                    if args.verbose: print(f"{YELLOW}Warning: Could not remove self-test sandbox {self_test_sandbox}: {e}{RESET}")
+                    if args.verbose:
+                        print(f"{YELLOW}Warning: Could not remove self-test sandbox {self_test_sandbox}: {e}{RESET}")
         print(GREEN + f"Self-test ({test_type_msg}) completed successfully. {PASS_SYMBOL}" + RESET)
         return
 
