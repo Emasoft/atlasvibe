@@ -121,35 +121,49 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     resolved_abs_excluded_dir_paths: List[Path] = []
     for d_str in excluded_dirs:
         try:
-            # Ensure excluded paths are absolute and resolved (without strict=True to handle non-existent paths if needed)
-            resolved_abs_excluded_dir_paths.append(root_dir.joinpath(d_str).resolve(strict=False))
+            # Ensure excluded paths are absolute and resolved
+            excluded_path = root_dir.joinpath(d_str)
+            try:
+                # Attempt to resolve symlinks in the excluded_dirs list to their canonical target
+                resolved_excluded_path = excluded_path.resolve(strict=False)
+            except Exception: # Fallback if resolve fails (e.g. broken symlink in excluded_dirs list itself)
+                resolved_excluded_path = excluded_path.absolute()
+            resolved_abs_excluded_dir_paths.append(resolved_excluded_path)
         except Exception as e:
-            # Fallback to absolute path if resolve fails for some reason
-            print(f"Warning: Could not resolve excluded directory '{d_str}' relative to '{root_dir}'. Using absolute path. Error: {e}")
+            print(f"Warning: Could not process excluded directory '{d_str}' relative to '{root_dir}'. Using absolute path. Error: {e}")
             resolved_abs_excluded_dir_paths.append(root_dir.joinpath(d_str).absolute())
-
+    
     for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
-            # Get the absolute path of the item itself. For symlinks, this is the link's path.
-            abs_item_path = item_path.absolute()
-
-            for excluded_dir_abs in resolved_abs_excluded_dir_paths:
-                # Check if the item is the excluded directory itself or is inside an excluded directory.
-                # This is done by string comparison of absolute paths.
-                abs_item_path_str = str(abs_item_path)
-                excluded_dir_abs_str = str(excluded_dir_abs)
-
-                if abs_item_path_str == excluded_dir_abs_str or \
-                   abs_item_path_str.startswith(excluded_dir_abs_str + os.sep):
+            # Resolve the item's path to a canonical absolute path for comparison.
+            current_item_resolved_path = item_path.resolve(strict=False)
+    
+            for excluded_dir_resolved in resolved_abs_excluded_dir_paths:
+                if current_item_resolved_path == excluded_dir_resolved:
                     is_excluded = True
                     break
-        except (OSError, FileNotFoundError) as e:
-            # This might happen for broken symlinks or permission issues during .absolute()
-            print(f"Warning: Could not get absolute path for {item_path} during exclusion check: {e}. Skipping this item.")
+                try:
+                    # Check if current_item_resolved_path is a child of excluded_dir_resolved
+                    current_item_resolved_path.relative_to(excluded_dir_resolved)
+                    # If no ValueError, it is a subpath (or same path, handled above)
+                    is_excluded = True
+                    break
+                except ValueError:
+                    # Not a subpath of this particular excluded_dir_resolved
+                    continue
+                except Exception as e_rel: # Catch other potential errors from relative_to
+                    print(f"Warning: Error checking relative path for {current_item_resolved_path} against {excluded_dir_resolved}: {e_rel}")
+                    pass
+                
+            if is_excluded:
+                continue # Skip this item_path
+    
+        except (OSError, FileNotFoundError) as e: # Errors during item_path.resolve()
+            print(f"Warning: Could not resolve path for {item_path} during exclusion check: {e}. Skipping this item.")
             is_excluded = True # Treat as excluded to be safe
         
-        if is_excluded:
+        if is_excluded: # Double check, though continue should have been hit
             continue
         yield item_path
 
@@ -230,17 +244,23 @@ def scan_directory_for_occurrences(
         original_name = item_path.name
 
         try:
-            # For file exclusion, if it's a symlink, we check the symlink path itself, not its target.
-            path_to_check_exclusion_resolved = item_path.resolve(strict=False)
-            if path_to_check_exclusion_resolved in abs_excluded_files:
+            # Resolve item_path to a canonical absolute path for exclusion checks.
+            item_path_resolved_for_exclusion = item_path.resolve(strict=False)
+            
+            # abs_excluded_files contains Path objects that are absolute and resolved.
+            if item_path_resolved_for_exclusion in abs_excluded_files:
                 continue
-            if item_path in abs_excluded_files:
+        except (OSError, FileNotFoundError) as e:
+            # This might happen for broken symlinks where item_path.resolve() fails.
+            # As a fallback, try to compare using absolute string paths if resolve failed.
+            try:
+                item_path_abs_str = str(item_path.absolute()) # Get absolute path of the link/file itself
+                # Compare against string representations of pre-resolved excluded file paths.
+                if any(str(ex_file) == item_path_abs_str for ex_file in abs_excluded_files):
+                    continue
+            except (OSError, FileNotFoundError): # If .absolute() also fails
+                 print(f"Warning: Could not resolve or get absolute path for {item_path} during file exclusion check. Skipping.")
                  continue
-
-        except (OSError, FileNotFoundError):
-            item_path_str_abs = str(item_path.absolute())
-            if any(str(ex_file.resolve(strict=False)) == item_path_str_abs for ex_file in abs_excluded_files):
-                continue
 
 
         if replace_occurrences(original_name) != original_name:
