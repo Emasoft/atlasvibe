@@ -636,8 +636,14 @@ def _verify_self_test_results_task(
              check_file_content_for_test(binary_renamed_path1, expected_binary_content, "[Standard] binary_atlasvibe_file.bin content", record_test, is_binary=True, verbose=verbose)
 
         
-        original_binary_fLoJoY_path = temp_dir / "binary_fLoJoY_name.bin" # Name has unmapped "fLoJoY", should be unchanged
-        record_test("[Standard] binary_fLoJoY_name.bin exists (name unchanged)", original_binary_fLoJoY_path.is_file())
+        original_binary_fLoJoY_path_name = "binary_fLoJoY_name.bin"
+        renamed_binary_fLoJoY_path = temp_dir / "binary_atlasVibe_name.bin" 
+        original_binary_fLoJoY_content = b"unmapped_variant_binary_content" + b"\x00\xff"
+
+        record_test(f"[Standard] '{renamed_binary_fLoJoY_path.name}' exists (renamed from '{original_binary_fLoJoY_path_name}')", renamed_binary_fLoJoY_path.is_file())
+        record_test(f"[Standard] Original '{original_binary_fLoJoY_path_name}' removed after rename", not (temp_dir / original_binary_fLoJoY_path_name).exists())
+        if renamed_binary_fLoJoY_path.is_file():
+            check_file_content_for_test(renamed_binary_fLoJoY_path, original_binary_fLoJoY_content, f"[Standard] '{renamed_binary_fLoJoY_path.name}' content (should be original)", record_test, is_binary=True, verbose=verbose)
 
 
         # Large file (1000 lines, not VERY_LARGE_FILE)

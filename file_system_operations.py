@@ -117,14 +117,17 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
-            resolved_item_path = item_path.resolve(strict=False)
-            for excluded_dir in abs_excluded_dirs:
-                if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
+            resolved_path_to_evaluate = item_path.resolve(strict=False)
+            for excluded_dir_abs in abs_excluded_dirs_resolved:
+                if resolved_path_to_evaluate == excluded_dir_abs: # Item is an excluded directory itself
                     is_excluded = True
                     break
-        except (ValueError, OSError, FileNotFoundError):
+                if excluded_dir_abs in resolved_path_to_evaluate.parents:
+                    is_excluded = True
+                    break
+        except (OSError, FileNotFoundError): # Fallback for unresolvable paths (e.g., broken symlink)
             item_path_str = str(item_path)
-            if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
+            if any(item_path_str.startswith(str(ex_dir_path_obj)) for ex_dir_path_obj in abs_excluded_dirs_resolved):
                 is_excluded = True
 
         if is_excluded:
