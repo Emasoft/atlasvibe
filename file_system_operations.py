@@ -113,7 +113,7 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     Yields paths for scanning, respecting exclusions.
     By default, Path.rglob does not follow symlinks for directory traversal.
     """
-    abs_excluded_dirs = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
+    abs_excluded_dirs_resolved = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
     for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
