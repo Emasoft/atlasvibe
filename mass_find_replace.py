@@ -44,6 +44,7 @@ import os
 import operator
 
 from prefect import task, flow, get_run_logger
+import prefect.runtime
 
 from file_system_operations import (
     scan_directory_for_occurrences,
@@ -110,7 +111,7 @@ def _create_self_test_environment(
     verbose: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
-    logger = get_run_logger() if flow.get_client() else print # Use Prefect logger if in flow context
+    logger = get_run_logger() if prefect.runtime.get_run_context() else print # Use Prefect logger if in flow context
 
     try:
         if not for_resume_test_phase_2:
@@ -267,7 +268,7 @@ def check_file_content_for_test(
     verbose: bool = False
 ) -> None:
     """Helper to check file content for self-tests, normalizing line endings."""
-    logger = get_run_logger() if flow.get_client() else print
+    logger = get_run_logger() if prefect.runtime.get_run_context() else print
 
     if not file_path or not file_path.exists():
         record_test_func(test_description + " (File Existence)", False, f"File missing: {file_path}")
