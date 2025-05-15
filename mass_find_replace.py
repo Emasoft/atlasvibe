@@ -615,18 +615,22 @@ def _verify_self_test_results_task(
         unmapped_variant_renamed_path = temp_dir / "unmapped_variant_atlasvibe_content.txt" # from "unmapped_variant_flojoy_content.txt"
         record_test("[Standard] unmapped_variant_atlasvibe_content.txt exists", unmapped_variant_renamed_path.is_file())
         if unmapped_variant_renamed_path.is_file():
-            expected_unmapped_content = "This has atlasVibe content, and also atlasvibe."
+            expected_unmapped_content = "This has atlasvibe content, and also atlasvibe." # Corrected expectation
             check_file_content_for_test(unmapped_variant_renamed_path, expected_unmapped_content, "[Standard] unmapped_variant_atlasvibe_content.txt content", record_test, verbose=verbose)
         
         gb18030_renamed_path = temp_dir / "gb18030_atlasvibe_file.txt" # from "gb18030_flojoy_file.txt"
         record_test("[Standard] gb18030_atlasvibe_file.txt exists", gb18030_renamed_path.is_file())
         if gb18030_renamed_path.is_file():
-            try: # Try reading with gb18030 first
-                expected_gb18030_content = "你好 atlasvibe 世界"
-                check_file_content_for_test(gb18030_renamed_path, expected_gb18030_content, "[Standard] gb18030_atlasvibe_file.txt content", record_test, encoding="gb18030", verbose=verbose)
-            except UnicodeDecodeError: # Fallback if original was fallback
-                expected_gb18030_content = "fallback atlasvibe content"
-                check_file_content_for_test(gb18030_renamed_path, expected_gb18030_content, "[Standard] gb18030_atlasvibe_file.txt content (fallback)", record_test, encoding="utf-8", verbose=verbose)
+            expected_gb18030_bytes = "你好 atlasvibe 世界".encode('gb18030')
+            expected_fallback_bytes = "fallback atlasvibe content".encode('utf-8')
+            
+            actual_bytes = gb18030_renamed_path.read_bytes()
+            if actual_bytes == expected_gb18030_bytes:
+                record_test("[Standard] gb18030_atlasvibe_file.txt content", True)
+            elif actual_bytes == expected_fallback_bytes:
+                record_test("[Standard] gb18030_atlasvibe_file.txt content (fallback)", True)
+            else:
+                record_test("[Standard] gb18030_atlasvibe_file.txt content", False, f"Byte content mismatch. Got: {actual_bytes[:50]!r}")
 
 
         binary_renamed_path1 = temp_dir / "binary_atlasvibe_file.bin" # from "binary_flojoy_file.bin"

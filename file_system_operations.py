@@ -111,25 +111,53 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
 def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     """
     Yields paths for scanning, respecting exclusions.
-    By default, Path.rglob does not follow symlinks for directory traversal.
+    Exclusion is based on the item's own path, not its target's path if it's a symlink.
     """
-    abs_excluded_dirs_resolved = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
+    # Resolve excluded directory paths once for efficient comparison.
+    # These are absolute, resolved paths.
+    resolved_abs_excluded_dirs = []
+    for d in excluded_dirs:
+        try:
+            resolved_abs_excluded_dirs.append(root_dir.joinpath(d).resolve(strict=False))
+        except Exception: # If an excluded dir path is problematic, try to use its absolute form
+            resolved_abs_excluded_dirs.append(root_dir.joinpath(d).absolute())
+
     for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
-            resolved_path_to_evaluate = item_path.resolve(strict=False)
-            for excluded_dir_abs in abs_excluded_dirs_resolved:
-                if resolved_path_to_evaluate == excluded_dir_abs: # Item is an excluded directory itself
-                    is_excluded = True
-                    break
-                if excluded_dir_abs in resolved_path_to_evaluate.parents:
-                    is_excluded = True
-                    break
-        except (OSError, FileNotFoundError): # Fallback for unresolvable paths (e.g., broken symlink)
-            item_path_str = str(item_path)
-            if any(item_path_str.startswith(str(ex_dir_path_obj)) for ex_dir_path_obj in abs_excluded_dirs_resolved):
-                is_excluded = True
+            # Get the absolute path of the item itself (without resolving the final symlink component).
+            # This is the path whose ancestry we check against excluded directories.
+            abs_item_path = item_path.absolute()
 
+            for excluded_dir_abs_resolved in resolved_abs_excluded_dirs:
+                # Case 1: The item itself is exactly an excluded directory.
+                # This check is more relevant for directories than files, but good for completeness.
+                # We use resolved path of item for this direct comparison if it's not a symlink,
+                # or the symlink path itself if it is one.
+                path_for_direct_match = abs_item_path
+                if not item_path.is_symlink(): # If not a symlink, resolve it for direct comparison
+                    path_for_direct_match = item_path.resolve(strict=False)
+
+                if path_for_direct_match == excluded_dir_abs_resolved:
+                    is_excluded = True
+                    break
+
+                # Case 2: The item is located *within* one of the excluded directories.
+                # Check if excluded_dir_abs_resolved is a parent of abs_item_path.
+                if excluded_dir_abs_resolved in abs_item_path.parents:
+                    is_excluded = True
+                    break
+        except (OSError, FileNotFoundError) as e:
+            # Fallback to string comparison if path resolution fails for item_path
+            # This is less robust but can catch some cases.
+            item_path_str = str(item_path.absolute()) # Use absolute string path
+            for abs_excl_dir in resolved_abs_excluded_dirs:
+                abs_excl_dir_str = str(abs_excl_dir)
+                if item_path_str == abs_excl_dir_str or \
+                   item_path_str.startswith(abs_excl_dir_str + os.sep):
+                    is_excluded = True
+                    break
+        
         if is_excluded:
             continue
         yield item_path
@@ -207,12 +235,13 @@ def scan_directory_for_occurrences(
         original_name = item_path.name
 
         try:
-            path_to_check_exclusion = item_path.resolve(strict=False) if item_path.is_symlink() else item_path
-            if path_to_check_exclusion in abs_excluded_files:
+            # For file exclusion, if it's a symlink, we check the symlink path itself, not its target.
+            path_to_check_exclusion = item_path 
+            if path_to_check_exclusion.resolve(strict=False) in abs_excluded_files: # Resolve for comparison with resolved abs_excluded_files
                 continue
-        except (OSError, FileNotFoundError):
-            item_path_str = str(item_path)
-            if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files):
+        except (OSError, FileNotFoundError): # Handle cases where resolving item_path fails (e.g. broken symlink)
+            item_path_str = str(item_path) # Compare string paths
+            if any(str(ex_file.resolve(strict=False)) == item_path_str for ex_file in abs_excluded_files): # Compare against resolved excluded files
                 continue
 
         if replace_occurrences(original_name) != original_name:
