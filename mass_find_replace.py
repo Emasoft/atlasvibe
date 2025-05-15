@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - Corrected Prefect 3 flow run context check:
+#   - In `_create_self_test_environment` and `check_file_content_for_test`,
+#     the previous change introduced `prefect.runtime.get_run_context()`. This has been
+#     replaced with a robust check for `prefect.runtime.flow_run.id` (using
+#     a try-except AttributeError block) to accurately determine if running
+#     inside a Prefect flow run, fixing the `AttributeError: module 'prefect.runtime' has no attribute 'get_run_context'`.
 # - Modified `check_file_content_for_test`:
 #   - Removed re-application of `replace_logic.replace_occurrences`.
 #   - Compares actual file content on disk directly with `expected_content`.
@@ -111,7 +117,13 @@ def _create_self_test_environment(
     verbose: bool = False
 ) -> None:
     """Creates a directory structure and files for self-testing."""
-    logger = get_run_logger() if prefect.runtime.get_run_context() else print # Use Prefect logger if in flow context
+    is_in_flow_context = False
+    try:
+        if prefect.runtime.flow_run and prefect.runtime.flow_run.id:
+            is_in_flow_context = True
+    except AttributeError:
+        is_in_flow_context = False
+    logger = get_run_logger() if is_in_flow_context else print # Use Prefect logger if in flow context
 
     try:
         if not for_resume_test_phase_2:
@@ -272,7 +284,13 @@ def check_file_content_for_test(
     verbose: bool = False
 ) -> None:
     """Helper to check file content for self-tests, normalizing line endings."""
-    logger = get_run_logger() if prefect.runtime.get_run_context() else print
+    is_in_flow_context = False
+    try:
+        if prefect.runtime.flow_run and prefect.runtime.flow_run.id:
+            is_in_flow_context = True
+    except AttributeError:
+        is_in_flow_context = False
+    logger = get_run_logger() if is_in_flow_context else print
 
     if not file_path or not file_path.exists():
         record_test_func(test_description + " (File Existence)", False, f"File missing: {file_path}")
