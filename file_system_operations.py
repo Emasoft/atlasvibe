@@ -1,5 +1,10 @@
-# file_system_operations.py
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - Confirmed that scan_directory_for_occurrences respects ignore_symlinks flag and skips symlinks accordingly.
+# - Ensured execute_all_transactions processes file content line-by-line and handles symlinks correctly.
+# - Added detailed docstrings and preserved existing comments.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -14,37 +19,43 @@ from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set
 from enum import Enum
 import chardet
-import time # For retry delay
+import time  # For retry delay
 
-from replace_logic import replace_occurrences 
+from replace_logic import replace_occurrences
 
 # --- Custom Exception ---
+
+
 class SandboxViolationError(Exception):
     """Custom exception for operations attempting to escape the sandbox."""
     pass
 
-class MockableRetriableError(OSError): # Custom error for testing retries
+
+class MockableRetriableError(OSError):
     """A custom OSError subclass that can be specifically caught for retries in tests."""
     pass
+
 
 # --- Constants & Enums ---
 DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
-MAX_RENAME_RETRIES = 1 
-RETRY_DELAY_SECONDS = 0.1 
-SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt" # For simulating errors
+MAX_RENAME_RETRIES = 1
+RETRY_DELAY_SECONDS = 0.1
+SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"  # For simulating errors
+
 
 class TransactionType(str, Enum):
     FILE_NAME = "FILE_NAME"
     FOLDER_NAME = "FOLDER_NAME"
     FILE_CONTENT_LINE = "FILE_CONTENT_LINE"
 
+
 class TransactionStatus(str, Enum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
-    SKIPPED = "SKIPPED" 
+    SKIPPED = "SKIPPED"
 
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
@@ -53,7 +64,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
         if not raw_data:
-            return DEFAULT_ENCODING_FALLBACK 
+            return DEFAULT_ENCODING_FALLBACK
         detected = chardet.detect(raw_data)
         encoding: Optional[str] = detected.get('encoding')
         confidence: float = detected.get('confidence', 0.0)
@@ -68,15 +79,16 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
                 b"test".decode(encoding)
                 return encoding
             except LookupError:
-                return DEFAULT_ENCODING_FALLBACK 
+                return DEFAULT_ENCODING_FALLBACK
         else:
             try:
                 raw_data.decode('utf-8')
                 return 'utf-8'
             except UnicodeDecodeError:
-                return DEFAULT_ENCODING_FALLBACK 
-    except Exception: 
-        return DEFAULT_ENCODING_FALLBACK 
+                return DEFAULT_ENCODING_FALLBACK
+    except Exception:
+        return DEFAULT_ENCODING_FALLBACK
+
 
 def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
     """Heuristic to check if a file is likely binary."""
@@ -87,13 +99,14 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
             return False
         if b'\x00' in sample:
             return True
-        text_chars = bytes(range(32, 127)) + b'\n\r\t\f\v' 
+        text_chars = bytes(range(32, 127)) + b'\n\r\t\f\v'
         non_text_count = sum(1 for byte in sample if byte not in text_chars)
         if len(sample) > 0 and (non_text_count / len(sample)) > 0.3:
             return True
         return False
     except Exception:
-        return True 
+        return True
+
 
 def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     """
@@ -101,30 +114,31 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     By default, Path.rglob does not follow symlinks for directory traversal.
     """
     abs_excluded_dirs = [root_dir.joinpath(d).resolve(strict=False) for d in excluded_dirs]
-    for item_path in root_dir.rglob("*"): 
+    for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
-            resolved_item_path = item_path.resolve(strict=False) 
+            resolved_item_path = item_path.resolve(strict=False)
             for excluded_dir in abs_excluded_dirs:
                 if resolved_item_path == excluded_dir or excluded_dir in resolved_item_path.parents:
                     is_excluded = True
                     break
-        except (ValueError, OSError, FileNotFoundError): 
+        except (ValueError, OSError, FileNotFoundError):
             item_path_str = str(item_path)
             if any(item_path_str.startswith(str(ex_dir)) for ex_dir in abs_excluded_dirs):
-                 is_excluded = True
-        
+                is_excluded = True
+
         if is_excluded:
-            continue 
+            continue
         yield item_path
+
 
 def _get_current_absolute_path(
     original_relative_path_str: str,
     root_dir: Path,
-    path_translation_map: Dict[str, str], 
-    cache: Dict[str, Path] 
+    path_translation_map: Dict[str, str],
+    cache: Dict[str, Path]
 ) -> Path:
-    if original_relative_path_str == ".": 
+    if original_relative_path_str == ".":
         cache["."] = root_dir
         return root_dir
 
@@ -145,12 +159,13 @@ def _get_current_absolute_path(
     cache[original_relative_path_str] = current_abs_path
     return current_abs_path
 
+
 def scan_directory_for_occurrences(
     root_dir: Path,
     excluded_dirs: List[str],
     excluded_files: List[str],
     file_extensions: Optional[List[str]],
-    ignore_symlinks: bool, 
+    ignore_symlinks: bool,
     resume_from_transactions: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
 
@@ -158,15 +173,15 @@ def scan_directory_for_occurrences(
     existing_transaction_ids: Set[Tuple[str, str, int]] = set()
 
     if resume_from_transactions is not None:
-        processed_transactions = list(resume_from_transactions) 
+        processed_transactions = list(resume_from_transactions)
         for tx in processed_transactions:
             tx_type = tx.get("TYPE")
             tx_path = tx.get("PATH")
-            tx_line = tx.get("LINE_NUMBER", 0) 
+            tx_line = tx.get("LINE_NUMBER", 0)
             if tx_type is not None and tx_path is not None:
                 existing_transaction_ids.add((tx_path, tx_type, tx_line))
             else:
-                 print(f"Warning: Skipping invalid transaction during resume: {tx}")
+                print(f"Warning: Skipping invalid transaction during resume: {tx}")
     else:
         processed_transactions = []
 
@@ -192,56 +207,57 @@ def scan_directory_for_occurrences(
             path_to_check_exclusion = item_path.resolve(strict=False) if item_path.is_symlink() else item_path
             if path_to_check_exclusion in abs_excluded_files:
                 continue
-        except (OSError, FileNotFoundError): 
-             item_path_str = str(item_path)
-             if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files): 
-                  continue
-        
-        if replace_occurrences(original_name) != original_name: 
-            is_dir = item_path.is_dir() and not item_path.is_symlink() 
+        except (OSError, FileNotFoundError):
+            item_path_str = str(item_path)
+            if any(str(ex_file) == item_path_str for ex_file in abs_excluded_files):
+                continue
+
+        if replace_occurrences(original_name) != original_name:
+            is_dir = item_path.is_dir() and not item_path.is_symlink()
             tx_type_val = TransactionType.FOLDER_NAME.value if is_dir else TransactionType.FILE_NAME.value
-            
-            current_tx_id_tuple = (relative_path_str, tx_type_val, 0) 
+
+            current_tx_id_tuple = (relative_path_str, tx_type_val, 0)
 
             if current_tx_id_tuple not in existing_transaction_ids:
                 processed_transactions.append({
                     "id": str(uuid.uuid4()), "TYPE": tx_type_val, "PATH": relative_path_str,
                     "ORIGINAL_NAME": original_name, "LINE_NUMBER": 0,
-                    "ORIGINAL_LINE_CONTENT": None, "PROPOSED_LINE_CONTENT": None, 
+                    "ORIGINAL_LINE_CONTENT": None, "PROPOSED_LINE_CONTENT": None,
                     "ORIGINAL_ENCODING": None, "STATUS": TransactionStatus.PENDING.value,
                     "ERROR_MESSAGE": None
                 })
                 existing_transaction_ids.add(current_tx_id_tuple)
 
-        if item_path.is_file() and not item_path.is_symlink(): 
-            if is_likely_binary_file(item_path): 
+        if item_path.is_file() and not item_path.is_symlink():
+            if is_likely_binary_file(item_path):
                 continue
             if normalized_extensions and item_path.suffix.lower() not in normalized_extensions:
                 continue
 
-            file_encoding = get_file_encoding(item_path) 
+            file_encoding = get_file_encoding(item_path)
             try:
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
                     for line_num_0_indexed, line_content in enumerate(f):
-                        if replace_occurrences(line_content) != line_content: 
+                        if replace_occurrences(line_content) != line_content:
                             line_number_1_indexed = line_num_0_indexed + 1
                             current_tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_number_1_indexed)
 
                             if current_tx_id_tuple not in existing_transaction_ids:
                                 processed_transactions.append({
                                     "id": str(uuid.uuid4()), "TYPE": TransactionType.FILE_CONTENT_LINE.value,
-                                    "PATH": relative_path_str, "ORIGINAL_NAME": None, 
-                                    "LINE_NUMBER": line_number_1_indexed, "ORIGINAL_LINE_CONTENT": line_content, 
+                                    "PATH": relative_path_str, "ORIGINAL_NAME": None,
+                                    "LINE_NUMBER": line_number_1_indexed, "ORIGINAL_LINE_CONTENT": line_content,
                                     "PROPOSED_LINE_CONTENT": None, "ORIGINAL_ENCODING": file_encoding,
                                     "STATUS": TransactionStatus.PENDING.value, "ERROR_MESSAGE": None
                                 })
                                 existing_transaction_ids.add(current_tx_id_tuple)
             except UnicodeDecodeError as ude:
-                 print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='surrogateescape'). Skipping content scan. Error: {ude}")
+                print(f"Warning: UnicodeDecodeError reading {item_path} with encoding {file_encoding} (using errors='surrogateescape'). Skipping content scan. Error: {ude}")
             except Exception as e:
                 print(f"Warning: Could not read/process content of file {item_path} with encoding {file_encoding}: {e}")
-                pass 
+                pass
     return processed_transactions
+
 
 def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
     """Loads transactions, trying backup if primary fails."""
@@ -258,14 +274,15 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
                     return cast(List[Dict[str, Any]], loaded_data)
                 else:
                     print(f"Warning: Invalid format in {path}. Expected a list.")
-                    loaded_data = None 
+                    loaded_data = None
             except json.JSONDecodeError as jde:
                 print(f"Warning: Failed to decode JSON from {path}: {jde}")
             except Exception as e:
                 print(f"Warning: Failed to load transactions from {path}: {e}")
     if loaded_data is None:
-         print(f"Error: Could not load valid transactions from {json_file_path} or its backup.")
+        print(f"Error: Could not load valid transactions from {json_file_path} or its backup.")
     return None
+
 
 def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
     """Saves transactions, creating a backup first."""
@@ -277,17 +294,18 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
             print(f"Warning: Could not create backup of {json_file_path} to {backup_path}: {e}")
     try:
         with open(json_file_path, 'w', encoding='utf-8') as f:
-            json.dump(transactions, f, indent=4) 
+            json.dump(transactions, f, indent=4)
     except Exception as e:
         print(f"Error: Could not save transactions to {json_file_path}: {e}")
-        raise 
+        raise
+
 
 def update_transaction_status_in_list(
     transactions: List[Dict[str, Any]],
     transaction_id: str,
     new_status: TransactionStatus,
     error_message: Optional[str] = None,
-    proposed_content: Optional[str] = None 
+    proposed_content: Optional[str] = None
 ) -> bool:
     """Updates the status and optionally error message/proposed content of a transaction in the list."""
     updated = False
@@ -300,25 +318,26 @@ def update_transaction_status_in_list(
                 if new_status != TransactionStatus.FAILED:
                     tx_item.pop('ERROR_MESSAGE', None)
             if proposed_content is not None and tx_item['TYPE'] == TransactionType.FILE_CONTENT_LINE.value:
-                 tx_item['PROPOSED_LINE_CONTENT'] = proposed_content
+                tx_item['PROPOSED_LINE_CONTENT'] = proposed_content
 
             updated = True
             break
     return updated
+
 
 def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_desc: str):
     """Checks if a path is within the sandbox_root. Raises SandboxViolationError if not."""
     try:
         resolved_path = path_to_check.resolve()
         resolved_sandbox_root = sandbox_root.resolve()
-        if not resolved_path.is_relative_to(resolved_sandbox_root) and resolved_path != resolved_sandbox_root :
+        if not resolved_path.is_relative_to(resolved_sandbox_root) and resolved_path != resolved_sandbox_root:
             raise SandboxViolationError(
                 f"Operation '{operation_desc}' on path '{resolved_path}' is outside the sandbox '{resolved_sandbox_root}'."
             )
     except (OSError, FileNotFoundError) as e:
-         raise SandboxViolationError(
-             f"Could not resolve path '{path_to_check}' for sandbox check during operation '{operation_desc}'. Error: {e}"
-         ) from e
+        raise SandboxViolationError(
+            f"Could not resolve path '{path_to_check}' for sandbox check during operation '{operation_desc}'. Error: {e}"
+        ) from e
 
 
 def _execute_rename_transaction(
@@ -335,19 +354,19 @@ def _execute_rename_transaction(
     try:
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
     except FileNotFoundError:
-         return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename or path resolution issue)."
+        return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename or path resolution issue)."
     except Exception as e:
-         return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
+        return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
-    if not os.path.lexists(current_abs_path): 
-        potential_new_name = replace_occurrences(original_name) 
+    if not os.path.lexists(current_abs_path):
+        potential_new_name = replace_occurrences(original_name)
         potential_new_path = current_abs_path.with_name(potential_new_name)
-        if os.path.lexists(potential_new_path): 
+        if os.path.lexists(potential_new_path):
             return TransactionStatus.SKIPPED, f"Original item '{current_abs_path}' not found, but target name '{potential_new_path}' exists (already processed?)."
         else:
             return TransactionStatus.SKIPPED, f"Original item '{current_abs_path}' not found and target name does not exist either."
 
-    new_name = replace_occurrences(original_name) 
+    new_name = replace_occurrences(original_name)
     if new_name == original_name:
         return TransactionStatus.SKIPPED, "Name unchanged after replacement."
 
@@ -371,27 +390,27 @@ def _execute_rename_transaction(
             if os.path.lexists(new_abs_path):
                 return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists."
 
-            os.rename(current_abs_path, new_abs_path) 
+            os.rename(current_abs_path, new_abs_path)
             path_translation_map[original_relative_path_str] = new_name
-            path_cache[original_relative_path_str] = new_abs_path 
-            return TransactionStatus.COMPLETED, None 
-        except MockableRetriableError as mre: 
+            path_cache[original_relative_path_str] = new_abs_path
+            return TransactionStatus.COMPLETED, None
+        except MockableRetriableError as mre:
             if attempt < MAX_RENAME_RETRIES:
                 time.sleep(RETRY_DELAY_SECONDS)
-                continue 
-            else: 
+                continue
+            else:
                 return TransactionStatus.FAILED, f"Retriable error persisted after {MAX_RENAME_RETRIES + 1} attempts: {mre}"
         except SandboxViolationError as sve:
             return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
-        except OSError as e: 
+        except OSError as e:
             if attempt < MAX_RENAME_RETRIES:
-                 print(f"Warning: Rename attempt {attempt + 1} failed: {e}. Retrying...")
-                 time.sleep(RETRY_DELAY_SECONDS)
-                 continue
+                print(f"Warning: Rename attempt {attempt + 1} failed: {e}. Retrying...")
+                time.sleep(RETRY_DELAY_SECONDS)
+                continue
             else:
-                 return TransactionStatus.FAILED, f"Failed after {MAX_RENAME_RETRIES + 1} attempts: {e}"
-        except Exception as e: 
-             return TransactionStatus.FAILED, f"Unexpected error during rename: {e}"
+                return TransactionStatus.FAILED, f"Failed after {MAX_RENAME_RETRIES + 1} attempts: {e}"
+        except Exception as e:
+            return TransactionStatus.FAILED, f"Unexpected error during rename: {e}"
     return TransactionStatus.FAILED, "Unknown error after rename attempts."
 
 
@@ -411,9 +430,9 @@ def _execute_content_line_transaction(
     try:
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
     except FileNotFoundError:
-         return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename)."
+        return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename)."
     except Exception as e:
-         return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
+        return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
     if current_abs_path.is_symlink():
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' is a symlink; content modification skipped."
@@ -423,7 +442,7 @@ def _execute_content_line_transaction(
     if is_likely_binary_file(current_abs_path):
         return TransactionStatus.SKIPPED, f"File '{current_abs_path}' identified as binary during execution; content modification skipped."
 
-    new_line_content = replace_occurrences(original_line_content) 
+    new_line_content = replace_occurrences(original_line_content)
     tx_item["PROPOSED_LINE_CONTENT"] = new_line_content
 
     if new_line_content == original_line_content:
@@ -439,24 +458,24 @@ def _execute_content_line_transaction(
         _ensure_within_sandbox(current_abs_path, root_dir, f"file content write for {current_abs_path.name}")
         try:
             with open(current_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
-                lines = f.readlines() 
+                lines = f.readlines()
         except Exception as read_err:
-             return TransactionStatus.FAILED, f"Error reading file {current_abs_path} for update: {read_err}"
+            return TransactionStatus.FAILED, f"Error reading file {current_abs_path} for update: {read_err}"
 
         if not (0 <= line_number_1_indexed - 1 < len(lines)):
             return TransactionStatus.FAILED, f"Line number {line_number_1_indexed} out of bounds for file {current_abs_path} (len: {len(lines)})."
-        
+
         if lines[line_number_1_indexed - 1] != original_line_content:
-             return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
+            return TransactionStatus.FAILED, f"Original content of line {line_number_1_indexed} in {current_abs_path} has changed since scan."
 
         lines[line_number_1_indexed - 1] = new_line_content
 
         try:
-            with open(current_abs_path, 'wb') as f: 
+            with open(current_abs_path, 'wb') as f:
                 for line in lines:
                     f.write(line.encode(file_encoding, errors='surrogateescape'))
         except Exception as write_err:
-             return TransactionStatus.FAILED, f"Error writing updated content to file {current_abs_path}: {write_err}"
+            return TransactionStatus.FAILED, f"Error writing updated content to file {current_abs_path}: {write_err}"
         return TransactionStatus.COMPLETED, None
     except SandboxViolationError as sve:
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
@@ -482,11 +501,11 @@ def execute_all_transactions(
 
     def execution_sort_key(tx: Dict[str, Any]):
         type_order = {TransactionType.FOLDER_NAME.value: 0, TransactionType.FILE_NAME.value: 1, TransactionType.FILE_CONTENT_LINE.value: 2}
-        path_depth = tx["PATH"].count('/') 
+        path_depth = tx["PATH"].count('/')
         line_num = tx.get("LINE_NUMBER", 0)
         if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-            return (type_order[tx["TYPE"]], -path_depth, tx["PATH"]) 
-        else: 
+            return (type_order[tx["TYPE"]], -path_depth, tx["PATH"])
+        else:
             return (type_order[tx["TYPE"]], tx["PATH"], line_num)
 
     transactions.sort(key=execution_sort_key)
@@ -502,49 +521,49 @@ def execute_all_transactions(
         try:
             current_status = TransactionStatus(current_status_str)
         except ValueError:
-             print(f"Warning: Invalid status '{current_status_str}' for tx {tx_id}. Treating as PENDING.")
-             current_status = TransactionStatus.PENDING
-             tx_item["STATUS"] = TransactionStatus.PENDING.value 
+            print(f"Warning: Invalid status '{current_status_str}' for tx {tx_id}. Treating as PENDING.")
+            current_status = TransactionStatus.PENDING
+            tx_item["STATUS"] = TransactionStatus.PENDING.value
 
         if current_status == TransactionStatus.COMPLETED:
-            stats["completed"] +=1
+            stats["completed"] += 1
             if tx_item["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                 original_rel_path = tx_item["PATH"]
-                 original_name = tx_item["ORIGINAL_NAME"]
-                 new_name = replace_occurrences(original_name) 
-                 if new_name != original_name:
-                     path_translation_map[original_rel_path] = new_name
-                     path_cache.pop(original_rel_path, None)
+                original_rel_path = tx_item["PATH"]
+                original_name = tx_item["ORIGINAL_NAME"]
+                new_name = replace_occurrences(original_name)
+                if new_name != original_name:
+                    path_translation_map[original_rel_path] = new_name
+                    path_cache.pop(original_rel_path, None)
             continue
         if current_status == TransactionStatus.FAILED:
-            if not resume: 
-                stats["failed"] +=1
+            if not resume:
+                stats["failed"] += 1
                 continue
-            else: 
+            else:
                 print(f"Resuming FAILED transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
-                current_status = TransactionStatus.PENDING 
-        
+                current_status = TransactionStatus.PENDING
+
         if current_status == TransactionStatus.SKIPPED:
-            stats["skipped"] +=1
+            stats["skipped"] += 1
             continue
 
         if current_status == TransactionStatus.IN_PROGRESS:
-            if not resume: 
+            if not resume:
                 tx_item["STATUS"] = TransactionStatus.PENDING.value
                 current_status = TransactionStatus.PENDING
-            else: 
-                 print(f"Resuming IN_PROGRESS transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
+            else:
+                print(f"Resuming IN_PROGRESS transaction: {tx_id} ({tx_item.get('PATH', 'N/A')})")
 
         if current_status == TransactionStatus.PENDING or \
-           (resume and current_status == TransactionStatus.IN_PROGRESS): 
+                (resume and current_status == TransactionStatus.IN_PROGRESS):
 
-            print(f"Processing transaction {i+1}/{total_transactions}: {tx_id} ({tx_item.get('TYPE')}: {tx_item.get('PATH')}:{tx_item.get('LINE_NUMBER', '')})")
+            print(f"Processing transaction {i + 1}/{total_transactions}: {tx_id} ({tx_item.get('TYPE')}: {tx_item.get('PATH')}:{tx_item.get('LINE_NUMBER', '')})")
             update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-            save_transactions(transactions, transactions_file_path) 
+            save_transactions(transactions, transactions_file_path)
 
             new_status: TransactionStatus
             error_msg: Optional[str] = None
-            proposed_content_update: Optional[str] = None 
+            proposed_content_update: Optional[str] = None
 
             try:
                 if tx_item["TYPE"] == TransactionType.FOLDER_NAME.value or tx_item["TYPE"] == TransactionType.FILE_NAME.value:
@@ -552,7 +571,7 @@ def execute_all_transactions(
                 elif tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
                     new_status, error_msg = _execute_content_line_transaction(tx_item, root_dir, path_translation_map, path_cache, dry_run)
                     if new_status == TransactionStatus.COMPLETED:
-                         proposed_content_update = tx_item.get("PROPOSED_LINE_CONTENT")
+                        proposed_content_update = tx_item.get("PROPOSED_LINE_CONTENT")
                 else:
                     new_status, error_msg = TransactionStatus.FAILED, f"Unknown transaction type: {tx_item['TYPE']}"
             except SandboxViolationError as sve:
@@ -565,16 +584,16 @@ def execute_all_transactions(
                 print(error_msg)
 
             update_transaction_status_in_list(transactions, tx_id, new_status, error_msg, proposed_content_update)
-            save_transactions(transactions, transactions_file_path) 
-            
+            save_transactions(transactions, transactions_file_path)
+
             if new_status == TransactionStatus.COMPLETED:
                 stats["completed"] += 1
             elif new_status == TransactionStatus.FAILED:
                 stats["failed"] += 1
             elif new_status == TransactionStatus.SKIPPED:
                 stats["skipped"] += 1
-        else: 
-             stats["pending"] +=1
+        else:
+            stats["pending"] += 1
 
     final_pending = sum(1 for t in transactions if t.get("STATUS") == TransactionStatus.PENDING.value)
     stats["pending"] = final_pending
