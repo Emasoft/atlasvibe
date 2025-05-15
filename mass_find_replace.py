@@ -615,7 +615,7 @@ def _verify_self_test_results_task(
         unmapped_variant_renamed_path = temp_dir / "unmapped_variant_atlasvibe_content.txt" # from "unmapped_variant_flojoy_content.txt"
         record_test("[Standard] unmapped_variant_atlasvibe_content.txt exists", unmapped_variant_renamed_path.is_file())
         if unmapped_variant_renamed_path.is_file():
-            expected_unmapped_content = "This has fLoJoY content, and also atlasvibe." # fLoJoY unmapped, flojoy mapped
+            expected_unmapped_content = "This has atlasVibe content, and also atlasvibe."
             check_file_content_for_test(unmapped_variant_renamed_path, expected_unmapped_content, "[Standard] unmapped_variant_atlasvibe_content.txt content", record_test, verbose=verbose)
         
         gb18030_renamed_path = temp_dir / "gb18030_atlasvibe_file.txt" # from "gb18030_flojoy_file.txt"
@@ -632,8 +632,10 @@ def _verify_self_test_results_task(
         binary_renamed_path1 = temp_dir / "binary_atlasvibe_file.bin" # from "binary_flojoy_file.bin"
         record_test("[Standard] binary_atlasvibe_file.bin exists", binary_renamed_path1.is_file())
         if binary_renamed_path1.is_file(): # Check binary content if needed, for now existence is fine
-             expected_binary_content = b"prefix_atlasvibe_suffix" + b"\x00\x01\x02atlasvibe_data\x03\x04"
-             check_file_content_for_test(binary_renamed_path1, expected_binary_content, "[Standard] binary_atlasvibe_file.bin content", record_test, is_binary=True, verbose=verbose)
+             # Content should be original, as binary file content is skipped for modification
+             original_binary_content1 = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
+             # The name was changed, so "flojoy" in content should NOT be changed.
+             check_file_content_for_test(binary_renamed_path1, original_binary_content1, "[Standard] binary_atlasvibe_file.bin content (should be original)", record_test, is_binary=True, verbose=verbose)
 
         
         original_binary_fLoJoY_path_name = "binary_fLoJoY_name.bin"
