@@ -5,6 +5,7 @@
 # - Confirmed that scan_directory_for_occurrences respects ignore_symlinks flag and skips symlinks accordingly.
 # - Ensured execute_all_transactions processes file content line-by-line and handles symlinks correctly.
 # - Added detailed docstrings and preserved existing comments.
+# - Defined VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG constant for diagnostic logging.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -42,6 +43,7 @@ TRANSACTION_FILE_BACKUP_EXT = ".bak"
 MAX_RENAME_RETRIES = 1
 RETRY_DELAY_SECONDS = 0.1
 SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"  # For simulating errors
+VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG = "very_large_flojoy_file.txt"  # Diagnostic for very large file
 
 
 class TransactionType(str, Enum):
