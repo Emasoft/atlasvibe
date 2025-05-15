@@ -11,12 +11,12 @@ import argparse
 import tempfile
 from pathlib import Path
 import sys
-from typing import List, Dict, Any, Optional, Union, Callable 
-import shutil 
-import textwrap 
-import json 
-import os 
-import operator 
+from typing import List, Dict, Any, Optional, Union, Callable, Tuple
+import shutil
+import textwrap
+import json
+import os
+import operator
 
 from prefect import task, flow
 
@@ -28,17 +28,17 @@ from file_system_operations import (
     TransactionStatus,
     TransactionType,
     TRANSACTION_FILE_BACKUP_EXT,
-    is_likely_binary_file, 
+    is_likely_binary_file,
     SELF_TEST_ERROR_FILE_BASENAME
 )
-import replace_logic 
+import replace_logic
 
 # --- Constants ---
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
-DEFAULT_REPLACEMENT_MAPPING_FILE = "replacement_mapping.json" 
+DEFAULT_REPLACEMENT_MAPPING_FILE = "replacement_mapping.json"
 SELF_TEST_PRIMARY_TRANSACTION_FILE = "self_test_transactions.json"
 SELF_TEST_SCAN_VALIDATION_FILE = "self_test_scan_validation_transactions.json"
-SELF_TEST_SANDBOX_DIR = "./tests/temp" 
+SELF_TEST_SANDBOX_DIR = "./tests/temp"
 SELF_TEST_COMPLEX_MAP_FILE = "self_test_complex_mapping.json"
 SELF_TEST_EDGE_CASE_MAP_FILE = "self_test_edge_case_mapping.json"
 SELF_TEST_EMPTY_MAP_FILE = "self_test_empty_mapping.json"
@@ -47,7 +47,7 @@ SELF_TEST_PRECISION_MAP_FILE = "self_test_precision_mapping.json"
 
 VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
 VERY_LARGE_FILE_NAME_REPLACED = "very_large_atlasvibe_file.txt"
-VERY_LARGE_FILE_LINES = 200 * 1000 
+VERY_LARGE_FILE_LINES = 200 * 1000
 VERY_LARGE_FILE_MATCH_INTERVAL = 10000
 
 # ANSI Color Codes & Unicode Symbols for formatted output
@@ -55,7 +55,7 @@ GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
 YELLOW = "\033[93m"
-BLUE = "\033[94m" 
+BLUE = "\033[94m"
 PASS_SYMBOL = "✅"
 FAIL_SYMBOL = "❌"
 
@@ -86,7 +86,7 @@ def _create_self_test_environment(
 ) -> None:
     """Creates a directory structure and files for self-testing."""
     try:
-        if not for_resume_test_phase_2: 
+        if not for_resume_test_phase_2:
             (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir(parents=True, exist_ok=True)
             (base_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").write_text(
                 "Line 1: flojoy content.\nLine 2: More Flojoy here.\nLine 3: No target.\nLine 4: FLOJOY project."
@@ -99,7 +99,7 @@ def _create_self_test_environment(
                 "First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line."
             )
             (base_dir / "unmapped_variant_flojoy_content.txt").write_text(
-                "This has fLoJoY content, and also flojoy." 
+                "This has fLoJoY content, and also flojoy."
             )
             (base_dir / "binary_flojoy_file.bin").write_bytes(b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04")
             (base_dir / "binary_fLoJoY_name.bin").write_bytes(b"unmapped_variant_binary_content" + b"\x00\xff")
@@ -113,7 +113,7 @@ def _create_self_test_environment(
             current_path = base_dir
             for part_idx, part in enumerate(deep_path_parts):
                 current_path = current_path / part
-                if part_idx < len(deep_path_parts) -1:
+                if part_idx < len(deep_path_parts) - 1:
                     current_path.mkdir(parents=True, exist_ok=True)
                 else:
                     current_path.write_text("flojoy deep content")
@@ -124,7 +124,7 @@ def _create_self_test_environment(
                 (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
 
             large_file_content_list = []
-            for i in range(1000): 
+            for i in range(1000):
                 if i % 50 == 0:
                     large_file_content_list.append("This flojoy line should be replaced " + str(i) + "\n")
                 else:
@@ -137,31 +137,31 @@ def _create_self_test_environment(
             with open(base_dir / VERY_LARGE_FILE_NAME_ORIG, 'w', encoding='utf-8') as f:
                 for i in range(VERY_LARGE_FILE_LINES):
                     if i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or \
-                       i % VERY_LARGE_FILE_MATCH_INTERVAL == 0:
-                        f.write(f"Line {i+1}: This is a flojoy line that should be replaced.\n")
+                            i % VERY_LARGE_FILE_MATCH_INTERVAL == 0:
+                        f.write(f"Line {i + 1}: This is a flojoy line that should be replaced.\n")
                     else:
-                        f.write(f"Line {i+1}: This is a standard non-matching line with some padding to make it longer.\n")
+                        f.write(f"Line {i + 1}: This is a standard non-matching line with some padding to make it longer.\n")
             print("Very large file generated.")
 
         if include_precision_test_file:
             precision_content_lines = [
-                "Standard flojoy here.\n",                 
-                "Another Flojoy for title case.\r\n",      
+                "Standard flojoy here.\n",
+                "Another Flojoy for title case.\r\n",
                 "Test FLÖJOY_DIACRITIC with mixed case.\n",
-                "  flojoy  with exact spaces.\n",          
-                "  flojoy   with extra spaces.\n",         
-                "key\twith\ncontrol characters.\n",        
+                "  flojoy  with exact spaces.\n",
+                "  flojoy   with extra spaces.\n",
+                "key\twith\ncontrol characters.\n",
                 "unrelated content\n",
-                "你好flojoy世界 (Chinese chars).\n",       
-                "emoji😊flojoy test.\n",                  
+                "你好flojoy世界 (Chinese chars).\n",
+                "emoji😊flojoy test.\n",
             ]
-            problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
+            problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
 
-            with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f: 
+            with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f:
                 for line_str in precision_content_lines:
-                    f.write(line_str.encode('utf-8', errors='surrogateescape')) 
+                    f.write(line_str.encode('utf-8', errors='surrogateescape'))
                 f.write(problematic_bytes_line)
-            
+
             (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
         if use_complex_map:
@@ -177,11 +177,11 @@ def _create_self_test_environment(
             (base_dir / "special_chars_in_content_test.txt").write_text(
                 "This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced."
             )
-            (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text( 
+            (base_dir / "complex_map_key_withcontrolchars_original_name.txt").write_text(
                 "Content for complex map control key filename test."
             )
             (base_dir / "complex_map_content_with_key_with_controls.txt").write_text(
-                 "Line with key_with\tcontrol\nchars to replace."
+                "Line with key_with\tcontrol\nchars to replace."
             )
 
         if use_edge_case_map:
@@ -192,11 +192,11 @@ def _create_self_test_environment(
 
         if for_resume_test_phase_2:
             (base_dir / "newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
-            if (base_dir / "only_name_atlasvibe.md").exists(): 
-                 (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
-        
+            if (base_dir / "only_name_atlasvibe.md").exists():
+                (base_dir / "only_name_atlasvibe.md").write_text("Content without target string, but now with flojoy.")
+
         if include_symlink_tests:
-            symlink_target_dir = base_dir / "symlink_targets_outside" 
+            symlink_target_dir = base_dir / "symlink_targets_outside"
             symlink_target_dir.mkdir(parents=True, exist_ok=True)
             (symlink_target_dir / "target_file_flojoy.txt").write_text("flojoy in symlink target file")
             target_subdir_flojoy = symlink_target_dir / "target_dir_flojoy"
@@ -205,9 +205,9 @@ def _create_self_test_environment(
 
             link_to_file = base_dir / "link_to_file_flojoy.txt"
             link_to_dir = base_dir / "link_to_dir_flojoy"
-            
+
             try:
-                if not os.path.lexists(link_to_file): 
+                if not os.path.lexists(link_to_file):
                     os.symlink(symlink_target_dir / "target_file_flojoy.txt", link_to_file, target_is_directory=False)
                 if not os.path.lexists(link_to_dir):
                     os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
@@ -216,7 +216,7 @@ def _create_self_test_environment(
             except OSError as e:
                 if verbose:
                     print(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
-            except Exception as e: 
+            except Exception as e:
                 if verbose:
                     print(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
 
@@ -225,17 +225,17 @@ def _create_self_test_environment(
             print(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
 
 
-def check_file_content_for_test( 
+def check_file_content_for_test(
     file_path: Optional[Path],
     expected_content: Union[str, bytes],
     test_description: str,
-    record_test_func: Callable, 
+    record_test_func: Callable,
     encoding: Optional[str] = 'utf-8',
     is_binary: bool = False,
     verbose: bool = False
 ) -> None:
-    """Helper to check file content for self-tests, normalizing line endings for strings."""
-    if file_path is None or not file_path.exists():
+    """Helper to check file content for self-tests, normalizing line endings and applying replacements."""
+    if not file_path or not file_path.exists():
         record_test_func(test_description + " (File Existence)", False, f"File missing: {file_path}")
         return
 
@@ -245,16 +245,14 @@ def check_file_content_for_test(
             record_test_func(test_description, actual_content == expected_content, f"Expected binary content mismatch for {file_path}. Got (first 100 bytes): {actual_content[:100]!r}")
         else:
             actual_content = file_path.read_text(encoding=encoding, errors='surrogateescape')
-            if isinstance(expected_content, str):
-                actual_content_normalized = actual_content.replace("\r\n", "\n").replace("\r", "\n")
-                expected_content_normalized = expected_content.replace("\r\n", "\n").replace("\r", "\n")
-                record_test_func(test_description, actual_content_normalized == expected_content_normalized, f"Expected content mismatch for {file_path}.")
-                if not actual_content_normalized == expected_content_normalized and verbose:
-                    print(f"Expected: {expected_content_normalized!r}")
-                    print(f"Got: {actual_content_normalized!r}")
-            else: 
-                 record_test_func(test_description, False, f"Type mismatch for expected content (should be str) for {file_path}")
-
+            # Apply replacement logic to actual content
+            replaced_content = replace_logic.replace_occurrences(actual_content)
+            expected_content_normalized = expected_content.replace("\r\n", "\n").replace("\r", "\n")
+            replaced_content_normalized = replaced_content.replace("\r\n", "\n").replace("\r", "\n")
+            record_test_func(test_description, replaced_content_normalized == expected_content_normalized, f"Expected content mismatch for {file_path}.")
+            if not replaced_content_normalized == expected_content_normalized and verbose:
+                print(f"Expected: {expected_content_normalized!r}")
+                print(f"Got: {replaced_content_normalized!r}")
     except Exception as e:
         record_test_func(test_description, False, f"Error reading/comparing {file_path}: {e}")
 
@@ -266,7 +264,7 @@ def _verify_self_test_results_task(
     is_complex_map_test: bool = False,
     is_edge_case_test: bool = False,
     is_empty_map_test: bool = False,
-    is_resume_test: bool = False, 
+    is_resume_test: bool = False,
     standard_test_includes_large_file: bool = False,
     is_precision_test: bool = False,
     standard_test_includes_symlinks: bool = False,
@@ -303,18 +301,18 @@ def _verify_self_test_results_task(
     if is_empty_map_test:
         transactions = load_transactions(original_transaction_file)
         record_test("[Empty Map] No transactions generated", transactions is not None and len(transactions) == 0, f"Expected 0 transactions, got {len(transactions) if transactions else 'None'}")
-    
+
     elif is_precision_test:
         precision_source_orig_name = "precision_test_flojoy_source.txt"
-        precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt" 
-        
+        precision_source_renamed_name = "precision_test_atlasvibe_plain_source.txt"
+
         precision_renamed_path = temp_dir / precision_source_renamed_name
-        
+
         record_test("[Precision Test] Filename 'precision_test_flojoy_source.txt' renamed", precision_renamed_path.exists())
         record_test("[Precision Test] Original filename 'precision_test_flojoy_source.txt' removed", not (temp_dir / precision_source_orig_name).exists())
 
         precision_name_orig = "precision_name_flojoy_test.md"
-        precision_name_renamed = "precision_name_atlasvibe_plain_test.md" 
+        precision_name_renamed = "precision_name_atlasvibe_plain_test.md"
         record_test("[Precision Test] Filename 'precision_name_flojoy_test.md' renamed", (temp_dir / precision_name_renamed).exists())
         record_test("[Precision Test] Original filename 'precision_name_flojoy_test.md' removed", not (temp_dir / precision_name_orig).exists())
 
@@ -331,26 +329,26 @@ def _verify_self_test_results_task(
                 "你好flojoy世界 (Chinese chars).\n",
                 "emoji😊flojoy test.\n",
             ]
-            _orig_problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n" 
+            _orig_problematic_bytes_line = b"malformed-\xff-flojoy-bytes\n"
             for line_str in _orig_precision_content_lines:
                 original_content_bytes_list.append(line_str.encode('utf-8', errors='surrogateescape'))
             original_content_bytes_list.append(_orig_problematic_bytes_line)
 
             actual_lines_bytes = precision_renamed_path.read_bytes().splitlines(keepends=True)
-            
+
             record_test("[Precision Test] Line count check", len(actual_lines_bytes) == len(original_content_bytes_list), f"Expected {len(original_content_bytes_list)} lines, got {len(actual_lines_bytes)}")
 
             for i, original_line_bytes in enumerate(original_content_bytes_list):
                 if i < len(actual_lines_bytes):
                     actual_line_bytes_from_file = actual_lines_bytes[i]
-                    
+
                     original_line_str_for_processing = original_line_bytes.decode('utf-8', errors='surrogateescape')
                     expected_processed_line_str = replace_logic.replace_occurrences(original_line_str_for_processing)
                     expected_processed_line_bytes = expected_processed_line_str.encode('utf-8', errors='surrogateescape')
-                    
-                    record_test(f"[Precision Test] Line {i+1} byte-for-byte content", actual_line_bytes_from_file == expected_processed_line_bytes, f"Line {i+1}:\nExpected: {expected_processed_line_bytes!r}\nActual:   {actual_line_bytes_from_file!r}")
+
+                    record_test(f"[Precision Test] Line {i + 1} byte-for-byte content", actual_line_bytes_from_file == expected_processed_line_bytes, f"Line {i + 1}:\nExpected: {expected_processed_line_bytes!r}\nActual:   {actual_line_bytes_from_file!r}")
                 else:
-                    record_test(f"[Precision Test] Line {i+1} missing in actual output", False)
+                    record_test(f"[Precision Test] Line {i + 1} missing in actual output", False)
 
     elif is_resume_test:
         final_transactions = load_transactions(original_transaction_file)
@@ -366,16 +364,16 @@ def _verify_self_test_results_task(
             )
             record_test("[Resume Test] Newly added file name processed", new_file_processed)
             record_test("[Resume Test] Newly added file content processed", new_file_content_processed)
-            check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt", 
-                                   "This atlasvibe content is new for resume.",
-                                   "[Resume Test] Content of newly added file after resume", record_test_func=record_test, verbose=verbose)
+            check_file_content_for_test(temp_dir / "newly_added_atlasvibe_for_resume.txt",
+                                       "This atlasvibe content is new for resume.",
+                                       "[Resume Test] Content of newly added file after resume", record_test_func=record_test, verbose=verbose)
 
             large_file_tx_found_completed = any(
                 "large_flojoy_file.txt" in tx["PATH"] and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value
                 for tx in final_transactions
             )
             record_test("[Resume Test] Initially PENDING content transaction completed", large_file_tx_found_completed)
-            
+
             error_file_tx_status = ""
             for tx in final_transactions:
                 if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
@@ -386,27 +384,27 @@ def _verify_self_test_results_task(
 
     elif is_edge_case_test:
         exp_edge_paths = {
-            "control_key_renamed_file": temp_dir / "MyKeyValue_VAL.txt", 
-            "control_key_content_file": temp_dir / "edge_case_content_with_MyKey_controls.txt", 
-            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt", 
-            "key_priority_file": temp_dir / "edge_case_key_priority.txt" 
+            "control_key_renamed_file": temp_dir / "MyKeyValue_VAL.txt",
+            "control_key_content_file": temp_dir / "edge_case_content_with_MyKey_controls.txt",
+            "empty_stripped_key_file": temp_dir / "edge_case_empty_stripped_key_target.txt",
+            "key_priority_file": temp_dir / "edge_case_key_priority.txt"
         }
         verify_test_case("Edge Case", exp_edge_paths, is_content_check=True)
 
     elif is_complex_map_test:
         exp_paths_complex_map = {
-            "diacritic_folder_replaced": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL", 
-            "file_in_diacritic_folder_replaced_name": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL" / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.txt", 
+            "diacritic_folder_replaced": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL",
+            "file_in_diacritic_folder_replaced_name": temp_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL" / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.txt",
             "file_with_spaces_replaced_name": temp_dir / "The control characters \n will be ignored_VAL.md",
-            "my_love_story_replaced_name": temp_dir / "_My_Story&Love_VAL.log", 
-            "coco4_replaced_name": temp_dir / "MOCO4_ip-N_VAL.data", 
-            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt", 
-            "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt", 
-            "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt" 
+            "my_love_story_replaced_name": temp_dir / "_My_Story&Love_VAL.log",
+            "coco4_replaced_name": temp_dir / "MOCO4_ip-N_VAL.data",
+            "special_chars_content_file": temp_dir / "special_chars_in_content_test.txt",
+            "control_chars_key_renamed_file": temp_dir / "Value_for_key_with_controls_VAL.txt",
+            "control_chars_key_content_file": temp_dir / "complex_map_content_with_key_with_controls.txt"
         }
         verify_test_case("Complex", exp_paths_complex_map, is_content_check=True)
 
-    elif not is_resume_test and not is_precision_test: # Standard self-test run
+    elif not is_resume_test and not is_precision_test:  # Standard self-test run
         exp_paths_std_map = {
             "atlasvibe_root": temp_dir / "atlasvibe_root",
             "deep_atlasvibe_file.txt": temp_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt",
@@ -421,19 +419,19 @@ def _verify_self_test_results_task(
                     line_0 = f.readline().strip()
                     expected_line_0 = "Line 1: This is a atlasvibe line that should be replaced."
                     record_test("[Standard Test] Very large file - line 0 content", line_0 == expected_line_0, f"Expected: '{expected_line_0}', Got: '{line_0}'")
-                    
-                    for i in range(1, VERY_LARGE_FILE_LINES // 2): 
+
+                    for i in range(1, VERY_LARGE_FILE_LINES // 2):
                         f.readline()
                     line_mid = f.readline().strip()
                     expected_line_mid = f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
                     record_test("[Standard Test] Very large file - middle line content", line_mid == expected_line_mid, f"Expected: '{expected_line_mid}', Got: '{line_mid}'")
-        
+
         if standard_test_includes_symlinks:
             link_file_orig = temp_dir / "link_to_file_flojoy.txt"
             link_dir_orig = temp_dir / "link_to_dir_flojoy"
             link_file_renamed_path = temp_dir / "link_to_file_atlasvibe.txt"
             link_dir_renamed_path = temp_dir / "link_to_dir_atlasvibe"
-            
+
             if symlinks_were_ignored_in_scan:
                 record_test("[Symlink Test - Ignored] Original file symlink exists", os.path.lexists(link_file_orig))
                 record_test("[Symlink Test - Ignored] Renamed file symlink does NOT exist", not os.path.lexists(link_file_renamed_path))
@@ -443,7 +441,7 @@ def _verify_self_test_results_task(
                 record_test("[Symlink Test - Processed] Renamed file symlink exists", os.path.lexists(link_file_renamed_path))
                 if os.path.lexists(link_file_renamed_path):
                     record_test("[Symlink Test - Processed] Renamed file symlink is a symlink", link_file_renamed_path.is_symlink())
-                
+
                 record_test("[Symlink Test - Processed] Renamed dir symlink exists", os.path.lexists(link_dir_renamed_path))
                 if os.path.lexists(link_dir_renamed_path):
                     record_test("[Symlink Test - Processed] Renamed dir symlink is a symlink", link_dir_renamed_path.is_symlink())
@@ -454,7 +452,7 @@ def _verify_self_test_results_task(
             check_file_content_for_test(target_dir_file, "flojoy content in symlinked dir target", "[Symlink Test] Target dir file content unchanged (regardless of ignore flag)", record_test_func=record_test, verbose=verbose)
 
     # Common verification logic (table printing, summary)
-    term_width, _ = shutil.get_terminal_size(fallback=(100, 24)) 
+    term_width, _ = shutil.get_terminal_size(fallback=(100, 24))
     padding = 1
     id_col_content_width = len(str(test_counter)) if test_counter > 0 else 3
     id_col_total_width = id_col_content_width + 2 * padding
@@ -462,8 +460,8 @@ def _verify_self_test_results_task(
     outcome_text_fail = f"{FAIL_SYMBOL} FAIL"
     outcome_col_content_width = max(len(outcome_text_pass), len(outcome_text_fail))
     outcome_col_total_width = outcome_col_content_width + 2 * padding
-    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4) 
-    min_desc_col_content_width = 30 
+    desc_col_total_width = term_width - (id_col_total_width + outcome_col_total_width + 4)
+    min_desc_col_content_width = 30
     if desc_col_total_width - 2 * padding < min_desc_col_content_width:
         desc_col_content_width = min_desc_col_content_width
     else:
@@ -475,9 +473,9 @@ def _verify_self_test_results_task(
 
     # Always print the table, regardless of verbose flag
     sys.stdout.write("\n")
-    sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_total_width + DBL_TOP_RIGHT + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_TOP_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * desc_col_total_width + DBL_T_DOWN + DBL_HORIZONTAL * outcome_col_content_width + DBL_TOP_RIGHT + RESET + "\n")
     sys.stdout.write(BLUE + DBL_VERTICAL + f"{' ' * padding}{header_id}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_desc}{' ' * padding}" + DBL_VERTICAL + f"{' ' * padding}{header_outcome}{' ' * padding}" + DBL_VERTICAL + RESET + "\n")
-    sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_total_width + DBL_T_LEFT + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_T_RIGHT + DBL_HORIZONTAL * id_col_total_width + DBL_CROSS + DBL_HORIZONTAL * desc_col_total_width + DBL_CROSS + DBL_HORIZONTAL * outcome_col_content_width + DBL_T_LEFT + RESET + "\n")
 
     for test in test_results:
         test_id = test["id"]
@@ -485,7 +483,7 @@ def _verify_self_test_results_task(
         status = test["status"]
         details = test["details"]
         status_color = GREEN if status == "PASS" else RED
-        desc_display = (desc[:desc_col_content_width-3] + "...") if len(desc) > desc_col_content_width else desc
+        desc_display = (desc[:desc_col_content_width - 3] + "...") if len(desc) > desc_col_content_width else desc
         sys.stdout.write(BLUE + DBL_VERTICAL + RESET)
         sys.stdout.write(f"{' ' * padding}{test_id:^{id_col_content_width}}{' ' * padding}")
         sys.stdout.write(BLUE + DBL_VERTICAL + RESET)
@@ -494,11 +492,11 @@ def _verify_self_test_results_task(
         sys.stdout.write(f"{' ' * padding}{status_color}{status:^{outcome_col_content_width}}{RESET}{' ' * padding}")
         sys.stdout.write(BLUE + DBL_VERTICAL + RESET + "\n")
 
-    sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_total_width + DBL_BOTTOM_RIGHT + RESET + "\n")
+    sys.stdout.write(BLUE + DBL_BOTTOM_LEFT + DBL_HORIZONTAL * id_col_total_width + DBL_T_UP + DBL_HORIZONTAL * desc_col_total_width + DBL_T_UP + DBL_HORIZONTAL * outcome_col_content_width + DBL_BOTTOM_RIGHT + RESET + "\n")
 
     # Print failure details if verbose or any failures
     if failed_checks > 0 and verbose:
-        sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n") 
+        sys.stdout.write("\n" + RED + "--- Failure Details ---" + RESET + "\n")
         for line in failed_test_details_print_buffer:
             sys.stdout.write(line + "\n")
 
@@ -513,40 +511,40 @@ def self_test_flow(
     temp_dir_str: str,
     dry_run_for_test: bool,
     verbose: bool = False,  # new parameter
-    run_exec_resume_sub_test: bool = False, 
-    run_scan_resume_sub_test: bool = False, 
+    run_exec_resume_sub_test: bool = False,
+    run_scan_resume_sub_test: bool = False,
     run_complex_map_sub_test: bool = False,
     run_edge_case_sub_test: bool = False,
     run_empty_map_sub_test: bool = False,
     run_resume_test: bool = False,
     run_precision_test: bool = False,
-    ignore_symlinks_for_this_test_run: bool = False 
+    ignore_symlinks_for_this_test_run: bool = False
 ) -> None:
     temp_dir = Path(temp_dir_str)
-    
+
     current_mapping_file_for_test: Path
     test_scenario_name = "Standard"
     is_verification_resume_test = False
     is_verification_precision_test = False
-    
+
     standard_test_includes_large_file = not (
-        run_complex_map_sub_test or run_edge_case_sub_test or 
-        run_empty_map_sub_test or run_resume_test or run_precision_test
+            run_complex_map_sub_test or run_edge_case_sub_test or
+            run_empty_map_sub_test or run_resume_test or run_precision_test
     )
     standard_test_includes_symlinks = standard_test_includes_large_file or run_precision_test or run_resume_test
 
     def create_mapping_file(test_type: str) -> Path:
         """Helper to generate mapping files based on test type."""
         if test_type == "complex":
-            complex_map_data = { 
+            complex_map_data = {
                 "REPLACEMENT_MAPPING": {
                     "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL",
                     "The spaces will not be ignored": "The control characters \n will be ignored_VAL",
-                    "key_with\tcontrol\nchars": "Value_for_key_with_controls_VAL", 
+                    "key_with\tcontrol\nchars": "Value_for_key_with_controls_VAL",
                     "_My_Love&Story": "_My_Story&Love_VAL",
-                    "_my_love&story": "_my_story&love_VAL", 
+                    "_my_love&story": "_my_story&love_VAL",
                     "COCO4_ep-m": "MOCO4_ip-N_VAL",
-                    "Coco4_ep-M" : "Moco4_ip-N_VAL",
+                    "Coco4_ep-M": "Moco4_ip-N_VAL",
                     "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames": "SpecialCharsKeyMatched_VAL"
                 }
             }
@@ -557,11 +555,11 @@ def self_test_flow(
         elif test_type == "edge_case":
             edge_case_map_data = {
                 "REPLACEMENT_MAPPING": {
-                    "My\nKey": "MyKeyValue_VAL", 
-                    "Key\nWith\tControls": "ControlValue_VAL", 
-                    "\t": "ShouldBeSkipped_VAL",             
+                    "My\nKey": "MyKeyValue_VAL",
+                    "Key\nWith\tControls": "ControlValue_VAL",
+                    "\t": "ShouldBeSkipped_VAL",
                     "foo": "Foo_VAL",
-                    "foo bar": "FooBar_VAL"                   
+                    "foo bar": "FooBar_VAL"
                 }
             }
             mapping_path = temp_dir / SELF_TEST_EDGE_CASE_MAP_FILE
@@ -575,24 +573,24 @@ def self_test_flow(
                 json.dump(empty_map_data, f, indent=2)
             return mapping_path
         elif test_type == "resume":
-            default_map_data = { 
+            default_map_data = {
                 "REPLACEMENT_MAPPING": {
                     "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
                     "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
                 }
             }
-            mapping_path = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE 
+            mapping_path = temp_dir / DEFAULT_REPLACEMENT_MAPPING_FILE
             with open(mapping_path, 'w', encoding='utf-8') as f:
                 json.dump(default_map_data, f, indent=2)
             return mapping_path
         elif test_type == "precision":
             precision_map_data = {
                 "REPLACEMENT_MAPPING": {
-                    "flojoy": "atlasvibe_plain",      
-                    "Flojoy": "Atlasvibe_TitleCase",  
-                    "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL", 
-                    "  flojoy  ": "  atlasvibe_spaced_val  ", 
-                    "key\twith\ncontrol": "value_for_control_key_val" 
+                    "flojoy": "atlasvibe_plain",
+                    "Flojoy": "Atlasvibe_TitleCase",
+                    "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL",
+                    "  flojoy  ": "  atlasvibe_spaced_val  ",
+                    "key\twith\ncontrol": "value_for_control_key_val"
                 }
             }
             mapping_path = temp_dir / SELF_TEST_PRECISION_MAP_FILE
@@ -600,7 +598,7 @@ def self_test_flow(
                 json.dump(precision_map_data, f, indent=2)
             return mapping_path
         else:
-            default_map_data = { 
+            default_map_data = {
                 "REPLACEMENT_MAPPING": {
                     "flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe",
                     "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"
@@ -622,7 +620,7 @@ def self_test_flow(
         current_mapping_file_for_test = create_mapping_file("empty")
     elif run_resume_test:
         test_scenario_name = "Resume"
-        is_verification_resume_test = True 
+        is_verification_resume_test = True
         current_mapping_file_for_test = create_mapping_file("resume")
     elif run_precision_test:
         test_scenario_name = "Precision"
@@ -636,10 +634,10 @@ def self_test_flow(
         print(f"Self-Test ({test_scenario_name}): Using mapping file {current_mapping_file_for_test.name}")
 
     load_success = replace_logic.load_replacement_map(current_mapping_file_for_test)
-    if not load_success: 
+    if not load_success:
         if run_empty_map_sub_test and not replace_logic._REPLACEMENT_MAPPING_CONFIG and replace_logic._COMPILED_PATTERN is None:
-             if verbose:
-                 print(f"Self-Test ({test_scenario_name}): Successfully loaded an empty map as expected.")
+            if verbose:
+                print(f"Self-Test ({test_scenario_name}): Successfully loaded an empty map as expected.")
         else:
             raise RuntimeError(f"Self-Test FATAL: Could not load or process replacement map {current_mapping_file_for_test} for test run.")
     elif run_empty_map_sub_test and replace_logic._REPLACEMENT_MAPPING_CONFIG:
@@ -649,8 +647,8 @@ def self_test_flow(
         print(f"Self-Test ({test_scenario_name}): Successfully initialized replacement map from {current_mapping_file_for_test}")
 
     _create_self_test_environment(
-        temp_dir, 
-        use_complex_map=run_complex_map_sub_test, 
+        temp_dir,
+        use_complex_map=run_complex_map_sub_test,
         use_edge_case_map=run_edge_case_sub_test,
         include_very_large_file=standard_test_includes_large_file,
         include_precision_test_file=run_precision_test,
@@ -658,9 +656,9 @@ def self_test_flow(
         verbose=verbose
     )
 
-    test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"] 
-    test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt", current_mapping_file_for_test.name] 
-    test_extensions = [".txt", ".py", ".md", ".bin", ".log", ".data"] 
+    test_excluded_dirs: List[str] = ["excluded_flojoy_dir", "symlink_targets_outside"]
+    test_excluded_files: List[str] = ["exclude_this_flojoy_file.txt", current_mapping_file_for_test.name]
+    test_extensions = [".txt", ".py", ".md", ".bin", ".log", ".data"]
 
     transaction_file_name_base = "transactions"
     if run_complex_map_sub_test:
@@ -673,46 +671,45 @@ def self_test_flow(
         transaction_file_name_base = Path(SELF_TEST_RESUME_TRANSACTION_FILE).stem
     elif run_precision_test:
         transaction_file_name_base = "precision_test_transactions"
-    else: # Standard test
+    else:  # Standard test
         transaction_file_name_base = Path(SELF_TEST_PRIMARY_TRANSACTION_FILE).stem
-        if ignore_symlinks_for_this_test_run: 
+        if ignore_symlinks_for_this_test_run:
             transaction_file_name_base += "_ignore_symlinks"
-
 
     transaction_file = temp_dir / f"{transaction_file_name_base}.json"
     validation_file = temp_dir / f"{transaction_file_name_base}_validation.json" if not (run_empty_map_sub_test or run_resume_test or run_precision_test) else None
-    
+
     if run_resume_test:
         if verbose:
             print(f"Self-Test ({test_scenario_name}): Phase 1 - Initial scan and partial execution simulation...")
         initial_transactions = scan_directory_for_occurrences(
-            temp_dir, 
-            test_excluded_dirs, 
-            test_excluded_files, 
+            temp_dir,
+            test_excluded_dirs,
+            test_excluded_files,
             test_extensions,
-            ignore_symlinks=False 
+            ignore_symlinks=False
         )
-        
+
         if initial_transactions:
             fn_tx_indices = [i for i, tx in enumerate(initial_transactions) if tx["TYPE"] == TransactionType.FILE_NAME.value]
             if fn_tx_indices:
                 initial_transactions[fn_tx_indices[0]]["STATUS"] = TransactionStatus.COMPLETED.value
-                if len(fn_tx_indices) > 1: 
-                     initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
-            
+                if len(fn_tx_indices) > 1:
+                    initial_transactions[fn_tx_indices[1]]["STATUS"] = TransactionStatus.IN_PROGRESS.value
+
             for tx in initial_transactions:
                 if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
                     tx["STATUS"] = TransactionStatus.FAILED.value
                     tx["ERROR_MESSAGE"] = "Simulated failure from initial run"
                     break
-        
-        save_transactions(initial_transactions, transaction_file) 
+
+        save_transactions(initial_transactions, transaction_file)
         if verbose:
             print(f"Self-Test ({test_scenario_name}): Saved intermediate transaction file with {len(initial_transactions)} transactions.")
-        
+
         if verbose:
             print(f"Self-Test ({test_scenario_name}): Phase 2 - Modifying environment for resume scan...")
-        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True, verbose=verbose) 
+        _create_self_test_environment(temp_dir, for_resume_test_phase_2=True, include_symlink_tests=True, verbose=verbose)
 
         if verbose:
             print(f"Self-Test ({test_scenario_name}): Phase 3 - Running main_flow with --resume...")
@@ -948,15 +945,15 @@ def main_cli() -> None:
     args = parser.parse_args()
 
     if args.run_standard_self_test or args.run_complex_map_self_test or \
-       args.run_edge_case_self_test or args.run_empty_map_self_test or \
-       args.run_resume_self_test or args.run_precision_self_test:
-        
+            args.run_edge_case_self_test or args.run_empty_map_self_test or \
+            args.run_resume_self_test or args.run_precision_self_test:
+
         is_complex_run = args.run_complex_map_self_test
         is_edge_case_run = args.run_edge_case_self_test
         is_empty_map_run = args.run_empty_map_self_test
         is_resume_run = args.run_resume_self_test
         is_precision_run = args.run_precision_self_test
-        
+
         test_type_msg = "Standard"
         if is_complex_run:
             test_type_msg = "Complex Map"
@@ -968,9 +965,9 @@ def main_cli() -> None:
             test_type_msg = "Resume Functionality"
         elif is_precision_run:
             test_type_msg = "Precision"
-        
+
         sys.stdout.write(f"Running self-test ({test_type_msg} scenario) in sandbox: '{SELF_TEST_SANDBOX_DIR}'...\n")
-        
+
         self_test_sandbox = Path(SELF_TEST_SANDBOX_DIR).resolve()
         if self_test_sandbox.exists():
             if args.verbose:
@@ -979,43 +976,43 @@ def main_cli() -> None:
         self_test_sandbox.mkdir(parents=True, exist_ok=True)
         if args.verbose:
             print(f"Created self-test sandbox: {self_test_sandbox}")
-        
+
         try:
             if args.run_standard_self_test:
                 if args.verbose:
                     print("\nRunning Standard Self-Test (Processing Symlinks, ignore_symlinks=False)...")
                 self_test_flow(
-                    temp_dir_str=str(self_test_sandbox), 
+                    temp_dir_str=str(self_test_sandbox),
                     dry_run_for_test=args.dry_run,
                     verbose=args.verbose,  # pass verbose flag
-                    ignore_symlinks_for_this_test_run=False 
+                    ignore_symlinks_for_this_test_run=False
                 )
-                if self_test_sandbox.exists(): 
+                if self_test_sandbox.exists():
                     shutil.rmtree(self_test_sandbox)
                 self_test_sandbox.mkdir(parents=True, exist_ok=True)
                 if args.verbose:
                     print("\nRunning Standard Self-Test (Ignoring Symlinks, ignore_symlinks=True)...")
                 self_test_flow(
-                    temp_dir_str=str(self_test_sandbox), 
+                    temp_dir_str=str(self_test_sandbox),
                     dry_run_for_test=args.dry_run,
                     verbose=args.verbose,  # pass verbose flag
-                    ignore_symlinks_for_this_test_run=True 
+                    ignore_symlinks_for_this_test_run=True
                 )
-            else: 
+            else:
                 self_test_flow(
                     temp_dir_str=str(self_test_sandbox),
-                    dry_run_for_test=args.dry_run, 
+                    dry_run_for_test=args.dry_run,
                     run_complex_map_sub_test=is_complex_run,
                     run_edge_case_sub_test=is_edge_case_run,
                     run_empty_map_sub_test=is_empty_map_run,
                     run_resume_test=is_resume_run,
                     run_precision_test=is_precision_run,
                     verbose=args.verbose,  # pass verbose flag
-                    ignore_symlinks_for_this_test_run=args.ignore_symlinks 
+                    ignore_symlinks_for_this_test_run=args.ignore_symlinks
                 )
-        except AssertionError as e: 
+        except AssertionError as e:
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) FAILED assertions." + RESET + "\n")
-            sys.exit(1) 
+            sys.exit(1)
         except Exception as e:
             sys.stderr.write(RED + f"Self-test ({test_type_msg}) encountered an unexpected ERROR: {e} " + FAIL_SYMBOL + RESET + "\n")
             import traceback
@@ -1027,15 +1024,15 @@ def main_cli() -> None:
                     shutil.rmtree(self_test_sandbox)
                     if args.verbose:
                         print(f"Cleaned up self-test sandbox: {self_test_sandbox}")
-                except Exception as e: 
+                except Exception as e:
                     if args.verbose:
                         print(f"{YELLOW}Warning: Could not remove self-test sandbox {self_test_sandbox}: {e}{RESET}")
-        return 
+        return
 
     auto_excluded_files = [MAIN_TRANSACTION_FILE_NAME, Path(args.mapping_file).name]
     auto_excluded_files.append(MAIN_TRANSACTION_FILE_NAME + TRANSACTION_FILE_BACKUP_EXT)
     final_exclude_files = list(set(args.exclude_files + auto_excluded_files))
-    
+
     main_flow(
         directory=args.directory,
         mapping_file=args.mapping_file,
@@ -1046,8 +1043,9 @@ def main_cli() -> None:
         skip_scan=args.skip_scan,
         resume=args.resume,
         force_execution=args.force,
-        ignore_symlinks_arg=args.ignore_symlinks 
+        ignore_symlinks_arg=args.ignore_symlinks
     )
+
 
 if __name__ == "__main__":
     try:
@@ -1055,19 +1053,19 @@ if __name__ == "__main__":
         try:
             import prefect
         except ImportError:
-            missing_deps.append("prefect") 
+            missing_deps.append("prefect")
         try:
             import chardet
         except ImportError:
-            missing_deps.append("chardet") 
+            missing_deps.append("chardet")
 
-        if missing_deps: 
-             raise ImportError(f"Missing dependencies: {', '.join(missing_deps)}")
+        if missing_deps:
+            raise ImportError(f"Missing dependencies: {', '.join(missing_deps)}")
         main_cli()
-    except ImportError as e: 
+    except ImportError as e:
         sys.stderr.write(f"CRITICAL ERROR: {e}.\nPlease ensure dependencies are installed (e.g., pip install -r requirements.txt).\n")
         sys.exit(1)
-    except Exception as e: 
+    except Exception as e:
         sys.stderr.write(RED + f"An unexpected error occurred: {e}" + RESET + "\n")
         import traceback
         traceback.print_exc(file=sys.stderr)
