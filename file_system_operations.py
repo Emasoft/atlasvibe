@@ -484,7 +484,14 @@ def _execute_content_line_transaction(
     path_cache: Dict[str, Path],
     dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str]]:
-    """Executes a single file content line modification transaction."""
+    """
+    Executes a single file content line modification transaction.
+    NOTE: This function reads the entire file into memory to modify a line.
+    For very large files, this could be memory-intensive. NOTES.md mentions
+    a "line-by-line approach to reduce memory usage" for files > 10MB,
+    which might imply line-by-line processing during execution as well.
+    The current scan phase is line-by-line.
+    """
     original_relative_path_str = tx_item["PATH"]
     line_number_1_indexed = tx_item["LINE_NUMBER"]
     original_line_content = tx_item["ORIGINAL_LINE_CONTENT"]
@@ -534,8 +541,10 @@ def _execute_content_line_transaction(
         lines[line_number_1_indexed - 1] = new_line_content
 
         try:
-            with open(current_abs_path, 'wb') as f:
+            with open(current_abs_path, 'wb') as f: # Open in binary write mode
                 for line in lines:
+                    # Encode each line using the original file encoding.
+                    # This preserves the original line endings as they were part of 'line'.
                     f.write(line.encode(file_encoding, errors='surrogateescape'))
         except Exception as write_err:
             return TransactionStatus.FAILED, f"Error writing updated content to file {current_abs_path}: {write_err}"
@@ -563,13 +572,23 @@ def execute_all_transactions(
     path_cache: Dict[str, Path] = {}
 
     def execution_sort_key(tx: Dict[str, Any]):
-        type_order = {TransactionType.FOLDER_NAME.value: 0, TransactionType.FILE_NAME.value: 1, TransactionType.FILE_CONTENT_LINE.value: 2}
+        type_order = {
+            TransactionType.FOLDER_NAME.value: 0,
+            TransactionType.FILE_NAME.value: 1,
+            TransactionType.FILE_CONTENT_LINE.value: 2
+        }
+        tx_type = tx["TYPE"]
         path_depth = tx["PATH"].count('/')
-        line_num = tx.get("LINE_NUMBER", 0)
-        if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-            return (type_order[tx["TYPE"]], -path_depth, tx["PATH"])
-        else:
-            return (type_order[tx["TYPE"]], tx["PATH"], line_num)
+    
+        if tx_type == TransactionType.FOLDER_NAME.value:
+            # Folders: shallowest depth first for renames, then by path string.
+            return (type_order[tx_type], path_depth, tx["PATH"])
+        elif tx_type == TransactionType.FILE_NAME.value:
+            # Files: shallowest depth first (after folders), then by path string.
+            return (type_order[tx_type], path_depth, tx["PATH"])
+        else:  # FILE_CONTENT_LINE
+            # Content: after all renames, by path string, then by line number.
+            return (type_order[tx_type], tx["PATH"], tx.get("LINE_NUMBER", 0))
 
     transactions.sort(key=execution_sort_key)
 
