@@ -188,7 +188,7 @@ def scan_directory_for_occurrences(
     ignore_symlinks: bool,
     resume_from_transactions: Optional[List[Dict[str, Any]]] = None
 ) -> List[Dict[str, Any]]:
-
+    """Scans a directory for occurrences of strings to be replaced."""
     processed_transactions: List[Dict[str, Any]]
     existing_transaction_ids: Set[Tuple[str, str, int]] = set()
 
@@ -211,6 +211,10 @@ def scan_directory_for_occurrences(
     sorted_items = sorted(all_items_for_scan, key=str)
 
     for item_path in sorted_items:
+        # Diagnostic for VERY_LARGE_FILE_NAME_ORIG
+        if item_path.name == VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG:
+            print(f"DIAGNOSTIC: Encountered '{VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG}' at path: {item_path}")
+
         try:
             relative_path_str = str(item_path.relative_to(root_dir)).replace("\\", "/")
         except ValueError:
@@ -225,17 +229,21 @@ def scan_directory_for_occurrences(
 
         try:
             # For file exclusion, if it's a symlink, we check the symlink path itself, not its target.
-            path_to_check_exclusion = item_path 
-            if path_to_check_exclusion.resolve(strict=False) in abs_excluded_files: # Resolve for comparison with resolved abs_excluded_files
+            path_to_check_exclusion_resolved = item_path.resolve(strict=False)
+            if path_to_check_exclusion_resolved in abs_excluded_files:
                 continue
-        except (OSError, FileNotFoundError): # Handle cases where resolving item_path fails (e.g. broken symlink)
-            item_path_str = str(item_path) # Compare string paths
-            if any(str(ex_file.resolve(strict=False)) == item_path_str for ex_file in abs_excluded_files): # Compare against resolved excluded files
+            if item_path in abs_excluded_files:
+                 continue
+
+        except (OSError, FileNotFoundError):
+            item_path_str_abs = str(item_path.absolute())
+            if any(str(ex_file.resolve(strict=False)) == item_path_str_abs for ex_file in abs_excluded_files):
                 continue
 
+
         if replace_occurrences(original_name) != original_name:
-            is_dir = item_path.is_dir() and not item_path.is_symlink()
-            tx_type_val = TransactionType.FOLDER_NAME.value if is_dir else TransactionType.FILE_NAME.value
+            is_dir_for_tx = item_path.is_dir() and not item_path.is_symlink()
+            tx_type_val = TransactionType.FOLDER_NAME.value if is_dir_for_tx else TransactionType.FILE_NAME.value
 
             current_tx_id_tuple = (relative_path_str, tx_type_val, 0)
 
@@ -248,14 +256,26 @@ def scan_directory_for_occurrences(
                     "ERROR_MESSAGE": None
                 })
                 existing_transaction_ids.add(current_tx_id_tuple)
+                if item_path.name == VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG:
+                     print(f"DIAGNOSTIC: Created FILE_NAME transaction for '{VERY_LARGE_FILE_NAME_ORIG_FOR_DIAG}'")
+
 
         if item_path.is_file() and not item_path.is_symlink():
             if is_likely_binary_file(item_path):
+                if item_path.name == "gb18030_flojoy_file.txt": # Diagnostic for GB18030
+                    print(f"DIAGNOSTIC: '{item_path.name}' was classified as BINARY by is_likely_binary_file.")
                 continue
+            
+            if item_path.name == "gb18030_flojoy_file.txt":  # Diagnostic for GB18030
+                print(f"DIAGNOSTIC: '{item_path.name}' was NOT classified as binary. Proceeding to content scan.")
+
             if normalized_extensions and item_path.suffix.lower() not in normalized_extensions:
                 continue
 
             file_encoding = get_file_encoding(item_path)
+            if item_path.name == "gb18030_flojoy_file.txt": # Diagnostic for GB18030
+                 print(f"DIAGNOSTIC: Encoding for '{item_path.name}' detected as: {file_encoding}")
+
             try:
                 with open(item_path, 'r', encoding=file_encoding, errors='surrogateescape', newline=None) as f:
                     for line_num_0_indexed, line_content in enumerate(f):
