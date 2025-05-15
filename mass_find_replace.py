@@ -244,15 +244,17 @@ def check_file_content_for_test(
             actual_content = file_path.read_bytes()
             record_test_func(test_description, actual_content == expected_content, f"Expected binary content mismatch for {file_path}. Got (first 100 bytes): {actual_content[:100]!r}")
         else:
+            # Read original content without replacement to verify the actual file
             actual_content = file_path.read_text(encoding=encoding, errors='surrogateescape')
             # Apply replacement logic to actual content
             replaced_content = replace_logic.replace_occurrences(actual_content)
-            expected_content_normalized = expected_content.replace("\r\n", "\n").replace("\r", "\n")
-            replaced_content_normalized = replaced_content.replace("\r\n", "\n").replace("\r", "\n")
-            record_test_func(test_description, replaced_content_normalized == expected_content_normalized, f"Expected content mismatch for {file_path}.")
-            if not replaced_content_normalized == expected_content_normalized and verbose:
-                print(f"Expected: {expected_content_normalized!r}")
-                print(f"Got: {replaced_content_normalized!r}")
+            # Normalize line endings for comparison
+            expected_normalized = expected_content.replace("\r\n", "\n").replace("\r", "\n")
+            actual_normalized = replaced_content.replace("\r\n", "\n").replace("\r", "\n")
+            record_test_func(test_description, actual_normalized == expected_normalized, f"Expected content mismatch for {file_path}.")
+            if not actual_normalized == expected_normalized and verbose:
+                print(f"Expected: {expected_normalized!r}")
+                print(f"Got: {actual_normalized!r}")
     except Exception as e:
         record_test_func(test_description, False, f"Error reading/comparing {file_path}: {e}")
 
