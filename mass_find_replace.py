@@ -270,8 +270,12 @@ def _create_self_test_environment(
                 if verbose:
                     logger(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
     except Exception as e:
-        if verbose:
-            logger(f"{YELLOW}Error creating self-test environment: {e}{RESET}")
+        # Always log the error, regardless of verbose, as it's a critical failure for test setup.
+        # Use logger_func which adapts to Prefect context or print.
+        logger_func(f"{RED}CRITICAL ERROR during self-test environment creation: {e}{RESET}")
+        # Print traceback to standard error for better visibility outside Prefect UI
+        traceback.print_exc(file=sys.stderr)
+        raise # Re-raise the exception to make the test fail clearly at this stage
 
 
 def check_file_content_for_test(
