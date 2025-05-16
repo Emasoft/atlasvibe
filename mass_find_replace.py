@@ -30,7 +30,7 @@
 # - Ensured `dry_run_for_test` is correctly passed and used, especially for resume tests.
 # - Excluded more transaction and mapping files from being processed during self-tests.
 # - Prefect flow calls `with_options(task_runner=None)` to avoid issues with default concurrent task runners in some environments for self-tests.
-#
+# - Added import for traceback for proper error handling.
 
 #
 # Copyright (c) 2024 Emasoft
@@ -48,6 +48,7 @@ import textwrap
 import json
 import os
 import operator
+import traceback # Add this import
 
 from prefect import task, flow, get_run_logger
 import prefect.runtime
