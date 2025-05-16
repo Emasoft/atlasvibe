@@ -413,31 +413,31 @@ def _execute_rename_transaction(
     """Executes a single file or folder rename transaction."""
     original_relative_path_str = tx_item["PATH"]
     original_name = tx_item["ORIGINAL_NAME"]
-    is_symlink_transaction = False # Helper flag for debug
+    is_symlink_debug_target = False # Helper flag for debug
+
+    # Broader condition for debug prints related to symlinks
+    if "link_to_" in original_relative_path_str or "link_to_" in original_name:
+        is_symlink_debug_target = True
+        print(f"DEBUG_SYMLINK_ATTENTION: Processing transaction for '{original_relative_path_str}' (name: '{original_name}')")
 
     try:
         current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache)
-        # Check if the original item (before potential rename) was a symlink
-        # This requires checking the original path on disk if current_abs_path might already reflect a parent rename
-        # For simplicity in debugging, let's check if the original_relative_path_str corresponds to known test symlinks
-        if original_relative_path_str in ["link_to_file_flojoy.txt", "link_to_dir_flojoy", "link_to_file_atlasvibe.txt", "link_to_dir_atlasvibe"]:
-            is_symlink_transaction = True
-            print(f"DEBUG_SYMLINK: Executing rename for: {original_relative_path_str}")
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: current_abs_path: {current_abs_path}, lexists: {os.path.lexists(current_abs_path)}, is_symlink: {current_abs_path.is_symlink() if os.path.lexists(current_abs_path) else 'N/A'}")
 
     except FileNotFoundError:
-        if is_symlink_transaction:
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: Parent path for '{original_relative_path_str}' not found.")
         return TransactionStatus.SKIPPED, f"Parent path for '{original_relative_path_str}' not found (likely due to prior failed rename or path resolution issue)."
     except Exception as e:
-        if is_symlink_transaction:
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: Error resolving current path for '{original_relative_path_str}': {e}")
         return TransactionStatus.FAILED, f"Error resolving current path for '{original_relative_path_str}': {e}"
 
     if not os.path.lexists(current_abs_path):
         potential_new_name = replace_occurrences(original_name)
         potential_new_path = current_abs_path.with_name(potential_new_name)
-        if is_symlink_transaction:
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: Original item '{current_abs_path}' not found by lexists.")
             print(f"DEBUG_SYMLINK: Potential new path '{potential_new_path}', lexists: {os.path.lexists(potential_new_path)}")
         if os.path.lexists(potential_new_path):
@@ -447,12 +447,12 @@ def _execute_rename_transaction(
 
     new_name = replace_occurrences(original_name)
     if new_name == original_name:
-        if is_symlink_transaction:
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: Name unchanged for '{original_name}'. Skipping.")
         return TransactionStatus.SKIPPED, "Name unchanged after replacement."
 
     new_abs_path = current_abs_path.with_name(new_name)
-    if is_symlink_transaction:
+    if is_symlink_debug_target:
         print(f"DEBUG_SYMLINK: original_name: {original_name}, new_name: {new_name}")
         print(f"DEBUG_SYMLINK: current_abs_path for rename: {current_abs_path}")
         print(f"DEBUG_SYMLINK: new_abs_path for rename: {new_abs_path}")
@@ -463,7 +463,7 @@ def _execute_rename_transaction(
         return TransactionStatus.FAILED, "Simulated permission error for self-test"
 
     if dry_run:
-        if is_symlink_transaction:
+        if is_symlink_debug_target:
             print(f"DEBUG_SYMLINK: [DRY RUN] Would rename '{current_abs_path}' to '{new_abs_path}'")
         path_translation_map[original_relative_path_str] = new_name
         path_cache[original_relative_path_str] = new_abs_path
@@ -475,20 +475,20 @@ def _execute_rename_transaction(
             _ensure_within_sandbox(new_abs_path, root_dir, f"rename destination for {new_name}")
 
             if os.path.lexists(new_abs_path):
-                if is_symlink_transaction:
+                if is_symlink_debug_target:
                     print(f"DEBUG_SYMLINK: Target path '{new_abs_path}' for new name already exists. Skipping.")
                 return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists."
 
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: Attempting os.rename('{current_abs_path}', '{new_abs_path}')")
             os.rename(current_abs_path, new_abs_path)
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: os.rename successful. New path lexists: {os.path.lexists(new_abs_path)}")
             path_translation_map[original_relative_path_str] = new_name
             path_cache[original_relative_path_str] = new_abs_path
             return TransactionStatus.COMPLETED, None
         except MockableRetriableError as mre:
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: MockableRetriableError on attempt {attempt + 1}: {mre}")
             if attempt < MAX_RENAME_RETRIES:
                 time.sleep(RETRY_DELAY_SECONDS)
@@ -496,11 +496,11 @@ def _execute_rename_transaction(
             else:
                 return TransactionStatus.FAILED, f"Retriable error persisted after {MAX_RENAME_RETRIES + 1} attempts: {mre}"
         except SandboxViolationError as sve:
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: SandboxViolationError: {sve}")
             return TransactionStatus.FAILED, f"SandboxViolation: {sve}"
         except OSError as e:
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: OSError on attempt {attempt + 1} for os.rename('{current_abs_path}', '{new_abs_path}'): {e}")
             if attempt < MAX_RENAME_RETRIES:
                 time.sleep(RETRY_DELAY_SECONDS)
@@ -508,10 +508,10 @@ def _execute_rename_transaction(
             else:
                 return TransactionStatus.FAILED, f"Failed after {MAX_RENAME_RETRIES + 1} attempts: {e}"
         except Exception as e:
-            if is_symlink_transaction:
+            if is_symlink_debug_target:
                 print(f"DEBUG_SYMLINK: Unexpected error during rename: {e}")
             return TransactionStatus.FAILED, f"Unexpected error during rename: {e}"
-    if is_symlink_transaction:
+    if is_symlink_debug_target:
         print(f"DEBUG_SYMLINK: Rename failed after all attempts for '{current_abs_path}'.")
     return TransactionStatus.FAILED, "Unknown error after rename attempts."
 
