@@ -285,7 +285,7 @@ def _create_self_test_environment(
                     _log_info("Symlinks created (or already existed) for testing.")
             except OSError as e:
                 if verbose:
-                    logger(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
+                    _log_warning(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
             except Exception as e: # Catch other potential errors like AttributeError if os.symlink is not available
                 if verbose:
                     _log_warning(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
