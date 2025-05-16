@@ -124,7 +124,26 @@ def _create_self_test_environment(
             is_in_flow_context = True
     except AttributeError:
         is_in_flow_context = False
-    logger = get_run_logger() if is_in_flow_context else print # Use Prefect logger if in flow context
+    
+    _logger_instance = get_run_logger() if is_in_flow_context else print
+
+    def _log_info(msg: str):
+        if is_in_flow_context:
+            _logger_instance.info(msg)
+        else:
+            _logger_instance(msg) # print(msg)
+
+    def _log_warning(msg: str):
+        if is_in_flow_context:
+            _logger_instance.warning(msg)
+        else:
+            _logger_instance(msg) # print(msg)
+
+    def _log_error(msg: str):
+        if is_in_flow_context:
+            _logger_instance.error(msg)
+        else:
+            _logger_instance(msg) # print(msg)
 
     try:
         if not for_resume_test_phase_2:
@@ -162,7 +181,7 @@ def _create_self_test_environment(
             try:
                 (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
             except Exception as e:
-                logger(f"Warning: Could not write GB18030 file: {e}. Using fallback.")
+                _log_warning(f"Warning: Could not write GB18030 file: {e}. Using fallback.")
                 (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
 
             large_file_content_list = [] # This is the 1000-line "large_file", not "very_large_file"
@@ -183,7 +202,7 @@ def _create_self_test_environment(
                         f.write(f"Line {i + 1}: This is a flojoy line that should be replaced.\n")
                     else:
                         f.write(f"Line {i + 1}: This is a standard non-matching line with some padding to make it longer.\n")
-            logger("Very large file generated.")
+            _log_info("Very large file generated.")
 
         if include_precision_test_file:
             precision_content_lines = [
@@ -263,17 +282,17 @@ def _create_self_test_environment(
                 if not os.path.lexists(link_to_dir):
                     os.symlink(symlink_target_dir / "target_dir_flojoy", link_to_dir, target_is_directory=True)
                 if verbose:
-                    logger("Symlinks created (or already existed) for testing.")
+                    _log_info("Symlinks created (or already existed) for testing.")
             except OSError as e:
                 if verbose:
                     logger(f"{YELLOW}Warning: Could not create symlinks for testing (OSError: {e}). Symlink tests may be skipped or fail.{RESET}")
             except Exception as e: # Catch other potential errors like AttributeError if os.symlink is not available
                 if verbose:
-                    logger(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
+                    _log_warning(f"{YELLOW}Warning: An unexpected error occurred creating symlinks: {e}. Symlink tests may be affected.{RESET}")
     except Exception as e:
         # Always log the error, regardless of verbose, as it's a critical failure for test setup.
         # Use logger_func which adapts to Prefect context or print.
-        logger_func(f"{RED}CRITICAL ERROR during self-test environment creation: {e}{RESET}")
+        _log_error(f"{RED}CRITICAL ERROR during self-test environment creation: {e}{RESET}")
         # Print traceback to standard error for better visibility outside Prefect UI
         traceback.print_exc(file=sys.stderr)
         raise # Re-raise the exception to make the test fail clearly at this stage
