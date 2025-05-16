@@ -194,7 +194,7 @@ def _create_self_test_environment(
             (base_dir / SELF_TEST_ERROR_FILE_BASENAME).write_text("This file will cause a rename error during tests.")
 
         if include_very_large_file:
-            logger(f"Generating very large file: {base_dir / VERY_LARGE_FILE_NAME_ORIG}...")
+            _log_info(f"Generating very large file: {base_dir / VERY_LARGE_FILE_NAME_ORIG}...")
             with open(base_dir / VERY_LARGE_FILE_NAME_ORIG, 'w', encoding='utf-8') as f:
                 for i in range(VERY_LARGE_FILE_LINES):
                     if i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or \
