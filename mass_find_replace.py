@@ -49,9 +49,11 @@ import json
 import os
 import operator
 import traceback # Add this import
+import logging # For controlling Prefect log levels
 
 from prefect import task, flow, get_run_logger
 import prefect.runtime
+from prefect.settings import PREFECT_LOGGING_LEVEL, PREFECT_LOGGING_SERVER_LEVEL
 
 from file_system_operations import (
     scan_directory_for_occurrences,
@@ -839,7 +841,23 @@ def _verify_self_test_results_task(
 
 
     if failed_checks > 0:
+        total_tests_run = passed_checks + failed_checks
+        pass_percentage = (passed_checks / total_tests_run * 100) if total_tests_run > 0 else 0
+        summary_message = f"Self-Test Summary: {passed_checks}/{total_tests_run} tests passed ({pass_percentage:.2f}%)."
+
+        logger.info(RED + summary_message + RESET)
+        if verbose:
+            logger.info("\n" + RED + "--- Failure Details ---" + RESET)
+            for detail_line in failed_test_details_print_buffer:
+                for sub_line in detail_line.splitlines():
+                    logger.info(RED + sub_line + RESET)
         raise AssertionError(f"Self-test failed with {failed_checks} assertion(s). Review output for details.")
+    else:
+        total_tests_run = passed_checks + failed_checks
+        pass_percentage = (passed_checks / total_tests_run * 100) if total_tests_run > 0 else 0
+        summary_message = f"Self-Test Summary: {passed_checks}/{total_tests_run} tests passed ({pass_percentage:.2f}%)."
+
+        logger.info(GREEN + summary_message + RESET)
     return True
 
 
@@ -1257,7 +1275,7 @@ def main_cli() -> None:
     parser.add_argument("--force", "--yes", "-y", action="store_true",
                         help="Force execution without confirmation prompt (use with caution).")
     parser.add_argument("--verbose", action="store_true",
-                        help="Enable verbose output during self-tests.")
+                        help="Enable verbose output during self-tests and general operation, including Prefect INFO logs.")
 
     self_test_group = parser.add_argument_group('Self-Test Options')
     self_test_group.add_argument("--self-test", dest="run_standard_self_test", action="store_true",

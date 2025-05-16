@@ -391,16 +391,28 @@ def update_transaction_status_in_list(
 def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_desc: str):
     """Checks if a path is within the sandbox_root. Raises SandboxViolationError if not."""
     try:
-        resolved_path = path_to_check.resolve()
-        resolved_sandbox_root = sandbox_root.resolve()
-        if not resolved_path.is_relative_to(resolved_sandbox_root) and resolved_path != resolved_sandbox_root:
+        # Use .absolute() instead of .resolve() to check the path of the link itself,
+        # not its target, for operations like renaming symlinks.
+        resolved_path_to_check = path_to_check.absolute()
+        resolved_sandbox_root = sandbox_root.resolve() # sandbox_root is expected to be a real directory
+
+        # Check if resolved_path_to_check is the same as or a subpath of resolved_sandbox_root
+        if resolved_path_to_check == resolved_sandbox_root:
+            return # Path is the sandbox root itself
+
+        # Path.is_relative_to() correctly checks if resolved_path_to_check is under resolved_sandbox_root
+        if not resolved_path_to_check.is_relative_to(resolved_sandbox_root):
             raise SandboxViolationError(
-                f"Operation '{operation_desc}' on path '{resolved_path}' is outside the sandbox '{resolved_sandbox_root}'."
+                f"Operation '{operation_desc}' on path '{resolved_path_to_check}' is outside the sandbox '{resolved_sandbox_root}'."
             )
-    except (OSError, FileNotFoundError) as e:
+    except (OSError, FileNotFoundError) as e: # Errors from .absolute() or .resolve()
         raise SandboxViolationError(
-            f"Could not resolve path '{path_to_check}' for sandbox check during operation '{operation_desc}'. Error: {e}"
+            f"Could not resolve/absolutize path '{path_to_check}' or sandbox root '{sandbox_root}' for sandbox check during operation '{operation_desc}'. Error: {e}"
         ) from e
+    except ValueError: # Raised by is_relative_to if paths are not hierarchically related (e.g. different drives)
+        raise SandboxViolationError(
+            f"Operation '{operation_desc}' on path '{resolved_path_to_check}' is not hierarchically within the sandbox '{resolved_sandbox_root}' (e.g., different drive or unrelated path)."
+        )
 
 
 def _execute_rename_transaction(
