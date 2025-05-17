@@ -136,16 +136,16 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
     for item_path in root_dir.rglob("*"):
         is_excluded = False
         try:
-            # Resolve the item's path to a canonical absolute path for comparison.
-            current_item_resolved_path = item_path.resolve(strict=False)
+            # Get the absolute path of the item without resolving the symlink
+            current_item_abs_path = item_path.absolute()
     
             for excluded_dir_resolved in resolved_abs_excluded_dir_paths:
-                if current_item_resolved_path == excluded_dir_resolved:
+                if current_item_abs_path == excluded_dir_resolved:
                     is_excluded = True
                     break
                 try:
-                    # Check if current_item_resolved_path is a child of excluded_dir_resolved
-                    current_item_resolved_path.relative_to(excluded_dir_resolved)
+                    # Check if current_item_abs_path is a child of excluded_dir_resolved
+                    current_item_abs_path.relative_to(excluded_dir_resolved)
                     # If no ValueError, it is a subpath (or same path, handled above)
                     is_excluded = True
                     break
@@ -153,14 +153,14 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
                     # Not a subpath of this particular excluded_dir_resolved
                     continue
                 except Exception as e_rel: # Catch other potential errors from relative_to
-                    print(f"Warning: Error checking relative path for {current_item_resolved_path} against {excluded_dir_resolved}: {e_rel}")
+                    print(f"Warning: Error checking relative path for {current_item_abs_path} against {excluded_dir_resolved}: {e_rel}")
                     pass
                 
             if is_excluded:
                 continue # Skip this item_path
     
-        except (OSError, FileNotFoundError) as e: # Errors during item_path.resolve()
-            print(f"Warning: Could not resolve path for {item_path} during exclusion check: {e}. Skipping this item.")
+        except (OSError, FileNotFoundError) as e: # Errors during item_path.absolute()
+            print(f"Warning: Could not get absolute path for {item_path} during exclusion check: {e}. Skipping this item.")
             is_excluded = True # Treat as excluded to be safe
         
         if is_excluded: # Double check, though continue should have been hit
