@@ -243,24 +243,10 @@ def scan_directory_for_occurrences(
 
         original_name = item_path.name
 
-        try:
-            # Resolve item_path to a canonical absolute path for exclusion checks.
-            item_path_resolved_for_exclusion = item_path.resolve(strict=False)
-            
-            # abs_excluded_files contains Path objects that are absolute and resolved.
-            if item_path_resolved_for_exclusion in abs_excluded_files:
-                continue
-        except (OSError, FileNotFoundError) as e:
-            # This might happen for broken symlinks where item_path.resolve() fails.
-            # As a fallback, try to compare using absolute string paths if resolve failed.
-            try:
-                item_path_abs_str = str(item_path.absolute()) # Get absolute path of the link/file itself
-                # Compare against string representations of pre-resolved excluded file paths.
-                if any(str(ex_file) == item_path_abs_str for ex_file in abs_excluded_files):
-                    continue
-            except (OSError, FileNotFoundError): # If .absolute() also fails
-                 print(f"Warning: Could not resolve or get absolute path for {item_path} during file exclusion check. Skipping.")
-                 continue
+        # Check if the item's name is in the excluded_files list
+        if item_path.name in [ex_file.name for ex_file in abs_excluded_files]:
+            print(f"Ignoring excluded file (per --exclude-files): {item_path}")
+            continue
 
 
         if replace_occurrences(original_name) != original_name:
