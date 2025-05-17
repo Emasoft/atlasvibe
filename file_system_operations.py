@@ -112,11 +112,12 @@ def is_likely_binary_file(file_path: Path, sample_size: int = 1024) -> bool:
         return True
 
 
-def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
+def _walk_for_scan(root_dir: Path, excluded_dirs: List[str], ignore_symlinks: bool) -> Iterator[Path]:
     """
     Yields paths for scanning, respecting exclusions.
     Exclusion is based on the item's own path, not its target's path if it's a symlink.
     An item is excluded if its absolute path matches an excluded directory or is a subpath of it.
+    If ignore_symlinks is True, symlinks are skipped.
     """
     resolved_abs_excluded_dir_paths: List[Path] = []
     for d_str in excluded_dirs:
@@ -134,6 +135,10 @@ def _walk_for_scan(root_dir: Path, excluded_dirs: List[str]) -> Iterator[Path]:
             resolved_abs_excluded_dir_paths.append(root_dir.joinpath(d_str).absolute())
     
     for item_path in root_dir.rglob("*"):
+        if ignore_symlinks and item_path.is_symlink():
+            print(f"Ignoring symlink (per --ignore-symlinks): {item_path}")
+            continue
+
         is_excluded = False
         try:
             # Get the absolute path of the item without resolving the symlink
