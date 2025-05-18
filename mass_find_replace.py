@@ -9,6 +9,16 @@
 # - `main_flow` passes skip flags and timeout to `execute_all_transactions`.
 # - `main_flow` now explicitly checks and reports if BINARY_MATCHES_LOG_FILE was created and has content.
 # - Robust binary detection (using `isbinary` library) and RTF text extraction integrated via file_system_operations.
+# - Migrated self-test suite to a separate `tests` directory using pytest.
+# - Removed `--self-test-*` CLI arguments and related internal flow logic.
+# - `main_cli` auto-exclusion list simplified.
+# - `main_flow` resume logic uses `abs_root_dir` and mtime check buffer removed.
+
+#
+# Copyright (c) 2024 Emasoft
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
 
 import argparse
 from pathlib import Path
@@ -44,7 +54,8 @@ def main_flow(
     dry_run: bool, skip_scan: bool, resume: bool, force_execution: bool, 
     ignore_symlinks_arg: bool, use_gitignore: bool, custom_ignore_file_path: Optional[str],
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
-    timeout_minutes: int
+    timeout_minutes: int,
+    quiet_mode: bool # Added for controlling print statements
 ):
     logger = get_run_logger()
     abs_root_dir = Path(directory).resolve(strict=False) 
@@ -56,10 +67,8 @@ def main_flow(
         return
 
     try:
-        if not any(abs_root_dir.iterdir()): # Check if dir is physically empty
-            # This check is before ignore patterns are applied.
-            # scan_directory_for_occurrences will return [] if it's effectively empty post-ignores.
-            logger.info(f"Target directory '{abs_root_dir}' appears empty. Nothing to do.")
+        if not any(abs_root_dir.iterdir()):
+            logger.info(f"Target directory '{abs_root_dir}' is empty. Nothing to do.")
             return
     except FileNotFoundError: 
         logger.error(f"Error: Root directory '{abs_root_dir}' disappeared before empty check."); return
@@ -73,7 +82,7 @@ def main_flow(
         logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic."); return
     if not replace_logic._RAW_REPLACEMENT_MAPPING: 
         logger.warning(f"{YELLOW}Warning: Map {map_file_path} is empty. No string replacements will occur based on map keys.{RESET}")
-    elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING : # Should not happen if _RAW_REPLACEMENT_MAPPING is populated
+    elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING :
          logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns."); return
     
     txn_json_path = abs_root_dir / MAIN_TRANSACTION_FILE_NAME
@@ -88,7 +97,7 @@ def main_flow(
                     raw_patterns_list.extend(p for p in (line.strip() for line in f_git) if p and not p.startswith('#'))
             except Exception as e:
                 logger.warning(f"{YELLOW}Warning: Could not read .gitignore file {gitignore_path}: {e}{RESET}")
-        else: logger.info(".gitignore not found in root, skipping.")
+        elif not quiet_mode: logger.info(".gitignore not found in root, skipping.") # Only log if not quiet
     if custom_ignore_file_path:
         custom_ignore_abs_path = Path(custom_ignore_file_path).resolve()
         if custom_ignore_abs_path.is_file():
@@ -107,7 +116,7 @@ def main_flow(
             logger.error(f"Error compiling combined ignore patterns: {e}")
             final_ignore_spec = None 
 
-    if not dry_run and not force_execution and not resume:
+    if not dry_run and not force_execution and not resume and not quiet_mode: # Suppress prompt if quiet
         print(f"{BLUE}--- Proposed Operation ---{RESET}")
         print(f"Root Directory: {abs_root_dir}")
         print(f"Replacement Map File: {map_file_path}")
@@ -177,14 +186,24 @@ def main_flow(
     else: 
         logger.info(f"Using existing transaction file: '{txn_json_path}'. Ensure it was generated with compatible settings.")
 
-    # If all operations that could use the map are skipped, and map is empty, no string-based changes will happen.
-    # This check is slightly different from the one before scan, as here we *have* a transaction list (or skipped scan).
-    if not replace_logic._RAW_REPLACEMENT_MAPPING and \
-       (skip_file_renaming or skip_folder_renaming) and \
-       skip_content:
-        logger.info("Map is empty and all relevant operations (renaming, content) are skipped or would rely on an empty map. No string-based changes will occur.")
-        # We might still have transactions if --skip-scan was used with an old non-empty map's transaction file.
-        # The execution phase will then skip them based on the current empty map.
+    if not replace_logic._RAW_REPLACEMENT_MAPPING and not skip_file_renaming and not skip_folder_renaming and not skip_content:
+        # This condition means map is empty, and all operations that *could* have happened without a map
+        # (e.g. if we had extension-based renaming not tied to map keys) are also effectively disabled or not applicable.
+        logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
+        # If transactions exist (e.g. from --skip-scan with an old non-empty map's transaction file),
+        # they will be skipped by execute_all_transactions if the current map is empty and they rely on it.
+        # Or if skip flags prevent them.
+        # If all skip flags are true, we'd have exited earlier.
+        # So, if we reach here with an empty map, it implies that any loaded transactions
+        # would likely be skipped if they depended on map keys.
+        # If the map is empty, `replace_occurrences` returns the input string, so transactions
+        # that would have been created due to a map match won't be.
+        # The only transactions that *could* exist with an empty map are those not dependent on map keys
+        # (e.g. a hypothetical "change all .txt to .md" - not implemented).
+        # Given current logic, an empty map means no string replacements.
+        if not (skip_file_renaming and skip_folder_renaming and skip_content): # If some ops are still enabled
+             logger.info("Map is empty. No string-based replacements will occur.")
+
 
     txns_for_exec = load_transactions(txn_json_path)
     if not txns_for_exec: 
@@ -263,7 +282,9 @@ def main_cli() -> None:
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
               args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
               args.use_gitignore, args.custom_ignore_file,
-              args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, args.timeout)
+              args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, args.timeout,
+              args.quiet # Pass quiet mode to main_flow
+             )
 
 if __name__ == "__main__":
     try:

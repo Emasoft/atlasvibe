@@ -117,8 +117,10 @@ dependencies = [
     { name = "debugpy" },
     { name = "fastapi" },
     { name = "griffe" },
+    { name = "isbinary" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "pathspec" },
     { name = "plotly" },
     { name = "prefect" },
     { name = "pydantic" },
@@ -126,6 +128,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "requests" },
+    { name = "striprtf" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "watchfiles" },
 ]
@@ -154,8 +157,10 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.104.1,<0.112.0" },
     { name = "griffe" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.26.0,<0.27.0" },
+    { name = "isbinary", specifier = ">=1.0.1" },
     { name = "numpy", specifier = ">=1.23.0,<2.0.0" },
     { name = "pandas", specifier = ">=1.4.0,<3.0.0" },
+    { name = "pathspec", specifier = ">=0.12.1" },
     { name = "pillow", marker = "extra == 'dev'", specifier = ">=9.0.0,<11.0.0" },
     { name = "plotly", specifier = ">=5.0.0,<6.0.0" },
     { name = "prefect", specifier = ">=3.1.4" },
@@ -172,6 +177,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0,<0.4.0" },
     { name = "scikit-image", marker = "extra == 'dev'", specifier = ">=0.19.0,<0.24.0" },
     { name = "scipy", marker = "extra == 'dev'", specifier = ">=1.7.0,<2.0.0" },
+    { name = "striprtf", specifier = ">=0.0.29" },
     { name = "typer", extras = ["all"], marker = "extra == 'dev'" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.23.2,<0.24.0" },
     { name = "watchfiles", specifier = ">=0.21.0,<0.22.0" },
@@ -268,11 +274,11 @@ wheels = [
 
 [[package]]
 name = "chardet"
-version = "5.2.0"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f3/0d/f7b6ab21ec75897ed80c17d79b15951a719226b9fababf1e40ea74d69079/chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7", size = 2069618, upload-time = "2023-08-01T19:23:02.662Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz", hash = "sha256:0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa", size = 1907771, upload-time = "2020-12-10T19:35:33.971Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970", size = 199385, upload-time = "2023-08-01T19:23:00.661Z" },
+    { url = "https://files.pythonhosted.org/packages/19/c7/fa589626997dd07bd87d9269342ccb74b1720384a4d739a1872bd84fbe68/chardet-4.0.0-py2.py3-none-any.whl", hash = "sha256:f864054d66fd9118f2e67044ac8981a54775ec5b67aed0441892edb553d21da5", size = 178743, upload-time = "2020-12-10T19:35:32.469Z" },
 ]
 
 [[package]]
@@ -761,6 +767,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f2/97/ebf4da567aa6827c909642694d71c9fcf53e5b504f2d96afea02718862f3/iniconfig-2.1.0.tar.gz", hash = "sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7", size = 4793, upload-time = "2025-03-19T20:09:59.721Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl", hash = "sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760", size = 6050, upload-time = "2025-03-19T20:10:01.071Z" },
+]
+
+[[package]]
+name = "isbinary"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "chardet" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/71/336828d1ed240b8545c8d59f7995779adef3d3aeb4905c655060e7ba9aaf/isbinary-1.0.1.tar.gz", hash = "sha256:86b8ebc9df64408a1a75592361d2181a77558d545f9c80cdb81b187e30add883", size = 6918, upload-time = "2022-05-22T13:18:19.532Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/0e/5dd7fdd048078f97b1e39dafd0f7ecc5b0173f79aaef2ac46942765fc7bb/isbinary-1.0.1-py3-none-any.whl", hash = "sha256:708c86e931dc9cf117b5ef44983237ff879a2657142b08854ed05b8b81c67ed5", size = 6923, upload-time = "2022-05-22T13:18:18.15Z" },
 ]
 
 [[package]]
@@ -1908,6 +1926,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/61/b5/6bceb93ff20bd7ca36e6f7c540581abb18f53130fabb30ba526e26fd819b/starlette-0.37.2.tar.gz", hash = "sha256:9af890290133b79fc3db55474ade20f6220a364a0402e0b556e7cd5e1e093823", size = 2843736, upload-time = "2024-03-05T16:16:54.267Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fd/18/31fa32ed6c68ba66220204ef0be798c349d0a20c1901f9d4a794e08c76d8/starlette-0.37.2-py3-none-any.whl", hash = "sha256:6fe59f29268538e5d0d182f2791a479a0c64638e6935d1c6989e63fb2699c6ee", size = 71908, upload-time = "2024-03-05T16:16:50.957Z" },
+]
+
+[[package]]
+name = "striprtf"
+version = "0.0.29"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/86/7154b7c625a3ff704581dab70c05389e1de90233b7a751f79f712c2ca0e9/striprtf-0.0.29.tar.gz", hash = "sha256:5a822d075e17417934ed3add6fc79b5fc8fb544fe4370b2f894cdd28f0ddd78e", size = 7533, upload-time = "2025-03-27T22:55:56.874Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/3e/1418afacc4aae04690cff282078f22620c89a99490499878ececc3021654/striprtf-0.0.29-py3-none-any.whl", hash = "sha256:0fc6a41999d015358d19627776b616424dd501ad698105c81d76734d1e14d91b", size = 7879, upload-time = "2025-03-27T22:55:55.977Z" },
 ]
 
 [[package]]

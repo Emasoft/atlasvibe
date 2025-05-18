@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Changelog:
-# - `is_likely_binary_file` replaced with `isbinary.is_binary_file` library.
+# - `is_likely_binary_file` replaced with `isbinary.is_binary_file`.
 # - RTF files are now explicitly checked: if `is_binary_file` says RTF is binary,
 #   we still attempt to extract text using `striprtf` for content scan.
 #   Content modification of RTF is still skipped to preserve formatting.
 # - `_execute_rename_transaction` & `_execute_content_line_transaction`:
 #   - Return retryable status for specific OSErrors.
 # - `execute_all_transactions`:
-#   - Refined retry loop logic for clarity and correctness with global timeout and indefinite retries.
-#   - Ensures `RETRY_LATER` items are only re-attempted after their `timestamp_next_retry`.
-#   - If `global_timeout_minutes == 0`, `max_overall_retry_attempts` is effectively ignored for loop termination.
+#   - Implements main loop for processing and retrying transactions with exponential backoff.
+#   - Respects global timeout and skip flags.
+# - Added `RETRYABLE_OS_ERRORNOS` for common retryable errors.
 
 import os
 import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any, Iterator, Set, Union 
+from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set 
 from enum import Enum
 import chardet 
 import time
@@ -244,6 +244,28 @@ def scan_directory_for_occurrences(
                             existing_transaction_ids.add(tx_id_tuple)
     return processed_transactions
 
+def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
+    backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
+    paths_to_try = [json_file_path, backup_path]
+    loaded_data = None
+    for path_to_try in paths_to_try:
+        if path_to_try.exists():
+            try:
+                with open(path_to_try, 'r', encoding='utf-8') as f:
+                    loaded_data = json.load(f)
+                if isinstance(loaded_data, list):
+                    return cast(List[Dict[str, Any]], loaded_data)
+                else:
+                    print(f"Warning: Invalid format in {path_to_try}. Expected a list.")
+                    loaded_data = None 
+            except json.JSONDecodeError as jde:
+                print(f"Warning: Failed to decode JSON from {path_to_try}: {jde}")
+            except Exception as e:
+                print(f"Warning: Failed to load transactions from {path_to_try}: {e}")
+    if loaded_data is None: 
+        print(f"Error: Could not load valid transactions from {json_file_path} or its backup.")
+    return None 
+
 def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
     if json_file_path.exists():
         try: shutil.copy2(json_file_path, json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT))
@@ -405,12 +427,14 @@ def execute_all_transactions(
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
+    # If timeout is 0, this effectively means retry indefinitely (or until max_overall_retry_attempts as a safety)
+    # If timeout > 0, max_overall_retry_attempts is a cap on how many full passes we do within that timeout.
     max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 
     current_overall_retry_attempt = 0
     
-    while True: # Main execution loop for retries
+    while True: 
         processed_in_this_pass = 0
-        items_still_requiring_retry = [] # Store tx_items that are still in RETRY_LATER or became RETRY_LATER
+        items_still_requiring_retry = [] 
 
         for tx_item in transactions:
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
@@ -421,29 +445,27 @@ def execute_all_transactions(
                (skip_content and tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value):
                 if current_status not in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by CLI option.")
-                    # This is a terminal state for this item, so it's "progress" in terms of resolution.
                     processed_in_this_pass +=1 
                 continue
             
             if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
                 continue 
 
-            # Prepare for current attempt
             if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: 
                 current_status = TransactionStatus.PENDING 
             
             if current_status == TransactionStatus.RETRY_LATER:
                 if tx_item.get("timestamp_next_retry", 0) > time.time():
-                    items_still_requiring_retry.append(tx_item) # Not yet time for this one
+                    items_still_requiring_retry.append(tx_item) 
                     continue 
-                else: # Time to retry
+                else: 
                     current_status = TransactionStatus.PENDING
             
             if resume and tx_item.get("STATUS") == TransactionStatus.FAILED.value and current_overall_retry_attempt == 0 :
                 print(f"Resuming FAILED tx as PENDING: {tx_id} ({tx_item.get('PATH','N/A')})")
                 current_status = TransactionStatus.PENDING
 
-            tx_item["STATUS"] = current_status.value # Update status in the list before processing attempt
+            tx_item["STATUS"] = current_status.value
 
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
@@ -467,7 +489,7 @@ def execute_all_transactions(
                 if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
                     retry_count = tx_item.get('retry_count', 0) 
                     base_delay_seconds = 5 
-                    max_backoff_seconds = 300 # Max 5 minutes for a single backoff
+                    max_backoff_seconds = 300 
                     backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds) 
                     tx_item['timestamp_next_retry'] = time.time() + backoff_seconds
                     print(f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count + 1}). Error: {err_msg_from_exec}")
@@ -479,54 +501,63 @@ def execute_all_transactions(
         
         current_overall_retry_attempt += 1
 
-        if not items_still_requiring_retry: # All items resolved (COMPLETED, FAILED, SKIPPED)
+        if not items_still_requiring_retry: 
             break 
         
-        # Check timeout conditions
         timed_out = False
         if global_timeout_minutes > 0 and (time.time() - execution_start_time) / 60 >= global_timeout_minutes:
             print(f"Global execution timeout of {global_timeout_minutes} minutes reached.")
             timed_out = True
         
-        # Check max retry passes (only if timeout is not indefinite)
-        max_retries_hit = False
+        max_retries_hit_for_timed_run = False
         if global_timeout_minutes != 0 and current_overall_retry_attempt >= max_overall_retry_attempts:
-            print(f"Warning: Max retry passes ({max_overall_retry_attempts}) reached.")
-            max_retries_hit = True
+            print(f"Warning: Max retry passes ({max_overall_retry_attempts}) reached for timed execution.")
+            max_retries_hit_for_timed_run = True
+        
+        # For indefinite timeout, max_overall_retry_attempts is a very high safeguard.
+        # If it's hit, it means something is likely wrong or taking extremely long.
+        # The loop should continue if items are still genuinely in RETRY_LATER and their backoff timers haven't expired.
+        # The primary exit for indefinite timeout should be when no more progress can be made.
+        if global_timeout_minutes == 0 and current_overall_retry_attempt >= max_overall_retry_attempts:
+             print(f"Warning: Indefinite timeout, but max retry passes ({max_overall_retry_attempts}) reached. This may indicate a persistent issue or very long backoffs.")
+             # Don't break here for indefinite timeout unless no progress is possible (checked later)
 
-        if timed_out or max_retries_hit:
-            failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached."
+
+        if timed_out or max_retries_hit_for_timed_run: # Only break if timed_out or (timed_run AND max_retries_hit)
+            failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached for timed execution."
             for tx_item_failed_retry in items_still_requiring_retry:
-                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: # Only update those still needing retry
+                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: 
                     update_transaction_status_in_list(transactions, tx_item_failed_retry["id"], TransactionStatus.FAILED, failure_reason)
             save_transactions(transactions, transactions_file_path)
             break
         
-        # If loop continues, and there are items to retry
         if items_still_requiring_retry:
             next_due_retry_timestamp = min(itx.get("timestamp_next_retry", float('inf')) for itx in items_still_requiring_retry)
             sleep_duration = max(0.1, next_due_retry_timestamp - time.time()) 
             
-            # If global_timeout_minutes is 0 (indefinite), we might sleep for a long time.
-            # If global_timeout_minutes > 0, cap sleep to not overshoot timeout significantly.
             if global_timeout_minutes > 0:
                 remaining_time_budget = (execution_start_time + global_timeout_minutes * 60) - time.time()
-                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) # Cap sleep at 60s or remaining budget
-            else:
-                sleep_duration = min(sleep_duration, 60.0) # Indefinite, but still cap individual sleeps
+                if remaining_time_budget <= 0: # No time left, break before sleep
+                    print(f"Global execution timeout of {global_timeout_minutes} minutes reached (checked before sleep).")
+                    for tx_item_timeout_retry in items_still_requiring_retry:
+                         update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
+                    save_transactions(transactions, transactions_file_path)
+                    break
+                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) 
+            else: # Indefinite timeout
+                sleep_duration = min(sleep_duration, 60.0) 
 
-            if sleep_duration > 0.05 : # Only print and sleep if meaningful duration
+            if sleep_duration > 0.05 : 
                  print(f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.")
                  time.sleep(sleep_duration)
-            else: # If next retry is immediate or past, don't sleep long, just yield for a moment
-                time.sleep(0.05)
-
-
-        elif not processed_in_this_pass: # No progress made and nothing specifically scheduled for later retry
-            break # Stalled, exit loop
+            else: 
+                time.sleep(0.05) 
+        elif not processed_in_this_pass: 
+            break 
     
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
     for t in transactions: 
         status_key = t.get("STATUS", TransactionStatus.PENDING.value).lower()
         stats[status_key] = stats.get(status_key, 0) + 1
     return stats
+    

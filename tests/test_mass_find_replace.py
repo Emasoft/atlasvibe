@@ -7,15 +7,16 @@ import shutil
 import time
 from typing import List, Dict, Any, Optional, Union
 import logging 
-from unittest.mock import patch, MagicMock # For mocking in timeout test
+from unittest.mock import patch, MagicMock 
 
 from mass_find_replace import main_flow, MAIN_TRANSACTION_FILE_NAME, SCRIPT_NAME
 from file_system_operations import (
     load_transactions, TransactionStatus, TransactionType, 
     BINARY_MATCHES_LOG_FILE, SELF_TEST_ERROR_FILE_BASENAME,
-    save_transactions, _is_retryable_os_error # Import for mocking
+    save_transactions, _is_retryable_os_error 
 )
 import replace_logic 
+import file_system_operations # For mocking its functions
 
 from .conftest import (
     create_test_environment_content, assert_file_content, 
@@ -33,7 +34,7 @@ def run_main_flow_for_test(
     force_execution: bool = True, ignore_symlinks_arg: bool = False,
     use_gitignore: bool = False, custom_ignore_file: Optional[str] = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
-    timeout_minutes: int = 1 # Default short timeout for most tests
+    timeout_minutes: int = 1, quiet_mode: bool = True # Default to quiet for tests
 ):
     load_map_success = replace_logic.load_replacement_map(map_file)
     if map_file.name != "empty_mapping.json": 
@@ -54,7 +55,8 @@ def run_main_flow_for_test(
         ignore_symlinks_arg=ignore_symlinks_arg,
         use_gitignore=use_gitignore, custom_ignore_file_path=custom_ignore_file,
         skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming,
-        skip_content=skip_content, timeout_minutes=timeout_minutes
+        skip_content=skip_content, timeout_minutes=timeout_minutes,
+        quiet_mode=quiet_mode
     )
 
 @pytest.mark.parametrize("ignore_symlinks", [False, True])
@@ -372,96 +374,92 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
              assert binary_log_has_match, f"Binary file {filename} expected in binary log."
 
 @pytest.mark.slow 
-def test_timeout_behavior_and_retries(temp_test_dir: Path, default_map_file: Path):
+def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_file: Path):
     create_test_environment_content(temp_test_dir)
-    file_to_lock_rel = "file_with_floJoy_lines.txt" # Original name before potential rename
-    file_to_lock_abs = temp_test_dir / file_to_lock_rel
-    assert file_to_lock_abs.exists()
-
-    # Mock _execute_content_line_transaction to simulate retryable errors
-    original_execute_content = file_system_operations._execute_content_line_transaction
+    file_to_lock_rel = "file_with_floJoy_lines.txt" 
     
-    mock_call_count = 0
-    max_fails = 2 # Fail 2 times, succeed on 3rd
+    original_execute_content = file_system_operations._execute_content_line_transaction
+    mock_call_counts = { "count": 0 } 
+    max_fails_for_mock = 2
 
-    def mock_execute_content_line_with_retryable_error(tx_item, root_dir, path_translation_map, path_cache, dry_run):
-        nonlocal mock_call_count
-        # Only interfere with our target file
-        if tx_item["PATH"] == file_to_lock_rel or Path(tx_item["PATH"]).name == "file_with_atlasVibe_lines.txt": # Check original or renamed
-            mock_call_count += 1
-            if mock_call_count <= max_fails:
-                print(f"DEBUG MOCK: Simulating retryable error for {tx_item['PATH']} (attempt {mock_call_count})")
-                # Simulate a retryable OSError
-                # Using a known retryable errno like EACCES
-                return TransactionStatus.RETRY_LATER, f"Mocked OS error (retryable), attempt {mock_call_count}", True
+    def mock_execute_content_with_retry(tx_item, root_dir, path_translation_map, path_cache, dry_run):
+        is_target_file = (tx_item["PATH"] == file_to_lock_rel or \
+                          Path(tx_item["PATH"]).name == "file_with_atlasVibe_lines.txt") and \
+                         tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
+
+        if is_target_file:
+            mock_call_counts["count"] += 1
+            if mock_call_counts["count"] <= max_fails_for_mock:
+                print(f"DEBUG MOCK: Simulating retryable OSError for {tx_item['PATH']} (attempt {mock_call_counts['count']})")
+                return TransactionStatus.RETRY_LATER, f"Mocked OS error (retryable), attempt {mock_call_counts['count']}", True
         return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run)
 
-    with patch('file_system_operations._execute_content_line_transaction', mock_execute_content_line_with_retryable_error):
-        run_main_flow_for_test(temp_test_dir, default_map_file, timeout_minutes=1) # Short timeout for test
+    with patch('file_system_operations._execute_content_line_transaction', mock_execute_content_with_retry):
+        run_main_flow_for_test(temp_test_dir, default_map_file, timeout_minutes=1) 
 
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
     
-    target_tx_found = False
+    target_tx_found_and_checked = False
     for tx in transactions:
-        # Check for the transaction related to the file we mocked, it might have been renamed
-        if file_to_lock_rel == tx.get("PATH") or Path(tx.get("PATH")).name == "file_with_atlasVibe_lines.txt":
-            if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-                target_tx_found = True
-                assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction for {tx['PATH']} should have eventually completed."
-                assert tx.get("retry_count", 0) == max_fails, f"Transaction for {tx['PATH']} should have {max_fails} retries."
-                break
-    assert target_tx_found, "Did not find the targeted content transaction for retry test."
-    assert mock_call_count == max_fails + 1, "Mocked function not called expected number of times."
+        if (tx.get("PATH") == file_to_lock_rel or Path(tx.get("PATH")).name == "file_with_atlasVibe_lines.txt") and \
+           tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            target_tx_found_and_checked = True
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction for {tx['PATH']} should have eventually completed."
+            assert tx.get("retry_count", 0) == max_fails_for_mock, f"Transaction for {tx['PATH']} should have {max_fails_for_mock} retries."
+            break
+    assert target_tx_found_and_checked, "Did not find the targeted content transaction for retry test."
+    assert mock_call_counts["count"] == max_fails_for_mock + 1, "Mocked function not called expected number of times."
 
-    # Test indefinite timeout (timeout=0) leading to more retries if error persists
-    mock_call_count = 0
-    # This time, always fail with retryable error
-    def mock_always_retryable_error(tx_item, root_dir, path_translation_map, path_cache, dry_run):
-        nonlocal mock_call_count
-        if tx_item["PATH"] == file_to_lock_rel or Path(tx_item["PATH"]).name == "file_with_atlasVibe_lines.txt":
-            mock_call_count += 1
-            # Simulate a very short run by limiting overall attempts in the test itself
-            if mock_call_count > 7: # More than default max_overall_retry_attempts (5) for timeout > 0
-                 return TransactionStatus.FAILED, "Mocked persistent error, exceeded test call limit", False # Stop test
-            return TransactionStatus.RETRY_LATER, f"Mocked persistent OS error (retryable), attempt {mock_call_count}", True
+    mock_call_counts["count"] = 0 
+    # Default max_overall_retry_attempts for timeout=0 is 500. We'll mock fewer to test the mock limit.
+    indef_max_mock_calls = 7 
+    
+    def mock_always_retryable_error_indef(tx_item, root_dir, path_translation_map, path_cache, dry_run):
+        nonlocal mock_call_counts 
+        is_target_file = (tx_item["PATH"] == file_to_lock_rel or \
+                          Path(tx_item["PATH"]).name == "file_with_atlasVibe_lines.txt") and \
+                         tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
+        if is_target_file:
+            mock_call_counts["count"] += 1
+            if mock_call_counts["count"] < indef_max_mock_calls : 
+                return TransactionStatus.RETRY_LATER, f"Mocked persistent OS error (retryable), attempt {mock_call_counts['count']}", True
+            else: 
+                return TransactionStatus.FAILED, "Mocked persistent error, exceeded test call limit", False
         return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run)
 
-    # Re-create a clean state for this part of the test if necessary, or ensure it can run on existing state
-    # For simplicity, we'll run on the already modified file names from previous part of this test.
-    # The important part is that the content transaction for file_with_atlasVibe_lines.txt is re-attempted.
-    # We need to reset its status in the loaded transaction file if it was COMPLETED.
     transactions_for_indef_retry = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     for tx in transactions_for_indef_retry:
-        if Path(tx["PATH"]).name == "file_with_atlasVibe_lines.txt" and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
-            tx["STATUS"] = TransactionStatus.PENDING.value # Reset for re-attempt
+        if (tx.get("PATH") == file_to_lock_rel or Path(tx.get("PATH")).name == "file_with_atlasVibe_lines.txt") and \
+           tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            tx["STATUS"] = TransactionStatus.PENDING.value 
             tx["retry_count"] = 0
             tx.pop("timestamp_next_retry", None)
             tx.pop("timestamp_processed", None)
+            tx.pop("ERROR_MESSAGE", None)
     save_transactions(transactions_for_indef_retry, temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
 
-
-    with patch('file_system_operations._execute_content_line_transaction', mock_always_retryable_error):
-        run_main_flow_for_test(temp_test_dir, default_map_file, timeout_minutes=0, resume=True) # Indefinite timeout
+    with patch('file_system_operations._execute_content_line_transaction', mock_always_retryable_error_indef):
+        run_main_flow_for_test(temp_test_dir, default_map_file, timeout_minutes=0, resume=True) 
 
     final_transactions_indef = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     assert final_transactions_indef is not None
     target_tx_indef = None
     for tx in final_transactions_indef:
-         if Path(tx["PATH"]).name == "file_with_atlasVibe_lines.txt" and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+         if (tx.get("PATH") == file_to_lock_rel or Path(tx.get("PATH")).name == "file_with_atlasVibe_lines.txt") and \
+            tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
             target_tx_indef = tx
             break
     assert target_tx_indef is not None
-    # With timeout=0, it should retry more than the default internal cap of execute_all_transactions for timed runs
-    # The mock limits calls to 7, so retry_count should be 6 (7 calls, first is not a retry)
-    assert target_tx_indef["STATUS"] == TransactionStatus.FAILED.value # Because our mock eventually returns FAILED
-    assert target_tx_indef.get("retry_count", 0) >= 5, "Should have retried multiple times with indefinite timeout"
+    assert target_tx_indef["STATUS"] == TransactionStatus.FAILED.value 
+    # The number of retries will be indef_max_mock_calls - 1 because the last call results in FAILED, not RETRY_LATER
+    assert target_tx_indef.get("retry_count", 0) == (indef_max_mock_calls -1) , \
+        f"Should have retried {indef_max_mock_calls -1} times with indefinite timeout. Got {target_tx_indef.get('retry_count',0)}"
 
 
 def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.INFO)
-    # Ensure temp_test_dir is truly empty for this test
-    for item in temp_test_dir.iterdir():
+    for item in temp_test_dir.iterdir(): 
         if item.is_dir(): shutil.rmtree(item)
         else: item.unlink()
     
