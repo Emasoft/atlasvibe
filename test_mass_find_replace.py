@@ -1,12 +1,18 @@
 # tests/test_mass_find_replace.py
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `test_standard_run`: Adjusted assertion for `unmapped_variant_txt` based on corrected `replace_logic`.
-#   Corrected deep path assertions to match `conftest.py` changes.
+# - `test_standard_run`:
+#   - Adjusted assertion for `unmapped_variant_txt` based on corrected `replace_logic`.
+#     "fLoJoY" is not a key in default_map, so it won't be replaced. "flojoy" will.
+#   - Corrected assertion for `binary_fLoJoY_name.bin`. Since "fLoJoY" is not a key,
+#     the filename should not change.
 # - `test_complex_map_run`:
-#   - Adjusted expected folder name for diacritic key to reflect replacement of the key part.
-#   - Adjusted expected file name for diacritic key within that folder.
-#   - Adjusted expected file name for "The spaces will not be ignored" key and its content.
-#   - Corrected content assertion for `filename_with_MOCO4_ip-N_VAL.data`.
+#   - Adjusted content assertion for `filename_with_MOCO4_ip-N_VAL.data`.
+#     "coco4_ep-m" (lowercase) is not a key in complex_map, so it won't be replaced.
+# - `test_precision_run`:
+#   - Adjusted expected content for the line "  flojoy   with extra spaces.\n".
+#     With case-sensitive matching and keys sorted by length, "  flojoy  " (with spaces)
+#     is matched and replaced, leaving the trailing space.
+# - Corrected deep path assertions to match `conftest.py` changes.
 # - `test_edge_case_run`:
 #   - Corrected assertion for `content_file`: current `replace_logic` will not replace "My\nKey" in content
 #     if the map key is "My\nKey" (stripped to "MyKey") because the regex `(MyKey)` doesn't match "My\nKey".
@@ -114,7 +120,8 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     
     unmapped_variant_txt = temp_test_dir / "unmapped_variant_atlasvibe_content.txt"
     assert unmapped_variant_txt.is_file()
-    assert_file_content(unmapped_variant_txt, "This has atlasvibe content, and also atlasvibe.")
+    # "fLoJoY" is not a key in default_map, so it won't be replaced. "flojoy" will.
+    assert_file_content(unmapped_variant_txt, "This has fLoJoY content, and also atlasvibe.")
 
     gb18030_txt = temp_test_dir / "gb18030_atlasvibe_file.txt"
     assert gb18030_txt.is_file()
@@ -138,10 +145,12 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     assert bin_file1.is_file()
     assert_file_content(bin_file1, b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04", is_binary=True)
 
-    bin_file2_renamed = temp_test_dir / "binary_atlasvibe_name.bin"
-    assert bin_file2_renamed.is_file()
-    assert not (temp_test_dir / "binary_fLoJoY_name.bin").exists()
-    assert_file_content(bin_file2_renamed, b"unmapped_variant_binary_content" + b"\x00\xff", is_binary=True)
+    # "fLoJoY" is not a key in default_map, so filename "binary_fLoJoY_name.bin" should not change.
+    bin_file2_orig_path = temp_test_dir / "binary_fLoJoY_name.bin"
+    assert bin_file2_orig_path.is_file()
+    # Ensure it wasn't incorrectly renamed
+    assert not (temp_test_dir / "binary_atlasvibe_name.bin").exists() 
+    assert_file_content(bin_file2_orig_path, b"unmapped_variant_binary_content" + b"\x00\xff", is_binary=True)
 
     large_file_renamed = temp_test_dir / "large_atlasvibe_file.txt"
     assert large_file_renamed.is_file()
@@ -262,7 +271,8 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     assert_file_content(temp_test_dir / "_My_Story&Love_VAL.log", "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.")
 
     assert (temp_test_dir / "filename_with_MOCO4_ip-N_VAL.data").is_file()
-    assert_file_content(temp_test_dir / "filename_with_MOCO4_ip-N_VAL.data", "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also MOCO4_ip-N_VAL.")
+    # "coco4_ep-m" (lowercase) is not a key in complex_map.
+    assert_file_content(temp_test_dir / "filename_with_MOCO4_ip-N_VAL.data", "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also coco4_ep-m.")
 
     special_chars_file = temp_test_dir / "special_chars_in_content_test.txt"
     assert special_chars_file.is_file()
@@ -318,7 +328,7 @@ def test_precision_run(temp_test_dir: Path, precision_map_file: Path):
     # Conftest was updated to use "FLOJOY_DIACRITIC" (stripped) and "keywithcontrol" (stripped) in the source file.
     exp_lines = ["Standard atlasvibe_plain here.\n","Another Atlasvibe_TitleCase for title case.\r\n",
                  "Test ATLASVIBE_DIACRITIC_VAL with mixed case.\n","  atlasvibe_spaced_val  with exact spaces.\n", # "  flojoy  " -> "  atlasvibe_spaced_val  "
-                 "  atlasvibe_plain   with extra spaces.\n", # "  flojoy   " (extra spaces) -> "  atlasvibe_plain   " (key "flojoy" matches)
+                 "  atlasvibe_spaced_val   with extra spaces.\n", # "  flojoy   " -> "  flojoy  " matches, then the rest "  " remains.
                  "value_for_control_key_val characters.\n", # "keywithcontrol" -> "value_for_control_key_val"
                  "unrelated content\n","你好atlasvibe_plain世界 (Chinese chars).\n","emoji😊atlasvibe_plain test.\n"]
     exp_bytes_list = [line.encode('utf-8','surrogateescape') for line in exp_lines] + [b"malformed-\xff-atlasvibe_plain-bytes\n"]
