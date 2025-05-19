@@ -145,7 +145,7 @@ def scan_directory_for_occurrences(
         try: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).resolve(strict=False))
         except Exception: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).absolute())
 
-    excluded_basenames = {Path(f).name for f in excluded_files if Path(f).name == f and not os.path.sep in f and not ('/' in f or '\\' in f)}
+    excluded_basenames = {Path(f).name for f in excluded_files if Path(f).name == f and os.path.sep not in f and not ('/' in f or '\\' in f)}
     excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f}
 
     normalized_extensions = {ext.lower() for ext in file_extensions} if file_extensions else None
@@ -472,7 +472,7 @@ def execute_all_transactions(
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
-                new_stat_from_exec: TransactionStatus; err_msg_from_exec: Optional[str] = None;
+                new_stat_from_exec: TransactionStatus; err_msg_from_exec: Optional[str] = None
                 final_prop_content_for_log: Optional[str] = None
                 is_retryable_error_from_exec = False
 
