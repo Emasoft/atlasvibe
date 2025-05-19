@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `scan_directory_for_occurrences`: Changed `item_abs_path.read_text(..., newline='')`
+#   to use `with open(item_abs_path, 'r', ..., newline='') as f: f.read()`
+#   to resolve the "unexpected keyword argument 'newline'" error seen in test logs.
+#   This ensures consistent file reading for line ending preservation.
 # - `_execute_content_line_transaction`: Changed `open(current_abs_path, 'r', ..., newline=None)`
 #   to `open(current_abs_path, 'r', ..., newline='')` to preserve line endings during file reading.
 #   This ensures that the `ORIGINAL_LINE_CONTENT` stored in transactions and processed by
@@ -288,7 +292,8 @@ def scan_directory_for_occurrences(
                 file_encoding = get_file_encoding(item_abs_path)
                 try:
                     # Read with newline='' to preserve original line endings in lines_for_scan
-                    file_content_for_scan = item_abs_path.read_text(encoding=file_encoding, errors='surrogateescape', newline='')
+                    with open(item_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f_scan:
+                        file_content_for_scan = f_scan.read()
                 except Exception as e:
                     print(f"Warn: Error reading text file {item_abs_path} (enc:{file_encoding}): {e}")
                     continue
