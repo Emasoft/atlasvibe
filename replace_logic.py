@@ -6,23 +6,9 @@
 #   1. Attempts a direct case-sensitive match of the stripped input text (case preserved)
 #      against the stripped, case-preserved keys in `_RAW_REPLACEMENT_MAPPING`.
 #   2. If no direct match, falls back to a case-insensitive comparison of the stripped input
-#      text (lowercased) against the lowercased versions of the stripped, case-preserved
-#      keys from `_SORTED_RAW_KEYS_FOR_REPLACE`.
-#   This prioritizes exact case matches from the map if available.
-# - `_actual_replace_callback`: Simplified to perform a direct case-insensitive comparison.
-#   The matched text from input (after stripping diacritics/controls) is lowercased.
-#   It's then compared against the lowercased versions of the (already stripped, case-preserved)
-#   keys stored in `_SORTED_RAW_KEYS_FOR_REPLACE`. If a match is found, the corresponding
-#   original value from `_RAW_REPLACEMENT_MAPPING` (using the case-preserved key) is returned.
-#   This removes the previous dual-priority (exact case then insensitive) logic.
-# - `_actual_replace_callback`: Added redundant stripping for `map_key_stripped_case_preserved.lower()` 
-#   in the fallback loop for diagnostic purposes, though theoretically unnecessary if stripping is consistent.
-#   The main lookup `stripped_matched_text_in_input in _RAW_REPLACEMENT_MAPPING` remains the primary path.
-# - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
-# - `_actual_replace_callback`:
-#   - Prioritizes exact case match of `matched_text_in_input` against `_RAW_REPLACEMENT_MAPPING` keys (which are stripped, case-preserved original JSON keys).
-#   - Falls back to case-insensitive comparison against `_SORTED_RAW_KEYS_FOR_REPLACE` if no exact case match is found.
-#   - Both comparison paths now use a stripped version of `matched_text_in_input` to ensure consistent comparison against the (already stripped) map keys.
+#      text (lowercased) against the lowercased versions of the stripped, case-preserved keys from `_SORTED_RAW_KEYS_FOR_REPLACE`. This fallback is now removed.
+# - Matching is now strictly case-sensitive. `re.IGNORECASE` flag removed from regex compilations.
+# - `_actual_replace_callback` simplified for direct case-sensitive lookup.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -37,10 +23,10 @@ import unicodedata
 
 # --- Module-level state ---
 _RAW_REPLACEMENT_MAPPING: Dict[str, str] = {} # Stores (stripped key) -> (stripped value) from JSON.
-_COMPILED_PATTERN_FOR_SCAN: Optional[re.Pattern] = None # Case-insensitive, for initial scan.
+_COMPILED_PATTERN_FOR_SCAN: Optional[re.Pattern] = None # For initial scan. Now case-sensitive.
 _MAPPING_LOADED: bool = False
 _SORTED_RAW_KEYS_FOR_REPLACE: TypingList[str] = [] # Stripped keys, sorted by length desc.
-_COMPILED_PATTERN_FOR_ACTUAL_REPLACE: Optional[re.Pattern] = None # Case-sensitive, for actual replacement.
+_COMPILED_PATTERN_FOR_ACTUAL_REPLACE: Optional[re.Pattern] = None # For actual replacement. Now case-sensitive.
 
 def strip_diacritics(text: str) -> str:
     if not isinstance(text, str):
@@ -116,7 +102,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     pattern_keys_for_scan: TypingList[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
     pattern_keys_for_scan.sort(key=len, reverse=True)
     try:
-        _COMPILED_PATTERN_FOR_SCAN = re.compile(r'(' + r'|'.join(pattern_keys_for_scan) + r')', flags=re.IGNORECASE)
+        _COMPILED_PATTERN_FOR_SCAN = re.compile(r'(' + r'|'.join(pattern_keys_for_scan) + r')')
     except re.error as e:
         print(f"ERROR: Could not compile SCAN regex pattern: {e}. Regex tried: '{'(' + '|'.join(pattern_keys_for_scan) + ')'}'")
         _RAW_REPLACEMENT_MAPPING = {}
@@ -126,8 +112,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     
     try:
         _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(
-            r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')',
-            flags=re.IGNORECASE
+            r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
         )
     except re.error as e:
         print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}")
@@ -145,36 +130,23 @@ def get_raw_stripped_keys() -> TypingList[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    matched_text_in_input = match.group(0) # Original case from input, e.g., "Flojoy" or "flojoy"
+    matched_text_in_input = match.group(0) # This is the exact text matched by the case-sensitive regex
     
-    # Stripped version of what was actually matched in the input, case preserved
-    stripped_matched_text_in_input_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
+    # The keys in _RAW_REPLACEMENT_MAPPING are stripped and case-preserved.
+    # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
+    # So, matched_text_in_input should directly be one of these keys.
+    # We still strip it to be absolutely sure we're comparing apples to apples,
+    # in case the regex somehow matched a non-stripped version (though unlikely with re.escape).
+    stripped_matched_text_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
 
-    # Attempt 1: Check if the stripped, case-preserved version of the *input match*
-    # exists as a key in our _RAW_REPLACEMENT_MAPPING.
-    # _RAW_REPLACEMENT_MAPPING keys are stripped and case-preserved from the original JSON keys.
-    if stripped_matched_text_in_input_case_preserved in _RAW_REPLACEMENT_MAPPING:
-        return _RAW_REPLACEMENT_MAPPING[stripped_matched_text_in_input_case_preserved]
-
-    # Attempt 2: If not found by direct case-preserved match, try a fully case-insensitive lookup.
-    # This handles cases where the input's casing (e.g., "fLoJoY") doesn't exactly match
-    # any of the case-preserved map keys (e.g., "flojoy", "Flojoy", "FLOJOY"), but its
-    # stripped lowercase form matches a stripped lowercase map key.
-    stripped_matched_text_in_input_lower = stripped_matched_text_in_input_case_preserved.lower()
-
-    # _SORTED_RAW_KEYS_FOR_REPLACE contains keys from _RAW_REPLACEMENT_MAPPING,
-    # which are already stripped and case-preserved.
-    for map_key_stripped_case_preserved_from_map in _SORTED_RAW_KEYS_FOR_REPLACE:
-        current_map_key_for_comparison_lower = map_key_stripped_case_preserved_from_map.lower()
+    if stripped_matched_text_case_preserved in _RAW_REPLACEMENT_MAPPING:
+        return _RAW_REPLACEMENT_MAPPING[stripped_matched_text_case_preserved]
         
-        if current_map_key_for_comparison_lower == stripped_matched_text_in_input_lower:
-            # Found a case-insensitive match. Return the value associated with the
-            # original case-preserved stripped key from the map.
-            return _RAW_REPLACEMENT_MAPPING[map_key_stripped_case_preserved_from_map]
-            
-    # This part should ideally not be reached if the regex matched,
+    # This fallback should ideally not be hit if the regex is correctly constructed
     # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
-    # However, as a fallback, return the original matched text.
+    # If it is hit, it means the regex matched something that, after stripping,
+    # isn't a direct key. This would be unexpected.
+    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (stripped: '{stripped_matched_text_case_preserved}')")
     return matched_text_in_input
 
 def replace_occurrences(input_string: str) -> str:
