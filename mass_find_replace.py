@@ -14,6 +14,7 @@
 # - `main_cli` auto-exclusion list simplified.
 # - `main_flow` resume logic uses `abs_root_dir` and mtime check buffer removed.
 # - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
+# - Fixed E701 and E702 ruff linting errors (multiple statements on one line).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -45,7 +46,11 @@ SCRIPT_NAME = "MFR - Mass Find Replace - A script to safely rename things in you
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
 DEFAULT_REPLACEMENT_MAPPING_FILE = "replacement_mapping.json"
 
-GREEN = "\033[92m"; RED = "\033[91m"; RESET = "\033[0m"; YELLOW = "\033[93m"; BLUE = "\033[94m"
+GREEN = "\033[92m"
+RED = "\033[91m"
+RESET = "\033[0m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
 
 @flow(name="Mass Find and Replace Orchestration Flow", log_prints=True)
 def main_flow(
@@ -60,7 +65,8 @@ def main_flow(
     logger = get_run_logger()
     abs_root_dir = Path(directory).resolve(strict=False) 
     if not abs_root_dir.is_dir(): 
-        logger.error(f"Error: Root directory '{abs_root_dir}' not found or not a directory."); return
+        logger.error(f"Error: Root directory '{abs_root_dir}' not found or not a directory.")
+        return
 
     if skip_file_renaming and skip_folder_renaming and skip_content:
         logger.info("All processing types (file rename, folder rename, content) are skipped. Nothing to do.")
@@ -71,19 +77,24 @@ def main_flow(
             logger.info(f"Target directory '{abs_root_dir}' is empty. Nothing to do.")
             return
     except FileNotFoundError: 
-        logger.error(f"Error: Root directory '{abs_root_dir}' disappeared before empty check."); return
+        logger.error(f"Error: Root directory '{abs_root_dir}' disappeared before empty check.")
+        return
     except OSError as e: 
-        logger.error(f"Error accessing directory '{abs_root_dir}' for empty check: {e}"); return
+        logger.error(f"Error accessing directory '{abs_root_dir}' for empty check: {e}")
+        return
 
     map_file_path = Path(mapping_file).resolve()
     if not replace_logic.load_replacement_map(map_file_path):
-        logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}"); return
+        logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}")
+        return
     if not replace_logic._MAPPING_LOADED: 
-        logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic."); return
+        logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic.")
+        return
     if not replace_logic._RAW_REPLACEMENT_MAPPING: 
         logger.warning(f"{YELLOW}Warning: Map {map_file_path} is empty. No string replacements will occur based on map keys.{RESET}")
     elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING :
-         logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns."); return
+         logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns.")
+         return
     
     txn_json_path: Path = abs_root_dir / MAIN_TRANSACTION_FILE_NAME
     final_ignore_spec: pathspec.PathSpec | None = None
@@ -97,7 +108,8 @@ def main_flow(
                     raw_patterns_list.extend(p for p in (line.strip() for line in f_git) if p and not p.startswith('#'))
             except Exception as e:
                 logger.warning(f"{YELLOW}Warning: Could not read .gitignore file {gitignore_path}: {e}{RESET}")
-        elif not quiet_mode: logger.info(".gitignore not found in root, skipping.") # Only log if not quiet
+        elif not quiet_mode:
+            logger.info(".gitignore not found in root, skipping.") # Only log if not quiet
     if custom_ignore_file_path:
         custom_ignore_abs_path = Path(custom_ignore_file_path).resolve()
         if custom_ignore_abs_path.is_file():
@@ -107,7 +119,8 @@ def main_flow(
                     raw_patterns_list.extend(p for p in (line.strip() for line in f_custom) if p and not p.startswith('#'))
             except Exception as e:
                 logger.warning(f"{YELLOW}Warning: Could not read custom ignore file {custom_ignore_abs_path}: {e}{RESET}")
-        else: logger.warning(f"{YELLOW}Warning: Custom ignore file '{custom_ignore_abs_path}' not found.{RESET}")
+        else:
+            logger.warning(f"{YELLOW}Warning: Custom ignore file '{custom_ignore_abs_path}' not found.{RESET}")
     if raw_patterns_list:
         try: 
             final_ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', raw_patterns_list)
@@ -120,14 +133,19 @@ def main_flow(
         print(f"{BLUE}--- Proposed Operation ---{RESET}")
         print(f"Root Directory: {abs_root_dir}")
         print(f"Replacement Map File: {map_file_path}")
-        if replace_logic._RAW_REPLACEMENT_MAPPING: print(f"Loaded {len(replace_logic._RAW_REPLACEMENT_MAPPING)} replacement rules.")
-        else: print("Replacement map is empty. No string replacements will occur.")
+        if replace_logic._RAW_REPLACEMENT_MAPPING:
+            print(f"Loaded {len(replace_logic._RAW_REPLACEMENT_MAPPING)} replacement rules.")
+        else:
+            print("Replacement map is empty. No string replacements will occur.")
         print(f"File Extensions for content scan: {extensions if extensions else 'All non-binary (heuristic)'}")
         print(f"Exclude Dirs (explicit): {exclude_dirs}")
         print(f"Exclude Files (explicit): {exclude_files}")
-        if use_gitignore: print(f"Using .gitignore: Yes (if found at {abs_root_dir / '.gitignore'})")
-        if custom_ignore_file_path: print(f"Custom Ignore File: {custom_ignore_file_path}")
-        if final_ignore_spec: print(f"Effective ignore patterns: {len(final_ignore_spec.patterns)} compiled from ignore files.") # type: ignore
+        if use_gitignore:
+            print(f"Using .gitignore: Yes (if found at {abs_root_dir / '.gitignore'})")
+        if custom_ignore_file_path:
+            print(f"Custom Ignore File: {custom_ignore_file_path}")
+        if final_ignore_spec:
+            print(f"Effective ignore patterns: {len(final_ignore_spec.patterns)} compiled from ignore files.") # type: ignore
         print(f"Ignore Symlinks: {ignore_symlinks_arg}")
         print(f"Skip File Renaming: {skip_file_renaming}")
         print(f"Skip Folder Renaming: {skip_folder_renaming}")
@@ -139,16 +157,21 @@ def main_flow(
                  print(f"{YELLOW}Warning: No replacement rules and no operations enabled that don't require rules. Likely no operations will be performed.{RESET}")
         
         confirm = input("Proceed with these changes? (yes/no): ")
-        if confirm.lower() != 'yes': print("Operation cancelled by user."); return
+        if confirm.lower() != 'yes':
+            print("Operation cancelled by user.")
+            return
 
     if not skip_scan:
         logger.info(f"Scanning '{abs_root_dir}'...")
-        current_txns_for_resume: list[dict[str,Any]] | None = None; paths_to_force_rescan: set[str] = set()
+        current_txns_for_resume: list[dict[str,Any]] | None = None
+        paths_to_force_rescan: set[str] = set()
         if resume and txn_json_path.exists(): # type: ignore
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
             current_txns_for_resume = load_transactions(txn_json_path)
-            if current_txns_for_resume is None: logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
-            elif not current_txns_for_resume: logger.warning(f"{YELLOW}Warn: Txn file empty. Fresh scan.{RESET}")
+            if current_txns_for_resume is None:
+                logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
+            elif not current_txns_for_resume:
+                logger.warning(f"{YELLOW}Warn: Txn file empty. Fresh scan.{RESET}")
             else:
                 logger.info("Checking for files modified since last processing...")
                 path_last_processed_time: Dict[str, float] = {} # Using typing.Dict as per user note in diff
@@ -161,12 +184,14 @@ def main_flow(
                     if item_fs.is_file() and not item_fs.is_symlink():
                         try:
                             rel_p = str(item_fs.relative_to(abs_root_dir)).replace("\\","/")
-                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): continue # type: ignore
+                            if final_ignore_spec and final_ignore_spec.match_file(rel_p):
+                                continue # type: ignore
                             mtime = item_fs.stat().st_mtime
                             if rel_p in path_last_processed_time and mtime > path_last_processed_time[rel_p]:
                                 logger.info(f"File '{rel_p}' (mtime:{mtime:.0f}) modified after last process (ts:{path_last_processed_time[rel_p]:.0f}). Re-scan.")
                                 paths_to_force_rescan.add(rel_p)
-                        except Exception as e: logger.warning(f"Could not stat {item_fs} for resume: {e}")
+                        except Exception as e:
+                            logger.warning(f"Could not stat {item_fs} for resume: {e}")
         
         found_txns = scan_directory_for_occurrences(
             root_dir=abs_root_dir, excluded_dirs=exclude_dirs, excluded_files=exclude_files,
@@ -180,9 +205,11 @@ def main_flow(
         save_transactions(found_txns or [], txn_json_path)
         logger.info(f"Scan complete. {len(found_txns or [])} transactions planned in '{txn_json_path}'")
         if not found_txns:
-            logger.info("No actionable occurrences found by scan." if replace_logic._RAW_REPLACEMENT_MAPPING else "Map empty and no scannable items found, or all items ignored."); return
+            logger.info("No actionable occurrences found by scan." if replace_logic._RAW_REPLACEMENT_MAPPING else "Map empty and no scannable items found, or all items ignored.")
+            return
     elif not txn_json_path.exists(): 
-        logger.error(f"Error: --skip-scan was used, but '{txn_json_path}' not found."); return
+        logger.error(f"Error: --skip-scan was used, but '{txn_json_path}' not found.")
+        return
     else: 
         logger.info(f"Using existing transaction file: '{txn_json_path}'. Ensure it was generated with compatible settings.")
 
@@ -207,7 +234,8 @@ def main_flow(
 
     txns_for_exec = load_transactions(txn_json_path)
     if not txns_for_exec: 
-        logger.info(f"No transactions found in {txn_json_path} to execute. Exiting."); return
+        logger.info(f"No transactions found in {txn_json_path} to execute. Exiting.")
+        return
 
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
@@ -265,9 +293,11 @@ def main_cli() -> None:
     if not args.quiet:
         print(f"{BLUE}{SCRIPT_NAME}{RESET}")
 
-    if args.timeout < 0: parser.error("--timeout cannot be negative.")
+    if args.timeout < 0:
+        parser.error("--timeout cannot be negative.")
     if args.timeout != 0 and args.timeout < 1 :
-        if not args.quiet: print(f"{YELLOW}Warning: --timeout value increased to minimum 1 minute.{RESET}")
+        if not args.quiet:
+            print(f"{YELLOW}Warning: --timeout value increased to minimum 1 minute.{RESET}")
         args.timeout = 1 
 
     auto_exclude_basenames = [
@@ -278,7 +308,8 @@ def main_cli() -> None:
     ]
     final_exclude_files = list(set(args.exclude_files + auto_exclude_basenames))
     
-    if args.verbose and not args.quiet: print("Verbose mode enabled (effect on logging may vary).")
+    if args.verbose and not args.quiet:
+        print("Verbose mode enabled (effect on logging may vary).")
 
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
               args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
@@ -290,18 +321,29 @@ def main_cli() -> None:
 if __name__ == "__main__":
     try:
         missing = []
-        try: import prefect
-        except ImportError: missing.append("prefect")
-        try: import chardet
-        except ImportError: missing.append("chardet")
-        try: import pathspec
-        except ImportError: missing.append("pathspec")
-        try: from striprtf.striprtf import rtf_to_text
-        except ImportError: missing.append("striprtf")
-        try: from isbinary import is_binary_file
-        except ImportError: missing.append("isbinary")
+        try:
+            import prefect
+        except ImportError:
+            missing.append("prefect")
+        try:
+            import chardet
+        except ImportError:
+            missing.append("chardet")
+        try:
+            import pathspec
+        except ImportError:
+            missing.append("pathspec")
+        try:
+            from striprtf.striprtf import rtf_to_text
+        except ImportError:
+            missing.append("striprtf")
+        try:
+            from isbinary import is_binary_file
+        except ImportError:
+            missing.append("isbinary")
 
-        if missing: raise ImportError(f"Missing dependencies: {', '.join(missing)}")
+        if missing:
+            raise ImportError(f"Missing dependencies: {', '.join(missing)}")
         main_cli()
     except ImportError as e:
         sys.stderr.write(f"CRITICAL ERROR: {e}.\nPlease ensure all dependencies are installed (e.g., pip install prefect chardet pathspec striprtf isbinary).\n")
