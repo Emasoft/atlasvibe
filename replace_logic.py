@@ -36,6 +36,8 @@
 #     by stripping and NFC normalizing IT to create the `lookup_key`.
 # - `replace_occurrences`: Changed `re.sub` to operate on an NFC-normalized version of the input string.
 #   The debug print for `replace_occurrences` was updated accordingly.
+# - Commented out verbose debug prints related to map loading, regex compilation,
+#   callback hits, and search results within `replace_occurrences` to reduce verbosity.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -108,16 +110,14 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         
         temp_raw_mapping[normalized_stripped_key_case_preserved] = v_original
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
-    # ---- START DEBUG PRINT ----
-    print(f"DEBUG (replace_logic.py): For map {mapping_file_path.name}:")
-    for k_orig_json, v_val_json in raw_mapping_from_json.items(): # Iterate original JSON keys
-        s_key_internal = strip_control_characters(strip_diacritics(k_orig_json)) # How it's processed
-        # Check if this processed key is actually in our final map (it might have been skipped if empty after strip)
-        # actual_value_in_map = _RAW_REPLACEMENT_MAPPING.get(s_key_internal) # This was pre-normalization
-        normalized_s_key_internal = unicodedata.normalize('NFC', s_key_internal)
-        print(f"  Original JSON Key: '{k_orig_json}' -> Stripped (pre-NFC): '{s_key_internal}' -> Normalized Stripped for map logic: '{normalized_s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{normalized_s_key_internal}': '{_RAW_REPLACEMENT_MAPPING.get(normalized_s_key_internal, 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY')}'")
-    print(f"  Final _RAW_REPLACEMENT_MAPPING internal state: {_RAW_REPLACEMENT_MAPPING}")
-    # ---- END DEBUG PRINT ----
+    # ---- START DEBUG PRINT (Map Loading Details - Commented Out) ----
+    # print(f"DEBUG (replace_logic.py): For map {mapping_file_path.name}:")
+    # for k_orig_json, v_val_json in raw_mapping_from_json.items(): # Iterate original JSON keys
+    #     s_key_internal = strip_control_characters(strip_diacritics(k_orig_json)) # How it's processed
+    #     normalized_s_key_internal = unicodedata.normalize('NFC', s_key_internal)
+    #     print(f"  Original JSON Key: '{k_orig_json}' -> Stripped (pre-NFC): '{s_key_internal}' -> Normalized Stripped for map logic: '{normalized_s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{normalized_s_key_internal}': '{_RAW_REPLACEMENT_MAPPING.get(normalized_s_key_internal, 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY')}'")
+    # print(f"  Final _RAW_REPLACEMENT_MAPPING internal state: {_RAW_REPLACEMENT_MAPPING}")
+    # ---- END DEBUG PRINT (Map Loading Details - Commented Out) ----
 
     if not _RAW_REPLACEMENT_MAPPING:
         print("Warning: No valid replacement rules found in the mapping file after initial loading/stripping.")
@@ -151,11 +151,11 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True)
     
     try:
-        # ---- START DEBUG PRINT (Regex String for ACTUAL_REPLACE) ----
-        regex_string_for_actual_replace = r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
-        print(f"DEBUG_REGEX_COMPILE: Compiling ACTUAL REPLACE pattern string: {regex_string_for_actual_replace!r}")
-        # ---- END DEBUG PRINT (Regex String for ACTUAL_REPLACE) ----
-        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(regex_string_for_actual_replace)
+        # ---- START DEBUG PRINT (Regex String for ACTUAL_REPLACE - Commented Out) ----
+        # regex_string_for_actual_replace = r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
+        # print(f"DEBUG_REGEX_COMPILE: Compiling ACTUAL REPLACE pattern string: {regex_string_for_actual_replace!r}")
+        # ---- END DEBUG PRINT (Regex String for ACTUAL_REPLACE - Commented Out) ----
+        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')')
     except re.error as e:
         print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}")
         _RAW_REPLACEMENT_MAPPING = {}
@@ -174,19 +174,14 @@ def get_raw_stripped_keys() -> list[str]:
 def _actual_replace_callback(match: re.Match[str]) -> str:
     matched_text_in_input = match.group(0)
     
-    # ---- START DEBUG PRINT (_actual_replace_callback HIT) ----
-    print(f"DEBUG_CALLBACK_HIT: Matched raw input (from NFC-normalized string): '{matched_text_in_input}'")
-    # ---- END DEBUG PRINT (_actual_replace_callback HIT) ----
+    # ---- START DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
+    # print(f"DEBUG_CALLBACK_HIT: Matched raw input (from NFC-normalized string): '{matched_text_in_input}'")
+    # ---- END DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
     
-    # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
-    # The input to .sub() is an NFC normalized string.
-    # `matched_text_in_input` is a segment from this NFC normalized string.
-    # We still need to strip and NFC normalize it to ensure it matches the canonical form of map keys,
-    # especially if the matched segment itself contained diacritics/controls that were part of the regex match.
     stripped_matched_text = strip_control_characters(strip_diacritics(matched_text_in_input))
     lookup_key = unicodedata.normalize('NFC', stripped_matched_text)
 
-    # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED) ----
+    # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED - Already Commented) ----
     # print(f"DEBUG_CALLBACK_PROCESSED: Matched segment (from NFC string): '{matched_text_in_input!r}' -> Stripped: '{stripped_matched_text!r}' -> Lookup Key (NFC): '{lookup_key!r}'")
     # print(f"DEBUG_CALLBACK_PROCESSED: Is lookup_key '{lookup_key!r}' in _RAW_REPLACEMENT_MAPPING? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
     # if lookup_key in _RAW_REPLACEMENT_MAPPING:
@@ -194,15 +189,12 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     # else:
     #     # This case should be rare if regex is built correctly from map keys
     #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text because key '{lookup_key!r}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
-    # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED) ----
+    # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED - Already Commented) ----
     
     if lookup_key in _RAW_REPLACEMENT_MAPPING:
         return _RAW_REPLACEMENT_MAPPING[lookup_key]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
-    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
-    # If it is hit, it means the regex matched something that, after stripping and normalizing,
-    # isn't a direct key. This would be unexpected.
     # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (lookup_key: '{lookup_key}')")
     return matched_text_in_input
 
@@ -212,17 +204,13 @@ def replace_occurrences(input_string: str) -> str:
     if not isinstance(input_string, str):
         return input_string
 
-    # Normalize the input string to NFC for consistent matching with NFC-normalized regex keys.
-    # The actual sub operation will also be done on this normalized_input_string.
     normalized_input_string = unicodedata.normalize('NFC', input_string)
 
-    # ---- START DEBUG PRINT (replace_occurrences search) ----
-    # The pattern itself is built from NFC-normalized, stripped keys.
-    # Search on the same normalized_input_string that will be used for substitution.
-    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_string)
-    print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {normalized_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}")
-    if search_result:
-        print(f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}")
-    # ---- END DEBUG PRINT (replace_occurrences search) ----
+    # ---- START DEBUG PRINT (replace_occurrences search - Commented Out) ----
+    # search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_string)
+    # print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {normalized_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}")
+    # if search_result:
+    #     print(f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}")
+    # ---- END DEBUG PRINT (replace_occurrences search - Commented Out) ----
 
     return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, normalized_input_string)
