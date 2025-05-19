@@ -19,6 +19,10 @@
 # - `_actual_replace_callback`: Matched text is also NFC normalized before lookup.
 # - Debug print in `load_replacement_map` updated to show pre-NFC and post-NFC stripped keys.
 # - Recursion check in `load_replacement_map` now uses NFC normalized keys for comparison.
+# - Added detailed debug prints:
+#   - In `load_replacement_map`: Print the exact regex string compiled for `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`.
+#   - In `replace_occurrences`: Print the input string and whether `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search()` finds a match.
+#   - In `_actual_replace_callback`: Added `DEBUG_CALLBACK_HIT` print to confirm if the callback is invoked.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -134,9 +138,11 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True)
     
     try:
-        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(
-            r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
-        )
+        # ---- START DEBUG PRINT (Regex String for ACTUAL_REPLACE) ----
+        regex_string_for_actual_replace = r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
+        print(f"DEBUG_REGEX_COMPILE: Compiling ACTUAL REPLACE pattern string: {regex_string_for_actual_replace!r}")
+        # ---- END DEBUG PRINT (Regex String for ACTUAL_REPLACE) ----
+        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(regex_string_for_actual_replace)
     except re.error as e:
         print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}")
         _RAW_REPLACEMENT_MAPPING = {}
@@ -153,7 +159,11 @@ def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    matched_text_in_input = match.group(0) # This is the exact text matched by the case-sensitive regex
+    matched_text_in_input = match.group(0)
+    
+    # ---- START DEBUG PRINT (_actual_replace_callback HIT) ----
+    print(f"DEBUG_CALLBACK_HIT: Matched raw input: '{matched_text_in_input}'")
+    # ---- END DEBUG PRINT (_actual_replace_callback HIT) ----
     
     # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
     # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
@@ -163,9 +173,14 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     stripped_matched_text_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
     normalized_stripped_matched_text = unicodedata.normalize('NFC', stripped_matched_text_case_preserved)
 
-    # ---- START DEBUG PRINT (_actual_replace_callback) ----
-    # print(f"DEBUG_CALLBACK: Matched: '{matched_text_in_input}', Stripped: '{stripped_matched_text_case_preserved}', Normalized: '{normalized_stripped_matched_text}', InMap? {normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING}")
-    # ---- END DEBUG PRINT (_actual_replace_callback) ----
+    # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED) ----
+    # print(f"DEBUG_CALLBACK_PROCESSED: Normalized stripped: '{normalized_stripped_matched_text}', Is in map? {normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING}")
+    # if normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING:
+    #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]}'")
+    # else:
+    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text. Key '{normalized_stripped_matched_text}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
+    # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED) ----
+    
     if normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING:
         return _RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]
         
@@ -181,5 +196,12 @@ def replace_occurrences(input_string: str) -> str:
         return input_string
     if not isinstance(input_string, str):
         return input_string
+
+    # ---- START DEBUG PRINT (replace_occurrences search) ----
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(input_string)
+    print(f"DEBUG_REPLACE_OCCURRENCES: Input: '{input_string!r}', Search found: {'YES' if search_result else 'NO'}")
+    if search_result:
+        print(f"DEBUG_REPLACE_OCCURRENCES: Search match object: {search_result}")
+    # ---- END DEBUG PRINT (replace_occurrences search) ----
 
     return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, input_string)
