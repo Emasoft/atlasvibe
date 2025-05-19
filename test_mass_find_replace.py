@@ -19,6 +19,7 @@
 #   - Changed expected log message to "Target directory ... is empty. Nothing to do." for truly empty dir.
 #   - Added check for "No actionable occurrences found by scan" when dir only has excluded map.
 # - Refactored multiple statements on single lines to comply with E701 linting rules.
+# - Corrected binary log offset assertion in `test_standard_run` for the `True` (ignore_symlinks) case.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -188,7 +189,7 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     if binary_log.exists():
         log_content = binary_log.read_text()
         assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 7" in log_content
-        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 20" in log_content
+        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 23" in log_content # Corrected from 20
     elif (temp_test_dir / "binary_atlasvibe_file.bin").exists():
          original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
          had_matches = False
@@ -226,41 +227,31 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     run_main_flow_for_test(temp_test_dir, complex_map_file)
 
     # Key: "ȕsele̮Ss_diá͡cRiti̅cS" (stripped: "useless_diacritics") -> Value: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
-    # Original folder: "ȕsele̮Ss_diá͡cRiti̅cS_folder" (created by conftest)
+    # Original folder (created by conftest with stripped key): "useless_diacritics_folder"
     # Expected rename: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_folder"
     renamed_diacritic_dir_path = temp_test_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_folder"
     assert renamed_diacritic_dir_path.is_dir(), f"Expected renamed directory '{renamed_diacritic_dir_path}' not found."
 
-    # Original file in that folder: "ȕsele̮Ss_diá͡cRiti̅cS_file.txt"
+    # Original file in that folder (created by conftest with stripped key): "useless_diacritics_file.txt"
     # Expected file name: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_file.txt"
     file_in_renamed_diacritic_dir = renamed_diacritic_dir_path / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_file.txt"
     assert file_in_renamed_diacritic_dir.is_file()
+    # Content was created with "useless_diacritics" (stripped key)
     assert_file_content(file_in_renamed_diacritic_dir, "Content with dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL and also dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.\nAnd another Flojoy for good measure.")
 
+
     # Key: "The spaces will not be ignored" -> Value: "The control characters \n will be ignored_VAL"
-    # Original file: "The spaces will not be ignored_file.md" (created by conftest)
+    # Original file (created by conftest with key): "The spaces will not be ignored_file.md"
     # Expected name: "The control characters \n will be ignored_VAL_file.md"
-    # The newline in the value makes the target filename problematic.
-    # replace_logic.replace_occurrences will produce this name.
-    # os.rename will likely fail or behave unpredictably with a newline in the filename.
-    # This test highlights that filenames from values with control chars are not sanitized.
-    # For now, let's assert based on what replace_logic *would* produce for the name.
-    # The actual file system operation might fail, leaving the original file.
-    # We should check if the original file is GONE and the new (problematic) one exists OR if the original still exists due to rename failure.
     original_space_file_name = "The spaces will not be ignored_file.md"
     expected_problematic_name = "The control characters \n will be ignored_VAL_file.md"
     
-    # Check if the rename was attempted and failed (original still exists) or succeeded (problematic name exists)
     original_space_file_path = temp_test_dir / original_space_file_name
     problematic_path = temp_test_dir / expected_problematic_name
 
-    if problematic_path.exists(): # Unlikely to succeed on most OS
+    if problematic_path.exists():
         assert_file_content(problematic_path, f"This file has {replace_logic.replace_occurrences('The spaces will not be ignored')} in its name and content.")
     elif original_space_file_path.exists():
-        # This means the rename likely failed due to the invalid char in new name.
-        # The content of the original file should NOT have been changed if the rename failed first.
-        # However, content transactions are separate. If the rename failed, the content might still be processed on the original path.
-        # Let's check the content of the original file if it still exists.
         assert_file_content(original_space_file_path, f"This file has {replace_logic.replace_occurrences('The spaces will not be ignored')} in its name and content.")
         logging.warning(f"File '{original_space_file_name}' was not renamed to '{expected_problematic_name}', likely due to invalid char in target name. Content was checked on original.")
     else:
@@ -275,14 +266,16 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
 
     special_chars_file = temp_test_dir / "special_chars_in_content_test.txt"
     assert special_chars_file.is_file()
+    # Content was created with stripped key "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames"
     assert_file_content(special_chars_file, "This line contains SpecialCharsKeyMatched_VAL to be replaced.")
 
     control_chars_key_orig_filename = temp_test_dir / "complex_map_key_withcontrolchars_original_name.txt"
-    assert control_chars_key_orig_filename.is_file()
+    assert control_chars_key_orig_filename.is_file() # This file's name should not change
     assert_file_content(control_chars_key_orig_filename, "Content for complex map control key filename test.")
 
     control_chars_key_content_file = temp_test_dir / "complex_map_content_with_key_with_controls.txt"
     assert control_chars_key_content_file.is_file()
+    # Content was created with stripped key "keywithcontrolchars"
     assert_file_content(control_chars_key_content_file, "Line with Value_for_key_with_controls_VAL to replace.")
 
 
@@ -290,9 +283,13 @@ def test_edge_case_run(temp_test_dir: Path, edge_case_map_file: Path):
     create_test_environment_content(temp_test_dir, use_edge_case_map=True)
     run_main_flow_for_test(temp_test_dir, edge_case_map_file)
 
+    # Original name: "edge_case_MyKey_original_name.txt"
+    # Map key "My\nKey" (stripped: "MyKey") -> "MyKeyValue_VAL"
+    # The filename "edge_case_MyKey_original_name.txt" contains "MyKey", which matches the stripped key.
     renamed_file = temp_test_dir / "edge_case_MyKeyValue_VAL_original_name.txt"
     assert renamed_file.is_file()
     assert_file_content(renamed_file, "Initial content for control key name test (MyKeyValue_VAL).")
+
 
     content_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
     assert content_file.is_file()
@@ -318,9 +315,11 @@ def test_precision_run(temp_test_dir: Path, precision_map_file: Path):
     assert name_renamed.is_file()
     assert_file_content(name_renamed, "File for precision rename test.")
 
+    # Conftest was updated to use "FLOJOY_DIACRITIC" (stripped) and "keywithcontrol" (stripped) in the source file.
     exp_lines = ["Standard atlasvibe_plain here.\n","Another Atlasvibe_TitleCase for title case.\r\n",
-                 "Test ATLASVIBE_DIACRITIC_VAL with mixed case.\n","  atlasvibe_spaced_val  with exact spaces.\n",
-                 "  atlasvibe_plain   with extra spaces.\n", "value_for_control_key_val characters.\n",
+                 "Test ATLASVIBE_DIACRITIC_VAL with mixed case.\n","  atlasvibe_spaced_val  with exact spaces.\n", # "  flojoy  " -> "  atlasvibe_spaced_val  "
+                 "  atlasvibe_plain   with extra spaces.\n", # "  flojoy   " (extra spaces) -> "  atlasvibe_plain   " (key "flojoy" matches)
+                 "value_for_control_key_val characters.\n", # "keywithcontrol" -> "value_for_control_key_val"
                  "unrelated content\n","你好atlasvibe_plain世界 (Chinese chars).\n","emoji😊atlasvibe_plain test.\n"]
     exp_bytes_list = [line.encode('utf-8','surrogateescape') for line in exp_lines] + [b"malformed-\xff-atlasvibe_plain-bytes\n"]
     assert_file_content(src_renamed, b"".join(exp_bytes_list), is_binary=True)

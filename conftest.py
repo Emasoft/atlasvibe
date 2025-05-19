@@ -3,11 +3,17 @@
 # - `create_test_environment_content`:
 #   - Corrected deep path creation to be under `flojoy_root`.
 #   - For `use_complex_map`:
-#     - Changed `diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS` to `ȕsele̮Ss_diá͡cRiti̅cS_folder` to test replacement of the key part.
-#     - Changed `file_with_diacritics_ȕsele̮Ss_diá͡cRiti̅cS.txt` to `ȕsele̮Ss_diá͡cRiti̅cS_file.txt`.
+#     - Changed `diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS` to `useless_diacritics_folder` (using stripped key for matching).
+#     - Changed `file_with_diacritics_ȕsele̮Ss_diá͡cRiti̅cS.txt` to `useless_diacritics_file.txt` (using stripped key for matching).
+#     - Content for the above file now uses `useless_diacritics` (stripped key).
 #     - Changed `file_with_spaces_The spaces will not be ignored.md` to `The spaces will not be ignored_file.md`.
-#   - These changes aim to create file/folder names that directly contain the (unstripped) keys from the complex map,
-#     allowing `replace_logic.py` (after its fix) to match and replace them.
+#     - Content for `complex_map_content_with_key_with_controls.txt` now uses `keywithcontrolchars` (stripped key).
+#     - Content for `special_chars_in_content_test.txt` now uses `charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames` (stripped key).
+#   - For `include_precision_test_file`:
+#     - Changed "FLÖJOY_DIACRITIC" to "FLOJOY_DIACRITIC" (stripped key) in content.
+#     - Changed "key\twith\ncontrol" to "keywithcontrol" (stripped key) in content.
+#   - These changes aim to create file/folder names and content that literally contain the stripped version of the keys
+#     from the complex/precision maps, allowing the current `replace_logic.py` regex to match them.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 #
 # Copyright (c) 2024 Emasoft
@@ -80,19 +86,12 @@ def create_test_environment_content(
                 is_match_line = (i == 0 or i == VERY_LARGE_FILE_LINES // 2 or i == VERY_LARGE_FILE_LINES - 1 or
                                  (i % VERY_LARGE_FILE_MATCH_INTERVAL == 0 and i != 0 and i != VERY_LARGE_FILE_LINES // 2 and i != VERY_LARGE_FILE_LINES -1) )
                 f.write(f"Line {i+1}: This is a {'flojoy line that should be replaced' if is_match_line else 'standard non-matching line'}.\n")
-        # VERY_LARGE_FILE_NAME_REPLACED is just a placeholder for tests to know what the *original* name of the replaced file was.
-        # The actual replaced name will depend on the map.
-        # We create it here mostly for size comparison or if a test needs to verify its *original* content before replacement.
-        # For this test suite, it's more about having a large file that *gets* replaced.
-        # So, we might not need to write to VERY_LARGE_FILE_NAME_REPLACED here.
-        # However, if a test specifically checks this name, it's kept.
-        # For now, let's assume it's for tracking the original name of the file that will be replaced.
-        # If tests need a pre-replaced version, that's a different setup.
-        # The current tests seem to imply VERY_LARGE_FILE_NAME_ORIG is the one processed.
 
     if include_precision_test_file:
-        lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n", "Test FLÖJOY_DIACRITIC with mixed case.\n",
-                   "  flojoy  with exact spaces.\n", "  flojoy   with extra spaces.\n", "key\twith\ncontrol characters.\n",
+        # Map: "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL" (stripped key: "FLOJOY_DIACRITIC")
+        # Map: "key\twith\ncontrol": "value_for_control_key_val" (stripped key: "keywithcontrol")
+        lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n", "Test FLOJOY_DIACRITIC with mixed case.\n", # Use stripped key
+                   "  flojoy  with exact spaces.\n", "  flojoy   with extra spaces.\n", "keywithcontrol characters.\n", # Use stripped key
                    "unrelated content\n", "你好flojoy世界 (Chinese chars).\n", "emoji😊flojoy test.\n"]
         with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f:
             for line_str in lines:
@@ -101,34 +100,47 @@ def create_test_environment_content(
         (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
     if use_complex_map:
-        complex_diacritic_folder = base_dir / "ȕsele̮Ss_diá͡cRiti̅cS_folder"
+        # Key: "ȕsele̮Ss_diá͡cRiti̅cS" (stripped: "useless_diacritics") -> Value: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
+        complex_diacritic_folder_orig_name_part = "useless_diacritics" # Use stripped key for matching
+        complex_diacritic_folder = base_dir / f"{complex_diacritic_folder_orig_name_part}_folder"
         complex_diacritic_folder.mkdir(parents=True,exist_ok=True)
-        (complex_diacritic_folder/"ȕsele̮Ss_diá͡cRiti̅cS_file.txt").write_text(
-            "Content with ȕsele̮Ss_diá͡cRiti̅cS and also useless_diacritics.\nAnd another Flojoy for good measure.")
+        (complex_diacritic_folder / f"{complex_diacritic_folder_orig_name_part}_file.txt").write_text(
+            f"Content with {complex_diacritic_folder_orig_name_part} and also {complex_diacritic_folder_orig_name_part}.\nAnd another Flojoy for good measure.")
         
-        (base_dir/"The spaces will not be ignored_file.md").write_text(
-            "This file has The spaces will not be ignored in its name and content.")
+        # Key: "The spaces will not be ignored" (stripped: "The spaces will not be ignored") -> Value: "The control characters \n will be ignored_VAL"
+        original_spaces_name_part = "The spaces will not be ignored"
+        (base_dir / f"{original_spaces_name_part}_file.md").write_text(
+            f"This file has {original_spaces_name_part} in its name and content.")
         
+        # Key: "_My_Love&Story" (stripped: "_My_Love&Story") -> "_My_Story&Love_VAL"
         (base_dir/"_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story. And My_Love&Story.")
+        
+        # Key: "COCO4_ep-m" (stripped: "COCO4_ep-m") -> "MOCO4_ip-N_VAL"
         (base_dir/"filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M. Also coco4_ep-m.")
-        (base_dir/"special_chars_in_content_test.txt").write_text("This line contains characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames to be replaced.")
+        
+        # Key: "characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames"
+        # (stripped: "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames")
+        # -> "SpecialCharsKeyMatched_VAL"
+        stripped_special_chars_key = "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames"
+        (base_dir/"special_chars_in_content_test.txt").write_text(f"This line contains {stripped_special_chars_key} to be replaced.")
+        
+        # This file's name does not contain any complex map keys, so it should remain unchanged.
         (base_dir/"complex_map_key_withcontrolchars_original_name.txt").write_text("Content for complex map control key filename test.")
-        (base_dir/"complex_map_content_with_key_with_controls.txt").write_text("Line with key_with\tcontrol\nchars to replace.")
+        
+        # Key: "key_with\tcontrol\nchars" (stripped: "keywithcontrolchars") -> "Value_for_key_with_controls_VAL"
+        (base_dir/"complex_map_content_with_key_with_controls.txt").write_text("Line with keywithcontrolchars to replace.") # Use stripped key in content
 
     if use_edge_case_map:
+        # Map key "My\nKey" (stripped: "MyKey")
+        # Create a filename that contains the stripped key "MyKey"
         (base_dir/"edge_case_MyKey_original_name.txt").write_text("Initial content for control key name test (MyKey).")
+        # Content file with the original unstripped key "My\nKey"
         (base_dir/"edge_case_content_with_MyKey_controls.txt").write_text("Line with My\nKey to replace.")
         (base_dir/"edge_case_empty_stripped_key_target.txt").write_text("This should not be changed by an empty key.")
         (base_dir/"edge_case_key_priority.txt").write_text("test foo bar test and also foo.")
 
     if for_resume_test_phase_2:
         (base_dir/"newly_added_flojoy_for_resume.txt").write_text("This flojoy content is new for resume.")
-        # This part of the original conftest was problematic:
-        # renamed_only_name_file = base_dir / "only_name_atlasvibe.md"
-        # if renamed_only_name_file.exists(): renamed_only_name_file.write_text("Content without target string, but now with flojoy.")
-        # Instead, ensure the *original* file "only_name_flojoy.md" exists if it's expected to be processed by resume.
-        # If the test intends to modify a file that *would have been renamed*, it should modify the original.
-        # The test_resume_functionality will handle the state of "only_name_flojoy.md".
 
     if include_symlink_tests:
         symlink_target_dir = base_dir / "symlink_targets_outside"

@@ -3,6 +3,8 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
+# - Changed `os.rename` to `Path(current_abs_path).rename(new_abs_path)` in `_execute_rename_transaction`
+#   for potentially more robust symlink renaming and path handling.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -403,7 +405,7 @@ def _execute_rename_transaction(
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename dest '{new_name}'")
         if os.path.lexists(new_abs_path):
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
-        os.rename(current_abs_path, new_abs_path)
+        Path(current_abs_path).rename(new_abs_path)
         path_translation_map[orig_rel_path] = new_name
         path_cache.pop(orig_rel_path, None)
         path_cache[orig_rel_path] = new_abs_path
