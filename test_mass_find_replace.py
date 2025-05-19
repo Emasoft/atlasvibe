@@ -817,3 +817,115 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
 
     if simple_map_path.exists():
         simple_map_path.unlink()
+
+def test_mixed_encoding_surgical_replacement(temp_test_dir: Path, default_map_file: Path):
+    """
+    Tests surgical replacement in a file with mixed line endings, non-standard characters
+    for its primary encoding, and potentially invalid byte sequences.
+    The "Flojoy" key (ASCII) should be replaced, everything else preserved byte-for-byte.
+    """
+    logger = logging.getLogger("test_mixed_encoding") # For test-specific logging if needed
+    
+    # --- Test File Setup ---
+    # Using cp1252 as base, which has some defined chars in 0x80-0x9F range unlike iso-8859-1
+    # \x99 is ™ (trademark symbol in cp1252)
+    # \x81 is undefined in cp1252, will be handled by surrogateescape
+    # \xae is ® (registered trademark in cp1252)
+    # Line endings: \n, \r\n, \r
+    # Key: "Flojoy" (ASCII) -> "Atlasvibe" (ASCII) from default_map_file
+    
+    original_lines_bytes = [
+        b"Line 1 with normal ASCII and Flojoy here.\n",
+        b"Line 2 with cp1252 char: \x99 trademark symbol.\r\n", # ™ in cp1252
+        b"Line 3 with another Flojoy and \xae registered symbol.\r", # ® in cp1252
+        b"Line 4 with invalid cp1252 byte \x81 sequence, then Flojoy.\n",
+        b"Line 5 Fl\xf6joy with diacritic (should not match 'Flojoy' key).\r\n", # ö is \xf6 in cp1252
+        b"Line 6 just ends.",
+    ]
+    original_full_content_bytes = b"".join(original_lines_bytes)
+    
+    test_file_name = "mixed_encoding_test_cp1252.txt"
+    test_file_path = temp_test_dir / test_file_name
+    test_file_path.write_bytes(original_full_content_bytes)
+
+    # --- Expected Lines Bytes after replacement ---
+    # "Flojoy" -> "Atlasvibe"
+    expected_lines_bytes = [
+        b"Line 1 with normal ASCII and Atlasvibe here.\n", # Flojoy replaced
+        b"Line 2 with cp1252 char: \x99 trademark symbol.\r\n", # Unchanged
+        b"Line 3 with another Atlasvibe and \xae registered symbol.\r", # Flojoy replaced
+        b"Line 4 with invalid cp1252 byte \x81 sequence, then Atlasvibe.\n", # Flojoy replaced
+        b"Line 5 Fl\xf6joy with diacritic (should not match 'Flojoy' key).\r\n", # Unchanged
+        b"Line 6 just ends.", # Unchanged
+    ]
+    expected_full_content_bytes = b"".join(expected_lines_bytes)
+
+    # --- Run Main Flow ---
+    # Ensure the map is loaded correctly for this test instance
+    load_map_success = replace_logic.load_replacement_map(default_map_file)
+    assert load_map_success, "Failed to load default_map_file for mixed encoding test"
+    
+    # Run the main flow, targeting only this file for simplicity if needed, or let it scan.
+    # Using extensions=None to let the script decide if it's text-like.
+    # cp1252 should be detected as text-like.
+    run_main_flow_for_test(
+        temp_test_dir, 
+        default_map_file, 
+        extensions=None, # Let script auto-detect
+        skip_file_renaming=True, # Focus on content
+        skip_folder_renaming=True
+    )
+
+    # --- Assertions ---
+    assert test_file_path.exists(), "Test file should still exist."
+    
+    modified_content_bytes = test_file_path.read_bytes()
+    
+    if modified_content_bytes != expected_full_content_bytes:
+        logger.error("Surgical replacement test FAILED. Content mismatch.")
+        logger.error(f"Expected bytes:\n{expected_full_content_bytes!r}")
+        logger.error(f"Actual bytes:\n{modified_content_bytes!r}")
+        
+        # For detailed line-by-line diff if helpful:
+        try:
+            original_str_surrogate = original_full_content_bytes.decode('cp1252', errors='surrogateescape')
+            modified_str_surrogate = modified_content_bytes.decode('cp1252', errors='surrogateescape')
+            expected_str_surrogate = expected_full_content_bytes.decode('cp1252', errors='surrogateescape')
+            
+            logger.info("\n--- Original Decoded (surrogateescape) ---")
+            for i, line in enumerate(original_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+            logger.info("\n--- Expected Decoded (surrogateescape) ---")
+            for i, line in enumerate(expected_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+            logger.info("\n--- Actual Decoded (surrogateescape) ---")
+            for i, line in enumerate(modified_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+        except Exception as e:
+            logger.error(f"Error during decoded diff generation: {e}")
+
+    assert modified_content_bytes == expected_full_content_bytes, \
+        "File content after surgical replacement does not match expected byte-for-byte."
+
+    # Check transaction log for this file
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None, "Transaction file not found."
+    
+    relevant_tx_count = 0
+    for tx in transactions:
+        if tx["PATH"] == test_file_name and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            relevant_tx_count += 1
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+            # Check if the original line content matches what we expect for replaced lines
+            if tx["LINE_NUMBER"] == 1: # Line 1 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[0].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[0].decode('cp1252', errors='surrogateescape')
+            elif tx["LINE_NUMBER"] == 3: # Line 3 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[2].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[2].decode('cp1252', errors='surrogateescape')
+            elif tx["LINE_NUMBER"] == 4: # Line 4 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[3].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[3].decode('cp1252', errors='surrogateescape')
+    
+    assert relevant_tx_count == 3, f"Expected 3 content transactions for {test_file_name}, got {relevant_tx_count}"

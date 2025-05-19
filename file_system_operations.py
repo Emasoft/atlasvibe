@@ -20,9 +20,12 @@
 #   providing consistent behavior for `ignore_symlinks` and path-based exclusion rules.
 # - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
 # - Added `import collections.abc`.
-# - `scan_directory_for_occurrences`: Normalize filenames and file content lines to NFC before regex search
-#   and before calling `replace_occurrences` for determining if a change would occur.
-#   Original (non-normalized) line content is still stored in transactions.
+# - `scan_directory_for_occurrences`:
+#   - For filenames and content lines, a "searchable version" (NFC normalized, stripped of diacritics & controls)
+#     is created for matching against `scan_pattern`.
+#   - `replace_occurrences` is called with the *original* (non-normalized, non-stripped) string to determine
+#     if an actual change would occur and thus if a transaction is needed.
+#   - Original (non-normalized) line content is still stored in transactions.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -45,7 +48,7 @@ import errno
 from striprtf.striprtf import rtf_to_text
 from isbinary import is_binary_file
 
-from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys
+from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
 
 class SandboxViolationError(Exception):
     pass
@@ -222,9 +225,13 @@ def scan_directory_for_occurrences(
             continue
 
         original_name = item_abs_path.name
-        normalized_original_name = unicodedata.normalize('NFC', original_name) # Normalize name for matching
-        if (scan_pattern and scan_pattern.search(normalized_original_name)) and \
-           (replace_occurrences(normalized_original_name) != normalized_original_name): # replace_occurrences also normalizes its input now
+        # For scanning, we need to see if the name *would* change if processed.
+        # The scan_pattern is built from NFC-normalized, stripped keys.
+        # To check if scan_pattern matches, we should search on a similarly processed version of original_name.
+        # `strip_diacritics` does NFD internally.
+        searchable_name = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(original_name)))
+        if (scan_pattern and scan_pattern.search(searchable_name)) and \
+           (replace_occurrences(original_name) != original_name): # Pass original_name to replace_occurrences
             tx_type: str | None = None
             if item_abs_path.is_dir() and not item_abs_path.is_symlink():
                 if not skip_folder_renaming:
@@ -307,9 +314,11 @@ def scan_directory_for_occurrences(
                     lines_for_scan = [file_content_for_scan]
 
                 for line_idx, line_content in enumerate(lines_for_scan):
-                    normalized_line_content = unicodedata.normalize('NFC', line_content) # Normalize line for matching
-                    if (scan_pattern and scan_pattern.search(normalized_line_content)) and \
-                       (replace_occurrences(normalized_line_content) != normalized_line_content): # replace_occurrences also normalizes
+                    # For scanning, process line_content similarly to how keys are processed for scan_pattern
+                    # `strip_diacritics` does NFD internally.
+                    searchable_line_content = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(line_content)))
+                    if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
+                       (replace_occurrences(line_content) != line_content): # Pass original line_content
                         tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
                         if tx_id_tuple not in existing_transaction_ids:
                             processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})

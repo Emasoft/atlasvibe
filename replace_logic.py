@@ -30,6 +30,10 @@
 #   - In `_actual_replace_callback`: Added `DEBUG_CALLBACK_HIT` print to confirm if the callback is invoked.
 # - `replace_occurrences`: Input string is now NFC normalized before regex search and substitution.
 # - Debug print in `replace_occurrences` updated to show original and NFC normalized input.
+# - SURGICAL PRINCIPLE REFINEMENT:
+#   - `replace_occurrences` now passes the ORIGINAL input string to `re.sub`.
+#   - `_actual_replace_callback` normalizes the `match.group(0)` (which is from the original string)
+#     by stripping and NFC normalizing IT to create the `lookup_key`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -173,26 +177,26 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     # ---- END DEBUG PRINT (_actual_replace_callback HIT) ----
     
     # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
-    # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
-    # The input to .sub() was also NFC normalized.
-    # Therefore, matched_text_in_input *should* already be one of the NFC-normalized, stripped keys.
-    # No further stripping or normalization should be needed on matched_text_in_input here.
-    lookup_key = matched_text_in_input
+    # The input to .sub() is the original (potentially non-NFC) string.
+    # So, we must process matched_text_in_input to the same canonical form as the map keys for lookup.
+    stripped_matched_text = strip_control_characters(strip_diacritics(matched_text_in_input))
+    lookup_key = unicodedata.normalize('NFC', stripped_matched_text)
 
     # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED) ----
-    # print(f"DEBUG_CALLBACK_PROCESSED: Using lookup_key: '{lookup_key}', Is in map? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
+    # print(f"DEBUG_CALLBACK_PROCESSED: Matched original segment: '{matched_text_in_input!r}' -> Stripped: '{stripped_matched_text!r}' -> Lookup Key (NFC): '{lookup_key!r}'")
+    # print(f"DEBUG_CALLBACK_PROCESSED: Is lookup_key '{lookup_key!r}' in _RAW_REPLACEMENT_MAPPING? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
     # if lookup_key in _RAW_REPLACEMENT_MAPPING:
     #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}'")
     # else:
     #     # This case should be rare if regex is built correctly from map keys
-    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text because key '{lookup_key}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
+    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text because key '{lookup_key!r}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
     # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED) ----
     
     if lookup_key in _RAW_REPLACEMENT_MAPPING:
         return _RAW_REPLACEMENT_MAPPING[lookup_key]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
-    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE and input to sub() is normalized.
+    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
     # If it is hit, it means the regex matched something that, after stripping and normalizing,
     # isn't a direct key. This would be unexpected.
     # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (lookup_key: '{lookup_key}')")
@@ -204,13 +208,16 @@ def replace_occurrences(input_string: str) -> str:
     if not isinstance(input_string, str):
         return input_string
 
-    normalized_input_string = unicodedata.normalize('NFC', input_string)
+    # For the DEBUG search, we normalize the input to see if the NFC-based regex *would* find a match.
+    # However, the actual sub operation is done on the original input_string to preserve its exact form.
+    normalized_input_for_debug_search = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(input_string)))
 
     # ---- START DEBUG PRINT (replace_occurrences search) ----
-    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_string) # Search on normalized
-    print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC): {normalized_input_string!r}, Search found: {'YES' if search_result else 'NO'}")
+    # The pattern itself is built from NFC-normalized, stripped keys.
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_for_debug_search)
+    print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (processed for search debug): {normalized_input_for_debug_search!r}, Search on processed found: {'YES' if search_result else 'NO'}")
     if search_result:
-        print(f"DEBUG_REPLACE_OCCURRENCES: Search match object: {search_result}")
+        print(f"DEBUG_REPLACE_OCCURRENCES: Search match object (on processed): {search_result}")
     # ---- END DEBUG PRINT (replace_occurrences search) ----
 
-    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, normalized_input_string)
+    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, input_string)

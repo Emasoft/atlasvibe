@@ -1,24 +1,45 @@
-# SELF-TEST SCENARIOS (TASKS CHECKLIST)
-# This checklist tracks the implementation of self-test scenarios as specified in NOTES.md
+# TASKS CHECKLIST (Mass Find & Replace Tool)
 
-+- Test to assess the ability to replace folder and file names in a directory tree of depth=10
-+- Test to assess the ability to search and replace strings in files with GB18030 charset encoding
-+- Test to assess the ability to replace a string with its replacement according to the replacement map
-+- Test to assess the ability to leave intact the occurrences of the string that are not included in the replacement map
-+- Test to assess the ability to find in text files multiple lines with the string occurrences
-+- Test to assess the ability to create an entry for a transaction in the json file for each line of a file containing the string occurrences
-+- Test to assess the ability to create an entry for a transaction in the json file for each file name containing the string occurrences
-+- Test to assess the ability to create an entry for a transaction in the json file for each folder name containing the string occurrences
-+- Test the ability to execute an entry for a transaction in the json file for each line of a file containing the string occurrences
-+- Test the ability to execute an entry for a transaction in the json file for each file name containing the string occurrences
-+- Test the ability to execute an entry for a transaction in the json file for each folder name containing the string occurrences
-+- Test the ability to update the json field of the STATE of a transaction in realtime in an atomic and secure way
-+- Test the ability to compare the first search and building the planned_transaction.json file with the second search that builds the planned_transaction_validation.json file, to ensure deterministic results
-+- Test the ability to resume the job from a json file with an incomplete number of transactions added, and resume the SEARCH phase
-+- Test the ability to resume the job from a json file with only a partial number of transactions have been marked with the COMPLETED value in the STATUS field, and to resume executing the remaining PLANNED or IN_PROGRESS transactions.
-+- Test the ability to retry transactions executions that were marked with STATE = ERROR, and correctly determine if to try again, ask the user for sudo/permissions or to stop the job and exit with an error message.
-+- Test the ability to find the search and replace the string inside files > 10MB using the line-by-line approach to reduce memory usage
-+- Test the ability of the script to correctly parse the replacement_mapping.json file according to the parsing rules I told you before.
-+- Test the ability of the script to make changes like a surgeon, only replacing the strings in the replacement_mapping.json configuration file and nothing else, leaving everything else exactly as was before, including: encoding, line endings, trailing chars, control characters, diacritics, malformed chars, illegal chars, corrupt chars, mixed encoding lines, spaces and invisible chars, etc. Everything must be identical and untouched except those occurrences matching the replacement map provided by the user. Do various tests about this, to consider all test cases.
-+- Test to assess the fact that files that have not been found containing (in the name or content) strings that matches the replacement map are always left intact.
-+- test the ability to detect and ignore symlinks (and not rename them) if the option `--ignore-symlinks` is used in the launch command.
+## I. Core Replacement Logic & Surgical Principle
+
+1.  [X] **Key Canonicalization**: Ensure keys from `replacement_mapping.json` are consistently processed (strip diacritics, strip control chars, NFC normalize) and stored in `_RAW_REPLACEMENT_MAPPING`.
+2.  [X] **Regex Compilation**: Ensure regex patterns (`_COMPILED_PATTERN_FOR_SCAN`, `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`) are built from these canonical keys and are case-sensitive.
+3.  [X] **Surgical `replace_occurrences`**:
+    *   [X] `replace_occurrences` function receives the original, non-normalized input string.
+    *   [X] `re.sub` operates directly on this original input string.
+    *   [X] `_actual_replace_callback` processes its `match.group(0)` (a segment from the original string) into the canonical key form for lookup.
+    *   [X] Callback returns the original, un-normalized value from the JSON map for substitution.
+4.  [X] **Surgical Scan Logic (`scan_directory_for_occurrences`):**
+    *   [X] When checking filenames/content lines, create a temporary "searchable version" (processed like map keys: strip diacritics, strip controls, NFC normalize).
+    *   [X] Use `_COMPILED_PATTERN_FOR_SCAN` on this `searchable_version` to determine if a match *could* occur.
+    *   [X] Confirm actual change by calling `replace_occurrences` with the *original* string.
+    *   [X] Store the *original* string in transactions.
+
+## II. Test Suite Enhancements & Verification
+
+1.  [X] **Review `test_complex_map_run` & `test_precision_run`**:
+    *   [X] Verify debug logs confirm consistent key processing and map loading.
+    *   [X] Ensure tests pass with the surgical replacement logic. (Failures indicate deeper issues if Phase I is correct).
+2.  [ ] **Add `test_mixed_encoding_surgical_replacement`**:
+    *   [ ] Create file with mixed line endings, non-standard chars for its encoding (e.g., cp1252), and invalid byte sequences.
+    *   [ ] Include an ASCII key (e.g., "Flojoy") that should be replaced.
+    *   [ ] Include a similar key with diacritics (e.g., "Flöjoy") that should *not* match the ASCII key.
+    *   [ ] Assert that only the exact key is replaced and all other bytes (including invalid ones, special chars, line endings) are preserved.
+    *   [ ] Verify transaction log entries for this file.
+3.  [ ] **Address `test_edge_case_run` (File Missing)**:
+    *   [ ] If still failing after Phase I, meticulously trace transactions and path resolutions for this test.
+    *   [ ] Add targeted debug logging in `_get_current_absolute_path` and rename execution logic if necessary.
+4.  [ ] **Address `test_skip_scan_behavior` (File Not Found)**:
+    *   [ ] If still failing, review `path_translation_map` initialization and usage in `skip_scan` mode.
+    *   [ ] Verify how `_get_current_absolute_path` resolves paths for items within (potentially renamed) parent directories based on loaded transactions.
+    *   [ ] Ensure `DRY_RUN` transaction statuses are correctly reset to `PENDING` for execution.
+
+## III. Documentation & Final Review
+
+1.  [ ] **Update `NOTES.md`**:
+    *   [ ] Document the refined surgical replacement strategy, including Unicode normalization aspects and encoding handling (`surrogateescape`).
+    *   [ ] Clarify behavior for keys unrepresentable in a file's charset.
+    *   [ ] Note the design's flexibility for future raw Unicode keys.
+2.  [ ] **Code Review**: Perform a final pass over all modified files for clarity, comments, and adherence to guidelines.
+3.  [ ] **Remove Temporary Debug Prints**: Clean up any extensive debug prints added during troubleshooting, leaving only essential ones (like the `DEBUG_REPLACE_OCCURRENCES` if deemed useful).
+

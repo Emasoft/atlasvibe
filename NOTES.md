@@ -1,4 +1,3 @@
-
 ## Project Goal
 Create a Python script using Prefect to find and replace all occurrences of specified strings with their corresponding replacements across a directory. This includes file names, folder names, and content within text files. The script must be robust, handle various file encodings, allow for dry runs, resumability, and load its replacement rules from an external JSON configuration file.
 
@@ -92,6 +91,19 @@ Create a Python script using Prefect to find and replace all occurrences of spec
     *   Occurrences of strings that, after diacritic stripping and case-folding, do not match a key in the internal mapping MUST be left entirely intact. For example, in the string `The word flojoy is not identical to the word flo̗j̕oy̆.`, if "flojoy" is a key (becomes "flojoy" after stripping) but "flo̗j̕oy̆" (becomes "flojoy" after stripping) is *not* explicitly a key with a *different* value, or if the intent is to only match the simple ASCII "flojoy", then only the simple ASCII "flojoy" would be replaced. The script matches based on the diacritic-stripped keys.
     *   All characters in filenames and file content that are not part of an actual match (based on the dynamically generated regex from diacritic-stripped keys) MUST be preserved in their original byte form. This includes control characters, line endings, and any byte sequences that may not be valid in the detected encoding (which are handled using `surrogateescape` during processing and written back as original bytes).
     *   The script's sole modification to any file or name should be the direct replacement of a matched segment (which corresponds to a diacritic-stripped key) with its corresponding original target string from the mapping, encoded back into the file's original encoding. No other bytes should be altered.
+*   **Surgical Principle with Encodings/Normalization**: The script aims to modify *only* the exact occurrences of matched keys.
+    *   **Input Processing**: When a file line or filename (input string) is processed:
+        1.  The original byte sequence of the input string is preserved.
+        2.  For matching purposes, a temporary "searchable version" of the input string is created by decoding it (using detected encoding with `surrogateescape`), then applying the same stripping (diacritics, control characters) and NFC normalization as was applied to the JSON keys during map loading.
+        3.  The regex pattern (built from canonical map keys) is searched against this `searchable_version`.
+    *   **Replacement**:
+        1.  If a match is found in the `searchable_version`, the `re.sub` operation is performed on the **original, non-normalized Unicode string** (decoded with `surrogateescape`).
+        2.  The callback function (`_actual_replace_callback`) receives the matched segment from this original string. It then processes this segment (strip diacritics, strip controls, NFC normalize) to create a canonical lookup key.
+        3.  This lookup key is used to retrieve the corresponding *original value string* from the loaded JSON map.
+        4.  This original value string is substituted by `re.sub`. The result is a modified Unicode string.
+    *   **Output**: The modified Unicode string is encoded back to the file's original detected encoding, using `surrogateescape` to handle any characters in the replacement string that might not be representable in the target encoding. This ensures that non-matched parts of the line/filename, including their original byte patterns for unmappable characters and specific normalization forms, are preserved.
+    *   **Unsupported Character Sets for Keys**: If a key from the replacement map cannot be represented or meaningfully searched in a file's content due to fundamental charset differences (e.g., a Chinese key in a file detected as purely Arabic DOS-720), that key will naturally not be found during the search in that file's content. No error is raised; the key is simply not matched.
+*   **Future Full Unicode Keys**: The current key processing (stripping, normalization) is applied at map load time. If this processing were removed in the future to support raw Unicode keys with diacritics/controls, the core replacement mechanism (operating on original Unicode strings and the callback processing the matched segment for lookup) would still be largely applicable. The callback's internal processing of the `matched_text_original_form` would simply become an identity operation if keys were already in their final lookup form.
 
 3.  **Scope of Operation**:
     *   **Directory Traversal**: Recursively scan a given root directory.
