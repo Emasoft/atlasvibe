@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `_get_current_absolute_path`: Changed `(current_parent_abs_path / current_item_name).resolve(strict=False)`
+#   to `current_parent_abs_path / current_item_name` to avoid resolving symlinks to their targets prematurely.
+#   This ensures that operations like renaming act on the symlink itself.
 # - `execute_all_transactions`:
 #   - Correctly reset status of transactions marked COMPLETED with ERROR_MESSAGE="DRY_RUN"
 #     to PENDING when `resume=True` or (`skip_scan=True` and `resume=False`).
@@ -143,7 +146,7 @@ def _get_current_absolute_path(
     parent_rel_str = "." if original_path_obj.parent == Path('.') else str(original_path_obj.parent)
     current_parent_abs_path = _get_current_absolute_path(parent_rel_str, root_dir, path_translation_map, cache)
     current_item_name = path_translation_map.get(original_relative_path_str, original_path_obj.name)
-    current_abs_path = (current_parent_abs_path / current_item_name).resolve(strict=False)
+    current_abs_path = current_parent_abs_path / current_item_name
     cache[original_relative_path_str] = current_abs_path
     return current_abs_path
 
