@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `execute_all_transactions`:
+#   - Correctly reset status of transactions marked COMPLETED with ERROR_MESSAGE="DRY_RUN"
+#     to PENDING when `resume=True` or (`skip_scan=True` and `resume=False`).
 # - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 # - Changed `os.rename` to `Path(current_abs_path).rename(new_abs_path)` in `_execute_rename_transaction`
@@ -526,6 +529,27 @@ def execute_all_transactions(
     execution_start_time = time.time()
     max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
     current_overall_retry_attempt = 0
+    
+    # Initial status reset for relevant transactions if resuming or skipping scan
+    if resume or (skip_scan and not resume):
+        for tx_item_for_reset in transactions:
+            if tx_item_for_reset.get("STATUS") == TransactionStatus.COMPLETED.value and \
+               tx_item_for_reset.get("ERROR_MESSAGE") == "DRY_RUN":
+                tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
+                tx_item_for_reset.pop('ERROR_MESSAGE', None)
+                tx_item_for_reset.pop('timestamp_processed', None)
+                tx_item_for_reset.pop('timestamp_next_retry', None) # Clear any retry timestamp too
+                tx_item_for_reset['retry_count'] = 0
+            elif resume and tx_item_for_reset.get("STATUS") == TransactionStatus.FAILED.value:
+                # Also reset FAILED transactions to PENDING on resume, so they are retried.
+                # This is a broader reset for FAILED than just DRY_RUN ones.
+                print(f"Resuming FAILED tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})")
+                tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
+                tx_item_for_reset.pop('ERROR_MESSAGE', None)
+                tx_item_for_reset.pop('timestamp_processed', None)
+                tx_item_for_reset.pop('timestamp_next_retry', None)
+                tx_item_for_reset['retry_count'] = 0
+
 
     while True:
         processed_in_this_pass = 0
@@ -548,25 +572,27 @@ def execute_all_transactions(
 
             if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0:
                 current_status = TransactionStatus.PENDING
-
+            
             if current_status == TransactionStatus.RETRY_LATER:
                 if tx_item.get("timestamp_next_retry", 0) > time.time():
                     items_still_requiring_retry.append(tx_item)
                     continue
                 else:
                     current_status = TransactionStatus.PENDING
+            
+            # This FAILED reset was specific to the first pass of resume, now handled by initial loop
+            # if resume and tx_item.get("STATUS") == TransactionStatus.FAILED.value and current_overall_retry_attempt == 0 :
+            #     print(f"Resuming FAILED tx as PENDING: {tx_id} ({tx_item.get('PATH','N/A')})")
+            #     current_status = TransactionStatus.PENDING
 
-            if resume and tx_item.get("STATUS") == TransactionStatus.FAILED.value and current_overall_retry_attempt == 0 :
-                print(f"Resuming FAILED tx as PENDING: {tx_id} ({tx_item.get('PATH','N/A')})")
-                current_status = TransactionStatus.PENDING
+            tx_item["STATUS"] = current_status.value # Ensure current_status is reflected in tx_item for this pass
 
-            tx_item["STATUS"] = current_status.value
-
-            if skip_scan and not resume and current_status == TransactionStatus.COMPLETED and tx_item.get("ERROR_MESSAGE") == "DRY_RUN":
-                current_status = TransactionStatus.PENDING
-                tx_item["STATUS"] = TransactionStatus.PENDING.value
-                tx_item.pop('ERROR_MESSAGE', None)
-                tx_item.pop('timestamp_processed', None)
+            # The specific skip_scan without resume logic for DRY_RUN was moved to the initial loop.
+            # if skip_scan and not resume and current_status == TransactionStatus.COMPLETED and tx_item.get("ERROR_MESSAGE") == "DRY_RUN":
+            #     current_status = TransactionStatus.PENDING
+            #     tx_item["STATUS"] = TransactionStatus.PENDING.value 
+            #     tx_item.pop('ERROR_MESSAGE', None) 
+            #     tx_item.pop('timestamp_processed', None) 
 
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)

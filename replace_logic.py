@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `_actual_replace_callback`: Added redundant stripping for `map_key_stripped_case_preserved.lower()` 
+#   in the fallback loop for diagnostic purposes, though theoretically unnecessary if stripping is consistent.
+#   The main lookup `stripped_matched_text_in_input in _RAW_REPLACEMENT_MAPPING` remains the primary path.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 # - `_actual_replace_callback`:
 #   - Prioritizes exact case match of `matched_text_in_input` against `_RAW_REPLACEMENT_MAPPING` keys (which are stripped, case-preserved original JSON keys).
@@ -133,11 +136,19 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     
     stripped_matched_text_in_input = strip_control_characters(strip_diacritics(matched_text_in_input))
 
+    # Priority 1: Exact case match of the stripped input against stripped, case-preserved map keys.
     if stripped_matched_text_in_input in _RAW_REPLACEMENT_MAPPING:
         return _RAW_REPLACEMENT_MAPPING[stripped_matched_text_in_input]
 
+    # Priority 2: Case-insensitive fallback using stripped input and stripped map keys.
+    # Defensive stripping for map_key_stripped_case_preserved during comparison,
+    # though it should already be stripped correctly when _SORTED_RAW_KEYS_FOR_REPLACE was populated.
+    stripped_matched_text_in_input_lower = stripped_matched_text_in_input.lower()
     for map_key_stripped_case_preserved in _SORTED_RAW_KEYS_FOR_REPLACE:
-        if map_key_stripped_case_preserved.lower() == stripped_matched_text_in_input.lower():
+        # Re-strip map_key just to be absolutely certain for comparison, then lowercase
+        # This is highly defensive and likely redundant if load_replacement_map is perfect.
+        current_map_key_for_comparison_lower = strip_control_characters(strip_diacritics(map_key_stripped_case_preserved)).lower()
+        if current_map_key_for_comparison_lower == stripped_matched_text_in_input_lower:
             return _RAW_REPLACEMENT_MAPPING[map_key_stripped_case_preserved]
             
     return matched_text_in_input
