@@ -2,16 +2,15 @@
 # -*- coding: utf-8 -*-
 #
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `_actual_replace_callback`: Changed to use `match.group(0)` directly as `lookup_key`.
+#   This assumes `match.group(0)` is already the NFC-normalized, stripped key because
+#   `re.sub` operates on an NFC-normalized input string and the regex patterns
+#   are built from NFC-normalized, stripped keys.
 # - `_actual_replace_callback`: Simplified lookup logic. Since `matched_text_in_input`
 #   is a result of a regex match (built from NFC-normalized, stripped keys) against
 #   an NFC-normalized input string, it should already be in the correct form
 #   (NFC-normalized, stripped key) for direct lookup in `_RAW_REPLACEMENT_MAPPING`.
 #   Removed redundant stripping and normalization of `matched_text_in_input` within the callback.
-# - `_actual_replace_callback`: Implemented a two-tier matching logic:
-#   1. Attempts a direct case-sensitive match of the stripped input text (case preserved)
-#      against the stripped, case-preserved keys in `_RAW_REPLACEMENT_MAPPING`.
-#   2. If no direct match, falls back to a case-insensitive comparison of the stripped input
-#      text (lowercased) against the lowercased versions of the stripped, case-preserved keys from `_SORTED_RAW_KEYS_FOR_REPLACE`. This fallback is now removed.
 # - Matching is now strictly case-sensitive. `re.IGNORECASE` flag removed from regex compilations.
 # - `_actual_replace_callback` simplified for direct case-sensitive lookup.
 # - Modernized type hints:
@@ -172,17 +171,17 @@ def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    matched_text_in_input = match.group(0)
+    # matched_text_in_input is a result of a regex match (built from NFC-normalized, stripped keys)
+    # against an NFC-normalized input string. So, it should already be in the correct
+    # (NFC-normalized, stripped key) form for direct lookup.
+    lookup_key = match.group(0)
     
     # ---- START DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
-    # print(f"DEBUG_CALLBACK_HIT: Matched raw input (from NFC-normalized string): '{matched_text_in_input}'")
+    # print(f"DEBUG_CALLBACK_HIT: Matched raw input (from NFC-normalized string): '{lookup_key}'")
     # ---- END DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
-    
-    stripped_matched_text = strip_control_characters(strip_diacritics(matched_text_in_input))
-    lookup_key = unicodedata.normalize('NFC', stripped_matched_text)
-
+        
     # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED - Already Commented) ----
-    # print(f"DEBUG_CALLBACK_PROCESSED: Matched segment (from NFC string): '{matched_text_in_input!r}' -> Stripped: '{stripped_matched_text!r}' -> Lookup Key (NFC): '{lookup_key!r}'")
+    # print(f"DEBUG_CALLBACK_PROCESSED: Lookup Key (from match.group(0)): '{lookup_key!r}'")
     # print(f"DEBUG_CALLBACK_PROCESSED: Is lookup_key '{lookup_key!r}' in _RAW_REPLACEMENT_MAPPING? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
     # if lookup_key in _RAW_REPLACEMENT_MAPPING:
     #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}'")
@@ -195,8 +194,8 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         return _RAW_REPLACEMENT_MAPPING[lookup_key]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
-    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (lookup_key: '{lookup_key}')")
-    return matched_text_in_input
+    # print(f"Warning: _actual_replace_callback fallback for '{lookup_key}'")
+    return lookup_key
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:

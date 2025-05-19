@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `get_file_encoding`: Refactored logic to prioritize chardet's detected encoding
+#   if it can successfully decode a sample of the file content, before falling back
+#   to a UTF-8 test or the default. Adjusted confidence threshold for chardet.
 # - `scan_directory_for_occurrences`: Changed `item_abs_path.read_text(..., newline='')`
 #   to use `with open(item_abs_path, 'r', ..., newline='') as f: f.read()`
 #   to resolve the "unexpected keyword argument 'newline'" error seen in test logs.
@@ -67,39 +70,51 @@ class TransactionStatus(str, Enum):
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
     if file_path.suffix.lower() == '.rtf': # Optional can be str | None
-        return 'latin-1'
+        return 'latin-1' # RTF is often latin-1 or cp1252, but text extraction handles it.
+    
     try:
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
         if not raw_data:
-            return DEFAULT_ENCODING_FALLBACK
+            return DEFAULT_ENCODING_FALLBACK # Default for empty files
+
         detected = chardet.detect(raw_data)
-        encoding: str | None = detected.get('encoding')
+        # print(f"DEBUG: Chardet for {file_path.name}: {detected}")
+
+        detected_encoding_from_chardet: str | None = detected.get('encoding')
         confidence: float = detected.get('confidence', 0.0)
-        if encoding and confidence and confidence > 0.7:
-            norm_enc = encoding.lower()
-            if norm_enc == 'ascii':
-                return 'ascii'
-            if 'utf-8' in norm_enc or 'utf8' in norm_enc:
-                return 'utf-8'
+
+        # Prioritize chardet's suggestion if it's reasonably confident and decodes the sample
+        if detected_encoding_from_chardet and confidence > 0.5: # Adjusted confidence
             try:
-                b"test".decode(encoding)
-                return encoding
-            except (LookupError, UnicodeDecodeError):
-                pass
+                # Test decoding with chardet's suggestion
+                raw_data.decode(detected_encoding_from_chardet)
+                # print(f"DEBUG: Using chardet's encoding: {detected_encoding_from_chardet} (confidence: {confidence}) for {file_path.name}")
+                return detected_encoding_from_chardet
+            except (UnicodeDecodeError, LookupError):
+                # print(f"DEBUG: Chardet's encoding {detected_encoding_from_chardet} failed to decode sample for {file_path.name}. Confidence: {confidence}")
+                pass # Fall through if chardet's suggestion fails
+
+        # If chardet's suggestion failed or low confidence, try UTF-8 as a strong candidate
         try:
             raw_data.decode('utf-8')
+            # print(f"DEBUG: Using UTF-8 after chardet low conf/fail for {file_path.name}")
             return 'utf-8'
         except UnicodeDecodeError:
-            if encoding:
-                try:
-                    raw_data.decode(encoding)
-                    return encoding
-                except (UnicodeDecodeError, LookupError):
-                    pass
+            # print(f"DEBUG: UTF-8 decoding failed for {file_path.name}")
+            # If UTF-8 fails, and chardet had an initial suggestion (even if it failed the sample decode test earlier),
+            # it might be better than a hardcoded fallback if it's a known encoding type.
+            # However, if it failed to decode the sample, it's risky.
+            # Let's stick to DEFAULT_ENCODING_FALLBACK if UTF-8 fails and chardet's initial suggestion also failed the sample.
+            # If chardet had a suggestion but it was <0.5 confidence and we skipped it, we could try it here,
+            # but that adds complexity. For now, simple fallback.
+            # print(f"DEBUG: Falling back to {DEFAULT_ENCODING_FALLBACK} for {file_path.name}")
             return DEFAULT_ENCODING_FALLBACK
-    except Exception:
+            
+    except Exception as e:
+        # print(f"DEBUG: Exception in get_file_encoding for {file_path.name}: {e}. Falling back to {DEFAULT_ENCODING_FALLBACK}.")
         return DEFAULT_ENCODING_FALLBACK
+
 
 def load_ignore_patterns(ignore_file_path: Path) -> pathspec.PathSpec | None:
     if not ignore_file_path.is_file():
