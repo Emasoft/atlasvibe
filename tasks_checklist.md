@@ -25,17 +25,17 @@
 
 1.  [X] **Review `test_complex_map_run` & `test_precision_run`**: Verified for consistency with current logic.
 2.  [X] **Add `test_mixed_encoding_surgical_replacement`**: Implemented and verified.
-3.  [ ] **Implement `test_highly_problematic_xml_content_preservation`**:
-    *   [ ] Create an XML-like file (e.g., encoded in cp1252 or latin-1) containing:
-        *   Mixed line endings (`\n`, `\r\n`, `\r`).
-        *   Valid characters for the chosen encoding (e.g., cp1252 specific chars like `™` 0x99, `®` 0xAE).
-        *   Bytes that are invalid/undefined for the chosen encoding (e.g., 0x81, 0xFE in cp1252/latin-1).
-        *   The ASCII key "Flojoy" (which should be replaced by "Atlasvibe").
-        *   A non-matching diacritic variant like "Flöjoy" (using `ö` 0xF6 in cp1252/latin-1).
-        *   XML-like tags `<tag attr="value">content</tag>`.
-    *   [ ] Run the replacement process (content modification only).
-    *   [ ] Assert that the output file is byte-for-byte identical to the input, except for "Flojoy" being replaced by "Atlasvibe". All problematic bytes, special characters, line endings, and XML structure must be preserved.
-    *   [ ] Verify transaction log entries for this file are correct (status, original line, proposed line, encoding).
+3.  [X] **Implement `test_highly_problematic_xml_content_preservation`**:
+    *   [X] Create an XML-like file (e.g., encoded in cp1252 or latin-1) containing:
+        *   [X] Mixed line endings (`\n`, `\r\n`, `\r`).
+        *   [X] Valid characters for the chosen encoding (e.g., cp1252 specific chars like `™` 0x99, `®` 0xAE).
+        *   [X] Bytes that are invalid/undefined for the chosen encoding (e.g., 0x81, 0xFE in cp1252/latin-1).
+        *   [X] The ASCII key "Flojoy" (which should be replaced by "Atlasvibe").
+        *   [X] A non-matching diacritic variant like "Flöjoy" (using `ö` 0xF6 in cp1252/latin-1).
+        *   [X] XML-like tags `<tag attr="value">content</tag>`.
+    *   [X] Run the replacement process (content modification only).
+    *   [X] Assert that the output file is byte-for-byte identical to the input, except for "Flojoy" being replaced by "Atlasvibe". All problematic bytes, special characters, line endings, and XML structure must be preserved.
+    *   [X] Verify transaction log entries for this file are correct (status, original line, proposed line, encoding).
 4.  [ ] **Address `test_edge_case_run` (File Missing / Content Not Replaced as Expected)**:
     *   [ ] Meticulously trace transactions and path resolutions.
     *   [ ] Verify `replace_occurrences` behavior with keys containing newlines/controls vs. content containing them.
@@ -47,13 +47,13 @@
 
 ## III. Documentation & Final Review
 
-1.  [ ] **Update `NOTES.md`**:
-    *   [ ] Document the refined surgical replacement strategy:
-        *   Map loading: key stripping (diacritics, controls) and NFC normalization. Original values preserved.
-        *   File I/O: `surrogateescape` for reading and writing.
-        *   Matching: `searchable_version` for scan, NFC normalization of input for `re.sub` in `replace_occurrences`.
-        *   Callback: processing of matched segment from NFC-normalized string to create lookup key.
-    *   [ ] Clarify behavior for keys unrepresentable in a file's charset (they won't match if the file content, when decoded to Unicode, doesn't produce those characters).
-    *   [ ] Note the design's flexibility for future raw Unicode keys (current key processing is at map load; if removed, core replacement logic adapts).
+1.  [X] **Update `NOTES.md`**:
+    *   [X] Document the refined surgical replacement strategy:
+        *   [X] Map loading: key stripping (diacritics, controls) and NFC normalization. Original values preserved.
+        *   [X] File I/O: `surrogateescape` for reading and writing.
+        *   [X] Matching: `searchable_version` for scan, NFC normalization of input for `re.sub` in `replace_occurrences`.
+        *   [X] Callback: processing of matched segment from NFC-normalized string to create lookup key.
+    *   [X] Clarify behavior for keys unrepresentable in a file's charset (they won't match if the file content, when decoded to Unicode, doesn't produce those characters).
+    *   [X] Note the design's flexibility for future raw Unicode keys (current key processing is at map load; if removed, core replacement logic adapts).
 2.  [ ] **Code Review**: Perform a final pass over all modified files for clarity, comments, and adherence to guidelines.
 3.  [ ] **Remove/Refine Debug Prints**: Clean up extensive debug prints, leaving only essential/toggleable ones.

@@ -59,61 +59,64 @@ Create a Python script using Prefect to find and replace all occurrences of spec
             1.  Diacritics are stripped (e.g., "Flöjoy" -> "Flojoy").
             2.  Control characters are stripped.
             3.  The result is NFC normalized.
-        *   This canonical form is used for internal storage and for building regex patterns.
+        *   This canonical form is used for internal storage (e.g., in `_RAW_REPLACEMENT_MAPPING`) and for building regex patterns.
         *   Matching is case-sensitive against these canonical keys.
     *   **Value Handling (Target Strings)**:
         *   The *values* (target strings) from the JSON file are used as-is for replacement, preserving their original characters, casing, and diacritics.
-    *   **Recursive Mapping Prevention**: The script checks for and disallows mappings where a canonicalized value is also a canonicalized key.
+    *   **Recursive Mapping Prevention**: The script checks for and disallows mappings where a canonicalized value (value stripped of diacritics/controls and NFC normalized) is also a canonicalized key.
 
 2.  **Surgical Principle with Encodings & Normalization**:
     The script aims to modify *only* the exact occurrences of matched keys, preserving all other bytes and file characteristics. This is achieved through a careful process:
 
     *   **Map Loading & Key Preparation**:
-        *   Keys from `replacement_mapping.json` are processed into a canonical form: diacritics are stripped, control characters are removed, and then the string is NFC normalized. This canonical key is what's used for matching.
-        *   The original values from the JSON map are stored as-is, without normalization or stripping.
-        *   Regex patterns for scanning and replacement are built from these canonical keys and are case-sensitive.
+        *   Keys from `replacement_mapping.json` are processed into a canonical form: diacritics are stripped, control characters are removed, and then the string is NFC normalized. This canonical key is what's used for matching and is stored in `_RAW_REPLACEMENT_MAPPING`.
+        *   The original values from the JSON map are stored as-is in `_RAW_REPLACEMENT_MAPPING`, without normalization or stripping.
+        *   Regex patterns for scanning (`_COMPILED_PATTERN_FOR_SCAN`) and actual replacement (`_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`) are built from these canonical keys and are case-sensitive.
 
     *   **File Reading & Initial Decoding**:
         *   The encoding of each file is detected (e.g., using `chardet`).
-        *   File content (and names) are read/decoded into Python Unicode strings using the detected encoding with `errors='surrogateescape'`. This ensures that all original bytes are represented in the Unicode string, even if they don't form valid characters in the detected encoding (they become surrogate codepoints).
+        *   File content (and names, when processed as strings) are read/decoded into Python Unicode strings using the detected encoding with `errors='surrogateescape'`. This ensures that all original bytes are represented in the Unicode string, even if they don't form valid characters in the detected encoding (they become surrogate codepoints).
 
-    *   **Scanning Phase (Identifying Potential Matches)**:
+    *   **Scanning Phase (Identifying Potential Matches in `scan_directory_for_occurrences`)**:
         *   For each filename or line of content (now a Unicode string from `surrogateescape`):
             1.  A temporary "searchable version" is created by applying the same canonicalization process used for map keys (strip diacritics, strip controls, NFC normalize).
             2.  The scanning regex (`_COMPILED_PATTERN_FOR_SCAN`), built from canonical map keys, is used against this `searchable_version`. This quickly identifies if a line/name *might* contain a match.
+            3.  If a potential match is found by the scan, `replace_occurrences` is called with the *original Unicode string* (the one decoded with `surrogateescape`, not the "searchable version") to confirm if an actual change would occur. This result is used to decide if a transaction is needed.
+            4.  The *original Unicode string* (from `surrogateescape`) is stored in the transaction log if a change is planned.
 
-    *   **Replacement Phase (Actual Modification)**:
-        1.  If the scan indicates a potential match, the `replace_occurrences` function is called with the Unicode string obtained from the `surrogateescape` decoding (let's call this `original_unicode_line`).
+    *   **Replacement Phase (Actual Modification in `_execute_content_line_transaction` via `replace_occurrences`)**:
+        1.  The `replace_occurrences` function is called with the Unicode string obtained from the `surrogateescape` decoding (let's call this `original_unicode_line`).
         2.  Inside `replace_occurrences`:
             *   `original_unicode_line` is first NFC normalized. This ensures consistency for the regex engine, as the regex patterns are also built from NFC-normalized keys. Let's call this `nfc_unicode_line`.
             *   `re.sub()` is called on `nfc_unicode_line` using the replacement regex (`_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`).
             *   The `_actual_replace_callback` function is invoked for each match found by `re.sub()` within `nfc_unicode_line`.
                 *   The `match.group(0)` passed to the callback is a segment from `nfc_unicode_line`.
                 *   This segment is then canonicalized (strip diacritics, strip controls, NFC normalize) to create a `lookup_key`.
-                *   This `lookup_key` is used to retrieve the corresponding *original, un-normalized value string* from the loaded JSON map.
+                *   This `lookup_key` is used to retrieve the corresponding *original, un-normalized value string* from `_RAW_REPLACEMENT_MAPPING`.
                 *   This original value is returned by the callback for substitution.
-        3.  The result of `re.sub()` is a new Unicode string (`modified_unicode_line`) where only the targeted parts have been replaced with their original mapped values. All other characters, including surrogates from the initial `surrogateescape` decoding, remain untouched relative to `nfc_unicode_line`.
+        3.  The result of `re.sub()` is a new Unicode string (`modified_unicode_line`) where only the targeted parts have been replaced with their original mapped values. All other characters, including surrogates from the initial `surrogateescape` decoding, remain untouched relative to `nfc_unicode_line`. (Note: The NFC normalization of the input string means that if the original string had a non-NFC form that didn't affect matching, the output might be NFC normalized. However, `surrogateescape` during re-encoding prioritizes round-tripping original bytes.)
 
     *   **File Writing & Encoding Preservation**:
-        *   The `modified_unicode_line` (or `modified_unicode_name`) is encoded back to bytes using the file's original detected encoding, again with `errors='surrogateescape'`. This ensures that:
+        *   The `modified_unicode_line` (or `modified_unicode_name` after `replace_occurrences`) is encoded back to bytes using the file's original detected encoding, again with `errors='surrogateescape'`. This ensures that:
             *   Characters from the replacement string that are representable in the target encoding are correctly encoded.
-            *   Characters from the replacement string that are *not* representable in the target encoding become surrogate escape sequences in the byte string (if the Python version and I/O layer support it, otherwise they might be lost or cause errors depending on the strictness of `surrogateescape`'s re-encoding behavior for unrepresentable *new* characters – typically, `surrogateescape` is primarily for round-tripping *existing* undecodable bytes).
+            *   Characters from the replacement string that are *not* representable in the target encoding might become surrogate escape sequences in the byte string if the Python I/O layer and encoding support it for *new* characters. More commonly, `surrogateescape` on *encoding* is primarily for round-tripping *existing* undecodable bytes from the read phase. Introducing new, unencodable characters via replacement can lead to `UnicodeEncodeError` or replacement characters (like `?`) if `surrogateescape` cannot represent them as lone surrogates during the write phase. The script aims to preserve original bytes; new unencodable characters are a separate challenge.
             *   Surrogate codepoints in `modified_unicode_line` that originated from undecodable bytes in the *original* file are converted back to their original byte sequences.
-        *   This process ensures that all non-matched parts of the file, including their original byte patterns for unmappable characters, specific Unicode normalization forms (if they differed from NFC but didn't affect matching), line endings, and control characters, are preserved as closely as possible to the original byte stream.
+        *   This process ensures that all non-matched parts of the file, including their original byte patterns for unmappable characters, specific Unicode normalization forms (if they differed from NFC but didn't affect matching against canonical keys), line endings, and control characters, are preserved as closely as possible to the original byte stream.
 
     *   **Handling of Keys Unrepresentable in File's Charset**:
-        *   If a key from the `replacement_mapping.json` (e.g., a Chinese string "繁体字") is being searched for in a file encoded in, say, cp1252 (a Western European encoding):
+        *   The script operates by decoding file content to Unicode (with `surrogateescape`) and then attempting to match Unicode keys (which are canonicalized versions of what's in `replacement_mapping.json`).
+        *   If a key from the `replacement_mapping.json` (e.g., a Chinese string "繁体字") is being searched for in a file encoded in, say, `cp1252` (a Western European encoding):
             1.  The Chinese key is canonicalized (stripped, NFC normalized) and remains a Unicode Chinese string.
-            2.  The cp1252 file content is decoded to Unicode using `cp1252` with `surrogateescape`. It will not contain Chinese characters.
-            3.  The "searchable version" of the cp1252 line will also not contain Chinese characters.
-            4.  The canonical Chinese key will not be found in the searchable version of the line.
-        *   The script correctly determines that the key is "NOT FOUND" in that specific file/line. No error is raised; the replacement simply doesn't occur for that key in that context. The system relies on Unicode matching after initial decoding.
+            2.  The `cp1252` file content is decoded to Unicode using `cp1252` with `surrogateescape`. It will not contain Chinese characters (unless they were somehow represented by byte sequences that `surrogateescape` preserved and which, by extreme coincidence, formed those Unicode characters – highly unlikely for distinct scripts).
+            3.  The "searchable version" of the `cp1252` line (after stripping and NFC normalization) will also not contain Chinese characters.
+            4.  The canonical Unicode Chinese key will not be found in the searchable version of the line.
+        *   The script correctly determines that the key is "NOT FOUND" in that specific file/line. No error is raised; the replacement simply doesn't occur for that key in that context. The system relies on matching in the Unicode domain after initial decoding.
 
     *   **Future Support for Full Unicode Keys**:
         *   The current canonicalization of keys (stripping diacritics/controls, NFC normalization) happens at the time the `replacement_mapping.json` is loaded.
         *   If, in the future, this initial canonicalization step for keys were removed (allowing keys in the JSON to be raw Unicode strings with diacritics, control characters, etc.), the core replacement mechanism would largely remain valid.
-        *   The main change would be that the `lookup_key` generation within `_actual_replace_callback` (which currently canonicalizes the matched segment from the input) would need to align with how the keys are stored in `_RAW_REPLACEMENT_MAPPING`. If map keys were stored raw, the callback might perform less processing or a different kind of normalization on the matched segment to ensure it can be found in the map.
-        *   The principle of operating on Unicode strings (decoded with `surrogateescape` and NFC normalized for `re.sub`) and then re-encoding with `surrogateescape` would still apply.
+        *   The main change would be that the `lookup_key` generation within `_actual_replace_callback` (which currently canonicalizes the matched segment from the input) would need to align with how the keys are stored in `_RAW_REPLACEMENT_MAPPING`. If map keys were stored raw (e.g., with diacritics), the callback might perform less processing or a different kind of normalization on the matched segment to ensure it can be found in the map. For instance, if keys in the map were stored as NFC-normalized Unicode strings (without stripping), the callback would also NFC-normalize the matched segment for lookup.
+        *   The principle of operating on Unicode strings (decoded with `surrogateescape` and NFC normalized for `re.sub`) and then re-encoding with `surrogateescape` would still apply, continuing to ensure surgical precision and byte preservation.
 
 3.  **Scope of Operation**: (As before)
 4.  **Exclusions**: (As before)
