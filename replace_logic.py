@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `_actual_replace_callback`: Simplified lookup logic. Since `matched_text_in_input`
+#   is a result of a regex match (built from NFC-normalized, stripped keys) against
+#   an NFC-normalized input string, it should already be in the correct form
+#   (NFC-normalized, stripped key) for direct lookup in `_RAW_REPLACEMENT_MAPPING`.
+#   Removed redundant stripping and normalization of `matched_text_in_input` within the callback.
 # - `_actual_replace_callback`: Implemented a two-tier matching logic:
 #   1. Attempts a direct case-sensitive match of the stripped input text (case preserved)
 #      against the stripped, case-preserved keys in `_RAW_REPLACEMENT_MAPPING`.
@@ -170,29 +175,27 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
     # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
     # The input to .sub() was also NFC normalized.
-    # So, matched_text_in_input should directly be one of these keys, already NFC normalized.
-    # We still strip and normalize it to be absolutely sure we're comparing apples to apples,
-    # in case the regex somehow matched a non-stripped/non-normalized version (though unlikely with re.escape
-    # and pre-normalized input to sub()).
-    stripped_matched_text_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
-    normalized_stripped_matched_text = unicodedata.normalize('NFC', stripped_matched_text_case_preserved)
+    # Therefore, matched_text_in_input *should* already be one of the NFC-normalized, stripped keys.
+    # No further stripping or normalization should be needed on matched_text_in_input here.
+    lookup_key = matched_text_in_input
 
     # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED) ----
-    # print(f"DEBUG_CALLBACK_PROCESSED: Normalized stripped: '{normalized_stripped_matched_text}', Is in map? {normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING}")
-    # if normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING:
-    #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]}'")
+    # print(f"DEBUG_CALLBACK_PROCESSED: Using lookup_key: '{lookup_key}', Is in map? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
+    # if lookup_key in _RAW_REPLACEMENT_MAPPING:
+    #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}'")
     # else:
-    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text. Key '{normalized_stripped_matched_text}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
+    #     # This case should be rare if regex is built correctly from map keys
+    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text because key '{lookup_key}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
     # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED) ----
     
-    if normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING:
-        return _RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]
+    if lookup_key in _RAW_REPLACEMENT_MAPPING:
+        return _RAW_REPLACEMENT_MAPPING[lookup_key]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
     # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE and input to sub() is normalized.
     # If it is hit, it means the regex matched something that, after stripping and normalizing,
     # isn't a direct key. This would be unexpected.
-    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (stripped: '{stripped_matched_text_case_preserved}', normalized: '{normalized_stripped_matched_text}')")
+    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (lookup_key: '{lookup_key}')")
     return matched_text_in_input
 
 def replace_occurrences(input_string: str) -> str:
