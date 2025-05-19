@@ -15,6 +15,10 @@
 #   - Replaced `typing.Optional[X]` with `X | None`.
 #   - Kept `typing.Dict` and `typing.Optional` aliased for specific internal uses if needed by older type checkers, as per diff.
 # - Added debug prints in `load_replacement_map` to show original JSON keys, their stripped versions, and the final internal mapping.
+# - `load_replacement_map`: Keys are now NFC normalized after stripping diacritics and control characters.
+# - `_actual_replace_callback`: Matched text is also NFC normalized before lookup.
+# - Debug print in `load_replacement_map` updated to show pre-NFC and post-NFC stripped keys.
+# - Recursion check in `load_replacement_map` now uses NFC normalized keys for comparison.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -28,10 +32,10 @@ from typing import Dict as TypingDict, Optional as TypingOptional # Retain for c
 import unicodedata
 
 # --- Module-level state ---
-_RAW_REPLACEMENT_MAPPING: dict[str, str] = {} # Stores (stripped key) -> (stripped value) from JSON.
+_RAW_REPLACEMENT_MAPPING: dict[str, str] = {} # Stores (normalized stripped key) -> (stripped value) from JSON.
 _COMPILED_PATTERN_FOR_SCAN: re.Pattern | None = None # For initial scan. Now case-sensitive.
 _MAPPING_LOADED: bool = False
-_SORTED_RAW_KEYS_FOR_REPLACE: list[str] = [] # Stripped keys, sorted by length desc.
+_SORTED_RAW_KEYS_FOR_REPLACE: list[str] = [] # Normalized stripped keys, sorted by length desc.
 _COMPILED_PATTERN_FOR_ACTUAL_REPLACE: re.Pattern | None = None # For actual replacement. Now case-sensitive.
 
 def strip_diacritics(text: str) -> str:
@@ -78,21 +82,23 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         if not isinstance(k, str) or not isinstance(v_original, str):
             print(f"Warning: Skipping invalid key-value pair (must be strings): {k}:{v_original}")
             continue
-        stripped_key_case_preserved = strip_control_characters(strip_diacritics(k))
+        temp_stripped_key = strip_control_characters(strip_diacritics(k))
+        normalized_stripped_key_case_preserved = unicodedata.normalize('NFC', temp_stripped_key)
         
-        if not stripped_key_case_preserved:
+        if not normalized_stripped_key_case_preserved:
             print(f"Warning: Original key '{k}' became empty after stripping diacritics/controls. Skipping.")
             continue
         
-        temp_raw_mapping[stripped_key_case_preserved] = v_original
+        temp_raw_mapping[normalized_stripped_key_case_preserved] = v_original
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
     # ---- START DEBUG PRINT ----
     print(f"DEBUG (replace_logic.py): For map {mapping_file_path.name}:")
     for k_orig_json, v_val_json in raw_mapping_from_json.items(): # Iterate original JSON keys
         s_key_internal = strip_control_characters(strip_diacritics(k_orig_json)) # How it's processed
         # Check if this processed key is actually in our final map (it might have been skipped if empty after strip)
-        actual_value_in_map = _RAW_REPLACEMENT_MAPPING.get(s_key_internal)
-        print(f"  Original JSON Key: '{k_orig_json}' -> Stripped for map logic: '{s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{s_key_internal}': '{actual_value_in_map if actual_value_in_map else 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY'}'")
+        # actual_value_in_map = _RAW_REPLACEMENT_MAPPING.get(s_key_internal) # This was pre-normalization
+        normalized_s_key_internal = unicodedata.normalize('NFC', s_key_internal)
+        print(f"  Original JSON Key: '{k_orig_json}' -> Stripped (pre-NFC): '{s_key_internal}' -> Normalized Stripped for map logic: '{normalized_s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{normalized_s_key_internal}': '{_RAW_REPLACEMENT_MAPPING.get(normalized_s_key_internal, 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY')}'")
     print(f"  Final _RAW_REPLACEMENT_MAPPING internal state: {_RAW_REPLACEMENT_MAPPING}")
     # ---- END DEBUG PRINT ----
 
@@ -102,15 +108,17 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         return True
 
     all_stripped_keys_for_recursion_check = set(_RAW_REPLACEMENT_MAPPING.keys())
-    for key_stripped_case_preserved, value_original_from_map in _RAW_REPLACEMENT_MAPPING.items():
+    for key_stripped_case_preserved, value_original_from_map in _RAW_REPLACEMENT_MAPPING.items(): # key_stripped_case_preserved is already normalized here
         value_stripped_for_check = strip_control_characters(strip_diacritics(value_original_from_map))
-        if value_stripped_for_check in all_stripped_keys_for_recursion_check:
-            original_json_key_for_error = key_stripped_case_preserved
+        normalized_value_stripped_for_check = unicodedata.normalize('NFC', value_stripped_for_check)
+        if normalized_value_stripped_for_check in all_stripped_keys_for_recursion_check:
+            original_json_key_for_error = key_stripped_case_preserved # This key is already normalized
             for orig_k, orig_v in raw_mapping_from_json.items():
-                if strip_control_characters(strip_diacritics(orig_k)) == key_stripped_case_preserved and orig_v == value_original_from_map:
-                    original_json_key_for_error = orig_k
+                # Compare against the normalized form of the original JSON key
+                if unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(orig_k))) == key_stripped_case_preserved and orig_v == value_original_from_map:
+                    original_json_key_for_error = orig_k # Report the true original key
                     break
-            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error}', its stripped form '{value_stripped_for_check}' is also a stripped key). This is disallowed. Aborting.")
+            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error}', its stripped form '{value_stripped_for_check}' which normalizes to '{normalized_value_stripped_for_check}' is also a stripped key). This is disallowed. Aborting.")
             _RAW_REPLACEMENT_MAPPING = {}
             return False
 
@@ -147,21 +155,25 @@ def get_raw_stripped_keys() -> list[str]:
 def _actual_replace_callback(match: re.Match[str]) -> str:
     matched_text_in_input = match.group(0) # This is the exact text matched by the case-sensitive regex
     
-    # The keys in _RAW_REPLACEMENT_MAPPING are stripped and case-preserved.
+    # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
     # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
     # So, matched_text_in_input should directly be one of these keys.
-    # We still strip it to be absolutely sure we're comparing apples to apples,
-    # in case the regex somehow matched a non-stripped version (though unlikely with re.escape).
+    # We still strip and normalize it to be absolutely sure we're comparing apples to apples,
+    # in case the regex somehow matched a non-stripped/non-normalized version (though unlikely with re.escape).
     stripped_matched_text_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
+    normalized_stripped_matched_text = unicodedata.normalize('NFC', stripped_matched_text_case_preserved)
 
-    if stripped_matched_text_case_preserved in _RAW_REPLACEMENT_MAPPING:
-        return _RAW_REPLACEMENT_MAPPING[stripped_matched_text_case_preserved]
+    # ---- START DEBUG PRINT (_actual_replace_callback) ----
+    # print(f"DEBUG_CALLBACK: Matched: '{matched_text_in_input}', Stripped: '{stripped_matched_text_case_preserved}', Normalized: '{normalized_stripped_matched_text}', InMap? {normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING}")
+    # ---- END DEBUG PRINT (_actual_replace_callback) ----
+    if normalized_stripped_matched_text in _RAW_REPLACEMENT_MAPPING:
+        return _RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
     # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
-    # If it is hit, it means the regex matched something that, after stripping,
+    # If it is hit, it means the regex matched something that, after stripping and normalizing,
     # isn't a direct key. This would be unexpected.
-    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (stripped: '{stripped_matched_text_case_preserved}')")
+    # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (stripped: '{stripped_matched_text_case_preserved}', normalized: '{normalized_stripped_matched_text}')")
     return matched_text_in_input
 
 def replace_occurrences(input_string: str) -> str:

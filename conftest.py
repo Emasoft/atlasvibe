@@ -19,6 +19,7 @@
 # - Imported strip_diacritics and strip_control_characters from replace_logic.
 # - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
 # - Added debug prints to show original keys and their stripped versions used for test data generation.
+# - Stripped keys used for test data generation are now also NFC normalized.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -30,6 +31,7 @@ import shutil
 import json
 from pathlib import Path
 import os
+import unicodedata # Added for NFC normalization
 from typing import Union, Optional
 
 from replace_logic import strip_diacritics, strip_control_characters
@@ -97,12 +99,14 @@ def create_test_environment_content(
         original_key_precision_diacritic = "FLÖJOY_DIACRITIC"
         original_key_precision_controls = "key\twith\ncontrol"
 
-        stripped_key_precision_diacritic = strip_control_characters(strip_diacritics(original_key_precision_diacritic))
+        temp_stripped_key_precision_diacritic = strip_control_characters(strip_diacritics(original_key_precision_diacritic))
+        stripped_key_precision_diacritic = unicodedata.normalize('NFC', temp_stripped_key_precision_diacritic)
         # ---- START DEBUG PRINT (conftest precision) ----
         print(f"DEBUG (conftest precision): Original key '{original_key_precision_diacritic}' -> Stripped for test data: '{stripped_key_precision_diacritic}'")
         # ---- END DEBUG PRINT ----
 
-        stripped_key_precision_controls = strip_control_characters(strip_diacritics(original_key_precision_controls))
+        temp_stripped_key_precision_controls = strip_control_characters(strip_diacritics(original_key_precision_controls))
+        stripped_key_precision_controls = unicodedata.normalize('NFC', temp_stripped_key_precision_controls)
 
         lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n",
                    f"Test {stripped_key_precision_diacritic} with mixed case.\n",
@@ -121,14 +125,18 @@ def create_test_environment_content(
         original_key_controls_in_key_for_content = "key_with\tcontrol\nchars"
         original_key_special_chars_for_content = "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames"
 
-        stripped_key_complex_diacritic = strip_control_characters(strip_diacritics(original_key_complex_diacritic))
+        temp_stripped_key_complex_diacritic = strip_control_characters(strip_diacritics(original_key_complex_diacritic))
+        stripped_key_complex_diacritic = unicodedata.normalize('NFC', temp_stripped_key_complex_diacritic)
         # ---- START DEBUG PRINT (conftest complex) ----
         print(f"DEBUG (conftest complex): Original key '{original_key_complex_diacritic}' -> Stripped for test data: '{stripped_key_complex_diacritic}'")
         # ---- END DEBUG PRINT ----
 
-        stripped_key_spaces = strip_control_characters(strip_diacritics(original_key_spaces))
-        stripped_key_controls_in_key_for_content = strip_control_characters(strip_diacritics(original_key_controls_in_key_for_content))
-        stripped_key_special_chars_for_content = strip_control_characters(strip_diacritics(original_key_special_chars_for_content))
+        temp_stripped_key_spaces = strip_control_characters(strip_diacritics(original_key_spaces))
+        stripped_key_spaces = unicodedata.normalize('NFC', temp_stripped_key_spaces)
+        temp_stripped_key_controls_in_key_for_content = strip_control_characters(strip_diacritics(original_key_controls_in_key_for_content))
+        stripped_key_controls_in_key_for_content = unicodedata.normalize('NFC', temp_stripped_key_controls_in_key_for_content)
+        temp_stripped_key_special_chars_for_content = strip_control_characters(strip_diacritics(original_key_special_chars_for_content))
+        stripped_key_special_chars_for_content = unicodedata.normalize('NFC', temp_stripped_key_special_chars_for_content)
 
         complex_diacritic_folder = base_dir / f"{stripped_key_complex_diacritic}_folder"
         complex_diacritic_folder.mkdir(parents=True,exist_ok=True)
