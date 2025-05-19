@@ -61,14 +61,14 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         print(f"ERROR: 'REPLACEMENT_MAPPING' key not found or not a dictionary in {mapping_file_path}"); return False
 
     temp_raw_mapping: Dict[str, str] = {}
-    for k, v in raw_mapping_from_json.items():
-        if not isinstance(k, str) or not isinstance(v, str):
-            print(f"Warning: Skipping invalid key-value pair (must be strings): {k}:{v}"); continue
+    for k, v_original in raw_mapping_from_json.items(): # Changed v to v_original
+        if not isinstance(k, str) or not isinstance(v_original, str): # Changed v to v_original
+            print(f"Warning: Skipping invalid key-value pair (must be strings): {k}:{v_original}"); continue # Changed v to v_original
         stripped_key = strip_control_characters(strip_diacritics(k))
-        stripped_value = strip_control_characters(strip_diacritics(v))
+        # Value stored in mapping is the original value from JSON
         if not stripped_key: 
             print(f"Warning: Original key '{k}' became empty after stripping diacritics/controls. Skipping."); continue
-        temp_raw_mapping[stripped_key] = stripped_value 
+        temp_raw_mapping[stripped_key] = v_original # Store original v_original
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
 
     if not _RAW_REPLACEMENT_MAPPING: 
@@ -76,9 +76,11 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         _MAPPING_LOADED = True; return True 
 
     all_raw_keys_set = set(_RAW_REPLACEMENT_MAPPING.keys())
-    for key, value in _RAW_REPLACEMENT_MAPPING.items():
-        if value in all_raw_keys_set: 
-            print(f"ERROR: Recursive mapping potential! Value '{value}' (for original key '{key}') is also an original key in the (stripped) mapping. This is disallowed. Aborting.");
+    for key, value_original_from_map in _RAW_REPLACEMENT_MAPPING.items(): # Changed value to value_original_from_map
+        # For recursion check, we see if the stripped version of a value is a key
+        value_stripped_for_check = strip_control_characters(strip_diacritics(value_original_from_map))
+        if value_stripped_for_check in all_raw_keys_set: 
+            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original key '{key}', its stripped form '{value_stripped_for_check}' is also a stripped key) This is disallowed. Aborting.");
             _RAW_REPLACEMENT_MAPPING = {}; return False 
 
     pattern_keys_for_scan: TypingList[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()] 
@@ -94,7 +96,8 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     
     try:
         _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(
-            r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
+            r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')',
+            flags=re.IGNORECASE # Make actual replacement pattern case-insensitive for matching
         )
     except re.error as e:
         print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}");
