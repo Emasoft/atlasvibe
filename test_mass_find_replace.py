@@ -97,24 +97,29 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     assert bin_file1.is_file()
     assert_file_content(bin_file1, b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04", is_binary=True)
     bin_file2_renamed = temp_test_dir / "binary_atlasvibe_name.bin"
-    assert bin_file2_renamed.is_file(); assert not (temp_test_dir / "binary_fLoJoY_name.bin").exists()
+    assert bin_file2_renamed.is_file()
+    assert not (temp_test_dir / "binary_fLoJoY_name.bin").exists()
     assert_file_content(bin_file2_renamed, b"unmapped_variant_binary_content" + b"\x00\xff", is_binary=True)
     
     large_file_renamed = temp_test_dir / "large_atlasvibe_file.txt"
     assert large_file_renamed.is_file()
-    with open(large_file_renamed, 'r', encoding='utf-8') as f: first_line = f.readline().strip()
+    with open(large_file_renamed, 'r', encoding='utf-8') as f:
+        first_line = f.readline().strip()
     assert first_line == "This atlasvibe line should be replaced 0"
 
     curr_deep_path = temp_test_dir
     deep_path_parts_after_rename = ["atlasvibe_root","depth1_atlasvibe","depth2","depth3_atlasvibe","depth4","depth5","depth6_atlasvibe","depth7","depth8","depth9_atlasvibe"]
     for part in deep_path_parts_after_rename:
-        curr_deep_path /= part; assert curr_deep_path.is_dir(), f"Deep dir missing: {curr_deep_path}"
-    curr_deep_path /= "depth10_file_atlasvibe.txt"; assert curr_deep_path.is_file()
+        curr_deep_path /= part
+        assert curr_deep_path.is_dir(), f"Deep dir missing: {curr_deep_path}"
+    curr_deep_path /= "depth10_file_atlasvibe.txt"
+    assert curr_deep_path.is_file()
     assert_file_content(curr_deep_path, "atlasvibe deep content")
 
     very_large_renamed = temp_test_dir / VERY_LARGE_FILE_NAME_REPLACED
     assert very_large_renamed.exists()
-    with open(very_large_renamed, 'r', encoding='utf-8') as f: lines = f.readlines()
+    with open(very_large_renamed, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
     assert lines[0].strip() == "Line 1: This is a atlasvibe line that should be replaced."
     assert lines[VERY_LARGE_FILE_LINES // 2].strip() == f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
     assert lines[VERY_LARGE_FILE_LINES - 1].strip() == f"Line {VERY_LARGE_FILE_LINES}: This is a atlasvibe line that should be replaced."
@@ -122,11 +127,15 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     link_f_orig, link_d_orig = temp_test_dir/"link_to_file_flojoy.txt", temp_test_dir/"link_to_dir_flojoy"
     link_f_ren, link_d_ren = temp_test_dir/"link_to_file_atlasvibe.txt", temp_test_dir/"link_to_dir_atlasvibe"
     if ignore_symlinks:
-        assert os.path.lexists(link_f_orig); assert not os.path.lexists(link_f_ren)
-        assert os.path.lexists(link_d_orig); assert not os.path.lexists(link_d_ren)
+        assert os.path.lexists(link_f_orig)
+        assert not os.path.lexists(link_f_ren)
+        assert os.path.lexists(link_d_orig)
+        assert not os.path.lexists(link_d_ren)
     else:
-        assert os.path.lexists(link_f_ren) and link_f_ren.is_symlink(); assert not os.path.lexists(link_f_orig)
-        assert os.path.lexists(link_d_ren) and link_d_ren.is_symlink(); assert not os.path.lexists(link_d_orig)
+        assert os.path.lexists(link_f_ren) and link_f_ren.is_symlink()
+        assert not os.path.lexists(link_f_orig)
+        assert os.path.lexists(link_d_ren) and link_d_ren.is_symlink()
+        assert not os.path.lexists(link_d_orig)
     assert_file_content(temp_test_dir/"symlink_targets_outside"/"target_file_flojoy.txt", "flojoy in symlink target file")
     assert_file_content(temp_test_dir/"symlink_targets_outside"/"target_dir_flojoy"/"another_flojoy_file.txt", "flojoy content in symlinked dir target")
 
@@ -139,7 +148,8 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
          pytest.fail(f"{BINARY_MATCHES_LOG_FILE} should exist if binary_flojoy_file.bin was processed and had matches.")
 
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
-    transactions = load_transactions(txn_file); assert transactions is not None
+    transactions = load_transactions(txn_file)
+    assert transactions is not None
     error_file_tx = next((tx for tx in transactions if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME), None)
     assert error_file_tx and error_file_tx["STATUS"] == TransactionStatus.FAILED.value
     assert (temp_test_dir / SELF_TEST_ERROR_FILE_BASENAME).exists()
@@ -189,35 +199,48 @@ def test_edge_case_run(temp_test_dir: Path, edge_case_map_file: Path):
     assert renamed_file.is_file()
     assert_file_content(renamed_file, "Initial content for control key name test (MyKeyValue_VAL).") # Expect content to be replaced
     content_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
-    assert content_file.is_file(); assert_file_content(content_file, "Line with MyKeyValue_VAL to replace.")
+    assert content_file.is_file()
+    assert_file_content(content_file, "Line with MyKeyValue_VAL to replace.")
     priority_file = temp_test_dir / "edge_case_key_priority.txt"
-    assert priority_file.is_file(); assert_file_content(priority_file, "test FooBar_VAL test and also Foo_VAL.")
+    assert priority_file.is_file()
+    assert_file_content(priority_file, "test FooBar_VAL test and also Foo_VAL.")
 
 def test_precision_run(temp_test_dir: Path, precision_map_file: Path):
     create_test_environment_content(temp_test_dir, include_precision_test_file=True)
     run_main_flow_for_test(temp_test_dir, precision_map_file)
     src_renamed = temp_test_dir / "precision_test_atlasvibe_plain_source.txt"
     name_renamed = temp_test_dir / "precision_name_atlasvibe_plain_test.md"
-    assert src_renamed.is_file(); assert name_renamed.is_file()
+    assert src_renamed.is_file()
+    assert name_renamed.is_file()
     assert_file_content(name_renamed, "File for precision rename test.")
     exp_lines = ["Standard atlasvibe_plain here.\n","Another Atlasvibe_TitleCase for title case.\r\n",
                  "Test ATLASVIBE_DIACRITIC_VAL with mixed case.\n","  atlasvibe_spaced_val  with exact spaces.\n",
                  "  atlasvibe_plain   with extra spaces.\n", "value_for_control_key_val characters.\n",
                  "unrelated content\n","你好atlasvibe_plain世界 (Chinese chars).\n","emoji😊atlasvibe_plain test.\n"]
-    exp_bytes_list = [l.encode('utf-8','surrogateescape') for l in exp_lines] + [b"malformed-\xff-atlasvibe_plain-bytes\n"]
+    exp_bytes_list = [line.encode('utf-8','surrogateescape') for line in exp_lines] + [b"malformed-\xff-atlasvibe_plain-bytes\n"]
     assert_file_content(src_renamed, b"".join(exp_bytes_list), is_binary=True)
 
 def test_resume_functionality(temp_test_dir: Path, default_map_file: Path):
     create_test_environment_content(temp_test_dir, include_symlink_tests=True)
     run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True) 
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
-    initial_txns = load_transactions(txn_file); assert initial_txns and len(initial_txns) > 0
+    initial_txns = load_transactions(txn_file)
+    assert initial_txns and len(initial_txns) > 0
     processed_time_sim = time.time() - 3600 
     name_tx_mod, content_tx_mod, error_tx_mod = False, False, False
     for tx in initial_txns:
-        if tx["TYPE"] == TransactionType.FILE_NAME.value and not name_tx_mod: tx["STATUS"] = TransactionStatus.COMPLETED.value; tx["timestamp_processed"] = processed_time_sim; name_tx_mod = True
-        if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "large_flojoy_file.txt" in tx["PATH"] and not content_tx_mod : tx["STATUS"] = TransactionStatus.PENDING.value; content_tx_mod = True
-        if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value: tx["STATUS"] = TransactionStatus.FAILED.value; tx["ERROR_MESSAGE"] = "Simulated initial fail"; tx["timestamp_processed"] = processed_time_sim; error_tx_mod = True
+        if tx["TYPE"] == TransactionType.FILE_NAME.value and not name_tx_mod:
+            tx["STATUS"] = TransactionStatus.COMPLETED.value
+            tx["timestamp_processed"] = processed_time_sim
+            name_tx_mod = True
+        if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "large_flojoy_file.txt" in tx["PATH"] and not content_tx_mod:
+            tx["STATUS"] = TransactionStatus.PENDING.value
+            content_tx_mod = True
+        if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
+            tx["STATUS"] = TransactionStatus.FAILED.value
+            tx["ERROR_MESSAGE"] = "Simulated initial fail"
+            tx["timestamp_processed"] = processed_time_sim
+            error_tx_mod = True
     assert name_tx_mod and error_tx_mod, "Resume setup failed"
     save_transactions(initial_txns, txn_file)
     create_test_environment_content(temp_test_dir, for_resume_test_phase_2=True, include_symlink_tests=True)
@@ -225,11 +248,14 @@ def test_resume_functionality(temp_test_dir: Path, default_map_file: Path):
     if deep_file_after_rename.exists():
         new_mtime = time.time() + 5 
         os.utime(deep_file_after_rename, (new_mtime, new_mtime))
-        with open(deep_file_after_rename, "a", encoding="utf-8") as f_append: f_append.write("\n# Externally appended for resume.")
+        with open(deep_file_after_rename, "a", encoding="utf-8") as f_append:
+            f_append.write("\n# Externally appended for resume.")
     run_main_flow_for_test(temp_test_dir, default_map_file, resume=True, dry_run=False)
-    final_txns = load_transactions(txn_file); assert final_txns is not None
+    final_txns = load_transactions(txn_file)
+    assert final_txns is not None
     new_file_renamed = temp_test_dir / "newly_added_atlasvibe_for_resume.txt"
-    assert new_file_renamed.exists(); assert_file_content(new_file_renamed, "This atlasvibe content is new for resume.")
+    assert new_file_renamed.exists()
+    assert_file_content(new_file_renamed, "This atlasvibe content is new for resume.")
     assert any(tx["PATH"] == "newly_added_flojoy_for_resume.txt" and # Check original path
                tx.get("ORIGINAL_NAME") == "newly_added_flojoy_for_resume.txt" and # Original name
                tx["TYPE"] == TransactionType.FILE_NAME.value and
@@ -238,7 +264,8 @@ def test_resume_functionality(temp_test_dir: Path, default_map_file: Path):
                tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and
                tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), "Content transaction for new file not completed"
     only_name_mod = temp_test_dir / "only_name_atlasvibe.md"
-    assert only_name_mod.exists(); assert_file_content(only_name_mod, "Content without target string, but now with atlasvibe.")
+    assert only_name_mod.exists()
+    assert_file_content(only_name_mod, "Content without target string, but now with atlasvibe.")
     assert any(tx["PATH"] == "only_name_atlasvibe.md" and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns)
     err_file_tx = next((tx for tx in final_txns if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME), None)
     assert err_file_tx and err_file_tx["STATUS"] == TransactionStatus.FAILED.value
@@ -256,20 +283,26 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path):
     orig_deep_file_path = temp_test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
     original_content = orig_deep_file_path.read_text()
     run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
-    assert orig_deep_file_path.exists(); assert_file_content(orig_deep_file_path, original_content)
+    assert orig_deep_file_path.exists()
+    assert_file_content(orig_deep_file_path, original_content)
     assert not (temp_test_dir / "atlasvibe_root").exists()
-    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME); assert transactions is not None
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
     for tx in transactions:
-        if tx["STATUS"] == TransactionStatus.COMPLETED.value: assert tx.get("ERROR_MESSAGE") == "DRY_RUN" or tx.get("PROPOSED_LINE_CONTENT") is not None
-        elif tx["STATUS"] == TransactionStatus.PENDING.value: pytest.fail(f"Tx {tx['id']} PENDING after dry run")
+        if tx["STATUS"] == TransactionStatus.COMPLETED.value:
+            assert tx.get("ERROR_MESSAGE") == "DRY_RUN" or tx.get("PROPOSED_LINE_CONTENT") is not None
+        elif tx["STATUS"] == TransactionStatus.PENDING.value:
+            pytest.fail(f"Tx {tx['id']} PENDING after dry run")
 
 def test_skip_scan_behavior(temp_test_dir: Path, default_map_file: Path):
     create_test_environment_content(temp_test_dir, include_symlink_tests=True)
     run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True) 
     file_to_delete_orig_path = temp_test_dir / "flojoy_root" / "another_flojoy_file.py"
-    assert file_to_delete_orig_path.exists(); file_to_delete_orig_path.unlink()
+    assert file_to_delete_orig_path.exists()
+    file_to_delete_orig_path.unlink()
     run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True, dry_run=False)
-    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME); assert transactions is not None
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
     deleted_file_txns_found = False
     for tx in transactions:
         if "another_flojoy_file.py" in tx["PATH"]: 
@@ -297,20 +330,27 @@ temp_data/
 def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
                            use_gitignore_cli, custom_ignore_name, expected_ignored_files, expected_processed_files):
     create_test_environment_content(temp_test_dir)
-    (temp_test_dir / "build").mkdir(exist_ok=True); (temp_test_dir / "build" / "ignored_build_file.txt").write_text("flojoy in build")
-    (temp_test_dir / "docs").mkdir(exist_ok=True); (temp_test_dir / "docs" / "specific_file.txt").write_text("flojoy in specific doc")
+    (temp_test_dir / "build").mkdir(exist_ok=True)
+    (temp_test_dir / "build" / "ignored_build_file.txt").write_text("flojoy in build")
+    (temp_test_dir / "docs").mkdir(exist_ok=True)
+    (temp_test_dir / "docs" / "specific_file.txt").write_text("flojoy in specific doc")
     (temp_test_dir / "important.log").write_text("flojoy important log")
-    (temp_test_dir / "src").mkdir(exist_ok=True); (temp_test_dir / "src" / "main.py").write_text("flojoy in main.py")
+    (temp_test_dir / "src").mkdir(exist_ok=True)
+    (temp_test_dir / "src" / "main.py").write_text("flojoy in main.py")
     (temp_test_dir / "data.tmp").write_text("flojoy in data.tmp")
-    (temp_test_dir / "temp_data").mkdir(exist_ok=True); (temp_test_dir / "temp_data" / "file.dat").write_text("flojoy in temp_data")
+    (temp_test_dir / "temp_data").mkdir(exist_ok=True)
+    (temp_test_dir / "temp_data" / "file.dat").write_text("flojoy in temp_data")
     (temp_test_dir / "other_file.log").write_text("flojoy in other_file.log")
-    if use_gitignore_cli: (temp_test_dir / ".gitignore").write_text(GITIGNORE_CONTENT)
+    if use_gitignore_cli:
+        (temp_test_dir / ".gitignore").write_text(GITIGNORE_CONTENT)
     custom_ignore_path_str: Optional[str] = None
     if custom_ignore_name:
         custom_ignore_path = temp_test_dir / custom_ignore_name
-        custom_ignore_path.write_text(CUSTOM_IGNORE_CONTENT); custom_ignore_path_str = str(custom_ignore_path)
+        custom_ignore_path.write_text(CUSTOM_IGNORE_CONTENT)
+        custom_ignore_path_str = str(custom_ignore_path)
     run_main_flow_for_test(temp_test_dir, default_map_file, use_gitignore=use_gitignore_cli, custom_ignore_file=custom_ignore_path_str)
-    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME); assert transactions is not None
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
     processed_paths_in_tx = {tx["PATH"] for tx in transactions}
     for ignored_file_rel_path in expected_ignored_files:
         assert ignored_file_rel_path not in processed_paths_in_tx, f"File '{ignored_file_rel_path}' expected to be ignored."
@@ -352,8 +392,10 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
     try:
         detected_as_binary_lib = lib_is_binary(str(file_path))
     except FileNotFoundError: 
-        if len(content_bytes) == 0: detected_as_binary_lib = False 
-        else: raise
+        if len(content_bytes) == 0:
+            detected_as_binary_lib = False
+        else:
+            raise
     
     assert detected_as_binary_lib == is_binary_expected_by_lib, \
         f"File {filename} lib_is_binary detection mismatch. Expected binary: {is_binary_expected_by_lib}, Detected binary: {detected_as_binary_lib}"
@@ -363,11 +405,13 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
     run_main_flow_for_test(temp_test_dir, default_map_file, extensions=None, # Process all text-like files
                            skip_file_renaming=True, skip_folder_renaming=True)
 
-    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME); assert transactions is not None
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
     content_tx_found = any(tx["PATH"] == filename and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value for tx in transactions)
     binary_log_path = temp_test_dir / BINARY_MATCHES_LOG_FILE
     binary_log_has_match = False
-    if binary_log_path.exists(): binary_log_has_match = filename in binary_log_path.read_text()
+    if binary_log_path.exists():
+        binary_log_has_match = filename in binary_log_path.read_text()
 
     if not script_treats_as_binary_for_content_mod: 
         if contains_flojoy_bytes:
@@ -468,8 +512,11 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
 def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.INFO)
     for item in temp_test_dir.iterdir(): 
-        if item.is_dir(): shutil.rmtree(item)
-        else: item.unlink()
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
+            item.unlink()
+    import json
     default_map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}})) # Recreate a simple map
     
     run_main_flow_for_test(temp_test_dir, default_map_file) 
