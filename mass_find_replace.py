@@ -13,7 +13,7 @@
 # - Removed `--self-test-*` CLI arguments and related internal flow logic.
 # - `main_cli` auto-exclusion list simplified.
 # - `main_flow` resume logic uses `abs_root_dir` and mtime check buffer removed.
-
+# - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -23,7 +23,7 @@
 import argparse
 from pathlib import Path
 import sys
-from typing import List, Dict, Any, Optional, Set
+from typing import Any, Dict # Keep Any if specifically needed, Dict for path_last_processed_time
 import json
 import traceback
 # import logging # Prefect logger is used primarily
@@ -49,10 +49,10 @@ GREEN = "\033[92m"; RED = "\033[91m"; RESET = "\033[0m"; YELLOW = "\033[93m"; BL
 
 @flow(name="Mass Find and Replace Orchestration Flow", log_prints=True)
 def main_flow(
-    directory: str, mapping_file: str, extensions: Optional[List[str]], 
-    exclude_dirs: List[str], exclude_files: List[str], 
-    dry_run: bool, skip_scan: bool, resume: bool, force_execution: bool, 
-    ignore_symlinks_arg: bool, use_gitignore: bool, custom_ignore_file_path: Optional[str],
+    directory: str, mapping_file: str, extensions: list[str] | None,
+    exclude_dirs: list[str], exclude_files: list[str],
+    dry_run: bool, skip_scan: bool, resume: bool, force_execution: bool,
+    ignore_symlinks_arg: bool, use_gitignore: bool, custom_ignore_file_path: str | None,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
     timeout_minutes: int,
     quiet_mode: bool # Added for controlling print statements
@@ -85,9 +85,9 @@ def main_flow(
     elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING :
          logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns."); return
     
-    txn_json_path = abs_root_dir / MAIN_TRANSACTION_FILE_NAME
-    final_ignore_spec: Optional[pathspec.PathSpec] = None
-    raw_patterns_list: List[str] = []
+    txn_json_path: Path = abs_root_dir / MAIN_TRANSACTION_FILE_NAME
+    final_ignore_spec: pathspec.PathSpec | None = None
+    raw_patterns_list: list[str] = []
     if use_gitignore:
         gitignore_path = abs_root_dir / ".gitignore"
         if gitignore_path.is_file():
@@ -127,7 +127,7 @@ def main_flow(
         print(f"Exclude Files (explicit): {exclude_files}")
         if use_gitignore: print(f"Using .gitignore: Yes (if found at {abs_root_dir / '.gitignore'})")
         if custom_ignore_file_path: print(f"Custom Ignore File: {custom_ignore_file_path}")
-        if final_ignore_spec: print(f"Effective ignore patterns: {len(final_ignore_spec.patterns)} compiled from ignore files.")
+        if final_ignore_spec: print(f"Effective ignore patterns: {len(final_ignore_spec.patterns)} compiled from ignore files.") # type: ignore
         print(f"Ignore Symlinks: {ignore_symlinks_arg}")
         print(f"Skip File Renaming: {skip_file_renaming}")
         print(f"Skip Folder Renaming: {skip_folder_renaming}")
@@ -143,16 +143,16 @@ def main_flow(
 
     if not skip_scan:
         logger.info(f"Scanning '{abs_root_dir}'...")
-        current_txns_for_resume: Optional[List[Dict[str,Any]]] = None; paths_to_force_rescan: Set[str] = set()
-        if resume and txn_json_path.exists():
+        current_txns_for_resume: list[dict[str,Any]] | None = None; paths_to_force_rescan: set[str] = set()
+        if resume and txn_json_path.exists(): # type: ignore
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
             current_txns_for_resume = load_transactions(txn_json_path)
             if current_txns_for_resume is None: logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
             elif not current_txns_for_resume: logger.warning(f"{YELLOW}Warn: Txn file empty. Fresh scan.{RESET}")
             else:
                 logger.info("Checking for files modified since last processing...")
-                path_last_processed_time: Dict[str, float] = {}
-                for tx in current_txns_for_resume:
+                path_last_processed_time: Dict[str, float] = {} # Using typing.Dict as per user note in diff
+                for tx in current_txns_for_resume: # type: ignore
                     tx_ts = tx.get("timestamp_processed", 0.0)
                     if tx.get("STATUS") in [TransactionStatus.COMPLETED.value, TransactionStatus.FAILED.value] and tx_ts > 0:
                          path_last_processed_time[tx["PATH"]] = max(path_last_processed_time.get(tx["PATH"],0.0), tx_ts)
@@ -161,7 +161,7 @@ def main_flow(
                     if item_fs.is_file() and not item_fs.is_symlink():
                         try:
                             rel_p = str(item_fs.relative_to(abs_root_dir)).replace("\\","/")
-                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): continue
+                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): continue # type: ignore
                             mtime = item_fs.stat().st_mtime
                             if rel_p in path_last_processed_time and mtime > path_last_processed_time[rel_p]:
                                 logger.info(f"File '{rel_p}' (mtime:{mtime:.0f}) modified after last process (ts:{path_last_processed_time[rel_p]:.0f}). Re-scan.")

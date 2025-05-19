@@ -18,6 +18,8 @@
 #   instead of `item_path.resolve()`. This ensures that symlink checks and ignore
 #   specification matching operate on the symlink's path itself, not its target,
 #   providing consistent behavior for `ignore_symlinks` and path-based exclusion rules.
+# - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
+# - Added `import collections.abc`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -29,7 +31,8 @@ import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set
+from typing import Any, cast # Keep Any and cast if specifically needed for dynamic parts
+import collections.abc # For Iterator, Callable
 from enum import Enum
 import chardet
 import time
@@ -67,8 +70,8 @@ class TransactionStatus(str, Enum):
     SKIPPED = "SKIPPED"
     RETRY_LATER = "RETRY_LATER"
 
-def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
-    if file_path.suffix.lower() == '.rtf':
+def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
+    if file_path.suffix.lower() == '.rtf': # Optional can be str | None
         return 'latin-1'
     try:
         with open(file_path, 'rb') as f:
@@ -76,7 +79,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
         if not raw_data:
             return DEFAULT_ENCODING_FALLBACK
         detected = chardet.detect(raw_data)
-        encoding: Optional[str] = detected.get('encoding')
+        encoding: str | None = detected.get('encoding')
         confidence: float = detected.get('confidence', 0.0)
         if encoding and confidence and confidence > 0.7:
             norm_enc = encoding.lower()
@@ -103,7 +106,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
     except Exception:
         return DEFAULT_ENCODING_FALLBACK
 
-def load_ignore_patterns(ignore_file_path: Path) -> Optional[pathspec.PathSpec]:
+def load_ignore_patterns(ignore_file_path: Path) -> pathspec.PathSpec | None:
     if not ignore_file_path.is_file():
         return None
     try:
@@ -116,9 +119,9 @@ def load_ignore_patterns(ignore_file_path: Path) -> Optional[pathspec.PathSpec]:
         return None
 
 def _walk_for_scan(
-    root_dir: Path, excluded_dirs_abs: List[Path],
-    ignore_symlinks: bool, ignore_spec: Optional[pathspec.PathSpec]
-) -> Iterator[Path]:
+    root_dir: Path, excluded_dirs_abs: list[Path],
+    ignore_symlinks: bool, ignore_spec: pathspec.PathSpec | None
+) -> collections.abc.Iterator[Path]:
     for item_path_from_rglob in root_dir.rglob("*"): # item_path_from_rglob is already absolute
         # Use item_path_from_rglob directly for checks. Do not resolve symlinks at this stage.
         if ignore_symlinks and item_path_from_rglob.is_symlink():
@@ -143,7 +146,7 @@ def _walk_for_scan(
 
 def _get_current_absolute_path(
     original_relative_path_str: str, root_dir: Path,
-    path_translation_map: Dict[str, str], cache: Dict[str, Path]
+    path_translation_map: dict[str, str], cache: dict[str, Path]
 ) -> Path:
     if original_relative_path_str in cache:
         return cache[original_relative_path_str]
@@ -159,16 +162,16 @@ def _get_current_absolute_path(
     return current_abs_path
 
 def scan_directory_for_occurrences(
-    root_dir: Path, excluded_dirs: List[str], excluded_files: List[str],
-    file_extensions: Optional[List[str]], ignore_symlinks: bool,
-    ignore_spec: Optional[pathspec.PathSpec],
-    resume_from_transactions: Optional[List[Dict[str, Any]]] = None,
-    paths_to_force_rescan: Optional[Set[str]] = None,
+    root_dir: Path, excluded_dirs: list[str], excluded_files: list[str],
+    file_extensions: list[str] | None, ignore_symlinks: bool,
+    ignore_spec: pathspec.PathSpec | None,
+    resume_from_transactions: list[dict[str, Any]] | None = None,
+    paths_to_force_rescan: set[str] | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False
-) -> List[Dict[str, Any]]:
-    processed_transactions: List[Dict[str, Any]] = []
-    existing_transaction_ids: Set[Tuple[str, str, int]] = set()
-    paths_to_force_rescan = paths_to_force_rescan or set()
+) -> list[dict[str, Any]]:
+    processed_transactions: list[dict[str, Any]] = []
+    existing_transaction_ids: set[tuple[str, str, int]] = set()
+    paths_to_force_rescan_internal: set[str] = paths_to_force_rescan if paths_to_force_rescan is not None else set()
     abs_root_dir = root_dir
 
     scan_pattern = get_scan_pattern()
@@ -178,7 +181,7 @@ def scan_directory_for_occurrences(
         processed_transactions = list(resume_from_transactions)
         for tx in resume_from_transactions:
             tx_rel_path = tx.get("PATH")
-            if tx_rel_path in paths_to_force_rescan and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value:
+            if tx_rel_path in paths_to_force_rescan_internal and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value:
                 continue
             tx_type, tx_line = tx.get("TYPE"), tx.get("LINE_NUMBER", 0)
             if tx_type and tx_rel_path:
@@ -199,9 +202,9 @@ def scan_directory_for_occurrences(
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec)
     first_item = next(item_iterator, None)
-    if first_item is None:
-        return []
-    def combined_iterator() -> Iterator[Path]:
+    if first_item is None: # No items found at all after basic walk setup
+        return [] # Ensure it returns a list
+    def combined_iterator() -> collections.abc.Iterator[Path]:
         if first_item:
             yield first_item
         yield from item_iterator
@@ -217,7 +220,7 @@ def scan_directory_for_occurrences(
         original_name = item_abs_path.name
         if (scan_pattern and scan_pattern.search(original_name)) and \
            (replace_occurrences(original_name) != original_name):
-            tx_type: Optional[str] = None
+            tx_type: str | None = None
             if item_abs_path.is_dir() and not item_abs_path.is_symlink():
                 if not skip_folder_renaming:
                     tx_type = TransactionType.FOLDER_NAME.value
@@ -265,7 +268,7 @@ def scan_directory_for_occurrences(
             if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
                  continue
 
-            file_content_for_scan: Optional[str] = None
+            file_content_for_scan: str | None = None
             file_encoding = DEFAULT_ENCODING_FALLBACK
 
             if is_rtf:
@@ -307,7 +310,7 @@ def scan_directory_for_occurrences(
                             existing_transaction_ids.add(tx_id_tuple)
     return processed_transactions
 
-def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
+def load_transactions(json_file_path: Path) -> list[dict[str, Any]] | None:
     backup_path = json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT)
     paths_to_try = [json_file_path, backup_path]
     loaded_data = None
@@ -315,9 +318,9 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         if path_to_try.exists():
             try:
                 with open(path_to_try, 'r', encoding='utf-8') as f:
-                    loaded_data = json.load(f)
+                    loaded_data = json.load(f) # type: ignore
                 if isinstance(loaded_data, list):
-                    return cast(List[Dict[str, Any]], loaded_data)
+                    return cast(list[dict[str, Any]], loaded_data)
                 else:
                     print(f"Warning: Invalid format in {path_to_try}. Expected a list.")
                     loaded_data = None
@@ -329,7 +332,7 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
         print(f"Error: Could not load valid transactions from {json_file_path} or its backup.")
     return None
 
-def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
+def save_transactions(transactions: list[dict[str, Any]], json_file_path: Path) -> None:
     if json_file_path.exists():
         try:
             shutil.copy2(json_file_path, json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT))
@@ -343,8 +346,8 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
         raise
 
 def update_transaction_status_in_list(
-    transactions: List[Dict[str, Any]], transaction_id: str, new_status: TransactionStatus,
-    error_message: Optional[str] = None, proposed_content_after_execution: Optional[str] = None,
+    transactions: list[dict[str, Any]], transaction_id: str, new_status: TransactionStatus,
+    error_message: str | None = None, proposed_content_after_execution: str | None = None,
     is_retryable_error: bool = False
 ) -> bool:
     current_time = time.time()
@@ -391,9 +394,9 @@ def _is_retryable_os_error(e: OSError) -> bool:
     return False
 
 def _execute_rename_transaction(
-    tx_item: Dict[str, Any], root_dir: Path,
-    path_translation_map: Dict[str, str], path_cache: Dict[str, Path], dry_run: bool
-) -> Tuple[TransactionStatus, Optional[str], bool]:
+    tx_item: dict[str, Any], root_dir: Path,
+    path_translation_map: dict[str, str], path_cache: dict[str, Path], dry_run: bool
+) -> tuple[TransactionStatus, str | None, bool]:
     orig_rel_path = tx_item["PATH"]
     orig_name = tx_item["ORIGINAL_NAME"]
     try:
@@ -434,9 +437,9 @@ def _execute_rename_transaction(
         return TransactionStatus.FAILED, f"Unexpected rename error: {e}", False
 
 def _execute_content_line_transaction(
-    tx_item: Dict[str, Any], root_dir: Path,
-    path_translation_map: Dict[str, str], path_cache: Dict[str, Path], dry_run: bool
-) -> Tuple[TransactionStatus, Optional[str], bool]:
+    tx_item: dict[str, Any], root_dir: Path,
+    path_translation_map: dict[str, str], path_cache: dict[str, Path], dry_run: bool
+) -> tuple[TransactionStatus, str | None, bool]:
     orig_rel_path = tx_item["PATH"]
     line_num = tx_item["LINE_NUMBER"]
     orig_line_content = tx_item["ORIGINAL_LINE_CONTENT"]
@@ -464,7 +467,7 @@ def _execute_content_line_transaction(
     if is_rtf:
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
 
-    temp_file_path: Optional[Path] = None
+    temp_file_path: Path | None = None
     try:
         _ensure_within_sandbox(current_abs_path, root_dir, f"content write for {current_abs_path.name}")
         temp_file_path = current_abs_path.with_name(f"{current_abs_path.name}.{uuid.uuid4()}.tmp")
@@ -515,14 +518,14 @@ def execute_all_transactions(
     global_timeout_minutes: int,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
     skip_scan: bool
-) -> Dict[str, int]:
+) -> dict[str, int]:
     transactions = load_transactions(transactions_file_path)
     if not transactions:
         return {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
 
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
-    path_translation_map: Dict[str,str] = {}
-    path_cache: Dict[str,Path] = {}
+    path_translation_map: dict[str,str] = {}
+    path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
     if resume or (skip_scan and not resume): # Also init map if skipping scan but not explicitly resuming
@@ -610,8 +613,8 @@ def execute_all_transactions(
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
                 new_stat_from_exec: TransactionStatus
-                err_msg_from_exec: Optional[str] = None
-                final_prop_content_for_log: Optional[str] = None
+                err_msg_from_exec: str | None = None
+                final_prop_content_for_log: str | None = None
                 is_retryable_error_from_exec = False
 
                 try:

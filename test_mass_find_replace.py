@@ -27,6 +27,7 @@
 #   - Added check for "No actionable occurrences found by scan" when dir only has excluded map.
 # - Refactored multiple statements on single lines to comply with E701 linting rules.
 # - Corrected binary log offset assertion in `test_standard_run` for the `True` (ignore_symlinks) case.
+# - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`, selectively).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -38,7 +39,7 @@ from pathlib import Path
 import os
 import shutil
 import time
-from typing import List, Dict, Any, Optional, Union
+from typing import Any, Optional, Dict # Keep Any if specifically needed, Optional for custom_ignore_path_str, Dict for mock_tx_call_counts
 import logging
 import json
 from unittest.mock import patch, MagicMock
@@ -62,11 +63,11 @@ DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
 DEFAULT_EXCLUDE_FILES_REL = ["exclude_this_flojoy_file.txt"]
 
 def run_main_flow_for_test(
-    temp_test_dir: Path, map_file: Path, extensions: Optional[list[str]] = DEFAULT_EXTENSIONS,
-    exclude_dirs: Optional[list[str]] = None, exclude_files: Optional[list[str]] = None,
+    temp_test_dir: Path, map_file: Path, extensions: list[str] | None = DEFAULT_EXTENSIONS,
+    exclude_dirs: list[str] | None = None, exclude_files: list[str] | None = None,
     dry_run: bool = False, skip_scan: bool = False, resume: bool = False,
-    force_execution: bool = True, ignore_symlinks_arg: bool = False,
-    use_gitignore: bool = False, custom_ignore_file: Optional[str] = None,
+    force_execution: bool = True, ignore_symlinks_arg: bool = False, # custom_ignore_file can be str | None
+    use_gitignore: bool = False, custom_ignore_file: str | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     timeout_minutes: int = 1, quiet_mode: bool = True # Default to quiet for tests
 ):
@@ -530,7 +531,7 @@ def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
     (temp_test_dir / "temp_data" / "file.dat").write_text("flojoy in temp_data")
     (temp_test_dir / "other_file.log").write_text("flojoy in other_file.log")
 
-    if use_gitignore_cli:
+    if use_gitignore_cli: # type: ignore
         (temp_test_dir / ".gitignore").write_text(GITIGNORE_CONTENT)
     custom_ignore_path_str: Optional[str] = None
     if custom_ignore_name:
@@ -539,14 +540,14 @@ def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
         custom_ignore_path_str = str(custom_ignore_path)
 
     run_main_flow_for_test(temp_test_dir, default_map_file, use_gitignore=use_gitignore_cli, custom_ignore_file=custom_ignore_path_str)
-
+    
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     processed_paths_in_tx = {tx["PATH"] for tx in transactions} if transactions else set()
 
     for ignored_file_rel_path_str in expected_ignored_files:
         ignored_file_path = Path(ignored_file_rel_path_str)
         is_present_in_tx = False
-        for tx_path_str in processed_paths_in_tx:
+        for tx_path_str in processed_paths_in_tx: # type: ignore
             tx_path = Path(tx_path_str)
             if tx_path == ignored_file_path or ignored_file_path in tx_path.parents:
                 is_present_in_tx = True
@@ -564,7 +565,7 @@ def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
         related_tx_exists = any(
             tx["PATH"] == str(processed_file_rel_path) or
             (tx.get("ORIGINAL_NAME") and Path(tx["PATH"]).name == replace_logic.replace_occurrences(processed_file_rel_path.name) and Path(tx["PATH"]).parent == processed_file_rel_path.parent)
-            for tx in transactions or []
+            for tx in transactions or [] # type: ignore
         )
         assert related_tx_exists, f"File '{processed_file_rel_path}' expected to be processed but no related transaction found."
 
@@ -626,9 +627,9 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
                            skip_file_renaming=True, skip_folder_renaming=True)
 
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
-    transactions = transactions or []
+    transactions_list = transactions if transactions is not None else [] # Ensure it's a list for iteration
 
-    content_tx_found = any(tx["PATH"] == filename and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value for tx in transactions)
+    content_tx_found = any(tx["PATH"] == filename and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value for tx in transactions_list)
 
     binary_log_path = temp_test_dir / BINARY_MATCHES_LOG_FILE
     binary_log_has_match_for_this_file = False
@@ -647,7 +648,7 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
             if file_path.suffix.lower() != '.rtf':
                 changed_content_str = file_path.read_text(encoding='utf-8', errors='surrogateescape')
                 all_map_keys_lower = {k.lower() for k in replace_logic.get_raw_stripped_keys()} # These are stripped keys
-                # Check against original map keys (unstripped, lowercased) to ensure no original forms remain
+                # Check against original map keys (unstripped, lowercased) to ensure no original forms remain (json.loads returns Any)
                 original_unstripped_keys_lower = {k.lower() for k,v in json.loads(default_map_file.read_text())["REPLACEMENT_MAPPING"].items()}
 
                 found_original_key = False
@@ -713,7 +714,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
     assert len(mock_tx_call_counts) == target_txs_checked_count, "mock_tx_call_counts tracked more/less transactions than expected."
 
 
-    mock_tx_call_counts_indef: Dict[str, int] = {}
+    mock_tx_call_counts_indef: dict[str, int] = {}
     indef_max_mock_calls_per_tx = 7
 
     def mock_always_retryable_error_indef(tx_item, root_dir, path_translation_map, path_cache, dry_run):
@@ -732,6 +733,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
         return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run)
 
     transactions_for_indef_retry = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions_for_indef_retry is not None # Ensure it's not None before iterating
     for tx in transactions_for_indef_retry:
         if (tx.get("PATH") == file_to_lock_rel or Path(tx.get("PATH")).name == renamed_file_to_lock_rel) and \
            tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:

@@ -15,6 +15,7 @@
 #   - These changes aim to create file/folder names and content that literally contain the stripped version of the keys
 #     from the complex/precision maps, allowing the current `replace_logic.py` regex to match them.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
+# - Modernized type hints (selectively, keeping Union/Optional in assert_file_content as per user diff note).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -26,7 +27,7 @@ import shutil
 import json
 from pathlib import Path
 import os
-from typing import Union, Optional
+from typing import Union, Optional # Kept for assert_file_content as per user diff interpretation
 
 SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"
 VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
@@ -204,7 +205,7 @@ def precision_map_file(temp_test_dir: Path) -> Path:
     return map_path
 
 def assert_file_content( file_path: Path, expected_content: Union[str, bytes], encoding: Optional[str] = 'utf-8', is_binary: bool = False ):
-    assert file_path.exists(), f"File missing: {file_path}"
+    assert file_path.exists(), f"File missing: {file_path}" # Union and Optional can be str | bytes and str | None
     try:
         if is_binary:
             actual = file_path.read_bytes()

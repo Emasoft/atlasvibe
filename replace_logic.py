@@ -9,6 +9,11 @@
 #      text (lowercased) against the lowercased versions of the stripped, case-preserved keys from `_SORTED_RAW_KEYS_FOR_REPLACE`. This fallback is now removed.
 # - Matching is now strictly case-sensitive. `re.IGNORECASE` flag removed from regex compilations.
 # - `_actual_replace_callback` simplified for direct case-sensitive lookup.
+# - Modernized type hints:
+#   - Replaced `typing.List` with `list`.
+#   - Replaced `typing.Dict` with `dict`.
+#   - Replaced `typing.Optional[X]` with `X | None`.
+#   - Kept `typing.Dict` and `typing.Optional` aliased for specific internal uses if needed by older type checkers, as per diff.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -18,15 +23,15 @@
 import re
 import json
 from pathlib import Path
-from typing import Dict, Optional, List as TypingList
+from typing import Dict as TypingDict, Optional as TypingOptional # Retain for clarity if needed for older type checkers or specific constructs
 import unicodedata
 
 # --- Module-level state ---
-_RAW_REPLACEMENT_MAPPING: Dict[str, str] = {} # Stores (stripped key) -> (stripped value) from JSON.
-_COMPILED_PATTERN_FOR_SCAN: Optional[re.Pattern] = None # For initial scan. Now case-sensitive.
+_RAW_REPLACEMENT_MAPPING: dict[str, str] = {} # Stores (stripped key) -> (stripped value) from JSON.
+_COMPILED_PATTERN_FOR_SCAN: re.Pattern | None = None # For initial scan. Now case-sensitive.
 _MAPPING_LOADED: bool = False
-_SORTED_RAW_KEYS_FOR_REPLACE: TypingList[str] = [] # Stripped keys, sorted by length desc.
-_COMPILED_PATTERN_FOR_ACTUAL_REPLACE: Optional[re.Pattern] = None # For actual replacement. Now case-sensitive.
+_SORTED_RAW_KEYS_FOR_REPLACE: list[str] = [] # Stripped keys, sorted by length desc.
+_COMPILED_PATTERN_FOR_ACTUAL_REPLACE: re.Pattern | None = None # For actual replacement. Now case-sensitive.
 
 def strip_diacritics(text: str) -> str:
     if not isinstance(text, str):
@@ -67,7 +72,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         print(f"ERROR: 'REPLACEMENT_MAPPING' key not found or not a dictionary in {mapping_file_path}")
         return False
 
-    temp_raw_mapping: Dict[str, str] = {}
+    temp_raw_mapping: dict[str, str] = {}
     for k, v_original in raw_mapping_from_json.items():
         if not isinstance(k, str) or not isinstance(v_original, str):
             print(f"Warning: Skipping invalid key-value pair (must be strings): {k}:{v_original}")
@@ -99,7 +104,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
             _RAW_REPLACEMENT_MAPPING = {}
             return False
 
-    pattern_keys_for_scan: TypingList[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
+    pattern_keys_for_scan: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
     pattern_keys_for_scan.sort(key=len, reverse=True)
     try:
         _COMPILED_PATTERN_FOR_SCAN = re.compile(r'(' + r'|'.join(pattern_keys_for_scan) + r')')
@@ -123,10 +128,10 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     _MAPPING_LOADED = True
     return True
 
-def get_scan_pattern() -> Optional[re.Pattern]:
+def get_scan_pattern() -> re.Pattern | None:
     return _COMPILED_PATTERN_FOR_SCAN if _MAPPING_LOADED else None
 
-def get_raw_stripped_keys() -> TypingList[str]:
+def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
