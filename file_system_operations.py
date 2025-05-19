@@ -421,7 +421,8 @@ def execute_all_transactions(
     if resume:
         for tx in transactions:
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
-               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value] and \
+               tx.get("ERROR_MESSAGE") != "DRY_RUN":
                 path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
     
     def sort_key(tx): type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}; return (type_o[tx["TYPE"]], tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0))
@@ -517,8 +518,8 @@ def execute_all_transactions(
             timed_out = True
         
         max_retries_hit_for_timed_run = False
-        if global_timeout_minutes != 0 and current_overall_retry_attempt >= max_overall_retry_attempts:
-            print(f"Warning: Max retry passes ({max_overall_retry_attempts}) reached for timed execution.")
+        if global_timeout_minutes != 0 and current_overall_retry_attempt >= max_overall_retry_passes:
+            print(f"Warning: Max retry passes ({max_overall_retry_passes}) reached for timed execution.")
             max_retries_hit_for_timed_run = True
         
         # For indefinite timeout, max_overall_retry_attempts is a very high safeguard.

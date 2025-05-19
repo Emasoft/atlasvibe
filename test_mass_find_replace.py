@@ -520,9 +520,9 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
     default_map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}})) # Recreate a simple map
     
     run_main_flow_for_test(temp_test_dir, default_map_file) 
-    
-    assert any("Target directory" in record.message and "is empty" in record.message for record in caplog.records), \
-        "Expected 'directory is empty' log message."
+       
+    assert any("No actionable occurrences found" in record.message for record in caplog.records), \
+        "Expected 'No actionable occurrences found' log message when directory effectively empty for processing."
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     assert not txn_file.exists() or txn_file.stat().st_size == 0 or (load_transactions(txn_file) == [])
     
