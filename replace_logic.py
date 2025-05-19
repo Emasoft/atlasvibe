@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 #
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `_actual_replace_callback`: Implemented a two-tier matching logic:
+#   1. Attempts a direct case-sensitive match of the stripped input text (case preserved)
+#      against the stripped, case-preserved keys in `_RAW_REPLACEMENT_MAPPING`.
+#   2. If no direct match, falls back to a case-insensitive comparison of the stripped input
+#      text (lowercased) against the lowercased versions of the stripped, case-preserved
+#      keys from `_SORTED_RAW_KEYS_FOR_REPLACE`.
+#   This prioritizes exact case matches from the map if available.
 # - `_actual_replace_callback`: Simplified to perform a direct case-insensitive comparison.
 #   The matched text from input (after stripping diacritics/controls) is lowercased.
 #   It's then compared against the lowercased versions of the (already stripped, case-preserved)
@@ -138,28 +145,36 @@ def get_raw_stripped_keys() -> TypingList[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    matched_text_in_input = match.group(0)
+    matched_text_in_input = match.group(0) # Original case from input, e.g., "Flojoy" or "flojoy"
     
-    # Strip diacritics and control characters from the text matched in the input
-    stripped_matched_text_in_input = strip_control_characters(strip_diacritics(matched_text_in_input))
-    stripped_matched_text_in_input_lower = stripped_matched_text_in_input.lower()
+    # Stripped version of what was actually matched in the input, case preserved
+    stripped_matched_text_in_input_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
 
-    # Iterate through the original mapping keys (which are stripped and case-preserved)
-    # _SORTED_RAW_KEYS_FOR_REPLACE contains the same keys as _RAW_REPLACEMENT_MAPPING.keys(),
-    # but sorted. Using it ensures consistent lookup order if ever needed, though for simple
-    # key presence, iterating _RAW_REPLACEMENT_MAPPING.items() is also fine.
-    # The main goal is to find the original map key that corresponds to the matched text.
-    for map_key_stripped_case_preserved in _SORTED_RAW_KEYS_FOR_REPLACE:
-        # Keys in _SORTED_RAW_KEYS_FOR_REPLACE are already stripped.
-        # We just need to lowercase for comparison.
-        current_map_key_for_comparison_lower = map_key_stripped_case_preserved.lower()
+    # Attempt 1: Check if the stripped, case-preserved version of the *input match*
+    # exists as a key in our _RAW_REPLACEMENT_MAPPING.
+    # _RAW_REPLACEMENT_MAPPING keys are stripped and case-preserved from the original JSON keys.
+    if stripped_matched_text_in_input_case_preserved in _RAW_REPLACEMENT_MAPPING:
+        return _RAW_REPLACEMENT_MAPPING[stripped_matched_text_in_input_case_preserved]
+
+    # Attempt 2: If not found by direct case-preserved match, try a fully case-insensitive lookup.
+    # This handles cases where the input's casing (e.g., "fLoJoY") doesn't exactly match
+    # any of the case-preserved map keys (e.g., "flojoy", "Flojoy", "FLOJOY"), but its
+    # stripped lowercase form matches a stripped lowercase map key.
+    stripped_matched_text_in_input_lower = stripped_matched_text_in_input_case_preserved.lower()
+
+    # _SORTED_RAW_KEYS_FOR_REPLACE contains keys from _RAW_REPLACEMENT_MAPPING,
+    # which are already stripped and case-preserved.
+    for map_key_stripped_case_preserved_from_map in _SORTED_RAW_KEYS_FOR_REPLACE:
+        current_map_key_for_comparison_lower = map_key_stripped_case_preserved_from_map.lower()
         
         if current_map_key_for_comparison_lower == stripped_matched_text_in_input_lower:
-            # If a case-insensitive match is found, return the original value from the map
-            # associated with the case-preserved stripped key.
-            return _RAW_REPLACEMENT_MAPPING[map_key_stripped_case_preserved]
+            # Found a case-insensitive match. Return the value associated with the
+            # original case-preserved stripped key from the map.
+            return _RAW_REPLACEMENT_MAPPING[map_key_stripped_case_preserved_from_map]
             
-    # If no match is found in the mapping, return the original matched text
+    # This part should ideally not be reached if the regex matched,
+    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
+    # However, as a fallback, return the original matched text.
     return matched_text_in_input
 
 def replace_occurrences(input_string: str) -> str:
