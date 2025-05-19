@@ -702,5 +702,3 @@ def execute_all_transactions(
         stats[status_key] = stats.get(status_key, 0) + 1
     return stats
 
-```
-test_mass_find_replace.py
