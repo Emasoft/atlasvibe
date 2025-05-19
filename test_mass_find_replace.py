@@ -470,7 +470,7 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
     for item in temp_test_dir.iterdir(): 
         if item.is_dir(): shutil.rmtree(item)
         else: item.unlink()
-    map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}})) # Recreate a simple map
+    default_map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}})) # Recreate a simple map
     
     run_main_flow_for_test(temp_test_dir, default_map_file) 
     
