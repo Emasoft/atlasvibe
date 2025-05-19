@@ -5,6 +5,7 @@
 #     "fLoJoY" is not a key in default_map, so it won't be replaced. "flojoy" will.
 #   - Corrected assertion for `binary_fLoJoY_name.bin`. Since "fLoJoY" is not a key,
 #     the filename should not change.
+#   - Corrected binary log offset for the second match in `binary_flojoy_file.bin` from 23 to 22.
 # - `test_complex_map_run`:
 #   - Adjusted content assertion for `filename_with_MOCO4_ip-N_VAL.data`.
 #     "coco4_ep-m" (lowercase) is not a key in complex_map, so it won't be replaced.
@@ -198,7 +199,7 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     if binary_log.exists():
         log_content = binary_log.read_text()
         assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 7" in log_content
-        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 23" in log_content # Corrected from 20
+        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 22" in log_content
     elif (temp_test_dir / "binary_atlasvibe_file.bin").exists():
          original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
          had_matches = False
