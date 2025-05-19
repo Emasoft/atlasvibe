@@ -18,7 +18,7 @@ from file_system_operations import (
 import replace_logic 
 import file_system_operations # For mocking its functions
 
-from .conftest_mass_find_replace import (
+from conftest import (
     create_test_environment_content, assert_file_content, 
     VERY_LARGE_FILE_NAME_ORIG, VERY_LARGE_FILE_NAME_REPLACED, VERY_LARGE_FILE_LINES
 )

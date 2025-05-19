@@ -149,3 +149,4 @@ def assert_file_content( file_path: Path, expected_content: Union[str, bytes], e
             assert actual_norm == expected_norm, f"Content mismatch for {file_path}.\nExp:\n{expected_norm!r}\nGot:\n{actual_norm!r}"
     except Exception as e: pytest.fail(f"Error reading/comparing {file_path}: {e}")
     
+    
