@@ -7,10 +7,17 @@
 # - `execute_all_transactions`:
 #   - Correctly reset status of transactions marked COMPLETED with ERROR_MESSAGE="DRY_RUN"
 #     to PENDING when `resume=True` or (`skip_scan=True` and `resume=False`).
+#   - Ensured that `path_translation_map` is initialized from `COMPLETED` rename transactions
+#     if `skip_scan=True` (or `resume=True`), providing consistent path resolution for
+#     operations based on a pre-existing transaction file.
 # - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 # - Changed `os.rename` to `Path(current_abs_path).rename(new_abs_path)` in `_execute_rename_transaction`
 #   for potentially more robust symlink renaming and path handling.
+# - Modified `_walk_for_scan` to use the direct path from `rglob` (`item_path_from_rglob`)
+#   instead of `item_path.resolve()`. This ensures that symlink checks and ignore
+#   specification matching operate on the symlink's path itself, not its target,
+#   providing consistent behavior for `ignore_symlinks` and path-based exclusion rules.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -112,26 +119,27 @@ def _walk_for_scan(
     root_dir: Path, excluded_dirs_abs: List[Path],
     ignore_symlinks: bool, ignore_spec: Optional[pathspec.PathSpec]
 ) -> Iterator[Path]:
-    for item_path in root_dir.rglob("*"):
-        item_abs_path = item_path.resolve(strict=False)
-        if ignore_symlinks and item_abs_path.is_symlink():
+    for item_path_from_rglob in root_dir.rglob("*"): # item_path_from_rglob is already absolute
+        # Use item_path_from_rglob directly for checks. Do not resolve symlinks at this stage.
+        if ignore_symlinks and item_path_from_rglob.is_symlink():
             continue
-        is_excluded_by_dir_arg = any(item_abs_path == ex_dir or \
-                                   (ex_dir.is_dir() and str(item_abs_path).startswith(str(ex_dir) + os.sep))
+        is_excluded_by_dir_arg = any(item_path_from_rglob == ex_dir or \
+                                   (ex_dir.is_dir() and str(item_path_from_rglob).startswith(str(ex_dir) + os.sep))
                                    for ex_dir in excluded_dirs_abs)
         if is_excluded_by_dir_arg:
             continue
         if ignore_spec:
             try:
-                path_rel_to_root_for_spec = item_abs_path.relative_to(root_dir)
+                path_rel_to_root_for_spec = item_path_from_rglob.relative_to(root_dir)
                 if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
-                   (item_abs_path.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
+                   (item_path_from_rglob.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
                     continue
             except ValueError:
+                # item is not under root_dir, should not happen if rglob is on absolute root_dir
                 pass
             except Exception as e:
-                print(f"Warning: Error during ignore_spec matching for {item_abs_path} relative to {root_dir}: {e}")
-        yield item_abs_path
+                print(f"Warning: Error during ignore_spec matching for {item_path_from_rglob} relative to {root_dir}: {e}")
+        yield item_path_from_rglob
 
 def _get_current_absolute_path(
     original_relative_path_str: str, root_dir: Path,
@@ -517,8 +525,9 @@ def execute_all_transactions(
     path_cache: Dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    if resume:
+    if resume or (skip_scan and not resume): # Also init map if skipping scan but not explicitly resuming
         for tx in transactions:
+            # Populate path_translation_map for any already completed renames
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
                tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value] and \
                tx.get("ERROR_MESSAGE") != "DRY_RUN":
