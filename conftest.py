@@ -18,6 +18,7 @@
 # - Modernized type hints (selectively, keeping Union/Optional in assert_file_content as per user diff note).
 # - Imported strip_diacritics and strip_control_characters from replace_logic.
 # - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
+# - Added debug prints to show original keys and their stripped versions used for test data generation.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -97,6 +98,10 @@ def create_test_environment_content(
         original_key_precision_controls = "key\twith\ncontrol"
 
         stripped_key_precision_diacritic = strip_control_characters(strip_diacritics(original_key_precision_diacritic))
+        # ---- START DEBUG PRINT (conftest precision) ----
+        print(f"DEBUG (conftest precision): Original key '{original_key_precision_diacritic}' -> Stripped for test data: '{stripped_key_precision_diacritic}'")
+        # ---- END DEBUG PRINT ----
+
         stripped_key_precision_controls = strip_control_characters(strip_diacritics(original_key_precision_controls))
 
         lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n",
@@ -117,6 +122,10 @@ def create_test_environment_content(
         original_key_special_chars_for_content = "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames"
 
         stripped_key_complex_diacritic = strip_control_characters(strip_diacritics(original_key_complex_diacritic))
+        # ---- START DEBUG PRINT (conftest complex) ----
+        print(f"DEBUG (conftest complex): Original key '{original_key_complex_diacritic}' -> Stripped for test data: '{stripped_key_complex_diacritic}'")
+        # ---- END DEBUG PRINT ----
+
         stripped_key_spaces = strip_control_characters(strip_diacritics(original_key_spaces))
         stripped_key_controls_in_key_for_content = strip_control_characters(strip_diacritics(original_key_controls_in_key_for_content))
         stripped_key_special_chars_for_content = strip_control_characters(strip_diacritics(original_key_special_chars_for_content))

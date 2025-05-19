@@ -14,6 +14,7 @@
 #   - Replaced `typing.Dict` with `dict`.
 #   - Replaced `typing.Optional[X]` with `X | None`.
 #   - Kept `typing.Dict` and `typing.Optional` aliased for specific internal uses if needed by older type checkers, as per diff.
+# - Added debug prints in `load_replacement_map` to show original JSON keys, their stripped versions, and the final internal mapping.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -85,6 +86,15 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         
         temp_raw_mapping[stripped_key_case_preserved] = v_original
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
+    # ---- START DEBUG PRINT ----
+    print(f"DEBUG (replace_logic.py): For map {mapping_file_path.name}:")
+    for k_orig_json, v_val_json in raw_mapping_from_json.items(): # Iterate original JSON keys
+        s_key_internal = strip_control_characters(strip_diacritics(k_orig_json)) # How it's processed
+        # Check if this processed key is actually in our final map (it might have been skipped if empty after strip)
+        actual_value_in_map = _RAW_REPLACEMENT_MAPPING.get(s_key_internal)
+        print(f"  Original JSON Key: '{k_orig_json}' -> Stripped for map logic: '{s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{s_key_internal}': '{actual_value_in_map if actual_value_in_map else 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY'}'")
+    print(f"  Final _RAW_REPLACEMENT_MAPPING internal state: {_RAW_REPLACEMENT_MAPPING}")
+    # ---- END DEBUG PRINT ----
 
     if not _RAW_REPLACEMENT_MAPPING:
         print("Warning: No valid replacement rules found in the mapping file after initial loading/stripping.")
