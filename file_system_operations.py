@@ -20,6 +20,9 @@
 #   providing consistent behavior for `ignore_symlinks` and path-based exclusion rules.
 # - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
 # - Added `import collections.abc`.
+# - `scan_directory_for_occurrences`: Normalize filenames and file content lines to NFC before regex search
+#   and before calling `replace_occurrences` for determining if a change would occur.
+#   Original (non-normalized) line content is still stored in transactions.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -35,6 +38,7 @@ from typing import Any, cast # Keep Any and cast if specifically needed for dyna
 import collections.abc # For Iterator, Callable
 from enum import Enum
 import chardet
+import unicodedata # For NFC normalization
 import time
 import pathspec
 import errno
@@ -218,8 +222,9 @@ def scan_directory_for_occurrences(
             continue
 
         original_name = item_abs_path.name
-        if (scan_pattern and scan_pattern.search(original_name)) and \
-           (replace_occurrences(original_name) != original_name):
+        normalized_original_name = unicodedata.normalize('NFC', original_name) # Normalize name for matching
+        if (scan_pattern and scan_pattern.search(normalized_original_name)) and \
+           (replace_occurrences(normalized_original_name) != normalized_original_name): # replace_occurrences also normalizes its input now
             tx_type: str | None = None
             if item_abs_path.is_dir() and not item_abs_path.is_symlink():
                 if not skip_folder_renaming:
@@ -302,8 +307,9 @@ def scan_directory_for_occurrences(
                     lines_for_scan = [file_content_for_scan]
 
                 for line_idx, line_content in enumerate(lines_for_scan):
-                    if (scan_pattern and scan_pattern.search(line_content)) and \
-                       (replace_occurrences(line_content) != line_content):
+                    normalized_line_content = unicodedata.normalize('NFC', line_content) # Normalize line for matching
+                    if (scan_pattern and scan_pattern.search(normalized_line_content)) and \
+                       (replace_occurrences(normalized_line_content) != normalized_line_content): # replace_occurrences also normalizes
                         tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
                         if tx_id_tuple not in existing_transaction_ids:
                             processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})

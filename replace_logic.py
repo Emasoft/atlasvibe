@@ -23,6 +23,8 @@
 #   - In `load_replacement_map`: Print the exact regex string compiled for `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`.
 #   - In `replace_occurrences`: Print the input string and whether `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search()` finds a match.
 #   - In `_actual_replace_callback`: Added `DEBUG_CALLBACK_HIT` print to confirm if the callback is invoked.
+# - `replace_occurrences`: Input string is now NFC normalized before regex search and substitution.
+# - Debug print in `replace_occurrences` updated to show original and NFC normalized input.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -167,9 +169,11 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     
     # The keys in _RAW_REPLACEMENT_MAPPING are stripped, case-preserved, and NFC normalized.
     # The regex itself was built from these _SORTED_RAW_KEYS_FOR_REPLACE (which are the same keys).
-    # So, matched_text_in_input should directly be one of these keys.
+    # The input to .sub() was also NFC normalized.
+    # So, matched_text_in_input should directly be one of these keys, already NFC normalized.
     # We still strip and normalize it to be absolutely sure we're comparing apples to apples,
-    # in case the regex somehow matched a non-stripped/non-normalized version (though unlikely with re.escape).
+    # in case the regex somehow matched a non-stripped/non-normalized version (though unlikely with re.escape
+    # and pre-normalized input to sub()).
     stripped_matched_text_case_preserved = strip_control_characters(strip_diacritics(matched_text_in_input))
     normalized_stripped_matched_text = unicodedata.normalize('NFC', stripped_matched_text_case_preserved)
 
@@ -185,7 +189,7 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         return _RAW_REPLACEMENT_MAPPING[normalized_stripped_matched_text]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
-    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE.
+    # as the regex is built from _SORTED_RAW_KEYS_FOR_REPLACE and input to sub() is normalized.
     # If it is hit, it means the regex matched something that, after stripping and normalizing,
     # isn't a direct key. This would be unexpected.
     # print(f"Warning: _actual_replace_callback fallback for '{matched_text_in_input}' (stripped: '{stripped_matched_text_case_preserved}', normalized: '{normalized_stripped_matched_text}')")
@@ -197,11 +201,13 @@ def replace_occurrences(input_string: str) -> str:
     if not isinstance(input_string, str):
         return input_string
 
+    normalized_input_string = unicodedata.normalize('NFC', input_string)
+
     # ---- START DEBUG PRINT (replace_occurrences search) ----
-    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(input_string)
-    print(f"DEBUG_REPLACE_OCCURRENCES: Input: '{input_string!r}', Search found: {'YES' if search_result else 'NO'}")
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_string) # Search on normalized
+    print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC): {normalized_input_string!r}, Search found: {'YES' if search_result else 'NO'}")
     if search_result:
         print(f"DEBUG_REPLACE_OCCURRENCES: Search match object: {search_result}")
     # ---- END DEBUG PRINT (replace_occurrences search) ----
 
-    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, input_string)
+    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, normalized_input_string)
