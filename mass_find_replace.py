@@ -212,7 +212,8 @@ def main_flow(
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
     stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
-                                     skip_file_renaming, skip_folder_renaming, skip_content)
+                                     skip_file_renaming, skip_folder_renaming, skip_content,
+                                     skip_scan) # Add skip_scan here
     logger.info(f"{op_type} phase complete. Stats: {stats}")
     logger.info(f"Review '{txn_json_path}' for a detailed log of changes and their statuses.")
     

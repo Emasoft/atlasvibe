@@ -408,7 +408,8 @@ def _execute_content_line_transaction(
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path, dry_run: bool, resume: bool,
     global_timeout_minutes: int, 
-    skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool
+    skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
+    skip_scan: bool  # Add skip_scan here
 ) -> Dict[str, int]:
     transactions = load_transactions(transactions_file_path)
     if not transactions: return {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
