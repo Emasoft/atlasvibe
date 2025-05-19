@@ -7,6 +7,7 @@ import shutil
 import time
 from typing import List, Dict, Any, Optional, Union
 import logging 
+import json # Added import for json
 from unittest.mock import patch, MagicMock 
 
 from mass_find_replace import main_flow, MAIN_TRANSACTION_FILE_NAME, SCRIPT_NAME
@@ -213,7 +214,7 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # Expected folder name: "diacritic_test_folder_dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL" (if "useless_diacritics" is found and replaced)
     # OR original name if "useless_diacritics" is NOT found in "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS"
     
-    # Current logic: replace_occurrences searches for the *stripped key* ("useless_diacritics")
+    # Current logic: replace_logic.replace_occurrences searches for the *stripped key* ("useless_diacritics")
     # in the input string ("diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS").
     # "useless_diacritics" is NOT in "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS". So no rename.
     # This test will fail based on current replace_logic if it expects diacritic-agnostic matching on input.
@@ -229,7 +230,7 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # Let's assume the test expects the *value* to be part of the new name if a match occurs.
     # The complex map has "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
     # If "diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS" is processed:
-    #   - replace_occurrences("diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS")
+    #   - replace_logic.replace_occurrences("diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS")
     #   - It will search for "useless_diacritics" (stripped key). This is NOT in the name.
     #   - So, no rename based on this rule.
     # What if the folder name was "diacritic_test_folder_useless_diacritics"? Then it would be renamed.
@@ -244,7 +245,7 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # If the folder name itself was "ȕsele̮Ss_diá͡cRiti̅cS", it would be renamed to "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
     # because the scan pattern (from stripped keys) would match "ȕsele̮Ss_diá͡cRiti̅cS" (case insensitively)
     # if "useless_diacritics" (stripped key) is in the pattern.
-    # Then replace_occurrences("ȕsele̮Ss_diá͡cRiti̅cS") would be called.
+    # Then replace_logic.replace_occurrences("ȕsele̮Ss_diá͡cRiti̅cS") would be called.
     # Callback would find "useless_diacritics" (key in _RAW_REPLACEMENT_MAPPING) matches "ȕsele̮Ss_diá͡cRiti̅cS".lower()
     # and return "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL".
 
@@ -300,8 +301,8 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # For "The control characters \n will be ignored_VAL.md":
     # Original key: "The spaces will not be ignored"
     # Original filename: "file_with_spaces_The spaces will not be ignored.md"
-    # replace_occurrences("file_with_spaces_The spaces will not be ignored.md")
-    # -> "file_with_spaces_" + replace_occurrences("The spaces will not be ignored") + ".md"
+    # replace_logic.replace_occurrences("file_with_spaces_The spaces will not be ignored.md")
+    # -> "file_with_spaces_" + replace_logic.replace_occurrences("The spaces will not be ignored") + ".md"
     # -> "file_with_spaces_The control characters \n will be ignored_VAL.md"
     # This filename with \n is not valid on most systems.
     # The assertion (temp_test_dir / "The control characters \n will be ignored_VAL.md").is_file()
@@ -377,7 +378,7 @@ def test_edge_case_run(temp_test_dir: Path, edge_case_map_file: Path):
     # Original file: "edge_case_content_with_MyKey_controls.txt"
     # Content: "Line with My\nKey to replace."
     # "My\nKey" in content. Stripped key "MyKey" from map.
-    # replace_occurrences("Line with My\nKey to replace.")
+    # replace_logic.replace_occurrences("Line with My\nKey to replace.")
     # The regex from stripped keys (e.g. "MyKey") will match "MyKey" in "Line with MyKey to replace." (if input was stripped first, which it isn't)
     # Or, if the regex is `(MyKey|KeyWithControls|foo|foo bar)` IGNORECASE.
     # This regex will match "My" then "Key" if they are adjacent after stripping controls from input.
@@ -660,13 +661,13 @@ def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
         # Check if there's any transaction related to this original path
         related_tx_exists = any(
             tx["PATH"] == str(processed_file_rel_path) or # Direct match on original path
-            (tx.get("ORIGINAL_NAME") and Path(tx["PATH"]).name == replace_occurrences(processed_file_rel_path.name) and Path(tx["PATH"]).parent == processed_file_rel_path.parent) # Match if name changed
+            (tx.get("ORIGINAL_NAME") and Path(tx["PATH"]).name == replace_logic.replace_occurrences(processed_file_rel_path.name) and Path(tx["PATH"]).parent == processed_file_rel_path.parent) # Match if name changed
             for tx in transactions or []
         )
         assert related_tx_exists, f"File '{processed_file_rel_path}' expected to be processed but no related transaction found."
 
         # Check if file was renamed or content changed as expected
-        new_name = replace_occurrences(original_path_abs.name)
+        new_name = replace_logic.replace_occurrences(original_path_abs.name)
         new_path_abs = original_path_abs.with_name(new_name)
 
         if new_name != original_path_abs.name: # If name should have changed
