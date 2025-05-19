@@ -69,7 +69,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
 
     if not _RAW_REPLACEMENT_MAPPING: 
-        print("Warning: No valid replacement rules found in the mapping file after initial loading/stripping.");
+        print("Warning: No valid replacement rules found in the mapping file after initial loading/stripping.")
         _MAPPING_LOADED = True; return True 
 
     # For recursion check, we compare the stripped version of a value against the set of stripped keys.
@@ -83,7 +83,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
                 if strip_control_characters(strip_diacritics(orig_k)) == key_stripped_case_preserved and orig_v == value_original_from_map:
                     original_json_key_for_error = orig_k
                     break
-            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error}', its stripped form '{value_stripped_for_check}' is also a stripped key). This is disallowed. Aborting.");
+            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error}', its stripped form '{value_stripped_for_check}' is also a stripped key). This is disallowed. Aborting.")
             _RAW_REPLACEMENT_MAPPING = {}; return False 
 
     # Pattern for SCAN phase is built from the stripped, case-preserved keys. It's case-insensitive.
@@ -92,7 +92,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
     try:
         _COMPILED_PATTERN_FOR_SCAN = re.compile(r'(' + r'|'.join(pattern_keys_for_scan) + r')', flags=re.IGNORECASE)
     except re.error as e:
-        print(f"ERROR: Could not compile SCAN regex pattern: {e}. Regex tried: '{'(' + '|'.join(pattern_keys_for_scan) + ')'}'");
+        print(f"ERROR: Could not compile SCAN regex pattern: {e}. Regex tried: '{'(' + '|'.join(pattern_keys_for_scan) + ')'}'")
         _RAW_REPLACEMENT_MAPPING = {}; return False
 
     # _SORTED_RAW_KEYS_FOR_REPLACE contains the stripped, case-preserved keys, sorted by length descending.
@@ -107,7 +107,7 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
             flags=re.IGNORECASE 
         )
     except re.error as e:
-        print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}");
+        print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}")
         _RAW_REPLACEMENT_MAPPING = {}; _COMPILED_PATTERN_FOR_SCAN = None; return False 
         
     _MAPPING_LOADED = True
