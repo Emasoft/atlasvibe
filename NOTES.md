@@ -42,92 +42,88 @@ Create a Python script using Prefect to find and replace all occurrences of spec
 - Python 3.10+
 - Prefect: For workflow orchestration, task management, and logging.
 - `chardet`: For detecting file encodings.
-- `unicodedata`: For diacritic stripping.
+- `unicodedata`: For diacritic stripping and NFC normalization.
+- `isbinary`: For heuristic binary file detection.
 - Standard Python libraries: `os`, `pathlib`, `json`, `re`, `shutil`.
 
 ## Development Process
-- **Test-Driven Development (TDD)**: Features and fixes are guided by tests, particularly the self-test suite.
-- **Checklist-Based Progress Tracking**: The "Self-Test Scenarios (Checklist)" (found at the end of this document) will be used to break down features into small steps/tasks. After each set of code changes, an updated version of this checklist will be provided to reflect the current status of each item.
+- **Test-Driven Development (TDD)**: Features and fixes are guided by tests.
+- **Checklist-Based Progress Tracking**: The `tasks_checklist.md` file is used to break down features into small steps/tasks.
 
 ## Key Requirements & Behaviors
 
 1.  **External Replacement Mapping (`replacement_mapping.json`)**:
-    *   The script MUST load its replacement rules from an external JSON file named `replacement_mapping.json` located in the same directory as the script, or from a path specified via a CLI argument (future enhancement).
-    *   The JSON file structure will be:
-        ```json
-        {
-            "REPLACEMENT_MAPPING": {
-                "source_string1": "target_string1",
-                "source_string2": "target_string2",
-                // ... and so on
-            }
-        }
-        ```
+    *   The script loads its replacement rules from an external JSON file.
     *   **Key Handling (Source Strings)**:
-        *   When loaded from `replacement_mapping.json`, the *keys* (source strings) MUST have diacritics stripped before being used for matching. For example, a key `"ȕsele̮Ss_diá͡cRiti̅cS"` in the JSON becomes `"useless_diacritics"` internally for pattern matching.
-        *   The matching against file/folder names and content will be case-insensitive based on these diacritic-stripped keys.
-        *   Regex metacharacters within the diacritic-stripped keys MUST be escaped (e.g., using `re.escape()`) when constructing the search pattern.
+        *   When loaded from `replacement_mapping.json`, the *keys* (source strings) are canonicalized:
+            1.  Diacritics are stripped (e.g., "Flöjoy" -> "Flojoy").
+            2.  Control characters are stripped.
+            3.  The result is NFC normalized.
+        *   This canonical form is used for internal storage and for building regex patterns.
+        *   Matching is case-sensitive against these canonical keys.
     *   **Value Handling (Target Strings)**:
-        *   The *values* (target strings) from the JSON file MUST be used as-is for replacement, preserving their original characters, casing, and diacritics.
-    *   **Example Complex Mapping for Testing**:
-        ```json
-        {
-            "REPLACEMENT_MAPPING": {
-                "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL",
-                "The spaces will not be ignored": "The control characters \n will be ignored_VAL",
-                "_My_Love&Story": "_My_Story&Love_VAL",
-                "_my_love&story": "_my_story&love_VAL",
-                "COCO4_ep-m": "MOCO4_ip-N_VAL",
-                "Coco4_ep-M" : "Moco4_ip-N_VAL",
-                "characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames": "SpecialCharsKeyMatched_VAL"
-            }
-        }
-        ```
-        (Note: `_VAL` suffix added to values for clarity in test verification).
+        *   The *values* (target strings) from the JSON file are used as-is for replacement, preserving their original characters, casing, and diacritics.
+    *   **Recursive Mapping Prevention**: The script checks for and disallows mappings where a canonicalized value is also a canonicalized key.
 
-2.  **Strict Matching and Preservation**:
-    *   The script MUST NOT perform any Unicode normalization (NFC, NFD, NFKC, NFKD) on filenames or file content beyond the specified diacritic stripping for *source string keys during map loading*.
-    *   Replacements are strictly limited to the (diacritic-stripped, case-insensitive) source strings found in the loaded `REPLACEMENT_MAPPING`.
-    *   Occurrences of strings that, after diacritic stripping and case-folding, do not match a key in the internal mapping MUST be left entirely intact. For example, in the string `The word flojoy is not identical to the word flo̗j̕oy̆.`, if "flojoy" is a key (becomes "flojoy" after stripping) but "flo̗j̕oy̆" (becomes "flojoy" after stripping) is *not* explicitly a key with a *different* value, or if the intent is to only match the simple ASCII "flojoy", then only the simple ASCII "flojoy" would be replaced. The script matches based on the diacritic-stripped keys.
-    *   All characters in filenames and file content that are not part of an actual match (based on the dynamically generated regex from diacritic-stripped keys) MUST be preserved in their original byte form. This includes control characters, line endings, and any byte sequences that may not be valid in the detected encoding (which are handled using `surrogateescape` during processing and written back as original bytes).
-    *   The script's sole modification to any file or name should be the direct replacement of a matched segment (which corresponds to a diacritic-stripped key) with its corresponding original target string from the mapping, encoded back into the file's original encoding. No other bytes should be altered.
-*   **Surgical Principle with Encodings/Normalization**: The script aims to modify *only* the exact occurrences of matched keys.
-    *   **Input Processing**: When a file line or filename (input string) is processed:
-        1.  The original byte sequence of the input string is preserved.
-        2.  For matching purposes, a temporary "searchable version" of the input string is created by decoding it (using detected encoding with `surrogateescape`), then applying the same stripping (diacritics, control characters) and NFC normalization as was applied to the JSON keys during map loading.
-        3.  The regex pattern (built from canonical map keys) is searched against this `searchable_version`.
-    *   **Replacement**:
-        1.  If a match is found in the `searchable_version`, the `re.sub` operation is performed on the **original, non-normalized Unicode string** (decoded with `surrogateescape`).
-        2.  The callback function (`_actual_replace_callback`) receives the matched segment from this original string. It then processes this segment (strip diacritics, strip controls, NFC normalize) to create a canonical lookup key.
-        3.  This lookup key is used to retrieve the corresponding *original value string* from the loaded JSON map.
-        4.  This original value string is substituted by `re.sub`. The result is a modified Unicode string.
-    *   **Output**: The modified Unicode string is encoded back to the file's original detected encoding, using `surrogateescape` to handle any characters in the replacement string that might not be representable in the target encoding. This ensures that non-matched parts of the line/filename, including their original byte patterns for unmappable characters and specific normalization forms, are preserved.
-    *   **Unsupported Character Sets for Keys**: If a key from the replacement map cannot be represented or meaningfully searched in a file's content due to fundamental charset differences (e.g., a Chinese key in a file detected as purely Arabic DOS-720), that key will naturally not be found during the search in that file's content. No error is raised; the key is simply not matched.
-*   **Future Full Unicode Keys**: The current key processing (stripping, normalization) is applied at map load time. If this processing were removed in the future to support raw Unicode keys with diacritics/controls, the core replacement mechanism (operating on original Unicode strings and the callback processing the matched segment for lookup) would still be largely applicable. The callback's internal processing of the `matched_text_original_form` would simply become an identity operation if keys were already in their final lookup form.
+2.  **Surgical Principle with Encodings & Normalization**:
+    The script aims to modify *only* the exact occurrences of matched keys, preserving all other bytes and file characteristics. This is achieved through a careful process:
 
-3.  **Scope of Operation**:
-    *   **Directory Traversal**: Recursively scan a given root directory.
-    *   **File Names**: Rename files if their names contain matches to any of the (diacritic-stripped, case-insensitive) source strings.
-    *   **Folder Names**: Rename folders similarly.
-    *   **File Content**: Modify content within text files if lines contain matches.
-        *   Binary files (heuristically detected) should have their content skipped but their names processed.
+    *   **Map Loading & Key Preparation**:
+        *   Keys from `replacement_mapping.json` are processed into a canonical form: diacritics are stripped, control characters are removed, and then the string is NFC normalized. This canonical key is what's used for matching.
+        *   The original values from the JSON map are stored as-is, without normalization or stripping.
+        *   Regex patterns for scanning and replacement are built from these canonical keys and are case-sensitive.
 
+    *   **File Reading & Initial Decoding**:
+        *   The encoding of each file is detected (e.g., using `chardet`).
+        *   File content (and names) are read/decoded into Python Unicode strings using the detected encoding with `errors='surrogateescape'`. This ensures that all original bytes are represented in the Unicode string, even if they don't form valid characters in the detected encoding (they become surrogate codepoints).
+
+    *   **Scanning Phase (Identifying Potential Matches)**:
+        *   For each filename or line of content (now a Unicode string from `surrogateescape`):
+            1.  A temporary "searchable version" is created by applying the same canonicalization process used for map keys (strip diacritics, strip controls, NFC normalize).
+            2.  The scanning regex (`_COMPILED_PATTERN_FOR_SCAN`), built from canonical map keys, is used against this `searchable_version`. This quickly identifies if a line/name *might* contain a match.
+
+    *   **Replacement Phase (Actual Modification)**:
+        1.  If the scan indicates a potential match, the `replace_occurrences` function is called with the Unicode string obtained from the `surrogateescape` decoding (let's call this `original_unicode_line`).
+        2.  Inside `replace_occurrences`:
+            *   `original_unicode_line` is first NFC normalized. This ensures consistency for the regex engine, as the regex patterns are also built from NFC-normalized keys. Let's call this `nfc_unicode_line`.
+            *   `re.sub()` is called on `nfc_unicode_line` using the replacement regex (`_COMPILED_PATTERN_FOR_ACTUAL_REPLACE`).
+            *   The `_actual_replace_callback` function is invoked for each match found by `re.sub()` within `nfc_unicode_line`.
+                *   The `match.group(0)` passed to the callback is a segment from `nfc_unicode_line`.
+                *   This segment is then canonicalized (strip diacritics, strip controls, NFC normalize) to create a `lookup_key`.
+                *   This `lookup_key` is used to retrieve the corresponding *original, un-normalized value string* from the loaded JSON map.
+                *   This original value is returned by the callback for substitution.
+        3.  The result of `re.sub()` is a new Unicode string (`modified_unicode_line`) where only the targeted parts have been replaced with their original mapped values. All other characters, including surrogates from the initial `surrogateescape` decoding, remain untouched relative to `nfc_unicode_line`.
+
+    *   **File Writing & Encoding Preservation**:
+        *   The `modified_unicode_line` (or `modified_unicode_name`) is encoded back to bytes using the file's original detected encoding, again with `errors='surrogateescape'`. This ensures that:
+            *   Characters from the replacement string that are representable in the target encoding are correctly encoded.
+            *   Characters from the replacement string that are *not* representable in the target encoding become surrogate escape sequences in the byte string (if the Python version and I/O layer support it, otherwise they might be lost or cause errors depending on the strictness of `surrogateescape`'s re-encoding behavior for unrepresentable *new* characters – typically, `surrogateescape` is primarily for round-tripping *existing* undecodable bytes).
+            *   Surrogate codepoints in `modified_unicode_line` that originated from undecodable bytes in the *original* file are converted back to their original byte sequences.
+        *   This process ensures that all non-matched parts of the file, including their original byte patterns for unmappable characters, specific Unicode normalization forms (if they differed from NFC but didn't affect matching), line endings, and control characters, are preserved as closely as possible to the original byte stream.
+
+    *   **Handling of Keys Unrepresentable in File's Charset**:
+        *   If a key from the `replacement_mapping.json` (e.g., a Chinese string "繁体字") is being searched for in a file encoded in, say, cp1252 (a Western European encoding):
+            1.  The Chinese key is canonicalized (stripped, NFC normalized) and remains a Unicode Chinese string.
+            2.  The cp1252 file content is decoded to Unicode using `cp1252` with `surrogateescape`. It will not contain Chinese characters.
+            3.  The "searchable version" of the cp1252 line will also not contain Chinese characters.
+            4.  The canonical Chinese key will not be found in the searchable version of the line.
+        *   The script correctly determines that the key is "NOT FOUND" in that specific file/line. No error is raised; the replacement simply doesn't occur for that key in that context. The system relies on Unicode matching after initial decoding.
+
+    *   **Future Support for Full Unicode Keys**:
+        *   The current canonicalization of keys (stripping diacritics/controls, NFC normalization) happens at the time the `replacement_mapping.json` is loaded.
+        *   If, in the future, this initial canonicalization step for keys were removed (allowing keys in the JSON to be raw Unicode strings with diacritics, control characters, etc.), the core replacement mechanism would largely remain valid.
+        *   The main change would be that the `lookup_key` generation within `_actual_replace_callback` (which currently canonicalizes the matched segment from the input) would need to align with how the keys are stored in `_RAW_REPLACEMENT_MAPPING`. If map keys were stored raw, the callback might perform less processing or a different kind of normalization on the matched segment to ensure it can be found in the map.
+        *   The principle of operating on Unicode strings (decoded with `surrogateescape` and NFC normalized for `re.sub`) and then re-encoding with `surrogateescape` would still apply.
+
+3.  **Scope of Operation**: (As before)
 4.  **Exclusions**: (As before)
-5.  **File Encodings**: (As before, `surrogateescape` is key)
-6.  **Transaction Management**: (As before, but `ORIGINAL_NAME`/`ORIGINAL_LINE_CONTENT` store what's on disk, `PROPOSED_LINE_CONTENT` stores the result of `replace_occurrences`)
-7.  **User Experience & Control**: (Mostly as before, CLI arg for mapping file path is a future consideration)
-8.  **Error Handling & Robustness**: (As before)
-9.  **Self-Test Functionality (`--self-test`)**:
-    *   (Existing tests adapted to load the default `replacement_mapping.json`)
-    *   **New Self-Test Scenario**: Add a specific test to use the complex example map provided above. This test will involve creating a temporary `replacement_mapping.json` with this map, setting up corresponding files/folders, and verifying:
-        *   Correct diacritic stripping from source keys for matching.
-        *   Correct use of original values (with their diacritics/casing) for replacement.
-        *   Handling of spaces in keys.
-        *   Handling of special regex/path characters in keys (matched literally due to `re.escape`).
+5.  **Transaction Management**: (As before)
+6.  **User Experience & Control**: (As before)
+7.  **Error Handling & Robustness**: (As before)
+8.  **Self-Test Functionality**: (As before)
 
 ## Open Questions/Considerations (Archive - most are addressed)
 - ... (previous content remains relevant) ...
-- *New Consideration*: How will the script locate `replacement_mapping.json`? Default to script's directory or CWD? Add CLI arg? (For now, assume CWD or script dir, self-test will place it in temp_dir).
 
 ## Transaction File Structure Example
 (Structure remains largely the same, `ORIGINAL_NAME` and `ORIGINAL_LINE_CONTENT` are critical for what was actually on disk/in the file line).
@@ -156,5 +152,3 @@ Create a Python script using Prefect to find and replace all occurrences of spec
     +- Test the ability to of the script to make changes like a surgeon, only replacing the strings in the replacement_mapping.json configuration file and nothing else, leaving everything else exactly as was before, including: encoding, line endings, trailing chars, control characters, diacritics, malformed chars, illegal chars, corrupt chars, mixed encoding lines, spaces and invisible chars, etc. Everything must be identical and untouched escept those occurrences matching the replacement map provided by the user. Do various tests about this, to consider all tests cases.
     +- Test to assess the fact that files that have not been found containing (in the name or content) strings that matches the replacement map are always left intact.
     +- test the ability to detect and ignore symlinks (and not rename them) if the option `--ignore-symlinks` is used in the launch command.
-    
-

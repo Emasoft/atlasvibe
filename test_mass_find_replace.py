@@ -28,6 +28,8 @@
 # - Refactored multiple statements on single lines to comply with E701 linting rules.
 # - Corrected binary log offset assertion in `test_standard_run` for the `True` (ignore_symlinks) case.
 # - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`, selectively).
+# - Added `test_highly_problematic_xml_content_preservation` to test surgical replacement with complex byte patterns.
+# - Added ".xml" to DEFAULT_EXTENSIONS.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -58,7 +60,7 @@ from conftest import (
     VERY_LARGE_FILE_NAME_ORIG, VERY_LARGE_FILE_NAME_REPLACED, VERY_LARGE_FILE_LINES
 )
 
-DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf"]
+DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
 DEFAULT_EXCLUDE_FILES_REL = ["exclude_this_flojoy_file.txt"]
 
@@ -151,7 +153,7 @@ def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlin
     bin_file2_orig_path = temp_test_dir / "binary_fLoJoY_name.bin"
     assert bin_file2_orig_path.is_file()
     # Ensure it wasn't incorrectly renamed
-    assert not (temp_test_dir / "binary_atlasvibe_name.bin").exists() 
+    assert not (temp_test_dir / "binary_atlasvibe_name.bin").exists()
     assert_file_content(bin_file2_orig_path, b"unmapped_variant_binary_content" + b"\x00\xff", is_binary=True)
 
     large_file_renamed = temp_test_dir / "large_atlasvibe_file.txt"
@@ -720,7 +722,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
     def mock_always_retryable_error_indef(tx_item, root_dir, path_translation_map, path_cache, dry_run):
         nonlocal mock_tx_call_counts_indef
         is_target_file_tx = (tx_item["PATH"] == file_to_lock_rel or Path(tx_item["PATH"]).name == renamed_file_to_lock_rel) and \
-                            tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
+                            tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
         if is_target_file_tx:
             tx_id = tx_item['id']
             current_tx_call_count = mock_tx_call_counts_indef.get(tx_id, 0) + 1
@@ -929,3 +931,114 @@ def test_mixed_encoding_surgical_replacement(temp_test_dir: Path, default_map_fi
                 assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[3].decode('cp1252', errors='surrogateescape')
     
     assert relevant_tx_count == 3, f"Expected 3 content transactions for {test_file_name}, got {relevant_tx_count}"
+
+
+def test_highly_problematic_xml_content_preservation(temp_test_dir: Path, default_map_file: Path):
+    """
+    Tests surgical replacement in an XML-like file with various problematic byte patterns,
+    ensuring maximum preservation of non-target bytes.
+    Uses cp1252 as the encoding for the test file.
+    """
+    logger = logging.getLogger("test_problematic_xml")
+
+    # --- Test File Content (byte string) ---
+    # Using cp1252 characters:
+    #   \x99 = ™ (trademark)
+    #   \xAE = ® (registered)
+    #   \xF6 = ö (o-umlaut)
+    # Invalid cp1252 bytes (standalone):
+    #   \x81 (undefined in cp1252)
+    #   \xFE (used in Shift-JIS, but not valid standalone in cp1252)
+    # Line endings: \n (LF), \r\n (CRLF), \r (CR)
+
+    original_byte_content = b"".join([
+        b"<?xml version=\"1.0\" encoding=\"cp1252\"?>\n",
+        b"<root>\r\n",
+        b"  <element attr=\"value_with_Flojoy_to_replace\">\n",
+        b"    Some text with cp1252 char \x99 and another Flojoy instance.\r", # Line 4
+        b"    A non-matching Fl\xf6joy here (should be preserved).\n", # Line 5
+        b"    Invalid byte \x81 sequence, then Flojoy, then another invalid byte \xFE.\r\n", # Line 6
+        b"    Final line with \xAE symbol.\n", # Line 7
+        b"  </element>\r",
+        b"</root>\n"
+    ])
+
+    test_file_name = "problematic_flojoy_content.xml"
+    test_file_path = temp_test_dir / test_file_name
+    test_file_path.write_bytes(original_byte_content)
+
+    # --- Expected Byte Content after "Flojoy" -> "Atlasvibe" ---
+    expected_byte_content = b"".join([
+        b"<?xml version=\"1.0\" encoding=\"cp1252\"?>\n",
+        b"<root>\r\n",
+        b"  <element attr=\"value_with_Atlasvibe_to_replace\">\n", # Flojoy in attr replaced
+        b"    Some text with cp1252 char \x99 and another Atlasvibe instance.\r", # Flojoy replaced
+        b"    A non-matching Fl\xf6joy here (should be preserved).\n", # Unchanged
+        b"    Invalid byte \x81 sequence, then Atlasvibe, then another invalid byte \xFE.\r\n", # Flojoy replaced
+        b"    Final line with \xAE symbol.\n", # Unchanged
+        b"  </element>\r",
+        b"</root>\n"
+    ])
+
+    # --- Run Main Flow ---
+    load_map_success = replace_logic.load_replacement_map(default_map_file)
+    assert load_map_success, "Failed to load default_map_file for problematic XML test"
+
+    run_main_flow_for_test(
+        temp_test_dir,
+        default_map_file,
+        extensions=[".xml"], # Explicitly target .xml
+        skip_file_renaming=True,
+        skip_folder_renaming=True
+    )
+
+    # --- Assertions ---
+    assert test_file_path.exists(), "Test XML file should still exist."
+    modified_content_bytes = test_file_path.read_bytes()
+
+    if modified_content_bytes != expected_byte_content:
+        logger.error("Problematic XML content preservation test FAILED. Byte mismatch.")
+        # Log detailed differences for easier debugging
+        from difflib import unified_diff
+        diff = unified_diff(
+            expected_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True),
+            modified_content_bytes.decode('cp1252', 'surrogateescape').splitlines(keepends=True),
+            fromfile='expected_bytes.xml',
+            tofile='actual_bytes.xml',
+            lineterm=''
+        )
+        logger.error("Diff:\n" + "".join(diff))
+        logger.error(f"Expected bytes raw:\n{expected_byte_content!r}")
+        logger.error(f"Actual bytes raw:\n{modified_content_bytes!r}")
+
+
+    assert modified_content_bytes == expected_byte_content, \
+        "File content after surgical replacement in problematic XML does not match expected byte-for-byte."
+
+    # Check transaction log
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None, "Transaction file not found for problematic XML test."
+
+    # Expected number of content line transactions (lines 3, 4, 6 contain "Flojoy")
+    expected_tx_count = 3
+    actual_tx_count = 0
+    
+    original_lines_decoded = original_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True)
+    expected_lines_decoded = expected_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True)
+
+    for tx in transactions:
+        if tx["PATH"] == test_file_name and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            actual_tx_count += 1
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+            line_num_idx = tx["LINE_NUMBER"] - 1 # 0-indexed
+            
+            assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_decoded[line_num_idx], \
+                f"TX original content mismatch for line {tx['LINE_NUMBER']}"
+            assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_decoded[line_num_idx], \
+                f"TX proposed content mismatch for line {tx['LINE_NUMBER']}"
+            assert tx["ORIGINAL_ENCODING"].lower() == 'cp1252' or tx["ORIGINAL_ENCODING"].lower() == 'windows-1252', \
+                f"TX encoding mismatch, expected cp1252/windows-1252, got {tx['ORIGINAL_ENCODING']}"
+
+    assert actual_tx_count == expected_tx_count, \
+        f"Expected {expected_tx_count} content transactions for {test_file_name}, got {actual_tx_count}."
