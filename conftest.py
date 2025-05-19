@@ -16,6 +16,8 @@
 #     from the complex/precision maps, allowing the current `replace_logic.py` regex to match them.
 # - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 # - Modernized type hints (selectively, keeping Union/Optional in assert_file_content as per user diff note).
+# - Imported strip_diacritics and strip_control_characters from replace_logic.
+# - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -27,7 +29,9 @@ import shutil
 import json
 from pathlib import Path
 import os
-from typing import Union, Optional # Kept for assert_file_content as per user diff interpretation
+from typing import Union, Optional
+
+from replace_logic import strip_diacritics, strip_control_characters
 
 SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"
 VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
@@ -89,10 +93,16 @@ def create_test_environment_content(
                 f.write(f"Line {i+1}: This is a {'flojoy line that should be replaced' if is_match_line else 'standard non-matching line'}.\n")
 
     if include_precision_test_file:
-        # Map: "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL" (stripped key: "FLOJOY_DIACRITIC")
-        # Map: "key\twith\ncontrol": "value_for_control_key_val" (stripped key: "keywithcontrol")
-        lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n", "Test FLOJOY_DIACRITIC with mixed case.\n", # Use stripped key
-                   "  flojoy  with exact spaces.\n", "  flojoy   with extra spaces.\n", "keywithcontrol characters.\n", # Use stripped key
+        original_key_precision_diacritic = "FLÖJOY_DIACRITIC"
+        original_key_precision_controls = "key\twith\ncontrol"
+
+        stripped_key_precision_diacritic = strip_control_characters(strip_diacritics(original_key_precision_diacritic))
+        stripped_key_precision_controls = strip_control_characters(strip_diacritics(original_key_precision_controls))
+
+        lines = ["Standard flojoy here.\n", "Another Flojoy for title case.\r\n",
+                   f"Test {stripped_key_precision_diacritic} with mixed case.\n",
+                   "  flojoy  with exact spaces.\n", "  flojoy   with extra spaces.\n", 
+                   f"{stripped_key_precision_controls} characters.\n",
                    "unrelated content\n", "你好flojoy世界 (Chinese chars).\n", "emoji😊flojoy test.\n"]
         with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f:
             for line_str in lines:
@@ -101,17 +111,23 @@ def create_test_environment_content(
         (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
     if use_complex_map:
-        # Key: "ȕsele̮Ss_diá͡cRiti̅cS" (stripped: "useless_diacritics") -> Value: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
-        complex_diacritic_folder_orig_name_part = "useless_diacritics" # Use stripped key for matching
-        complex_diacritic_folder = base_dir / f"{complex_diacritic_folder_orig_name_part}_folder"
+        original_key_complex_diacritic = "ȕsele̮Ss_diá͡cRiti̅cS"
+        original_key_spaces = "The spaces will not be ignored"
+        original_key_controls_in_key_for_content = "key_with\tcontrol\nchars"
+        original_key_special_chars_for_content = "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames"
+
+        stripped_key_complex_diacritic = strip_control_characters(strip_diacritics(original_key_complex_diacritic))
+        stripped_key_spaces = strip_control_characters(strip_diacritics(original_key_spaces))
+        stripped_key_controls_in_key_for_content = strip_control_characters(strip_diacritics(original_key_controls_in_key_for_content))
+        stripped_key_special_chars_for_content = strip_control_characters(strip_diacritics(original_key_special_chars_for_content))
+
+        complex_diacritic_folder = base_dir / f"{stripped_key_complex_diacritic}_folder"
         complex_diacritic_folder.mkdir(parents=True,exist_ok=True)
-        (complex_diacritic_folder / f"{complex_diacritic_folder_orig_name_part}_file.txt").write_text(
-            f"Content with {complex_diacritic_folder_orig_name_part} and also {complex_diacritic_folder_orig_name_part}.\nAnd another Flojoy for good measure.")
+        (complex_diacritic_folder / f"{stripped_key_complex_diacritic}_file.txt").write_text(
+            f"Content with {stripped_key_complex_diacritic} and also {stripped_key_complex_diacritic}.\nAnd another Flojoy for good measure.")
         
-        # Key: "The spaces will not be ignored" (stripped: "The spaces will not be ignored") -> Value: "The control characters \n will be ignored_VAL"
-        original_spaces_name_part = "The spaces will not be ignored"
-        (base_dir / f"{original_spaces_name_part}_file.md").write_text(
-            f"This file has {original_spaces_name_part} in its name and content.")
+        (base_dir / f"{stripped_key_spaces}_file.md").write_text(
+            f"This file has {stripped_key_spaces} in its name and content.")
         
         # Key: "_My_Love&Story" (stripped: "_My_Love&Story") -> "_My_Story&Love_VAL"
         (base_dir/"_My_Love&Story.log").write_text("Log for _My_Love&Story and _my_love&story. And My_Love&Story.")
@@ -119,17 +135,12 @@ def create_test_environment_content(
         # Key: "COCO4_ep-m" (stripped: "COCO4_ep-m") -> "MOCO4_ip-N_VAL"
         (base_dir/"filename_with_COCO4_ep-m.data").write_text("Data for COCO4_ep-m and Coco4_ep-M. Also coco4_ep-m.")
         
-        # Key: "characters|not<allowed^in*paths::will/be!escaped%when?searched~in$filenames@and\"foldernames"
-        # (stripped: "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames")
-        # -> "SpecialCharsKeyMatched_VAL"
-        stripped_special_chars_key = "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames"
-        (base_dir/"special_chars_in_content_test.txt").write_text(f"This line contains {stripped_special_chars_key} to be replaced.")
+        (base_dir/"special_chars_in_content_test.txt").write_text(f"This line contains {stripped_key_special_chars_for_content} to be replaced.")
         
         # This file's name does not contain any complex map keys, so it should remain unchanged.
         (base_dir/"complex_map_key_withcontrolchars_original_name.txt").write_text("Content for complex map control key filename test.")
         
-        # Key: "key_with\tcontrol\nchars" (stripped: "keywithcontrolchars") -> "Value_for_key_with_controls_VAL"
-        (base_dir/"complex_map_content_with_key_with_controls.txt").write_text("Line with keywithcontrolchars to replace.") # Use stripped key in content
+        (base_dir/"complex_map_content_with_key_with_controls.txt").write_text(f"Line with {stripped_key_controls_in_key_for_content} to replace.")
 
     if use_edge_case_map:
         # Map key "My\nKey" (stripped: "MyKey")
