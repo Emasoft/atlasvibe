@@ -1,39 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Changelog:
-# - `is_likely_binary_file` replaced with `isbinary.is_binary_file`.
-# - RTF files are now explicitly checked: if `is_binary_file` says RTF is binary,
-#   we still attempt to extract text using `striprtf` for content scan.
-#   Content modification of RTF is still skipped to preserve formatting.
-# - `_execute_rename_transaction` & `_execute_content_line_transaction`:
-#   - Return retryable status for specific OSErrors.
-# - `execute_all_transactions`:
-#   - Implements main loop for processing and retrying transactions with exponential backoff.
-#   - Respects global timeout and skip flags.
-# - Added `RETRYABLE_OS_ERRORNOS` for common retryable errors.
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
+#
+# Copyright (c) 2024 Emasoft
+#
+# This software is licensed under the MIT License.
+# Refer to the LICENSE file for more details.
 
 import os
 import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set 
+from typing import List, Tuple, Optional, Dict, Any, Iterator, cast, Callable, Union, Set
 from enum import Enum
-import chardet 
+import chardet
 import time
-import pathspec 
-import errno 
-from striprtf.striprtf import rtf_to_text 
-from isbinary import is_binary_file 
+import pathspec
+import errno
+from striprtf.striprtf import rtf_to_text
+from isbinary import is_binary_file
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys
 
 class SandboxViolationError(Exception): pass
-class MockableRetriableError(OSError): pass 
+class MockableRetriableError(OSError): pass
 
 DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
-SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt" 
+SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"
 BINARY_MATCHES_LOG_FILE = "binary_files_matches.log"
 
 RETRYABLE_OS_ERRORNOS = {
@@ -55,7 +51,7 @@ class TransactionStatus(str, Enum):
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str]:
     if file_path.suffix.lower() == '.rtf':
-        return 'latin-1' 
+        return 'latin-1'
     try:
         with open(file_path, 'rb') as f: raw_data = f.read(sample_size)
         if not raw_data: return DEFAULT_ENCODING_FALLBACK
@@ -67,9 +63,9 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
             if norm_enc == 'ascii': return 'ascii'
             if 'utf-8' in norm_enc or 'utf8' in norm_enc: return 'utf-8'
             try: b"test".decode(encoding); return encoding
-            except (LookupError, UnicodeDecodeError): pass 
+            except (LookupError, UnicodeDecodeError): pass
         try: raw_data.decode('utf-8'); return 'utf-8'
-        except UnicodeDecodeError: 
+        except UnicodeDecodeError:
             if encoding:
                 try: raw_data.decode(encoding); return encoding
                 except (UnicodeDecodeError, LookupError): pass
@@ -85,14 +81,14 @@ def load_ignore_patterns(ignore_file_path: Path) -> Optional[pathspec.PathSpec]:
     except Exception as e: print(f"Warning: Could not load ignore file {ignore_file_path}: {e}"); return None
 
 def _walk_for_scan(
-    root_dir: Path, excluded_dirs_abs: List[Path], 
+    root_dir: Path, excluded_dirs_abs: List[Path],
     ignore_symlinks: bool, ignore_spec: Optional[pathspec.PathSpec]
 ) -> Iterator[Path]:
     for item_path in root_dir.rglob("*"):
         item_abs_path = item_path.resolve(strict=False)
         if ignore_symlinks and item_abs_path.is_symlink(): continue
         is_excluded_by_dir_arg = any(item_abs_path == ex_dir or \
-                                   (ex_dir.is_dir() and str(item_abs_path).startswith(str(ex_dir) + os.sep)) 
+                                   (ex_dir.is_dir() and str(item_abs_path).startswith(str(ex_dir) + os.sep))
                                    for ex_dir in excluded_dirs_abs)
         if is_excluded_by_dir_arg: continue
         if ignore_spec:
@@ -101,7 +97,7 @@ def _walk_for_scan(
                 if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
                    (item_abs_path.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
                     continue
-            except ValueError: pass 
+            except ValueError: pass
             except Exception as e:
                 print(f"Warning: Error during ignore_spec matching for {item_abs_path} relative to {root_dir}: {e}")
         yield item_abs_path
@@ -123,7 +119,7 @@ def _get_current_absolute_path(
 def scan_directory_for_occurrences(
     root_dir: Path, excluded_dirs: List[str], excluded_files: List[str],
     file_extensions: Optional[List[str]], ignore_symlinks: bool,
-    ignore_spec: Optional[pathspec.PathSpec], 
+    ignore_spec: Optional[pathspec.PathSpec],
     resume_from_transactions: Optional[List[Dict[str, Any]]] = None,
     paths_to_force_rescan: Optional[Set[str]] = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False
@@ -131,7 +127,7 @@ def scan_directory_for_occurrences(
     processed_transactions: List[Dict[str, Any]] = []
     existing_transaction_ids: Set[Tuple[str, str, int]] = set()
     paths_to_force_rescan = paths_to_force_rescan or set()
-    abs_root_dir = root_dir 
+    abs_root_dir = root_dir
 
     scan_pattern = get_scan_pattern()
     raw_keys_for_binary_search = get_raw_stripped_keys()
@@ -140,7 +136,7 @@ def scan_directory_for_occurrences(
         processed_transactions = list(resume_from_transactions)
         for tx in resume_from_transactions:
             tx_rel_path = tx.get("PATH")
-            if tx_rel_path in paths_to_force_rescan and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value: continue 
+            if tx_rel_path in paths_to_force_rescan and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value: continue
             tx_type, tx_line = tx.get("TYPE"), tx.get("LINE_NUMBER", 0)
             if tx_type and tx_rel_path: existing_transaction_ids.add((tx_rel_path, tx_type, tx_line))
 
@@ -148,16 +144,16 @@ def scan_directory_for_occurrences(
     for d_str in excluded_dirs:
         try: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).resolve(strict=False))
         except Exception: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).absolute())
-    
+
     excluded_basenames = {Path(f).name for f in excluded_files if Path(f).name == f and not os.path.sep in f and not ('/' in f or '\\' in f)}
-    excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f} 
+    excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f}
 
     normalized_extensions = {ext.lower() for ext in file_extensions} if file_extensions else None
     binary_log_path = abs_root_dir / BINARY_MATCHES_LOG_FILE
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec)
     first_item = next(item_iterator, None)
-    if first_item is None: return [] 
+    if first_item is None: return []
     def combined_iterator() -> Iterator[Path]:
         if first_item: yield first_item
         yield from item_iterator
@@ -180,17 +176,17 @@ def scan_directory_for_occurrences(
                 if tx_id_tuple not in existing_transaction_ids:
                     processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":tx_type, "PATH":relative_path_str, "ORIGINAL_NAME":original_name, "LINE_NUMBER":0, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                     existing_transaction_ids.add(tx_id_tuple)
-        
+
         if not skip_content and item_abs_path.is_file() and not item_abs_path.is_symlink():
             is_rtf = item_abs_path.suffix.lower() == '.rtf'
             try:
-                is_bin = is_binary_file(str(item_abs_path)) 
+                is_bin = is_binary_file(str(item_abs_path))
             except FileNotFoundError: continue
-            except Exception as e_isbin: 
+            except Exception as e_isbin:
                 print(f"Warning: Could not determine if {item_abs_path} is binary: {e_isbin}. Skipping content scan.")
                 continue
 
-            if is_bin and not is_rtf: 
+            if is_bin and not is_rtf:
                 if raw_keys_for_binary_search:
                     try:
                         with open(item_abs_path, 'rb') as bf: content_bytes = bf.read()
@@ -209,30 +205,30 @@ def scan_directory_for_occurrences(
 
             if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
                  continue
-            
+
             file_content_for_scan: Optional[str] = None
             file_encoding = DEFAULT_ENCODING_FALLBACK
-            
+
             if is_rtf:
                 try:
                     rtf_source_bytes = item_abs_path.read_bytes()
                     rtf_source_str = ""
-                    for enc_try in ['latin-1', 'cp1252', 'utf-8']: 
+                    for enc_try in ['latin-1', 'cp1252', 'utf-8']:
                         try: rtf_source_str = rtf_source_bytes.decode(enc_try); break
                         except UnicodeDecodeError: pass
                     if not rtf_source_str: rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
                     file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
-                    file_encoding = 'utf-8' 
+                    file_encoding = 'utf-8'
                 except Exception as e: print(f"Warn: Error extracting text from RTF {item_abs_path}: {e}"); continue
-            else: 
+            else:
                 file_encoding = get_file_encoding(item_abs_path)
-                try: 
+                try:
                     file_content_for_scan = item_abs_path.read_text(encoding=file_encoding, errors='surrogateescape')
                 except Exception as e: print(f"Warn: Error reading text file {item_abs_path} (enc:{file_encoding}): {e}"); continue
-            
+
             if file_content_for_scan is not None:
                 lines_for_scan = file_content_for_scan.splitlines(keepends=True)
-                if not lines_for_scan and file_content_for_scan: 
+                if not lines_for_scan and file_content_for_scan:
                     lines_for_scan = [file_content_for_scan]
 
                 for line_idx, line_content in enumerate(lines_for_scan):
@@ -257,14 +253,14 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
                     return cast(List[Dict[str, Any]], loaded_data)
                 else:
                     print(f"Warning: Invalid format in {path_to_try}. Expected a list.")
-                    loaded_data = None 
+                    loaded_data = None
             except json.JSONDecodeError as jde:
                 print(f"Warning: Failed to decode JSON from {path_to_try}: {jde}")
             except Exception as e:
                 print(f"Warning: Failed to load transactions from {path_to_try}: {e}")
-    if loaded_data is None: 
+    if loaded_data is None:
         print(f"Error: Could not load valid transactions from {json_file_path} or its backup.")
-    return None 
+    return None
 
 def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
     if json_file_path.exists():
@@ -277,7 +273,7 @@ def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) 
 def update_transaction_status_in_list(
     transactions: List[Dict[str, Any]], transaction_id: str, new_status: TransactionStatus,
     error_message: Optional[str] = None, proposed_content_after_execution: Optional[str] = None,
-    is_retryable_error: bool = False 
+    is_retryable_error: bool = False
 ) -> bool:
     current_time = time.time()
     for tx_item in transactions:
@@ -285,15 +281,15 @@ def update_transaction_status_in_list(
             tx_item['STATUS'] = new_status.value
             tx_item['timestamp_last_attempt'] = current_time
             if error_message: tx_item['ERROR_MESSAGE'] = error_message
-            elif new_status not in [TransactionStatus.FAILED, TransactionStatus.RETRY_LATER] : 
+            elif new_status not in [TransactionStatus.FAILED, TransactionStatus.RETRY_LATER] :
                 tx_item.pop('ERROR_MESSAGE', None)
-            
+
             if tx_item['TYPE'] == TransactionType.FILE_CONTENT_LINE.value and proposed_content_after_execution is not None:
                 tx_item['PROPOSED_LINE_CONTENT'] = proposed_content_after_execution
-            
+
             if new_status in [TransactionStatus.COMPLETED, TransactionStatus.FAILED]:
                 tx_item["timestamp_processed"] = current_time
-            
+
             if new_status == TransactionStatus.RETRY_LATER:
                 tx_item['retry_count'] = tx_item.get('retry_count', 0) + 1
             return True
@@ -302,7 +298,7 @@ def update_transaction_status_in_list(
 def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_desc: str):
     try:
         resolved_path = path_to_check.resolve(strict=False)
-        resolved_root = sandbox_root.resolve(strict=True) 
+        resolved_root = sandbox_root.resolve(strict=True)
         if resolved_path == resolved_root: return
         if not str(resolved_path).startswith(str(resolved_root) + os.sep):
              raise SandboxViolationError(f"Op '{operation_desc}' path '{resolved_path}' outside sandbox '{resolved_root}'.")
@@ -327,7 +323,7 @@ def _execute_rename_transaction(
     new_name = replace_occurrences(orig_name)
     if new_name == orig_name: return TransactionStatus.SKIPPED, "Name unchanged by replacement logic.", False
     new_abs_path = current_abs_path.with_name(new_name)
-    if not dry_run and orig_name == SELF_TEST_ERROR_FILE_BASENAME: return TransactionStatus.FAILED, "Simulated rename error for self-test.", False 
+    if not dry_run and orig_name == SELF_TEST_ERROR_FILE_BASENAME: return TransactionStatus.FAILED, "Simulated rename error for self-test.", False
     if dry_run:
         path_translation_map[orig_rel_path] = new_name; path_cache.pop(orig_rel_path, None)
         return TransactionStatus.COMPLETED, "DRY_RUN", False
@@ -337,7 +333,7 @@ def _execute_rename_transaction(
         if os.path.lexists(new_abs_path): return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
         os.rename(current_abs_path, new_abs_path)
         path_translation_map[orig_rel_path] = new_name; path_cache.pop(orig_rel_path, None)
-        path_cache[orig_rel_path] = new_abs_path 
+        path_cache[orig_rel_path] = new_abs_path
         return TransactionStatus.COMPLETED, None, False
     except OSError as e:
         if _is_retryable_os_error(e): return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
@@ -352,7 +348,7 @@ def _execute_content_line_transaction(
     orig_rel_path = tx_item["PATH"]; line_num = tx_item["LINE_NUMBER"]
     orig_line_content = tx_item["ORIGINAL_LINE_CONTENT"]; encoding = tx_item["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
     is_rtf = tx_item.get("IS_RTF", False)
-    
+
     actual_new_line_content = replace_occurrences(orig_line_content)
     tx_item["PROPOSED_LINE_CONTENT"] = actual_new_line_content
 
@@ -363,8 +359,8 @@ def _execute_content_line_transaction(
     if current_abs_path.is_symlink(): return TransactionStatus.SKIPPED, f"'{current_abs_path}' is a symlink; content modification skipped.", False
     if not current_abs_path.is_file(): return TransactionStatus.SKIPPED, f"'{current_abs_path}' not found or not a file.", False
     if dry_run: return TransactionStatus.COMPLETED, "DRY_RUN", False
-    
-    if is_rtf: 
+
+    if is_rtf:
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
 
     temp_file_path: Optional[Path] = None
@@ -379,13 +375,13 @@ def _execute_content_line_transaction(
                 current_line_idx += 1
                 if current_line_idx == line_num:
                     line_processed_flag = True
-                    if current_line_in_file == orig_line_content: 
+                    if current_line_in_file == orig_line_content:
                         outf.write(actual_new_line_content)
-                    else: 
-                        outf.write(current_line_in_file) 
+                    else:
+                        outf.write(current_line_in_file)
                         for rest_line in inf: outf.write(rest_line)
                         raise RuntimeError(f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content)}, Found: {repr(current_line_in_file)}")
-                else: 
+                else:
                     outf.write(current_line_in_file)
             if not line_processed_flag and line_num > current_line_idx:
                 raise RuntimeError(f"Line number {line_num} is out of bounds for file {current_abs_path} (file has {current_line_idx} lines).")
@@ -407,13 +403,13 @@ def _execute_content_line_transaction(
 
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path, dry_run: bool, resume: bool,
-    global_timeout_minutes: int, 
+    global_timeout_minutes: int,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
-    skip_scan: bool  # Add skip_scan here
+    skip_scan: bool
 ) -> Dict[str, int]:
     transactions = load_transactions(transactions_file_path)
     if not transactions: return {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
-    
+
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
     path_translation_map: Dict[str,str] = {}; path_cache: Dict[str,Path] = {}
     abs_r_dir = root_dir
@@ -424,19 +420,17 @@ def execute_all_transactions(
                tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value] and \
                tx.get("ERROR_MESSAGE") != "DRY_RUN":
                 path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
-    
+
     def sort_key(tx): type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}; return (type_o[tx["TYPE"]], tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0))
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
-    # If timeout is 0, this effectively means retry indefinitely (or until max_overall_retry_attempts as a safety)
-    # If timeout > 0, max_overall_retry_attempts is a cap on how many full passes we do within that timeout.
-    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 
+    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
     current_overall_retry_attempt = 0
-    
-    while True: 
+
+    while True:
         processed_in_this_pass = 0
-        items_still_requiring_retry = [] 
+        items_still_requiring_retry = []
 
         for tx_item in transactions:
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
@@ -447,22 +441,22 @@ def execute_all_transactions(
                (skip_content and tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value):
                 if current_status not in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by CLI option.")
-                    processed_in_this_pass +=1 
+                    processed_in_this_pass +=1
                 continue
-            
-            if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
-                continue 
 
-            if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: 
-                current_status = TransactionStatus.PENDING 
-            
+            if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
+                continue
+
+            if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0:
+                current_status = TransactionStatus.PENDING
+
             if current_status == TransactionStatus.RETRY_LATER:
                 if tx_item.get("timestamp_next_retry", 0) > time.time():
-                    items_still_requiring_retry.append(tx_item) 
-                    continue 
-                else: 
+                    items_still_requiring_retry.append(tx_item)
+                    continue
+                else:
                     current_status = TransactionStatus.PENDING
-            
+
             if resume and tx_item.get("STATUS") == TransactionStatus.FAILED.value and current_overall_retry_attempt == 0 :
                 print(f"Resuming FAILED tx as PENDING: {tx_id} ({tx_item.get('PATH','N/A')})")
                 current_status = TransactionStatus.PENDING
@@ -471,101 +465,95 @@ def execute_all_transactions(
 
             if skip_scan and not resume and current_status == TransactionStatus.COMPLETED and tx_item.get("ERROR_MESSAGE") == "DRY_RUN":
                 current_status = TransactionStatus.PENDING
-                tx_item["STATUS"] = TransactionStatus.PENDING.value # Update in list for current pass
-                tx_item.pop('ERROR_MESSAGE', None) # Clear DRY_RUN message
-                tx_item.pop('timestamp_processed', None) # Clear processed timestamp
+                tx_item["STATUS"] = TransactionStatus.PENDING.value
+                tx_item.pop('ERROR_MESSAGE', None)
+                tx_item.pop('timestamp_processed', None)
 
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-                
-                new_stat_from_exec: TransactionStatus; err_msg_from_exec: Optional[str] = None; 
+
+                new_stat_from_exec: TransactionStatus; err_msg_from_exec: Optional[str] = None;
                 final_prop_content_for_log: Optional[str] = None
                 is_retryable_error_from_exec = False
-                
+
                 try:
                     if tx_item["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run)
                     elif tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run)
-                        final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT") 
-                    else: 
+                        final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT")
+                    else:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_item['TYPE']}", False
-                except Exception as e_outer: 
+                except Exception as e_outer:
                     new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Outer execution error: {e_outer}", False
                     print(f"CRITICAL outer error processing tx {tx_id}: {e_outer}")
-                
+
                 if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
-                    retry_count = tx_item.get('retry_count', 0) 
-                    base_delay_seconds = 5 
-                    max_backoff_seconds = 300 
-                    backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds) 
+                    retry_count = tx_item.get('retry_count', 0)
+                    base_delay_seconds = 5
+                    max_backoff_seconds = 300
+                    backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds)
                     tx_item['timestamp_next_retry'] = time.time() + backoff_seconds
                     print(f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count + 1}). Error: {err_msg_from_exec}")
                     items_still_requiring_retry.append(tx_item)
-                
+
                 update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
                 save_transactions(transactions, transactions_file_path)
                 processed_in_this_pass += 1
-        
+
         current_overall_retry_attempt += 1
 
-        if not items_still_requiring_retry: 
-            break 
-        
+        if not items_still_requiring_retry:
+            break
+
         timed_out = False
         if global_timeout_minutes > 0 and (time.time() - execution_start_time) / 60 >= global_timeout_minutes:
             print(f"Global execution timeout of {global_timeout_minutes} minutes reached.")
             timed_out = True
-        
+
         max_retries_hit_for_timed_run = False
         if global_timeout_minutes != 0 and current_overall_retry_attempt >= max_overall_retry_passes:
             print(f"Warning: Max retry passes ({max_overall_retry_passes}) reached for timed execution.")
             max_retries_hit_for_timed_run = True
-        
-        # For indefinite timeout, max_overall_retry_attempts is a very high safeguard.
-        # If it's hit, it means something is likely wrong or taking extremely long.
-        # The loop should continue if items are still genuinely in RETRY_LATER and their backoff timers haven't expired.
-        # The primary exit for indefinite timeout should be when no more progress can be made.
-        if global_timeout_minutes == 0 and current_overall_retry_attempt >= max_overall_retry_attempts:
-             print(f"Warning: Indefinite timeout, but max retry passes ({max_overall_retry_attempts}) reached. This may indicate a persistent issue or very long backoffs.")
-             # Don't break here for indefinite timeout unless no progress is possible (checked later)
+
+        if global_timeout_minutes == 0 and current_overall_retry_attempt >= max_overall_retry_passes:
+             print(f"Warning: Indefinite timeout, but max retry passes ({max_overall_retry_passes}) reached. This may indicate a persistent issue or very long backoffs.")
 
 
-        if timed_out or max_retries_hit_for_timed_run: # Only break if timed_out or (timed_run AND max_retries_hit)
+        if timed_out or max_retries_hit_for_timed_run:
             failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached for timed execution."
             for tx_item_failed_retry in items_still_requiring_retry:
-                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: 
+                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value:
                     update_transaction_status_in_list(transactions, tx_item_failed_retry["id"], TransactionStatus.FAILED, failure_reason)
             save_transactions(transactions, transactions_file_path)
             break
-        
+
         if items_still_requiring_retry:
             next_due_retry_timestamp = min(itx.get("timestamp_next_retry", float('inf')) for itx in items_still_requiring_retry)
-            sleep_duration = max(0.1, next_due_retry_timestamp - time.time()) 
-            
+            sleep_duration = max(0.1, next_due_retry_timestamp - time.time())
+
             if global_timeout_minutes > 0:
                 remaining_time_budget = (execution_start_time + global_timeout_minutes * 60) - time.time()
-                if remaining_time_budget <= 0: # No time left, break before sleep
+                if remaining_time_budget <= 0:
                     print(f"Global execution timeout of {global_timeout_minutes} minutes reached (checked before sleep).")
                     for tx_item_timeout_retry in items_still_requiring_retry:
                          update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
                     save_transactions(transactions, transactions_file_path)
                     break
-                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) 
-            else: # Indefinite timeout
-                sleep_duration = min(sleep_duration, 60.0) 
+                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0)
+            else:
+                sleep_duration = min(sleep_duration, 60.0)
 
-            if sleep_duration > 0.05 : 
+            if sleep_duration > 0.05 :
                  print(f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.")
                  time.sleep(sleep_duration)
-            else: 
-                time.sleep(0.05) 
-        elif not processed_in_this_pass: 
-            break 
-    
+            else:
+                time.sleep(0.05)
+        elif not processed_in_this_pass:
+            break
+
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
-    for t in transactions: 
+    for t in transactions:
         status_key = t.get("STATUS", TransactionStatus.PENDING.value).lower()
         stats[status_key] = stats.get(status_key, 0) + 1
     return stats
-    
