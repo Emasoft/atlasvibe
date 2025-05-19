@@ -467,6 +467,12 @@ def execute_all_transactions(
 
             tx_item["STATUS"] = current_status.value
 
+            if skip_scan and not resume and current_status == TransactionStatus.COMPLETED and tx_item.get("ERROR_MESSAGE") == "DRY_RUN":
+                current_status = TransactionStatus.PENDING
+                tx_item["STATUS"] = TransactionStatus.PENDING.value # Update in list for current pass
+                tx_item.pop('ERROR_MESSAGE', None) # Clear DRY_RUN message
+                tx_item.pop('timestamp_processed', None) # Clear processed timestamp
+
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
                 

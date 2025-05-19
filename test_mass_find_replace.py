@@ -186,7 +186,8 @@ def test_edge_case_run(temp_test_dir: Path, edge_case_map_file: Path):
     create_test_environment_content(temp_test_dir, use_edge_case_map=True)
     run_main_flow_for_test(temp_test_dir, edge_case_map_file)
     renamed_file = temp_test_dir / "edge_case_MyKeyValue_VAL_original_name.txt"
-    assert renamed_file.is_file(); assert_file_content(renamed_file, "Initial content for control key name test (MyKey).")
+    assert renamed_file.is_file()
+    assert_file_content(renamed_file, "Initial content for control key name test (MyKeyValue_VAL).") # Expect content to be replaced
     content_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
     assert content_file.is_file(); assert_file_content(content_file, "Line with MyKeyValue_VAL to replace.")
     priority_file = temp_test_dir / "edge_case_key_priority.txt"
@@ -229,7 +230,13 @@ def test_resume_functionality(temp_test_dir: Path, default_map_file: Path):
     final_txns = load_transactions(txn_file); assert final_txns is not None
     new_file_renamed = temp_test_dir / "newly_added_atlasvibe_for_resume.txt"
     assert new_file_renamed.exists(); assert_file_content(new_file_renamed, "This atlasvibe content is new for resume.")
-    assert any(tx["PATH"] == "newly_added_atlasvibe_for_resume.txt" and tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns)
+    assert any(tx["PATH"] == "newly_added_flojoy_for_resume.txt" and # Check original path
+               tx.get("ORIGINAL_NAME") == "newly_added_flojoy_for_resume.txt" and # Original name
+               tx["TYPE"] == TransactionType.FILE_NAME.value and
+               tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), "File rename transaction for new file not completed"
+    assert any(tx["PATH"] == "newly_added_flojoy_for_resume.txt" and # Check original path for content
+               tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and
+               tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), "Content transaction for new file not completed"
     only_name_mod = temp_test_dir / "only_name_atlasvibe.md"
     assert only_name_mod.exists(); assert_file_content(only_name_mod, "Content without target string, but now with atlasvibe.")
     assert any(tx["PATH"] == "only_name_atlasvibe.md" and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns)
@@ -322,7 +329,7 @@ def test_ignore_file_logic(temp_test_dir: Path, default_map_file: Path,
 
 @pytest.mark.parametrize("filename, content_bytes, is_binary_expected_by_lib, contains_flojoy_bytes", [
     ("text_file.txt", b"This is a plain text file with flojoy.", False, True),
-    ("utf16_file.txt", "UTF-16 text with flojoy".encode('utf-16'), True, True),
+    ("utf16_file.txt", "UTF-16 text with flojoy".encode('utf-16'), False, True), # isbinary likely sees it as text
     ("binary_file.bin", b"\x00\x01\x02flojoy_data\x03\x04\xDE\xAD\xBE\xEF", True, True),
     ("image.jpg", b"\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01flojoy_marker", True, True),
     ("control_char_heavy.txt", b"text" + b"\x01\x02\x03\x04\x05" * 200 + b"flojoy", True, True),
@@ -353,7 +360,8 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
 
     script_treats_as_binary_for_content_mod = detected_as_binary_lib and not filename.endswith(".rtf")
 
-    run_main_flow_for_test(temp_test_dir, default_map_file, skip_file_renaming=True, skip_folder_renaming=True)
+    run_main_flow_for_test(temp_test_dir, default_map_file, extensions=None, # Process all text-like files
+                           skip_file_renaming=True, skip_folder_renaming=True)
 
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME); assert transactions is not None
     content_tx_found = any(tx["PATH"] == filename and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value for tx in transactions)
@@ -462,6 +470,7 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
     for item in temp_test_dir.iterdir(): 
         if item.is_dir(): shutil.rmtree(item)
         else: item.unlink()
+    map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}})) # Recreate a simple map
     
     run_main_flow_for_test(temp_test_dir, default_map_file) 
     

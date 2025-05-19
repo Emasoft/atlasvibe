@@ -110,8 +110,16 @@ def get_raw_stripped_keys() -> TypingList[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    matched_key = match.group(0) 
-    return _RAW_REPLACEMENT_MAPPING.get(matched_key, matched_key) 
+    matched_text_in_input = match.group(0)
+    # Find which key from our map was responsible for this IGNORECASE match
+    # _SORTED_RAW_KEYS_FOR_REPLACE contains the stripped, case-preserved keys from the map, sorted by length.
+    # _RAW_REPLACEMENT_MAPPING maps these stripped, case-preserved keys to their original values from JSON.
+    for map_key_case_preserved_stripped in _SORTED_RAW_KEYS_FOR_REPLACE:
+        if map_key_case_preserved_stripped.lower() == matched_text_in_input.lower():
+            # This map_key_case_preserved_stripped is the one that semantically matched.
+            # Use it to get the intended original value from the mapping.
+            return _RAW_REPLACEMENT_MAPPING[map_key_case_preserved_stripped]
+    return matched_text_in_input # Should not be reached if pattern is built correctly from these keys
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
