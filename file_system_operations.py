@@ -1,31 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `_get_current_absolute_path`: Changed `(current_parent_abs_path / current_item_name).resolve(strict=False)`
-#   to `current_parent_abs_path / current_item_name` to avoid resolving symlinks to their targets prematurely.
-#   This ensures that operations like renaming act on the symlink itself.
-# - `execute_all_transactions`:
-#   - Correctly reset status of transactions marked COMPLETED with ERROR_MESSAGE="DRY_RUN"
-#     to PENDING when `resume=True` or (`skip_scan=True` and `resume=False`).
-#   - Ensured that `path_translation_map` is initialized from `COMPLETED` rename transactions
-#     if `skip_scan=True` (or `resume=True`), providing consistent path resolution for
-#     operations based on a pre-existing transaction file.
-# - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
-# - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
-# - Changed `os.rename` to `Path(current_abs_path).rename(new_abs_path)` in `_execute_rename_transaction`
-#   for potentially more robust symlink renaming and path handling.
-# - Modified `_walk_for_scan` to use the direct path from `rglob` (`item_path_from_rglob`)
-#   instead of `item_path.resolve()`. This ensures that symlink checks and ignore
-#   specification matching operate on the symlink's path itself, not its target,
-#   providing consistent behavior for `ignore_symlinks` and path-based exclusion rules.
-# - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
-# - Added `import collections.abc`.
-# - `scan_directory_for_occurrences`:
-#   - For filenames and content lines, a "searchable version" (NFC normalized, stripped of diacritics & controls)
-#     is created for matching against `scan_pattern`.
-#   - `replace_occurrences` is called with the *original* (non-normalized, non-stripped) string to determine
-#     if an actual change would occur and thus if a transaction is needed.
-#   - Original (non-normalized) line content is still stored in transactions.
+# - `_execute_content_line_transaction`: Changed `open(current_abs_path, 'r', ..., newline=None)`
+#   to `open(current_abs_path, 'r', ..., newline='')` to preserve line endings during file reading.
+#   This ensures that the `ORIGINAL_LINE_CONTENT` stored in transactions and processed by
+#   `replace_occurrences` retains its true line endings, which are then preserved on write.
+# - `execute_all_transactions`: Modified the logic for populating `path_translation_map`
+#   when `resume=True` or (`skip_scan=True` and `not resume`). The condition
+#   `tx.get("ERROR_MESSAGE") != "DRY_RUN"` was removed when checking for COMPLETED rename
+#   transactions. This allows `skip_scan` mode to correctly use the renames planned
+#   during a previous dry run to build its understanding of the current file paths.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -296,21 +280,22 @@ def scan_directory_for_occurrences(
                     if not rtf_source_str:
                         rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
                     file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
-                    file_encoding = 'utf-8'
+                    file_encoding = 'utf-8' # Extracted text is effectively UTF-8
                 except Exception as e:
                     print(f"Warn: Error extracting text from RTF {item_abs_path}: {e}")
                     continue
             else:
                 file_encoding = get_file_encoding(item_abs_path)
                 try:
-                    file_content_for_scan = item_abs_path.read_text(encoding=file_encoding, errors='surrogateescape')
+                    # Read with newline='' to preserve original line endings in lines_for_scan
+                    file_content_for_scan = item_abs_path.read_text(encoding=file_encoding, errors='surrogateescape', newline='')
                 except Exception as e:
                     print(f"Warn: Error reading text file {item_abs_path} (enc:{file_encoding}): {e}")
                     continue
 
             if file_content_for_scan is not None:
                 lines_for_scan = file_content_for_scan.splitlines(keepends=True)
-                if not lines_for_scan and file_content_for_scan:
+                if not lines_for_scan and file_content_for_scan: # Handle files with no newlines but content
                     lines_for_scan = [file_content_for_scan]
 
                 for line_idx, line_content in enumerate(lines_for_scan):
@@ -404,7 +389,7 @@ def _is_retryable_os_error(e: OSError) -> bool:
         return True
     if hasattr(e, 'errno') and e.errno in RETRYABLE_OS_ERRORNOS:
         return True
-    if os.name == 'nt' and hasattr(e, 'winerror') and e.winerror in [32, 33]:
+    if os.name == 'nt' and hasattr(e, 'winerror') and e.winerror in [32, 33]: # type: ignore
         return True
     return False
 
@@ -487,29 +472,35 @@ def _execute_content_line_transaction(
         _ensure_within_sandbox(current_abs_path, root_dir, f"content write for {current_abs_path.name}")
         temp_file_path = current_abs_path.with_name(f"{current_abs_path.name}.{uuid.uuid4()}.tmp")
         line_processed_flag = False
-        with open(current_abs_path,'r',encoding=encoding,errors='surrogateescape',newline=None) as inf, \
+        # Read with newline='' to preserve original line endings
+        with open(current_abs_path,'r',encoding=encoding,errors='surrogateescape',newline='') as inf, \
              open(temp_file_path,'w',encoding=encoding,errors='surrogateescape',newline='') as outf:
             current_line_idx = 0
             for current_line_in_file in inf:
                 current_line_idx += 1
                 if current_line_idx == line_num:
                     line_processed_flag = True
+                    # Compare with original line content from transaction (which also had preserved newlines if scan was correct)
                     if current_line_in_file == orig_line_content:
                         outf.write(actual_new_line_content)
                     else:
+                        # If content changed since scan, write current line and abort for this file to be safe
                         outf.write(current_line_in_file)
+                        # Write rest of file as is
                         for rest_line in inf:
                             outf.write(rest_line)
                         raise RuntimeError(f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content)}, Found: {repr(current_line_in_file)}")
                 else:
                     outf.write(current_line_in_file)
-            if not line_processed_flag and line_num > current_line_idx:
+            if not line_processed_flag and line_num > current_line_idx: # Should not happen if scan was correct
                 raise RuntimeError(f"Line number {line_num} is out of bounds for file {current_abs_path} (file has {current_line_idx} lines).")
-        if line_processed_flag:
+        
+        if line_processed_flag: # Ensure the target line was actually found and processed
             shutil.copymode(current_abs_path, temp_file_path)
             os.replace(temp_file_path, current_abs_path)
-            temp_file_path = None
+            temp_file_path = None # Prevent deletion in finally
             return TransactionStatus.COMPLETED, None, False
+        # This case (line_processed_flag is False but no error raised) should be unlikely
         return TransactionStatus.FAILED, "Content update logic error: target line not processed as expected.", False
     except OSError as e:
         if _is_retryable_os_error(e):
@@ -517,7 +508,7 @@ def _execute_content_line_transaction(
         return TransactionStatus.FAILED, f"OS error: {e}", False
     except SandboxViolationError as sve:
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
-    except RuntimeError as rte:
+    except RuntimeError as rte: # Catch our specific "content changed" or "line out of bounds"
         return TransactionStatus.FAILED, str(rte), False
     except Exception as e:
         return TransactionStatus.FAILED, f"Unexpected content update error for {current_abs_path}: {e}", False
@@ -525,8 +516,8 @@ def _execute_content_line_transaction(
         if temp_file_path and temp_file_path.exists():
             try:
                 temp_file_path.unlink(missing_ok=True)
-            except OSError:
-                pass
+            except OSError: # nosec
+                pass # Best effort to clean up
 
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path, dry_run: bool, resume: bool,
@@ -543,13 +534,16 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    if resume or (skip_scan and not resume): # Also init map if skipping scan but not explicitly resuming
+    # Initialize path_translation_map from COMPLETED renames if resuming or skipping scan.
+    if resume or skip_scan:
         for tx in transactions:
-            # Populate path_translation_map for any already completed renames
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
-               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value] and \
-               tx.get("ERROR_MESSAGE") != "DRY_RUN":
+               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+                # For skip_scan, we trust the "COMPLETED" (even if from DRY_RUN) as the plan.
+                # For resume, actual completed renames are used.
+                # The key is that `replace_occurrences` will give the *target* name.
                 path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
+
 
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
@@ -557,22 +551,23 @@ def execute_all_transactions(
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
-    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
+    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 # Max passes for timed, effectively infinite for timeout=0
     current_overall_retry_attempt = 0
     
     # Initial status reset for relevant transactions if resuming or skipping scan
-    if resume or (skip_scan and not resume):
+    if resume or skip_scan: # Apply to both resume and skip_scan
         for tx_item_for_reset in transactions:
-            if tx_item_for_reset.get("STATUS") == TransactionStatus.COMPLETED.value and \
+            current_tx_status = tx_item_for_reset.get("STATUS")
+            # If resuming or skipping scan, reset "DRY_RUN" completed items to PENDING
+            if current_tx_status == TransactionStatus.COMPLETED.value and \
                tx_item_for_reset.get("ERROR_MESSAGE") == "DRY_RUN":
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
                 tx_item_for_reset.pop('ERROR_MESSAGE', None)
                 tx_item_for_reset.pop('timestamp_processed', None)
-                tx_item_for_reset.pop('timestamp_next_retry', None) # Clear any retry timestamp too
+                tx_item_for_reset.pop('timestamp_next_retry', None)
                 tx_item_for_reset['retry_count'] = 0
-            elif resume and tx_item_for_reset.get("STATUS") == TransactionStatus.FAILED.value:
-                # Also reset FAILED transactions to PENDING on resume, so they are retried.
-                # This is a broader reset for FAILED than just DRY_RUN ones.
+            # If resuming, also reset FAILED items to PENDING for a retry attempt
+            elif resume and current_tx_status == TransactionStatus.FAILED.value:
                 print(f"Resuming FAILED tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})")
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
                 tx_item_for_reset.pop('ERROR_MESSAGE', None)
@@ -601,28 +596,17 @@ def execute_all_transactions(
                 continue
 
             if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0:
+                # If a previous run was interrupted, IN_PROGRESS items should be re-evaluated
                 current_status = TransactionStatus.PENDING
             
             if current_status == TransactionStatus.RETRY_LATER:
                 if tx_item.get("timestamp_next_retry", 0) > time.time():
                     items_still_requiring_retry.append(tx_item)
                     continue
-                else:
+                else: # Timer expired, try again
                     current_status = TransactionStatus.PENDING
             
-            # This FAILED reset was specific to the first pass of resume, now handled by initial loop
-            # if resume and tx_item.get("STATUS") == TransactionStatus.FAILED.value and current_overall_retry_attempt == 0 :
-            #     print(f"Resuming FAILED tx as PENDING: {tx_id} ({tx_item.get('PATH','N/A')})")
-            #     current_status = TransactionStatus.PENDING
-
             tx_item["STATUS"] = current_status.value # Ensure current_status is reflected in tx_item for this pass
-
-            # The specific skip_scan without resume logic for DRY_RUN was moved to the initial loop.
-            # if skip_scan and not resume and current_status == TransactionStatus.COMPLETED and tx_item.get("ERROR_MESSAGE") == "DRY_RUN":
-            #     current_status = TransactionStatus.PENDING
-            #     tx_item["STATUS"] = TransactionStatus.PENDING.value 
-            #     tx_item.pop('ERROR_MESSAGE', None) 
-            #     tx_item.pop('timestamp_processed', None) 
 
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
@@ -647,7 +631,7 @@ def execute_all_transactions(
                 if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
                     retry_count = tx_item.get('retry_count', 0)
                     base_delay_seconds = 5
-                    max_backoff_seconds = 300
+                    max_backoff_seconds = 300 # 5 minutes
                     backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds)
                     tx_item['timestamp_next_retry'] = time.time() + backoff_seconds
                     print(f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count + 1}). Error: {err_msg_from_exec}")
@@ -659,7 +643,7 @@ def execute_all_transactions(
 
         current_overall_retry_attempt += 1
 
-        if not items_still_requiring_retry:
+        if not items_still_requiring_retry: # All items processed or no retries needed
             break
 
         timed_out = False
@@ -671,45 +655,52 @@ def execute_all_transactions(
         if global_timeout_minutes != 0 and current_overall_retry_attempt >= max_overall_retry_passes:
             print(f"Warning: Max retry passes ({max_overall_retry_passes}) reached for timed execution.")
             max_retries_hit_for_timed_run = True
-
+        
+        # For indefinite timeout, we don't cap by max_overall_retry_passes in the same way,
+        # but we might log if it's taking too many passes.
         if global_timeout_minutes == 0 and current_overall_retry_attempt >= max_overall_retry_passes:
              print(f"Warning: Indefinite timeout, but max retry passes ({max_overall_retry_passes}) reached. This may indicate a persistent issue or very long backoffs.")
 
 
-        if timed_out or max_retries_hit_for_timed_run:
+        if timed_out or max_retries_hit_for_timed_run: # Only for timed runs
             failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached for timed execution."
             for tx_item_failed_retry in items_still_requiring_retry:
-                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value:
+                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: # Only fail those still in RETRY_LATER
                     update_transaction_status_in_list(transactions, tx_item_failed_retry["id"], TransactionStatus.FAILED, failure_reason)
             save_transactions(transactions, transactions_file_path)
-            break
+            break # Exit retry loop
 
-        if items_still_requiring_retry:
+        if items_still_requiring_retry: # If still items to retry (and not timed out for timed runs)
             next_due_retry_timestamp = min(itx.get("timestamp_next_retry", float('inf')) for itx in items_still_requiring_retry)
             sleep_duration = max(0.1, next_due_retry_timestamp - time.time())
 
-            if global_timeout_minutes > 0:
+            if global_timeout_minutes > 0: # If timed, ensure sleep doesn't exceed remaining budget
                 remaining_time_budget = (execution_start_time + global_timeout_minutes * 60) - time.time()
-                if remaining_time_budget <= 0:
+                if remaining_time_budget <= 0: # Double check timeout before sleep
                     print(f"Global execution timeout of {global_timeout_minutes} minutes reached (checked before sleep).")
                     for tx_item_timeout_retry in items_still_requiring_retry:
-                         update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
+                         if tx_item_timeout_retry["STATUS"] == TransactionStatus.RETRY_LATER.value:
+                            update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
                     save_transactions(transactions, transactions_file_path)
-                    break
-                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0)
-            else:
+                    break # Exit retry loop
+                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) # Cap sleep at 60s or remaining budget
+            else: # Indefinite timeout, cap sleep at 60s for responsiveness
                 sleep_duration = min(sleep_duration, 60.0)
 
-            if sleep_duration > 0.05 :
+            if sleep_duration > 0.05 : # Avoid spamming logs for very short sleeps
                  print(f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.")
                  time.sleep(sleep_duration)
-            else:
-                time.sleep(0.05)
-        elif not processed_in_this_pass:
+            else: # Minimal sleep if next retry is almost immediate
+                time.sleep(0.05) 
+        elif not processed_in_this_pass: # No items processed, no items to retry
             break
 
+    # Final count of statuses
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
     for t in transactions:
         status_key = t.get("STATUS", TransactionStatus.PENDING.value).lower()
         stats[status_key] = stats.get(status_key, 0) + 1
     return stats
+
+```
+test_mass_find_replace.py
