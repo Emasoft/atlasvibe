@@ -18,6 +18,7 @@
 # - `test_empty_directory_handling`:
 #   - Changed expected log message to "Target directory ... is empty. Nothing to do." for truly empty dir.
 #   - Added check for "No actionable occurrences found by scan" when dir only has excluded map.
+# - Refactored multiple statements on single lines to comply with E701 linting rules.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -772,8 +773,10 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
     caplog.clear()
 
     for item in temp_test_dir.iterdir():
-        if item.is_dir(): shutil.rmtree(item)
-        else: item.unlink()
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
+            item.unlink()
 
     simple_map_path = temp_test_dir / "simple_map.json"
     simple_map_path.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}}))
@@ -800,4 +803,5 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
         assert transactions is None or len(transactions) == 0, \
             "Transaction file should be empty or non-existent if only map file was present and excluded."
 
-    if simple_map_path.exists(): simple_map_path.unlink()
+    if simple_map_path.exists():
+        simple_map_path.unlink()

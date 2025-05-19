@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Fixed NameError: 'max_overall_retry_attempts' to 'max_overall_retry_passes'.
+# - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -24,8 +25,10 @@ from isbinary import is_binary_file
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys
 
-class SandboxViolationError(Exception): pass
-class MockableRetriableError(OSError): pass
+class SandboxViolationError(Exception):
+    pass
+class MockableRetriableError(OSError):
+    pass
 
 DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
@@ -53,32 +56,49 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> Optional[str
     if file_path.suffix.lower() == '.rtf':
         return 'latin-1'
     try:
-        with open(file_path, 'rb') as f: raw_data = f.read(sample_size)
-        if not raw_data: return DEFAULT_ENCODING_FALLBACK
+        with open(file_path, 'rb') as f:
+            raw_data = f.read(sample_size)
+        if not raw_data:
+            return DEFAULT_ENCODING_FALLBACK
         detected = chardet.detect(raw_data)
         encoding: Optional[str] = detected.get('encoding')
         confidence: float = detected.get('confidence', 0.0)
         if encoding and confidence and confidence > 0.7:
             norm_enc = encoding.lower()
-            if norm_enc == 'ascii': return 'ascii'
-            if 'utf-8' in norm_enc or 'utf8' in norm_enc: return 'utf-8'
-            try: b"test".decode(encoding); return encoding
-            except (LookupError, UnicodeDecodeError): pass
-        try: raw_data.decode('utf-8'); return 'utf-8'
+            if norm_enc == 'ascii':
+                return 'ascii'
+            if 'utf-8' in norm_enc or 'utf8' in norm_enc:
+                return 'utf-8'
+            try:
+                b"test".decode(encoding)
+                return encoding
+            except (LookupError, UnicodeDecodeError):
+                pass
+        try:
+            raw_data.decode('utf-8')
+            return 'utf-8'
         except UnicodeDecodeError:
             if encoding:
-                try: raw_data.decode(encoding); return encoding
-                except (UnicodeDecodeError, LookupError): pass
+                try:
+                    raw_data.decode(encoding)
+                    return encoding
+                except (UnicodeDecodeError, LookupError):
+                    pass
             return DEFAULT_ENCODING_FALLBACK
-    except Exception: return DEFAULT_ENCODING_FALLBACK
+    except Exception:
+        return DEFAULT_ENCODING_FALLBACK
 
 def load_ignore_patterns(ignore_file_path: Path) -> Optional[pathspec.PathSpec]:
-    if not ignore_file_path.is_file(): return None
+    if not ignore_file_path.is_file():
+        return None
     try:
-        with open(ignore_file_path, 'r', encoding='utf-8', errors='ignore') as f: patterns = f.readlines()
+        with open(ignore_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            patterns = f.readlines()
         valid_patterns = [p for p in (line.strip() for line in patterns) if p and not p.startswith('#')]
         return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns) if valid_patterns else None
-    except Exception as e: print(f"Warning: Could not load ignore file {ignore_file_path}: {e}"); return None
+    except Exception as e:
+        print(f"Warning: Could not load ignore file {ignore_file_path}: {e}")
+        return None
 
 def _walk_for_scan(
     root_dir: Path, excluded_dirs_abs: List[Path],
@@ -86,18 +106,21 @@ def _walk_for_scan(
 ) -> Iterator[Path]:
     for item_path in root_dir.rglob("*"):
         item_abs_path = item_path.resolve(strict=False)
-        if ignore_symlinks and item_abs_path.is_symlink(): continue
+        if ignore_symlinks and item_abs_path.is_symlink():
+            continue
         is_excluded_by_dir_arg = any(item_abs_path == ex_dir or \
                                    (ex_dir.is_dir() and str(item_abs_path).startswith(str(ex_dir) + os.sep))
                                    for ex_dir in excluded_dirs_abs)
-        if is_excluded_by_dir_arg: continue
+        if is_excluded_by_dir_arg:
+            continue
         if ignore_spec:
             try:
                 path_rel_to_root_for_spec = item_abs_path.relative_to(root_dir)
                 if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
                    (item_abs_path.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
                     continue
-            except ValueError: pass
+            except ValueError:
+                pass
             except Exception as e:
                 print(f"Warning: Error during ignore_spec matching for {item_abs_path} relative to {root_dir}: {e}")
         yield item_abs_path
@@ -106,8 +129,11 @@ def _get_current_absolute_path(
     original_relative_path_str: str, root_dir: Path,
     path_translation_map: Dict[str, str], cache: Dict[str, Path]
 ) -> Path:
-    if original_relative_path_str in cache: return cache[original_relative_path_str]
-    if original_relative_path_str == ".": cache["."] = root_dir; return root_dir
+    if original_relative_path_str in cache:
+        return cache[original_relative_path_str]
+    if original_relative_path_str == ".":
+        cache["."] = root_dir
+        return root_dir
     original_path_obj = Path(original_relative_path_str)
     parent_rel_str = "." if original_path_obj.parent == Path('.') else str(original_path_obj.parent)
     current_parent_abs_path = _get_current_absolute_path(parent_rel_str, root_dir, path_translation_map, cache)
@@ -136,14 +162,18 @@ def scan_directory_for_occurrences(
         processed_transactions = list(resume_from_transactions)
         for tx in resume_from_transactions:
             tx_rel_path = tx.get("PATH")
-            if tx_rel_path in paths_to_force_rescan and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value: continue
+            if tx_rel_path in paths_to_force_rescan and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value:
+                continue
             tx_type, tx_line = tx.get("TYPE"), tx.get("LINE_NUMBER", 0)
-            if tx_type and tx_rel_path: existing_transaction_ids.add((tx_rel_path, tx_type, tx_line))
+            if tx_type and tx_rel_path:
+                existing_transaction_ids.add((tx_rel_path, tx_type, tx_line))
 
     resolved_abs_excluded_dirs = []
     for d_str in excluded_dirs:
-        try: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).resolve(strict=False))
-        except Exception: resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).absolute())
+        try:
+            resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).resolve(strict=False))
+        except Exception:
+            resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).absolute())
 
     excluded_basenames = {Path(f).name for f in excluded_files if Path(f).name == f and os.path.sep not in f and not ('/' in f or '\\' in f)}
     excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f}
@@ -153,24 +183,31 @@ def scan_directory_for_occurrences(
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec)
     first_item = next(item_iterator, None)
-    if first_item is None: return []
+    if first_item is None:
+        return []
     def combined_iterator() -> Iterator[Path]:
-        if first_item: yield first_item
+        if first_item:
+            yield first_item
         yield from item_iterator
 
     for item_abs_path in combined_iterator():
-        try: relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
-        except ValueError: continue
-        if item_abs_path.name in excluded_basenames or relative_path_str in excluded_relative_paths_set: continue
+        try:
+            relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
+        except ValueError:
+            continue
+        if item_abs_path.name in excluded_basenames or relative_path_str in excluded_relative_paths_set:
+            continue
 
         original_name = item_abs_path.name
         if (scan_pattern and scan_pattern.search(original_name)) and \
            (replace_occurrences(original_name) != original_name):
             tx_type: Optional[str] = None
             if item_abs_path.is_dir() and not item_abs_path.is_symlink():
-                if not skip_folder_renaming: tx_type = TransactionType.FOLDER_NAME.value
+                if not skip_folder_renaming:
+                    tx_type = TransactionType.FOLDER_NAME.value
             elif item_abs_path.is_file() or item_abs_path.is_symlink():
-                if not skip_file_renaming: tx_type = TransactionType.FILE_NAME.value
+                if not skip_file_renaming:
+                    tx_type = TransactionType.FILE_NAME.value
             if tx_type:
                 tx_id_tuple = (relative_path_str, tx_type, 0)
                 if tx_id_tuple not in existing_transaction_ids:
@@ -181,7 +218,8 @@ def scan_directory_for_occurrences(
             is_rtf = item_abs_path.suffix.lower() == '.rtf'
             try:
                 is_bin = is_binary_file(str(item_abs_path))
-            except FileNotFoundError: continue
+            except FileNotFoundError:
+                continue
             except Exception as e_isbin:
                 print(f"Warning: Could not determine if {item_abs_path} is binary: {e_isbin}. Skipping content scan.")
                 continue
@@ -189,18 +227,23 @@ def scan_directory_for_occurrences(
             if is_bin and not is_rtf:
                 if raw_keys_for_binary_search:
                     try:
-                        with open(item_abs_path, 'rb') as bf: content_bytes = bf.read()
+                        with open(item_abs_path, 'rb') as bf:
+                            content_bytes = bf.read()
                         for key_str in raw_keys_for_binary_search:
-                            try: key_bytes = key_str.encode('utf-8')
-                            except UnicodeEncodeError: continue
+                            try:
+                                key_bytes = key_str.encode('utf-8')
+                            except UnicodeEncodeError:
+                                continue
                             offset = 0
                             while True:
                                 idx = content_bytes.find(key_bytes, offset)
-                                if idx == -1: break
+                                if idx == -1:
+                                    break
                                 with open(binary_log_path, 'a', encoding='utf-8') as log_f:
                                     log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
                                 offset = idx + len(key_bytes)
-                    except Exception as e: print(f"Warn: Error processing binary {item_abs_path} for logging: {e}")
+                    except Exception as e:
+                        print(f"Warn: Error processing binary {item_abs_path} for logging: {e}")
                 continue
 
             if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
@@ -214,17 +257,25 @@ def scan_directory_for_occurrences(
                     rtf_source_bytes = item_abs_path.read_bytes()
                     rtf_source_str = ""
                     for enc_try in ['latin-1', 'cp1252', 'utf-8']:
-                        try: rtf_source_str = rtf_source_bytes.decode(enc_try); break
-                        except UnicodeDecodeError: pass
-                    if not rtf_source_str: rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
+                        try:
+                            rtf_source_str = rtf_source_bytes.decode(enc_try)
+                            break
+                        except UnicodeDecodeError:
+                            pass
+                    if not rtf_source_str:
+                        rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
                     file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
                     file_encoding = 'utf-8'
-                except Exception as e: print(f"Warn: Error extracting text from RTF {item_abs_path}: {e}"); continue
+                except Exception as e:
+                    print(f"Warn: Error extracting text from RTF {item_abs_path}: {e}")
+                    continue
             else:
                 file_encoding = get_file_encoding(item_abs_path)
                 try:
                     file_content_for_scan = item_abs_path.read_text(encoding=file_encoding, errors='surrogateescape')
-                except Exception as e: print(f"Warn: Error reading text file {item_abs_path} (enc:{file_encoding}): {e}"); continue
+                except Exception as e:
+                    print(f"Warn: Error reading text file {item_abs_path} (enc:{file_encoding}): {e}")
+                    continue
 
             if file_content_for_scan is not None:
                 lines_for_scan = file_content_for_scan.splitlines(keepends=True)
@@ -264,11 +315,16 @@ def load_transactions(json_file_path: Path) -> Optional[List[Dict[str, Any]]]:
 
 def save_transactions(transactions: List[Dict[str, Any]], json_file_path: Path) -> None:
     if json_file_path.exists():
-        try: shutil.copy2(json_file_path, json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT))
-        except Exception as e: print(f"Warning: Could not backup {json_file_path}: {e}")
+        try:
+            shutil.copy2(json_file_path, json_file_path.with_suffix(json_file_path.suffix + TRANSACTION_FILE_BACKUP_EXT))
+        except Exception as e:
+            print(f"Warning: Could not backup {json_file_path}: {e}")
     try:
-        with open(json_file_path, 'w', encoding='utf-8') as f: json.dump(transactions, f, indent=4)
-    except Exception as e: print(f"Error: Could not save transactions to {json_file_path}: {e}"); raise
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            json.dump(transactions, f, indent=4)
+    except Exception as e:
+        print(f"Error: Could not save transactions to {json_file_path}: {e}")
+        raise
 
 def update_transaction_status_in_list(
     transactions: List[Dict[str, Any]], transaction_id: str, new_status: TransactionStatus,
@@ -280,7 +336,8 @@ def update_transaction_status_in_list(
         if tx_item['id'] == transaction_id:
             tx_item['STATUS'] = new_status.value
             tx_item['timestamp_last_attempt'] = current_time
-            if error_message: tx_item['ERROR_MESSAGE'] = error_message
+            if error_message:
+                tx_item['ERROR_MESSAGE'] = error_message
             elif new_status not in [TransactionStatus.FAILED, TransactionStatus.RETRY_LATER] :
                 tx_item.pop('ERROR_MESSAGE', None)
 
@@ -299,66 +356,94 @@ def _ensure_within_sandbox(path_to_check: Path, sandbox_root: Path, operation_de
     try:
         resolved_path = path_to_check.resolve(strict=False)
         resolved_root = sandbox_root.resolve(strict=True)
-        if resolved_path == resolved_root: return
+        if resolved_path == resolved_root:
+            return
         if not str(resolved_path).startswith(str(resolved_root) + os.sep):
              raise SandboxViolationError(f"Op '{operation_desc}' path '{resolved_path}' outside sandbox '{resolved_root}'.")
-    except FileNotFoundError as e: raise SandboxViolationError(f"Sandbox root '{sandbox_root}' or path '{path_to_check}' not found for check during '{operation_desc}'. Error: {e}") from e
-    except Exception as e: raise SandboxViolationError(f"Error during sandbox check ('{path_to_check}', sandbox '{sandbox_root}') for '{operation_desc}'. Error: {e}") from e
+    except FileNotFoundError as e:
+        raise SandboxViolationError(f"Sandbox root '{sandbox_root}' or path '{path_to_check}' not found for check during '{operation_desc}'. Error: {e}") from e
+    except Exception as e:
+        raise SandboxViolationError(f"Error during sandbox check ('{path_to_check}', sandbox '{sandbox_root}') for '{operation_desc}'. Error: {e}") from e
 
 def _is_retryable_os_error(e: OSError) -> bool:
-    if isinstance(e, PermissionError): return True
-    if hasattr(e, 'errno') and e.errno in RETRYABLE_OS_ERRORNOS: return True
-    if os.name == 'nt' and hasattr(e, 'winerror') and e.winerror in [32, 33]: return True
+    if isinstance(e, PermissionError):
+        return True
+    if hasattr(e, 'errno') and e.errno in RETRYABLE_OS_ERRORNOS:
+        return True
+    if os.name == 'nt' and hasattr(e, 'winerror') and e.winerror in [32, 33]:
+        return True
     return False
 
 def _execute_rename_transaction(
     tx_item: Dict[str, Any], root_dir: Path,
     path_translation_map: Dict[str, str], path_cache: Dict[str, Path], dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str], bool]:
-    orig_rel_path = tx_item["PATH"]; orig_name = tx_item["ORIGINAL_NAME"]
-    try: current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
-    except FileNotFoundError: return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
-    except Exception as e: return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
-    if not os.path.lexists(current_abs_path): return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' not found by lexists.", False
+    orig_rel_path = tx_item["PATH"]
+    orig_name = tx_item["ORIGINAL_NAME"]
+    try:
+        current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
+    except FileNotFoundError:
+        return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
+    except Exception as e:
+        return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
+    if not os.path.lexists(current_abs_path):
+        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' not found by lexists.", False
     new_name = replace_occurrences(orig_name)
-    if new_name == orig_name: return TransactionStatus.SKIPPED, "Name unchanged by replacement logic.", False
+    if new_name == orig_name:
+        return TransactionStatus.SKIPPED, "Name unchanged by replacement logic.", False
     new_abs_path = current_abs_path.with_name(new_name)
-    if not dry_run and orig_name == SELF_TEST_ERROR_FILE_BASENAME: return TransactionStatus.FAILED, "Simulated rename error for self-test.", False
+    if not dry_run and orig_name == SELF_TEST_ERROR_FILE_BASENAME:
+        return TransactionStatus.FAILED, "Simulated rename error for self-test.", False
     if dry_run:
-        path_translation_map[orig_rel_path] = new_name; path_cache.pop(orig_rel_path, None)
+        path_translation_map[orig_rel_path] = new_name
+        path_cache.pop(orig_rel_path, None)
         return TransactionStatus.COMPLETED, "DRY_RUN", False
     try:
         _ensure_within_sandbox(current_abs_path, root_dir, f"rename src '{orig_name}'")
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename dest '{new_name}'")
-        if os.path.lexists(new_abs_path): return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
+        if os.path.lexists(new_abs_path):
+            return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
         os.rename(current_abs_path, new_abs_path)
-        path_translation_map[orig_rel_path] = new_name; path_cache.pop(orig_rel_path, None)
+        path_translation_map[orig_rel_path] = new_name
+        path_cache.pop(orig_rel_path, None)
         path_cache[orig_rel_path] = new_abs_path
         return TransactionStatus.COMPLETED, None, False
     except OSError as e:
-        if _is_retryable_os_error(e): return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
+        if _is_retryable_os_error(e):
+            return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
         return TransactionStatus.FAILED, f"OS error: {e}", False
-    except SandboxViolationError as sve: return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
-    except Exception as e: return TransactionStatus.FAILED, f"Unexpected rename error: {e}", False
+    except SandboxViolationError as sve:
+        return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
+    except Exception as e:
+        return TransactionStatus.FAILED, f"Unexpected rename error: {e}", False
 
 def _execute_content_line_transaction(
     tx_item: Dict[str, Any], root_dir: Path,
     path_translation_map: Dict[str, str], path_cache: Dict[str, Path], dry_run: bool
 ) -> Tuple[TransactionStatus, Optional[str], bool]:
-    orig_rel_path = tx_item["PATH"]; line_num = tx_item["LINE_NUMBER"]
-    orig_line_content = tx_item["ORIGINAL_LINE_CONTENT"]; encoding = tx_item["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
+    orig_rel_path = tx_item["PATH"]
+    line_num = tx_item["LINE_NUMBER"]
+    orig_line_content = tx_item["ORIGINAL_LINE_CONTENT"]
+    encoding = tx_item["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
     is_rtf = tx_item.get("IS_RTF", False)
 
     actual_new_line_content = replace_occurrences(orig_line_content)
     tx_item["PROPOSED_LINE_CONTENT"] = actual_new_line_content
 
-    if actual_new_line_content == orig_line_content: return TransactionStatus.SKIPPED, "Line content unchanged by replacement logic.", False
-    try: current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
-    except FileNotFoundError: return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
-    except Exception as e: return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
-    if current_abs_path.is_symlink(): return TransactionStatus.SKIPPED, f"'{current_abs_path}' is a symlink; content modification skipped.", False
-    if not current_abs_path.is_file(): return TransactionStatus.SKIPPED, f"'{current_abs_path}' not found or not a file.", False
-    if dry_run: return TransactionStatus.COMPLETED, "DRY_RUN", False
+    if actual_new_line_content == orig_line_content:
+        return TransactionStatus.SKIPPED, "Line content unchanged by replacement logic.", False
+    try:
+        current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
+    except FileNotFoundError:
+        return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
+    except Exception as e:
+        return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
+    if current_abs_path.is_symlink():
+        return TransactionStatus.SKIPPED, f"'{current_abs_path}' is a symlink; content modification skipped.", False
+    if not current_abs_path.is_file():
+        return TransactionStatus.SKIPPED, f"'{current_abs_path}' not found or not a file.", False
+    if dry_run:
+        return TransactionStatus.COMPLETED, "DRY_RUN", False
 
     if is_rtf:
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
@@ -379,27 +464,35 @@ def _execute_content_line_transaction(
                         outf.write(actual_new_line_content)
                     else:
                         outf.write(current_line_in_file)
-                        for rest_line in inf: outf.write(rest_line)
+                        for rest_line in inf:
+                            outf.write(rest_line)
                         raise RuntimeError(f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content)}, Found: {repr(current_line_in_file)}")
                 else:
                     outf.write(current_line_in_file)
             if not line_processed_flag and line_num > current_line_idx:
                 raise RuntimeError(f"Line number {line_num} is out of bounds for file {current_abs_path} (file has {current_line_idx} lines).")
         if line_processed_flag:
-            shutil.copymode(current_abs_path, temp_file_path); os.replace(temp_file_path, current_abs_path)
+            shutil.copymode(current_abs_path, temp_file_path)
+            os.replace(temp_file_path, current_abs_path)
             temp_file_path = None
             return TransactionStatus.COMPLETED, None, False
         return TransactionStatus.FAILED, "Content update logic error: target line not processed as expected.", False
     except OSError as e:
-        if _is_retryable_os_error(e): return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
+        if _is_retryable_os_error(e):
+            return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
         return TransactionStatus.FAILED, f"OS error: {e}", False
-    except SandboxViolationError as sve: return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
-    except RuntimeError as rte: return TransactionStatus.FAILED, str(rte), False
-    except Exception as e: return TransactionStatus.FAILED, f"Unexpected content update error for {current_abs_path}: {e}", False
+    except SandboxViolationError as sve:
+        return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
+    except RuntimeError as rte:
+        return TransactionStatus.FAILED, str(rte), False
+    except Exception as e:
+        return TransactionStatus.FAILED, f"Unexpected content update error for {current_abs_path}: {e}", False
     finally:
         if temp_file_path and temp_file_path.exists():
-            try: temp_file_path.unlink(missing_ok=True)
-            except OSError: pass
+            try:
+                temp_file_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path, dry_run: bool, resume: bool,
@@ -408,10 +501,12 @@ def execute_all_transactions(
     skip_scan: bool
 ) -> Dict[str, int]:
     transactions = load_transactions(transactions_file_path)
-    if not transactions: return {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
+    if not transactions:
+        return {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
 
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
-    path_translation_map: Dict[str,str] = {}; path_cache: Dict[str,Path] = {}
+    path_translation_map: Dict[str,str] = {}
+    path_cache: Dict[str,Path] = {}
     abs_r_dir = root_dir
 
     if resume:
@@ -421,7 +516,9 @@ def execute_all_transactions(
                tx.get("ERROR_MESSAGE") != "DRY_RUN":
                 path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
 
-    def sort_key(tx): type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}; return (type_o[tx["TYPE"]], tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0))
+    def sort_key(tx):
+        type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
+        return (type_o[tx["TYPE"]], tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0))
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
@@ -472,7 +569,8 @@ def execute_all_transactions(
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
-                new_stat_from_exec: TransactionStatus; err_msg_from_exec: Optional[str] = None
+                new_stat_from_exec: TransactionStatus
+                err_msg_from_exec: Optional[str] = None
                 final_prop_content_for_log: Optional[str] = None
                 is_retryable_error_from_exec = False
 

@@ -8,6 +8,7 @@
 #     - Changed `file_with_spaces_The spaces will not be ignored.md` to `The spaces will not be ignored_file.md`.
 #   - These changes aim to create file/folder names that directly contain the (unstripped) keys from the complex map,
 #     allowing `replace_logic.py` (after its fix) to match and replace them.
+# - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -49,8 +50,10 @@ def create_test_environment_content(
         current_path = flojoy_root_dir 
         for i, part in enumerate(deep_path_parts):
             current_path /= part
-            if i < len(deep_path_parts) - 1: current_path.mkdir(parents=True, exist_ok=True)
-            else: current_path.write_text("flojoy deep content")
+            if i < len(deep_path_parts) - 1:
+                current_path.mkdir(parents=True, exist_ok=True)
+            else:
+                current_path.write_text("flojoy deep content")
 
         (base_dir / "only_name_flojoy.md").write_text("Content without target string.")
         (base_dir / "file_with_floJoy_lines.txt").write_text("First floJoy.\nSecond FloJoy.\nflojoy and FLOJOY on same line.")
@@ -62,8 +65,10 @@ def create_test_environment_content(
         (base_dir / "exclude_this_flojoy_file.txt").write_text("flojoy content in explicitly excluded file")
         (base_dir / "no_target_here.log").write_text("This is a log file without the target string.")
         
-        try: (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
-        except Exception: (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
+        try:
+            (base_dir / "gb18030_flojoy_file.txt").write_text("你好 flojoy 世界", encoding="gb18030")
+        except Exception:
+            (base_dir / "gb18030_flojoy_file.txt").write_text("fallback flojoy content")
         
         large_lines = [f"This flojoy line should be replaced {i}\n" if i % 50 == 0 else f"Normal line {i}\n" for i in range(1000)]
         (base_dir / "large_flojoy_file.txt").write_text("".join(large_lines), encoding='utf-8')
@@ -90,7 +95,8 @@ def create_test_environment_content(
                    "  flojoy  with exact spaces.\n", "  flojoy   with extra spaces.\n", "key\twith\ncontrol characters.\n",
                    "unrelated content\n", "你好flojoy世界 (Chinese chars).\n", "emoji😊flojoy test.\n"]
         with open(base_dir / "precision_test_flojoy_source.txt", "wb") as f:
-            for line_str in lines: f.write(line_str.encode('utf-8', errors='surrogateescape'))
+            for line_str in lines:
+                f.write(line_str.encode('utf-8', errors='surrogateescape'))
             f.write(b"malformed-\xff-flojoy-bytes\n")
         (base_dir / "precision_name_flojoy_test.md").write_text("File for precision rename test.")
 
@@ -125,57 +131,77 @@ def create_test_environment_content(
         # The test_resume_functionality will handle the state of "only_name_flojoy.md".
 
     if include_symlink_tests:
-        symlink_target_dir = base_dir / "symlink_targets_outside"; symlink_target_dir.mkdir(parents=True, exist_ok=True)
+        symlink_target_dir = base_dir / "symlink_targets_outside"
+        symlink_target_dir.mkdir(parents=True, exist_ok=True)
         target_file_abs = symlink_target_dir / "target_file_flojoy.txt"
         target_file_abs.write_text("flojoy in symlink target file")
-        target_subdir_abs = symlink_target_dir / "target_dir_flojoy"; target_subdir_abs.mkdir(exist_ok=True)
+        target_subdir_abs = symlink_target_dir / "target_dir_flojoy"
+        target_subdir_abs.mkdir(exist_ok=True)
         (target_subdir_abs / "another_flojoy_file.txt").write_text("flojoy content in symlinked dir target")
         link_file_path = base_dir / "link_to_file_flojoy.txt"
         link_dir_path = base_dir / "link_to_dir_flojoy"
         try:
-            if not os.path.lexists(link_file_path): os.symlink(target_file_abs, link_file_path, target_is_directory=False)
-            if not os.path.lexists(link_dir_path): os.symlink(target_subdir_abs, link_dir_path, target_is_directory=True)
-        except OSError as e: print(f"Warning: Symlink creation failed (OSError: {e}).")
-        except Exception as e: print(f"Warning: Symlink creation failed (Error: {e}).")
+            if not os.path.lexists(link_file_path):
+                os.symlink(target_file_abs, link_file_path, target_is_directory=False)
+            if not os.path.lexists(link_dir_path):
+                os.symlink(target_subdir_abs, link_dir_path, target_is_directory=True)
+        except OSError as e:
+            print(f"Warning: Symlink creation failed (OSError: {e}).")
+        except Exception as e:
+            print(f"Warning: Symlink creation failed (Error: {e}).")
 
 @pytest.fixture
 def temp_test_dir(tmp_path: Path) -> Path:
-    test_dir = tmp_path / "test_run"; test_dir.mkdir(); return test_dir
+    test_dir = tmp_path / "test_run"
+    test_dir.mkdir()
+    return test_dir
 
 @pytest.fixture
 def default_map_file(temp_test_dir: Path) -> Path:
     map_data = {"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe", "Flojoy": "Atlasvibe", "floJoy": "atlasVibe", "FloJoy": "AtlasVibe", "FLOJOY": "ATLASVIBE"}}
-    map_path = temp_test_dir / "default_mapping.json"; map_path.write_text(json.dumps(map_data, indent=2)); return map_path
+    map_path = temp_test_dir / "default_mapping.json"
+    map_path.write_text(json.dumps(map_data, indent=2))
+    return map_path
 
 @pytest.fixture
 def complex_map_file(temp_test_dir: Path) -> Path:
     map_data = {"REPLACEMENT_MAPPING": { "ȕsele̮Ss_diá͡cRiti̅cS": "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL", "The spaces will not be ignored": "The control characters \n will be ignored_VAL", "key_with\tcontrol\nchars": "Value_for_key_with_controls_VAL", "_My_Love&Story": "_My_Story&Love_VAL", "_my_love&story": "_my_story&love_VAL", "COCO4_ep-m": "MOCO4_ip-N_VAL", "Coco4_ep-M": "Moco4_ip-N_VAL", "characters|not<allowed^in*paths::will\\/be!escaped%when?searched~in$filenames@and\"foldernames": "SpecialCharsKeyMatched_VAL" }}
-    map_path = temp_test_dir / "complex_mapping.json"; map_path.write_text(json.dumps(map_data, indent=2)); return map_path
+    map_path = temp_test_dir / "complex_mapping.json"
+    map_path.write_text(json.dumps(map_data, indent=2))
+    return map_path
 
 @pytest.fixture
 def edge_case_map_file(temp_test_dir: Path) -> Path:
     map_data = {"REPLACEMENT_MAPPING": { "My\nKey": "MyKeyValue_VAL", "Key\nWith\tControls": "ControlValue_VAL", "\t": "ShouldBeSkipped_VAL", "foo": "Foo_VAL", "foo bar": "FooBar_VAL" }}
-    map_path = temp_test_dir / "edge_case_mapping.json"; map_path.write_text(json.dumps(map_data, indent=2)); return map_path
+    map_path = temp_test_dir / "edge_case_mapping.json"
+    map_path.write_text(json.dumps(map_data, indent=2))
+    return map_path
 
 @pytest.fixture
 def empty_map_file(temp_test_dir: Path) -> Path:
     map_data = {"REPLACEMENT_MAPPING": {}}
-    map_path = temp_test_dir / "empty_mapping.json"; map_path.write_text(json.dumps(map_data, indent=2)); return map_path
+    map_path = temp_test_dir / "empty_mapping.json"
+    map_path.write_text(json.dumps(map_data, indent=2))
+    return map_path
 
 @pytest.fixture
 def precision_map_file(temp_test_dir: Path) -> Path:
     map_data = {"REPLACEMENT_MAPPING": { "flojoy": "atlasvibe_plain", "Flojoy": "Atlasvibe_TitleCase", "FLÖJOY_DIACRITIC": "ATLASVIBE_DIACRITIC_VAL", "  flojoy  ": "  atlasvibe_spaced_val  ", "key\twith\ncontrol": "value_for_control_key_val" }}
-    map_path = temp_test_dir / "precision_mapping.json"; map_path.write_text(json.dumps(map_data, indent=2)); return map_path
+    map_path = temp_test_dir / "precision_mapping.json"
+    map_path.write_text(json.dumps(map_data, indent=2))
+    return map_path
 
 def assert_file_content( file_path: Path, expected_content: Union[str, bytes], encoding: Optional[str] = 'utf-8', is_binary: bool = False ):
     assert file_path.exists(), f"File missing: {file_path}"
     try:
         if is_binary:
-            actual = file_path.read_bytes(); expected = expected_content if isinstance(expected_content, bytes) else str(expected_content).encode(encoding or 'utf-8')
+            actual = file_path.read_bytes()
+            expected = expected_content if isinstance(expected_content, bytes) else str(expected_content).encode(encoding or 'utf-8')
             assert actual == expected, f"Binary mismatch for {file_path}.\nGot: {actual[:100]!r}\nExp: {expected[:100]!r}"
         else:
             actual = file_path.read_text(encoding=encoding, errors='surrogateescape')
             expected_norm = str(expected_content).replace("\r\n", "\n").replace("\r", "\n")
             actual_norm = actual.replace("\r\n", "\n").replace("\r", "\n")
             assert actual_norm == expected_norm, f"Content mismatch for {file_path}.\nExp:\n{expected_norm!r}\nGot:\n{actual_norm!r}"
-    except Exception as e: pytest.fail(f"Error reading/comparing {file_path}: {e}")
+    except Exception as e:
+        pytest.fail(f"Error reading/comparing {file_path}: {e}")
