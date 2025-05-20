@@ -4,6 +4,14 @@
 # - `get_file_encoding`:
 #   - If chardet provides an encoding and it can decode the sample, use it, even if confidence is not very high (e.g., > 0.3).
 #   - This aims to better handle encodings like cp1252 that chardet might detect with lower confidence than UTF-8 but are correct.
+#   - Refined logic:
+#     1. Handle RTF.
+#     2. Read sample. If empty, default.
+#     3. Use chardet.
+#     4. If chardet's encoding is a common Western single-byte (cp1252, windows-1252, iso-8859-1, latin-1) AND decodes sample, use it.
+#     5. Else, try UTF-8. If decodes sample, use it.
+#     6. Else, if chardet had an initial suggestion (not already tried and failed) AND it decodes sample, use it.
+#     7. Else, fallback to DEFAULT_ENCODING_FALLBACK.
 # - `scan_directory_for_occurrences`: Changed `item_abs_path.read_text(..., newline='')`
 #   to use `with open(item_abs_path, 'r', ..., newline='') as f: f.read()`
 #   to resolve the "unexpected keyword argument 'newline'" error seen in test logs.
@@ -78,41 +86,47 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         if not raw_data:
             return DEFAULT_ENCODING_FALLBACK
 
-        detected = chardet.detect(raw_data)
-        detected_encoding: str | None = detected.get('encoding')
-        confidence: float = detected.get('confidence', 0.0)
+        detected_by_chardet = chardet.detect(raw_data)
+        chardet_encoding: str | None = detected_by_chardet.get('encoding')
+        # chardet_confidence: float = detected_by_chardet.get('confidence', 0.0) # Confidence not directly used in this refined logic
 
-        # Try chardet's suggestion first if it's somewhat confident and can decode the sample
-        if detected_encoding and confidence > 0.3: # Lowered confidence threshold slightly
-            try:
-                raw_data.decode(detected_encoding)
-                # print(f"DEBUG: Using chardet's encoding: {detected_encoding} (confidence: {confidence}) for {file_path.name}")
-                return detected_encoding
-            except (UnicodeDecodeError, LookupError):
-                # print(f"DEBUG: Chardet's encoding {detected_encoding} failed to decode sample for {file_path.name}. Confidence: {confidence}")
-                pass # Fall through
+        common_single_byte_western = ['cp1252', 'windows-1252', 'iso-8859-1', 'latin1', 'latin-1']
 
-        # If chardet's suggestion failed or confidence was too low, try UTF-8
+        # 1. Try chardet's suggestion if it's a common Western encoding and decodes the sample
+        if chardet_encoding:
+            norm_chardet_enc = chardet_encoding.lower()
+            if norm_chardet_enc in common_single_byte_western:
+                try:
+                    raw_data.decode(chardet_encoding)
+                    return chardet_encoding
+                except (UnicodeDecodeError, LookupError):
+                    pass # This specific common encoding failed, fall through
+
+        # 2. Try UTF-8 with high priority
         try:
             raw_data.decode('utf-8')
-            # print(f"DEBUG: Using UTF-8 for {file_path.name} (chardet failed or low conf)")
             return 'utf-8'
         except UnicodeDecodeError:
-            # print(f"DEBUG: UTF-8 decoding also failed for {file_path.name}")
-            # If UTF-8 also fails, and chardet had a suggestion (even if it failed sample decode or was low conf),
-            # it might be a last resort if it's a known encoding.
-            if detected_encoding and detected_encoding.lower() != 'ascii': # Avoid using 'ascii' if UTF-8 failed.
-                try:
-                    # Test again, maybe the sample was tricky but the whole file might be okay with it.
-                    # This is a bit of a stretch but could save some cp1252/latin1 files.
-                    b"test".decode(detected_encoding) # Quick check if encoding name is valid
-                    # print(f"DEBUG: Re-trying chardet's initial low-confidence/failed-sample encoding {detected_encoding} for {file_path.name}")
-                    return detected_encoding
-                except (UnicodeDecodeError, LookupError):
-                    pass # Fall through to default
-            
-            # print(f"DEBUG: Falling back to {DEFAULT_ENCODING_FALLBACK} for {file_path.name}")
-            return DEFAULT_ENCODING_FALLBACK
+            pass # Fall through
+
+        # 3. If UTF-8 failed, and chardet had an initial suggestion (that wasn't a common western one or failed earlier), try it now.
+        if chardet_encoding and chardet_encoding.lower() not in common_single_byte_western:
+            try:
+                raw_data.decode(chardet_encoding)
+                return chardet_encoding
+            except (UnicodeDecodeError, LookupError):
+                pass # Fall through
+        
+        # 4. As a further fallback for Western-like content if UTF-8 and specific chardet failed,
+        #    try cp1252 directly if not already attempted and failed.
+        if not (chardet_encoding and chardet_encoding.lower() in ['cp1252', 'windows-1252']):
+            try:
+                raw_data.decode('cp1252')
+                return 'cp1252'
+            except UnicodeDecodeError:
+                pass
+        
+        return DEFAULT_ENCODING_FALLBACK
             
     except Exception as e:
         # print(f"DEBUG: Exception in get_file_encoding for {file_path.name}: {e}. Falling back to {DEFAULT_ENCODING_FALLBACK}.")
