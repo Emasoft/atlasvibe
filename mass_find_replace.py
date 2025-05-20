@@ -1,20 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Changelog:
-# - Added --skip-file-renaming, --skip-folder-renaming, --skip-content CLI options.
-# - Added --timeout and --quiet CLI options.
-# - Script prints its name on startup (unless --quiet).
-# - Early exit if all skip options are true or if target directory is empty.
-# - Help text updated for new options and binary log info.
-# - `main_flow` passes skip flags and timeout to `execute_all_transactions`.
-# - `main_flow` now explicitly checks and reports if BINARY_MATCHES_LOG_FILE was created and has content.
-# - Robust binary detection (using `isbinary` library) and RTF text extraction integrated via file_system_operations.
-# - Migrated self-test suite to a separate `tests` directory using pytest.
-# - Removed `--self-test-*` CLI arguments and related internal flow logic.
-# - `main_cli` auto-exclusion list simplified.
-# - `main_flow` resume logic uses `abs_root_dir` and mtime check buffer removed.
-# - Modernized type hints (e.g., `list` instead of `typing.List`, `X | None` instead of `Optional[X]`).
-# - Fixed E701 and E702 ruff linting errors (multiple statements on one line).
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - Removed commented-out `import logging` and `import prefect.runtime`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -27,12 +14,10 @@ import sys
 from typing import Any, Dict # Keep Any if specifically needed, Dict for path_last_processed_time
 import json
 import traceback
-# import logging # Prefect logger is used primarily
 import time 
 import pathspec 
 
 from prefect import flow, get_run_logger
-# import prefect.runtime # Not strictly needed
 
 from file_system_operations import (
     scan_directory_for_occurrences, save_transactions, load_transactions,
