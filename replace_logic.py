@@ -46,6 +46,7 @@
 #   and applied to an NFC-normalized string, so `match.group(0)` should be the canonical key.
 # - Added extensive debug logging to `load_replacement_map` and `_actual_replace_callback`
 #   to trace key canonicalization and map lookups, including character ordinals.
+# - Fixed Ruff linting errors: E701 (multiple statements on one line) and F821 (undefined name `k`).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -110,9 +111,10 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         return False
 
     temp_raw_mapping: dict[str, str] = {}
-    if _DEBUG_REPLACE_LOGIC: print(f"DEBUG MAP LOAD: Loading map from {mapping_file_path.name}")
+    if _DEBUG_REPLACE_LOGIC:
+        print(f"DEBUG MAP LOAD: Loading map from {mapping_file_path.name}")
     for k_orig_json, v_original in raw_mapping_from_json.items():
-        if not isinstance(k, str) or not isinstance(v_original, str): # k was not defined, should be k_orig_json
+        if not isinstance(k_orig_json, str) or not isinstance(v_original, str): # k was not defined, should be k_orig_json
             print(f"Warning: Skipping invalid key-value pair (must be strings): {k_orig_json}:{v_original}")
             continue
         
@@ -122,7 +124,8 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         canonical_key = unicodedata.normalize('NFC', temp_stripped_key_no_diacritics)
         
         if not canonical_key: # Check if canonical key is empty
-            if _DEBUG_REPLACE_LOGIC: print(f"  DEBUG MAP LOAD: Original key '{k_orig_json}' (len {len(k_orig_json)}) became empty after canonicalization. Skipping.")
+            if _DEBUG_REPLACE_LOGIC:
+                print(f"  DEBUG MAP LOAD: Original key '{k_orig_json}' (len {len(k_orig_json)}) became empty after canonicalization. Skipping.")
             continue
         
         if _DEBUG_REPLACE_LOGIC:
@@ -204,7 +207,8 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
     
     if replacement_value is not None:
-        if _DEBUG_REPLACE_LOGIC: print(f"  Found in map. Replacing with: '{replacement_value}'")
+        if _DEBUG_REPLACE_LOGIC:
+            print(f"  Found in map. Replacing with: '{replacement_value}'")
         return replacement_value
     else:
         # This should ideally not happen if the regex is built correctly from the map keys.

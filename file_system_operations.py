@@ -24,6 +24,7 @@
 #   `tx.get("ERROR_MESSAGE") != "DRY_RUN"` was removed when checking for COMPLETED rename
 #   transactions. This allows `skip_scan` mode to correctly use the renames planned
 #   during a previous dry run to build its understanding of the current file paths.
+# - Fixed Ruff linting errors (E701).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -99,8 +100,10 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         if chardet_encoding:
             norm_chardet_enc = chardet_encoding.lower()
             # Normalize common aliases
-            if norm_chardet_enc in ('windows-1252', '1252'): chardet_encoding = 'cp1252'
-            elif norm_chardet_enc in ('latin_1', 'iso-8859-1', 'iso8859_1'): chardet_encoding = 'latin1'
+            if norm_chardet_enc in ('windows-1252', '1252'):
+                chardet_encoding = 'cp1252'
+            elif norm_chardet_enc in ('latin_1', 'iso-8859-1', 'iso8859_1'):
+                chardet_encoding = 'latin1'
             # Add more aliases if needed
 
             try: # Try chardet's (potentially normalized) suggestion
