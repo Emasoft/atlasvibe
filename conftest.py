@@ -20,6 +20,9 @@
 # - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
 # - Added debug prints to show original keys and their stripped versions used for test data generation.
 # - Stripped keys used for test data generation are now also NFC normalized.
+# - Added `prefect_test_settings` session-scoped autouse fixture to disable
+#   Prefect's ephemeral API server during tests. This aims to prevent the
+#   `ValueError: I/O operation on closed file` during Prefect's shutdown logging.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -41,6 +44,21 @@ VERY_LARGE_FILE_NAME_ORIG = "very_large_flojoy_file.txt"
 VERY_LARGE_FILE_NAME_REPLACED = "very_large_flojoy_file_replaced.txt" # Note: This name might be further changed by tests
 VERY_LARGE_FILE_LINES = 10000
 VERY_LARGE_FILE_MATCH_INTERVAL = 500
+
+@pytest.fixture(scope="session", autouse=True)
+def prefect_test_settings():
+    """
+    Session-scoped fixture to configure Prefect settings for the test environment.
+    Disables the ephemeral API server to prevent logging errors on shutdown with pytest.
+    """
+    original_setting = os.environ.get("PREFECT_API_EPHEMERAL_SERVER_ENABLED")
+    os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
+    yield
+    if original_setting is None:
+        if "PREFECT_API_EPHEMERAL_SERVER_ENABLED" in os.environ:
+            del os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"]
+    else:
+        os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = original_setting
 
 def create_test_environment_content(
     base_dir: Path,
@@ -102,7 +120,7 @@ def create_test_environment_content(
         temp_stripped_key_precision_diacritic = strip_control_characters(strip_diacritics(original_key_precision_diacritic))
         stripped_key_precision_diacritic = unicodedata.normalize('NFC', temp_stripped_key_precision_diacritic)
         # ---- START DEBUG PRINT (conftest precision) ----
-        print(f"DEBUG (conftest precision): Original key '{original_key_precision_diacritic}' -> Stripped for test data: '{stripped_key_precision_diacritic}'")
+        # print(f"DEBUG (conftest precision): Original key '{original_key_precision_diacritic}' -> Stripped for test data: '{stripped_key_precision_diacritic}'")
         # ---- END DEBUG PRINT ----
 
         temp_stripped_key_precision_controls = strip_control_characters(strip_diacritics(original_key_precision_controls))
@@ -128,7 +146,7 @@ def create_test_environment_content(
         temp_stripped_key_complex_diacritic = strip_control_characters(strip_diacritics(original_key_complex_diacritic))
         stripped_key_complex_diacritic = unicodedata.normalize('NFC', temp_stripped_key_complex_diacritic)
         # ---- START DEBUG PRINT (conftest complex) ----
-        print(f"DEBUG (conftest complex): Original key '{original_key_complex_diacritic}' -> Stripped for test data: '{stripped_key_complex_diacritic}'")
+        # print(f"DEBUG (conftest complex): Original key '{original_key_complex_diacritic}' -> Stripped for test data: '{stripped_key_complex_diacritic}'")
         # ---- END DEBUG PRINT ----
 
         temp_stripped_key_spaces = strip_control_characters(strip_diacritics(original_key_spaces))
