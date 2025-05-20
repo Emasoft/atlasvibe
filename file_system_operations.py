@@ -38,6 +38,15 @@
 #   The modified file's bytes must exactly match the expected bytes (original file with only the target line surgically replaced and re-encoded).
 #   If not, the transaction fails, and the original file is preserved.
 # - Fixed Ruff E701 linting errors in `_execute_content_line_transaction` by moving `unlink` calls to new lines.
+# - `get_file_encoding`: Further refined encoding detection logic.
+#   1. RTF special case.
+#   2. Empty file check.
+#   3. Chardet detection.
+#   4. If chardet suggests a common single-byte Western encoding (cp1252, latin1, etc.) AND it decodes the sample, use it.
+#   5. Else, if chardet suggests UTF-8 (or UTF-8 decodes the sample if chardet's primary was different and failed), use UTF-8.
+#   6. Else, if chardet had another suggestion not yet tried that decodes the sample, use it.
+#   7. Else, try cp1252 as a general fallback if not already tried.
+#   8. Default to DEFAULT_ENCODING_FALLBACK.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -105,35 +114,41 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         
         common_single_byte_western_encodings = ['cp1252', 'windows-1252', 'iso-8859-1', 'latin1', 'latin-1', 'iso8859-15']
         
-        normalized_chardet_encoding = None
+        normalized_chardet_encoding_candidate = None
         if chardet_encoding:
             norm_low = chardet_encoding.lower()
             if norm_low in ('windows-1252', '1252'):
-                normalized_chardet_encoding = 'cp1252'
+                normalized_chardet_encoding_candidate = 'cp1252'
             elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
-                normalized_chardet_encoding = 'latin1' 
+                normalized_chardet_encoding_candidate = 'latin1' 
             else:
-                normalized_chardet_encoding = norm_low
+                normalized_chardet_encoding_candidate = norm_low
 
         # 2. If chardet suggests a common Western encoding, and it decodes the sample, prioritize it.
-        if normalized_chardet_encoding and normalized_chardet_encoding in common_single_byte_western_encodings:
+        if normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate in common_single_byte_western_encodings:
             try:
-                raw_data.decode(normalized_chardet_encoding)
-                return normalized_chardet_encoding
+                raw_data.decode(normalized_chardet_encoding_candidate)
+                return normalized_chardet_encoding_candidate
             except (UnicodeDecodeError, LookupError):
-                pass 
+                pass # This specific common encoding failed, fall through
 
         # 3. Try UTF-8 (if not already chardet's successful suggestion for a common western encoding)
-        if not (normalized_chardet_encoding and normalized_chardet_encoding == 'utf-8' and \
-                normalized_chardet_encoding in common_single_byte_western_encodings): # Avoid re-trying if chardet already suggested utf-8 and it worked
+        #    Also, if chardet suggested UTF-8, this will try it.
+        if normalized_chardet_encoding_candidate != 'utf-8':
             try:
                 raw_data.decode('utf-8')
                 return 'utf-8'
             except UnicodeDecodeError:
                 pass 
+        elif normalized_chardet_encoding_candidate == 'utf-8': # Chardet suggested UTF-8
+             try:
+                raw_data.decode('utf-8')
+                return 'utf-8'
+             except UnicodeDecodeError:
+                pass # Chardet's UTF-8 suggestion failed, fall through
 
         # 4. If chardet had an initial suggestion (and it wasn't one already tried and failed as a common western or UTF-8), try it now.
-        if chardet_encoding and chardet_encoding != normalized_chardet_encoding and \
+        if chardet_encoding and chardet_encoding != normalized_chardet_encoding_candidate and \
            chardet_encoding.lower() not in (common_single_byte_western_encodings + ['utf-8']):
             try:
                 raw_data.decode(chardet_encoding) 
@@ -142,7 +157,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
                 pass
         
         # 5. As a further fallback for Western-like content, try cp1252 directly if not already attempted and failed.
-        if not (normalized_chardet_encoding and normalized_chardet_encoding == 'cp1252'): 
+        if normalized_chardet_encoding_candidate != 'cp1252': 
             try:
                 raw_data.decode('cp1252')
                 return 'cp1252'
