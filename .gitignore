@@ -3,6 +3,11 @@
 # python
 /venv
 /venv2
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.ipynb_checkpoints/
 
 # dependencies
 /node_modules
@@ -14,6 +19,10 @@ dist-electron/*
 /coverage
 /cypress/screenshots/
 tests/temp/
+.pytest_cache/
+coverage.xml
+.nyc_output/
+coverage-cy/
 
 # gitpod config to prevent unwanted installations
 .gitpod.yml
@@ -25,49 +34,38 @@ tests/temp/
 .env.test.local
 .env.production.local
 dump.rdb
-
+*.rdb
 *~
-
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-__pycache__
-dump.rdb
-*.rdb
-*.pyc
-.ipynb_checkpoints
+.python-version
+.history/
+.logs/
+bin/
+out/
+test-results/
+docs/pnpm-lock.yml
+.aider*
+
+
+# Project specific
 PYTHON/WATCH/fc.json
 PYTHON/obj-detection.jpg
 PYTHON/utils/object_detection/yolov3.weights
 src/feature/flow_chart_panel/manifest/pythonFunctions.json
-venv2
-.env
 dist
+build
 update_apps.js
 worker-manager/node_modules
 
+# IDE specific
 /**/.idea/*
 .vscode/*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Data files that might be generated or downloaded
 src/data/*.json
-src/feature/flow_chart_panel/manifest/pythonFunctions.json
-
-.coverage
-coverage.xml
-
-.nyc_output/out.json
-coverage-cy
-build
-.nyc_output
-
-.python-version
-
-.history
-.logs
-bin
-out
-test-results
-docs/pnpm-lock.yml
-.aider*
+# Re-add if pythonFunctions.json is truly generated and shouldn't be tracked
+# src/feature/flow_chart_panel/manifest/pythonFunctions.json
