@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Removed commented-out `import logging` and `import prefect.runtime`.
+# - Passed the Prefect logger from `main_flow` to `replace_logic.load_replacement_map`
+#   and to `file_system_operations` functions (`scan_directory_for_occurrences`,
+#   `load_transactions`, `save_transactions`, `execute_all_transactions`).
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -69,7 +72,7 @@ def main_flow(
         return
 
     map_file_path = Path(mapping_file).resolve()
-    if not replace_logic.load_replacement_map(map_file_path):
+    if not replace_logic.load_replacement_map(map_file_path, logger=logger): # Pass logger
         logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}")
         return
     if not replace_logic._MAPPING_LOADED: 
@@ -152,7 +155,7 @@ def main_flow(
         paths_to_force_rescan: set[str] = set()
         if resume and txn_json_path.exists(): # type: ignore
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
-            current_txns_for_resume = load_transactions(txn_json_path)
+            current_txns_for_resume = load_transactions(txn_json_path, logger=logger) # Pass logger
             if current_txns_for_resume is None:
                 logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
             elif not current_txns_for_resume:
@@ -184,10 +187,11 @@ def main_flow(
             ignore_spec=final_ignore_spec, 
             resume_from_transactions=current_txns_for_resume if resume else None,
             paths_to_force_rescan=paths_to_force_rescan if resume else None,
-            skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming, skip_content=skip_content
+            skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming, skip_content=skip_content,
+            logger=logger # Pass logger
         )
         
-        save_transactions(found_txns or [], txn_json_path)
+        save_transactions(found_txns or [], txn_json_path, logger=logger) # Pass logger
         logger.info(f"Scan complete. {len(found_txns or [])} transactions planned in '{txn_json_path}'")
         if not found_txns:
             logger.info("No actionable occurrences found by scan." if replace_logic._RAW_REPLACEMENT_MAPPING else "Map empty and no scannable items found, or all items ignored.")
@@ -199,25 +203,11 @@ def main_flow(
         logger.info(f"Using existing transaction file: '{txn_json_path}'. Ensure it was generated with compatible settings.")
 
     if not replace_logic._RAW_REPLACEMENT_MAPPING and not skip_file_renaming and not skip_folder_renaming and not skip_content:
-        # This condition means map is empty, and all operations that *could* have happened without a map
-        # (e.g. if we had extension-based renaming not tied to map keys) are also effectively disabled or not applicable.
         logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
-        # If transactions exist (e.g. from --skip-scan with an old non-empty map's transaction file),
-        # they will be skipped by execute_all_transactions if the current map is empty and they rely on it.
-        # Or if skip flags prevent them.
-        # If all skip flags are true, we'd have exited earlier.
-        # So, if we reach here with an empty map, it implies that any loaded transactions
-        # would likely be skipped if they depended on map keys.
-        # If the map is empty, `replace_occurrences` returns the input string, so transactions
-        # that would have been created due to a map match won't be.
-        # The only transactions that *could* exist with an empty map are those not dependent on map keys
-        # (e.g. a hypothetical "change all .txt to .md" - not implemented).
-        # Given current logic, an empty map means no string replacements.
-        if not (skip_file_renaming and skip_folder_renaming and skip_content): # If some ops are still enabled
+        if not (skip_file_renaming and skip_folder_renaming and skip_content):
              logger.info("Map is empty. No string-based replacements will occur.")
 
-
-    txns_for_exec = load_transactions(txn_json_path)
+    txns_for_exec = load_transactions(txn_json_path, logger=logger) # Pass logger
     if not txns_for_exec: 
         logger.info(f"No transactions found in {txn_json_path} to execute. Exiting.")
         return
@@ -226,7 +216,7 @@ def main_flow(
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
     stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
-                                     skip_scan) # Add skip_scan here
+                                     skip_scan, logger=logger) # Pass logger
     logger.info(f"{op_type} phase complete. Stats: {stats}")
     logger.info(f"Review '{txn_json_path}' for a detailed log of changes and their statuses.")
     

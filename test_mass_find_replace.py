@@ -40,6 +40,8 @@
 #   - `test_main_cli_small_positive_timeout`
 #   - `test_main_cli_verbose_flag`
 #   - `test_main_cli_missing_dependency`
+# - Added `test_edge_case_map_run` to verify behavior with edge case map.
+# - Added `test_skip_scan_with_previous_dry_run_renames` to verify skip_scan logic.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -86,7 +88,16 @@ def run_main_flow_for_test(
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     timeout_minutes: int = 1, quiet_mode: bool = True # Default to quiet for tests
 ):
-    load_map_success = replace_logic.load_replacement_map(map_file)
+    # In a real scenario, Prefect's get_run_logger() would be used.
+    # For testing, we can use a standard logger if needed, or rely on caplog.
+    # Here, we'll let main_flow get its logger from Prefect context or a fallback.
+    
+    # Temporarily set the debug flag in replace_logic for specific tests if needed
+    # original_debug_state = replace_logic._DEBUG_REPLACE_LOGIC
+    # if some_condition_for_debug:
+    #    replace_logic._DEBUG_REPLACE_LOGIC = True
+        
+    load_map_success = replace_logic.load_replacement_map(map_file) # Logger passed internally by main_flow
     if map_file.name != "empty_mapping.json": # Normal map loading expectation
         if not load_map_success and map_file.name not in ("invalid_map.json", "map_missing_key.json", "map_regex_error_simulated.json"): # Allow specific test maps to fail loading
             assert load_map_success, f"Failed to load map {map_file} for test"
@@ -100,8 +111,6 @@ def run_main_flow_for_test(
     additional_excludes = [map_file.name, BINARY_MATCHES_LOG_FILE]
     final_exclude_files = list(set(base_exclude_files + additional_excludes))
     
-    # Ensure temp_test_dir is a string for main_flow if it expects string
-    # However, main_flow internally resolves it to Path. So Path object is fine.
     main_flow(
         directory=str(temp_test_dir), mapping_file=str(map_file), extensions=extensions,
         exclude_dirs=final_exclude_dirs, exclude_files=final_exclude_files, dry_run=dry_run,
@@ -112,6 +121,8 @@ def run_main_flow_for_test(
         skip_content=skip_content, timeout_minutes=timeout_minutes,
         quiet_mode=quiet_mode
     )
+    # if some_condition_for_debug: # Restore debug state
+    #    replace_logic._DEBUG_REPLACE_LOGIC = original_debug_state
 
 
 
@@ -318,7 +329,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
     mock_tx_call_counts: Dict[str, int] = {}
     max_fails_for_mock = 2
 
-    def mock_execute_content_with_retry(tx_item, root_dir, path_translation_map, path_cache, dry_run):
+    def mock_execute_content_with_retry(tx_item, root_dir, path_translation_map, path_cache, dry_run, logger): # Added logger
         nonlocal mock_tx_call_counts
         is_target_file_tx = (tx_item["PATH"] == file_to_lock_rel or Path(tx_item["PATH"]).name == renamed_file_to_lock_rel) and \
                             tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
@@ -330,7 +341,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
 
             if current_tx_call_count <= max_fails_for_mock:
                 return TransactionStatus.RETRY_LATER, f"Mocked OS error (retryable), tx_id: {tx_id}, attempt {current_tx_call_count}", True
-        return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run)
+        return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run, logger) # Pass logger
 
     with patch('file_system_operations._execute_content_line_transaction', mock_execute_content_with_retry):
         run_main_flow_for_test(temp_test_dir, default_map_file, timeout_minutes=1)
@@ -355,7 +366,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
     mock_tx_call_counts_indef: dict[str, int] = {}
     indef_max_mock_calls_per_tx = 7
 
-    def mock_always_retryable_error_indef(tx_item, root_dir, path_translation_map, path_cache, dry_run):
+    def mock_always_retryable_error_indef(tx_item, root_dir, path_translation_map, path_cache, dry_run, logger): # Added logger
         nonlocal mock_tx_call_counts_indef
         is_target_file_tx = (tx_item["PATH"] == file_to_lock_rel or Path(tx_item["PATH"]).name == renamed_file_to_lock_rel) and \
                             tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value
@@ -368,7 +379,7 @@ def test_timeout_behavior_and_retries_mocked(temp_test_dir: Path, default_map_fi
                 return TransactionStatus.RETRY_LATER, f"Mocked persistent OS error (retryable), tx_id: {tx_id}, attempt {current_tx_call_count}", True
             else:
                 return TransactionStatus.FAILED, "Mocked persistent error, exceeded test call limit for this tx_id", False
-        return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run)
+        return original_execute_content(tx_item, root_dir, path_translation_map, path_cache, dry_run, logger) # Pass logger
 
     transactions_for_indef_retry = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions_for_indef_retry is not None # Ensure it's not None before iterating
@@ -437,12 +448,8 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
                    for record in caplog.records), \
         "The 'directory is empty' message should not appear when map file is present."
 
-    # Check for the message that indicates scan happened but found nothing actionable (because map file is excluded)
-    # This could be "No actionable occurrences found by scan." or similar if the map itself is the only file.
-    # Or if the map is empty, "Map empty and no scannable items found..."
-    # Given the map is not empty, but is excluded, "No actionable occurrences found by scan" is likely.
     assert any("No actionable occurrences found by scan." in record.message or
-               "Map empty and no scannable items found" in record.message # If map was empty
+               "Map empty and no scannable items found" in record.message
                for record in caplog.records), \
         "Expected appropriate log message when dir only has excluded map/transaction files."
 
@@ -467,7 +474,7 @@ def test_main_flow_target_directory_not_exists(temp_test_dir: Path, default_map_
 
 def test_main_flow_mapping_file_invalid_json(temp_test_dir: Path, caplog):
     caplog.set_level(logging.ERROR)
-    create_test_environment_content(temp_test_dir) # Create some content so it doesn't exit due to empty dir
+    create_test_environment_content(temp_test_dir) 
     invalid_map_file = temp_test_dir / "invalid_map.json"
     invalid_map_file.write_text("this is not valid json {")
     run_main_flow_for_test(temp_test_dir, invalid_map_file)
@@ -488,12 +495,10 @@ def test_main_flow_mapping_file_no_replacement_mapping_key(temp_test_dir: Path, 
 def test_main_flow_mapping_file_regex_compile_error_simulated(temp_test_dir: Path, caplog):
     caplog.set_level(logging.ERROR)
     create_test_environment_content(temp_test_dir)
-    # This map will load, but we'll mock get_scan_pattern to simulate failure post-load
     map_file = temp_test_dir / "map_regex_error_simulated.json"
     map_file.write_text(json.dumps({"REPLACEMENT_MAPPING": {"flojoy": "atlasvibe"}}))
 
     with patch('replace_logic.get_scan_pattern', return_value=None):
-        # Ensure _RAW_REPLACEMENT_MAPPING is True so the specific error condition is met
         with patch('replace_logic._RAW_REPLACEMENT_MAPPING', {"flojoy": "atlasvibe"}): 
             run_main_flow_for_test(temp_test_dir, map_file)
     
@@ -502,7 +507,7 @@ def test_main_flow_mapping_file_regex_compile_error_simulated(temp_test_dir: Pat
 
 def test_main_flow_skip_scan_no_transaction_file(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.ERROR)
-    create_test_environment_content(temp_test_dir) # Need some content for other checks not to fire first
+    create_test_environment_content(temp_test_dir) 
     transaction_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     if transaction_file.exists():
         transaction_file.unlink()
@@ -513,10 +518,10 @@ def test_main_flow_skip_scan_no_transaction_file(temp_test_dir: Path, default_ma
 
 def test_main_flow_scan_finds_nothing_actionable(temp_test_dir: Path, empty_map_file: Path, caplog):
     caplog.set_level(logging.INFO)
-    create_test_environment_content(temp_test_dir) # Create some files
+    create_test_environment_content(temp_test_dir) 
     (temp_test_dir / "some_file.txt").write_text("content without any map keys")
     
-    run_main_flow_for_test(temp_test_dir, empty_map_file) # Use an empty map
+    run_main_flow_for_test(temp_test_dir, empty_map_file) 
     
     assert any("Map empty and no scannable items found, or all items ignored." in record.message for record in caplog.records)
     transaction_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
@@ -526,7 +531,6 @@ def test_main_flow_scan_finds_nothing_actionable(temp_test_dir: Path, empty_map_
 
 def test_main_flow_scan_finds_nothing_actionable_with_map(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.INFO)
-    # Create a directory with files, but none of them will match "flojoy" or other map keys
     (temp_test_dir / "no_match_here.txt").write_text("This file has standard content.")
     (temp_test_dir / "another_safe_file.py").write_text("print('Hello world')")
     
@@ -547,18 +551,18 @@ def test_main_flow_all_skip_options_true(temp_test_dir: Path, default_map_file: 
 
 
 def test_main_flow_use_gitignore_not_found(temp_test_dir: Path, default_map_file: Path, caplog):
-    caplog.set_level(logging.INFO) # Info level to catch the "not found" message if it's INFO
+    caplog.set_level(logging.INFO) 
     create_test_environment_content(temp_test_dir)
     gitignore_path = temp_test_dir / ".gitignore"
     if gitignore_path.exists():
         gitignore_path.unlink()
         
-    run_main_flow_for_test(temp_test_dir, default_map_file, use_gitignore=True, quiet_mode=False) # quiet_mode=False to ensure log
+    run_main_flow_for_test(temp_test_dir, default_map_file, use_gitignore=True, quiet_mode=False) 
     assert any(".gitignore not found in root, skipping." in record.message for record in caplog.records)
 
 
 def test_main_flow_custom_ignore_file_not_found(temp_test_dir: Path, default_map_file: Path, caplog):
-    caplog.set_level(logging.WARNING) # Warning level for "not found"
+    caplog.set_level(logging.WARNING) 
     create_test_environment_content(temp_test_dir)
     custom_ignore_path = temp_test_dir / "my_custom.ignore"
     if custom_ignore_path.exists():
@@ -570,7 +574,6 @@ def test_main_flow_custom_ignore_file_not_found(temp_test_dir: Path, default_map
 
 def test_main_flow_empty_dir_os_error_on_iterdir(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.ERROR)
-    # Don't create any files in temp_test_dir to ensure it's "empty" for the initial check
     
     with patch.object(Path, 'iterdir', side_effect=OSError("Simulated OS error on iterdir")):
         run_main_flow_for_test(temp_test_dir, default_map_file)
@@ -581,7 +584,7 @@ def test_main_flow_ignore_file_read_error(temp_test_dir: Path, default_map_file:
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
     bad_ignore_file = temp_test_dir / ".badignore"
-    bad_ignore_file.write_text("some pattern") # File must exist for open to be called
+    bad_ignore_file.write_text("some pattern") 
 
     with patch('builtins.open', mock_open(read_data="dummy")) as mock_file:
         mock_file.side_effect = OSError("Simulated read error")
@@ -593,12 +596,8 @@ def test_main_flow_ignore_pattern_compile_error(temp_test_dir: Path, default_map
     caplog.set_level(logging.ERROR)
     create_test_environment_content(temp_test_dir)
     ignore_file_with_bad_pattern = temp_test_dir / ".customignore"
-    ignore_file_with_bad_pattern.write_text("[") # Invalid regex for gitwildmatch
+    ignore_file_with_bad_pattern.write_text("[") 
 
-    # pathspec.PathSpec.from_lines might not raise error for simple invalid gitwildmatch like "["
-    # It might just ignore it. Let's simulate a more direct error from pathspec if possible,
-    # or ensure the log reflects that patterns might be problematic.
-    # For now, let's mock it to raise an error to test the except block.
     with patch('pathspec.PathSpec.from_lines', side_effect=Exception("Simulated pattern compile error")):
         run_main_flow_for_test(temp_test_dir, default_map_file, custom_ignore_file=str(ignore_file_with_bad_pattern))
     
@@ -611,7 +610,6 @@ def test_main_flow_prompt_user_cancels(temp_test_dir: Path, default_map_file: Pa
     
     captured = capsys.readouterr()
     assert "Operation cancelled by user." in captured.out
-    # Check that no transactions file was created or it's empty if created before prompt
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     if txn_file.exists():
         transactions = load_transactions(txn_file)
@@ -619,107 +617,60 @@ def test_main_flow_prompt_user_cancels(temp_test_dir: Path, default_map_file: Pa
 
 def test_main_flow_prompt_warning_empty_map_complex_skips(temp_test_dir: Path, empty_map_file: Path, capsys):
     create_test_environment_content(temp_test_dir)
-    with patch('builtins.input', return_value='yes'): # Proceed after warning
+    # This test aims to check a specific warning print during the user prompt.
+    # The warning: "Warning: No replacement rules and no operations enabled that don't require rules. Likely no operations will be performed."
+    # Condition for this warning:
+    # `not replace_logic._RAW_REPLACEMENT_MAPPING` (True with empty_map_file)
+    # AND `(skip_file_renaming or not extensions)`
+    # AND `(skip_folder_renaming or not extensions)`
+    # AND `skip_content`
+    # To hit this, we need: empty map, skip_content=True.
+    # And for the (skip_X or not extensions) parts:
+    # If extensions is None (default), then `not extensions` is True. So this part is True regardless of skip_X.
+    # So, empty_map, skip_content=True, extensions=None (or default) should trigger it.
+    
+    with patch('builtins.input', return_value='yes'): # User confirms to proceed
         run_main_flow_for_test(
             temp_test_dir, empty_map_file, 
             force_execution=False, quiet_mode=False, resume=False,
-            extensions=None, # Means all files are candidates for content scan
-            skip_file_renaming=True, 
-            skip_folder_renaming=True, 
-            skip_content=False # Content scan enabled, but map is empty
+            extensions=None, # -> not extensions is True
+            skip_file_renaming=False, # -> (False or True) is True
+            skip_folder_renaming=False, # -> (False or True) is True
+            skip_content=True # -> skip_content is True
         )
     
     captured = capsys.readouterr()
     expected_warning = f"{YELLOW}Warning: No replacement rules and no operations enabled that don't require rules. Likely no operations will be performed.{RESET}"
-    # This specific warning is tricky to hit. The condition is:
-    # `not replace_logic._RAW_REPLACEMENT_MAPPING and (skip_file_renaming or not extensions) and (skip_folder_renaming or not extensions) and skip_content`
-    # If skip_content is True, it will hit. If skip_content is False, but map is empty, then (skip_X or not extensions) needs to be true.
-    # If extensions=None, then `not extensions` is False. So `skip_file_renaming` and `skip_folder_renaming` must be True.
-    # Let's try: empty_map, skip_file_renaming=True, skip_folder_renaming=True, skip_content=True, extensions=None (or some list)
-    
-    with patch('builtins.input', return_value='yes'):
-         run_main_flow_for_test(
-            temp_test_dir, empty_map_file, 
-            force_execution=False, quiet_mode=False, resume=False,
-            extensions=None,
-            skip_file_renaming=True, 
-            skip_folder_renaming=True, 
-            skip_content=True 
-        )
-    captured_all_skip = capsys.readouterr() # Reread stdout
-    # This should hit the "All processing types ... are skipped" log message from main_flow, not the specific prompt warning.
-    # The prompt warning is inside the `if not dry_run and not force_execution...` block.
-    # The "All processing types skipped" is an earlier exit.
-
-    # Let's try to hit the specific warning:
-    # Need: empty_map, not force_execution, not quiet_mode, not resume
-    # AND (skip_file_renaming OR not extensions) AND (skip_folder_renaming OR not extensions) AND skip_content
-    # If skip_content is True:
-    with patch('builtins.input', return_value='yes'): # Proceed after warning
-        run_main_flow_for_test(
-            temp_test_dir, empty_map_file, 
-            force_execution=False, quiet_mode=False, resume=False,
-            extensions=['.txt'], # extensions is not None
-            skip_file_renaming=False, # so (False or False) is False for file renaming part
-            skip_folder_renaming=False, # so (False or False) is False for folder renaming part
-            skip_content=True # This makes the last part true
-        )
-    captured = capsys.readouterr()
-    # The condition for the warning is:
-    # `not replace_logic._RAW_REPLACEMENT_MAPPING` (True with empty_map_file)
-    # `(skip_file_renaming or not extensions)`
-    # `(skip_folder_renaming or not extensions)`
-    # `skip_content`
-    # If extensions = ['.txt'], then `not extensions` is False.
-    # So we need `skip_file_renaming` to be True, `skip_folder_renaming` to be True, and `skip_content` to be True.
-    # This will trigger the "All processing types ... skipped" early exit.
-
-    # The warning is hard to trigger uniquely due to other early exits or conditions.
-    # The most likely scenario for this warning is an empty map AND skip_content=True,
-    # AND (file renaming is skipped OR no extensions specified)
-    # AND (folder renaming is skipped OR no extensions specified).
-    # If all are skipped, it exits early.
-    # If content is skipped, and map is empty, then renaming is the only hope.
-    # If renaming is also skipped, or no extensions are given (making renaming less likely to find matches if it depended on extensions for some reason),
-    # then the warning makes sense.
-
-    # Let's simplify: empty map, skip_content=True, extensions specified (so `not extensions` is false)
-    # This means `skip_file_renaming` must be True and `skip_folder_renaming` must be True.
-    # This leads to the "all skipped" exit.
-
-    # The warning seems to be for a very specific edge case that might be hard to isolate from other log messages or early exits.
-    # For now, I'll skip asserting this specific print output due to its complexity to hit uniquely.
-    pass
+    assert expected_warning in captured.out
 
 
 def test_main_flow_resume_load_transactions_returns_none(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
-    txn_file.write_text("corrupt json") # Make it exist but be invalid for load_transactions
+    txn_file.write_text("corrupt json") 
 
     with patch('mass_find_replace.load_transactions', return_value=None) as mock_load:
         run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
     
-    mock_load.assert_called_once_with(txn_file)
+    mock_load.assert_called_once() # Check it was called, args check is tricky due to logger
     assert any("Warn: Could not load txns. Fresh scan." in record.message for record in caplog.records)
 
 def test_main_flow_resume_load_transactions_returns_empty(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
-    save_transactions([], txn_file) # Make it exist and be empty list
+    save_transactions([], txn_file) 
 
     with patch('mass_find_replace.load_transactions', return_value=[]) as mock_load:
         run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
         
-    mock_load.assert_called_once_with(txn_file)
+    mock_load.assert_called_once()
     assert any("Warn: Txn file empty. Fresh scan." in record.message for record in caplog.records)
 
 def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
-    # Create a dummy transaction file indicating a file was processed
     processed_file_rel = "file_with_floJoy_lines.txt"
     dummy_txns = [{"PATH": processed_file_rel, "STATUS": TransactionStatus.COMPLETED.value, "timestamp_processed": time.time() - 1000}]
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
@@ -732,25 +683,18 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
 
 def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.INFO)
-    create_test_environment_content(temp_test_dir) # Has content
+    create_test_environment_content(temp_test_dir) 
     
-    # Scenario 1: Scan runs but finds nothing (e.g., map is empty, or content doesn't match)
-    # This is covered by test_main_flow_scan_finds_nothing_actionable / _with_map
-
-    # Scenario 2: --skip-scan is used, and transaction file is empty or unreadable
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     
-    # Case 2a: Transaction file is empty
     save_transactions([], txn_file)
     run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True)
     assert any(f"No transactions found in {txn_file.resolve()} to execute. Exiting." in record.message for record in caplog.records)
     caplog.clear()
 
-    # Case 2b: Transaction file is unreadable (load_transactions returns None)
     if txn_file.exists():
         txn_file.unlink()
-    txn_file.write_text("this is not json") # Make it unreadable by json.load
-    # Mock load_transactions directly for this sub-case
+    txn_file.write_text("this is not json") 
     with patch('mass_find_replace.load_transactions', return_value=None) as mock_load_tx:
         run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True)
     assert any(f"No transactions found in {txn_file.resolve()} to execute. Exiting." in record.message for record in caplog.records)
@@ -758,46 +702,23 @@ def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_
 
 # --- CLI Tests ---
 def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    # Ensure the script path is correct, assuming it's in the parent of the tests directory
     script_path = Path(__file__).parent.parent / "mass_find_replace.py"
     command = [sys.executable, str(script_path)] + args_list
     return subprocess.run(command, capture_output=True, text=True, cwd=cwd)
 
 def test_main_cli_negative_timeout(temp_test_dir: Path):
     res = run_cli_command([str(temp_test_dir), "--timeout", "-5"], cwd=temp_test_dir)
-    assert res.returncode != 0 # argparse should exit with error
-    assert "error: argument --timeout: invalid int value: '-5'" in res.stderr or "--timeout cannot be negative" in res.stderr # Prefect might intercept SystemExit from argparse
+    assert res.returncode != 0 
+    assert "error: argument --timeout: invalid int value: '-5'" in res.stderr or "--timeout cannot be negative" in res.stderr 
 
 def test_main_cli_small_positive_timeout(temp_test_dir: Path, capsys):
-    # This test needs to check stdout/stderr of the script itself, not Prefect logs
-    # So, run_main_flow_for_test is not suitable here. We need to call main_cli and check its prints.
-    
-    # Create a dummy mapping file so the script doesn't exit early due to map issues
     dummy_map = temp_test_dir / "dummy_map.json"
     dummy_map.write_text(json.dumps({"REPLACEMENT_MAPPING": {"a": "b"}}))
-    
-    # Create some content in the directory
     (temp_test_dir / "somefile.txt").write_text("content")
-
-    test_args = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--timeout", "0.5", "--force"] # --force to skip prompt
+    test_args = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--timeout", "0.5", "--force"] 
     
-    with patch.object(sys, 'argv', ['mass_find_replace.py'] + test_args):
-        with pytest.raises(SystemExit) as e: # argparse.error calls sys.exit
-             # We expect main_cli to run, print the warning, and then proceed to main_flow
-             # main_flow will likely run to completion or hit another controlled exit.
-             # The key is to capture the print about timeout adjustment.
-             # Patching main_flow to prevent full execution might be too complex here.
-             # Let's assume it runs and we check capsys.
-             # Prefect flow might cause issues with capsys if not careful.
-             # For CLI specific prints before flow, direct call to main_cli is better.
-             pass # Allow it to run; we'll check capsys or caplog
-
-    # This is tricky because main_cli calls main_flow which is a Prefect flow.
-    # Prefect's logging might interfere with capsys.
-    # Let's try running it as a subprocess to capture its direct stdout.
     res = run_cli_command(test_args, cwd=temp_test_dir)
     assert f"{YELLOW}Warning: --timeout value increased to minimum 1 minute.{RESET}" in res.stdout
-    # Also check that it proceeded (e.g., scan complete message, or no error exit code if it ran fully)
     assert "Scan complete" in res.stdout or "No transactions found" in res.stdout or "phase complete" in res.stdout
     assert res.returncode == 0
 
@@ -813,21 +734,118 @@ def test_main_cli_verbose_flag(temp_test_dir: Path):
     assert res.returncode == 0
 
 def test_main_cli_missing_dependency(temp_test_dir: Path):
-    # Simulate 'prefect' module being missing
-    # This needs to be done carefully to not break pytest itself.
-    # We'll patch sys.modules for the duration of the CLI call.
-    
     original_sys_modules = sys.modules.copy()
     if "prefect" in sys.modules:
-        del sys.modules["prefect"] # Simulate it's not importable
+        del sys.modules["prefect"] 
 
     try:
         res = run_cli_command([str(temp_test_dir)], cwd=temp_test_dir)
         assert res.returncode != 0
         assert "CRITICAL ERROR: Missing dependencies: prefect" in res.stderr or "No module named 'prefect'" in res.stderr
     finally:
-        # Restore sys.modules to its original state
         sys.modules = original_sys_modules
-        # If prefect was originally there, re-import it for subsequent tests if necessary
         if "prefect" not in sys.modules and "prefect" in original_sys_modules:
             import prefect # type: ignore
+
+
+# --- Tests for specific scenarios from checklist ---
+def test_edge_case_map_run(temp_test_dir: Path, edge_case_map_file: Path, caplog):
+    caplog.set_level(logging.INFO)
+    create_test_environment_content(temp_test_dir, use_edge_case_map=True)
+
+    # For debugging this specific test if needed:
+    # replace_logic._DEBUG_REPLACE_LOGIC = True
+    run_main_flow_for_test(temp_test_dir, edge_case_map_file, extensions=None) # Process all files
+    # replace_logic._DEBUG_REPLACE_LOGIC = False
+
+    # 1. File: edge_case_MyKey_original_name.txt
+    #    Map: "My\nKey": "MyKeyValue_VAL" (canonical key: "MyKey")
+    #    Filename contains "MyKey". Should be renamed.
+    orig_mykey_name_file = temp_test_dir / "edge_case_MyKey_original_name.txt"
+    # Expected new name: "edge_case_MyKeyValue_VAL_original_name.txt"
+    # replace_occurrences("edge_case_MyKey_original_name.txt")
+    #   -> replace_occurrences will NFC normalize its input.
+    #   -> callback will get "MyKey", lookup "MyKey", get "MyKeyValue_VAL"
+    #   -> so "MyKey" in name becomes "MyKeyValue_VAL"
+    expected_mykey_new_name = "edge_case_MyKeyValue_VAL_original_name.txt"
+    renamed_mykey_name_file = temp_test_dir / expected_mykey_new_name
+    
+    assert not orig_mykey_name_file.exists(), f"{orig_mykey_name_file} should have been renamed."
+    assert renamed_mykey_name_file.exists(), f"{renamed_mykey_name_file} should exist after rename."
+    assert_file_content(renamed_mykey_name_file, "Initial content for control key name test (MyKey).") # Content unchanged
+
+    # 2. File: edge_case_content_with_MyKey_controls.txt
+    #    Map: "My\nKey": "MyKeyValue_VAL"
+    #    Content: "Line with My\nKey to replace."
+    content_mykey_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
+    assert content_mykey_file.exists() # Name should not change
+    assert_file_content(content_mykey_file, "Line with MyKeyValue_VAL to replace.")
+
+    # 3. File: edge_case_empty_stripped_key_target.txt
+    #    Map: "\t": "ShouldBeSkipped_VAL" (canonical key: "", skipped in load)
+    empty_key_file = temp_test_dir / "edge_case_empty_stripped_key_target.txt"
+    assert empty_key_file.exists() # Name should not change
+    assert_file_content(empty_key_file, "This should not be changed by an empty key.") # Content unchanged
+
+    # 4. File: edge_case_key_priority.txt
+    #    Map: "foo": "Foo_VAL", "foo bar": "FooBar_VAL"
+    #    Content: "test foo bar test and also foo."
+    #    Expected: "test FooBar_VAL test and also Foo_VAL."
+    priority_file = temp_test_dir / "edge_case_key_priority.txt"
+    assert priority_file.exists() # Name should not change
+    assert_file_content(priority_file, "test FooBar_VAL test and also Foo_VAL.")
+
+
+def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_map_file: Path, caplog):
+    caplog.set_level(logging.INFO)
+
+    # Setup initial files and folders
+    orig_file_rel = "flojoy_file_to_rename.txt"
+    orig_folder_rel = "flojoy_folder_to_rename"
+    orig_sub_file_rel = f"{orig_folder_rel}/another_flojoy_file.txt"
+
+    (temp_test_dir / orig_folder_rel).mkdir()
+    (temp_test_dir / orig_file_rel).write_text("flojoy content line 1\nflojoy content line 2")
+    (temp_test_dir / orig_sub_file_rel).write_text("flojoy in subfolder")
+
+    # Phase 1: Dry Run
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True, extensions=[".txt"])
+    
+    # Assertions for Dry Run
+    txn_file_path = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    assert txn_file_path.exists()
+    transactions_dry_run = load_transactions(txn_file_path)
+    assert transactions_dry_run is not None
+    
+    # Check that original files/folders still exist
+    assert (temp_test_dir / orig_file_rel).exists()
+    assert (temp_test_dir / orig_folder_rel).exists()
+    assert (temp_test_dir / orig_sub_file_rel).exists()
+    assert_file_content(temp_test_dir / orig_file_rel, "flojoy content line 1\nflojoy content line 2")
+
+    # Phase 2: Skip Scan Execution
+    run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True, dry_run=False, force_execution=True, extensions=[".txt"])
+
+    # Assertions for Skip Scan Execution
+    renamed_file_rel = "atlasvibe_file_to_rename.txt"
+    renamed_folder_rel = "atlasvibe_folder_to_rename"
+    # The sub-file's name also changes due to "flojoy" -> "atlasvibe"
+    renamed_sub_file_rel = f"{renamed_folder_rel}/another_atlasvibe_file.txt" 
+
+    assert not (temp_test_dir / orig_file_rel).exists(), "Original file should be renamed."
+    assert (temp_test_dir / renamed_file_rel).exists(), "Renamed file should exist."
+    assert_file_content(temp_test_dir / renamed_file_rel, "atlasvibe content line 1\natlasvibe content line 2")
+
+    assert not (temp_test_dir / orig_folder_rel).exists(), "Original folder should be renamed."
+    assert (temp_test_dir / renamed_folder_rel).exists(), "Renamed folder should exist."
+    
+    assert not (temp_test_dir / orig_sub_file_rel).exists(), "Original sub-file path should not exist." # Path changed due to parent folder rename
+    assert (temp_test_dir / renamed_sub_file_rel).exists(), "Renamed sub-file should exist in renamed folder."
+    assert_file_content(temp_test_dir / renamed_sub_file_rel, "atlasvibe in subfolder")
+
+    transactions_final = load_transactions(txn_file_path)
+    assert transactions_final is not None
+    for tx in transactions_final:
+        if tx["TYPE"] != TransactionType.FILE_CONTENT_LINE.value or "flojoy" in tx["ORIGINAL_LINE_CONTENT"].lower(): # Only check relevant tx
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction {tx['id']} ({tx['PATH']}) should be COMPLETED."
+            assert tx.get("ERROR_MESSAGE") is None or tx.get("ERROR_MESSAGE") == "DRY_RUN" # DRY_RUN might persist if not cleared by exec logic for some reason

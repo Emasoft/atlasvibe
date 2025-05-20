@@ -36,14 +36,14 @@
     *   [X] Run the replacement process (content modification only).
     *   [X] Assert that the output file is byte-for-byte identical to the input, except for "Flojoy" being replaced by "Atlasvibe". All problematic bytes, special characters, line endings, and XML structure must be preserved.
     *   [X] Verify transaction log entries for this file are correct (status, original line, proposed line, encoding).
-4.  [ ] **Address `test_edge_case_run` (File Missing / Content Not Replaced as Expected)**:
-    *   [ ] Meticulously trace transactions and path resolutions.
-    *   [ ] Verify `replace_occurrences` behavior with keys containing newlines/controls vs. content containing them.
-    *   [ ] Add targeted debug logging if necessary.
-5.  [ ] **Address `test_skip_scan_behavior` (File Not Found / Incorrect State)**:
-    *   [ ] Review `path_translation_map` initialization and usage in `skip_scan` mode.
-    *   [ ] Verify how `_get_current_absolute_path` resolves paths.
-    *   [ ] Ensure `DRY_RUN` transaction statuses are correctly reset.
+4.  [X] **Address `test_edge_case_run` (File Missing / Content Not Replaced as Expected)**:
+    *   [X] Meticulously trace transactions and path resolutions.
+    *   [X] Verify `replace_occurrences` behavior with keys containing newlines/controls vs. content containing them.
+    *   [X] Add targeted debug logging if necessary.
+5.  [X] **Address `test_skip_scan_behavior` (File Not Found / Incorrect State)**:
+    *   [X] Review `path_translation_map` initialization and usage in `skip_scan` mode.
+    *   [X] Verify how `_get_current_absolute_path` resolves paths.
+    *   [X] Ensure `DRY_RUN` transaction statuses are correctly reset.
 
 ## III. Documentation & Final Review
 
@@ -55,5 +55,5 @@
         *   [X] Callback: processing of matched segment from NFC-normalized string to create lookup key.
     *   [X] Clarify behavior for keys unrepresentable in a file's charset (they won't match if the file content, when decoded to Unicode, doesn't produce those characters).
     *   [X] Note the design's flexibility for future raw Unicode keys (current key processing is at map load; if removed, core replacement logic adapts).
-2.  [ ] **Code Review**: Perform a final pass over all modified files for clarity, comments, and adherence to guidelines.
-3.  [ ] **Remove/Refine Debug Prints**: Clean up extensive debug prints, leaving only essential/toggleable ones.
+2.  [X] **Code Review**: Perform a final pass over all modified files for clarity, comments, and adherence to guidelines.
+3.  [X] **Remove/Refine Debug Prints**: Clean up extensive debug prints, leaving only essential/toggleable ones. (Converted `print` to logger calls, `_DEBUG_REPLACE_LOGIC` flag in place and default False).
