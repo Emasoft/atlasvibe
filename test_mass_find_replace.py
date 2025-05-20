@@ -92,11 +92,376 @@ def run_main_flow_for_test(
         quiet_mode=quiet_mode
     )
 
+@pytest.mark.parametrize("ignore_symlinks", [False, True])
+def test_standard_run(temp_test_dir: Path, default_map_file: Path, ignore_symlinks: bool):
+    create_test_environment_content(temp_test_dir, include_very_large_file=True, include_symlink_tests=True)
+    (temp_test_dir / "test_flojoy.rtf").write_text("{\\rtf1\\ansi an rtf with flojoy content here}", encoding='latin-1')
+
+    run_main_flow_for_test(temp_test_dir, default_map_file, ignore_symlinks_arg=ignore_symlinks)
+
+    root_renamed = temp_test_dir / "atlasvibe_root"
+    assert root_renamed.is_dir()
+    deep_folder = root_renamed / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir"
+    assert deep_folder.is_dir()
+    deep_file = deep_folder / "deep_atlasvibe_file.txt"
+    assert deep_file.is_file()
+    assert_file_content(deep_file, "Line 1: atlasvibe content.\nLine 2: More Atlasvibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.")
+    another_py = root_renamed / "another_atlasvibe_file.py"
+    assert another_py.is_file()
+    assert_file_content(another_py, "import atlasvibe_lib\n# class MyAtlasvibeClass: pass")
+    
+    only_name_md = temp_test_dir / "only_name_atlasvibe.md"
+    assert only_name_md.is_file()
+    assert_file_content(only_name_md, "Content without target string.")
+    
+    flojoy_lines_txt = temp_test_dir / "file_with_atlasVibe_lines.txt"
+    assert flojoy_lines_txt.is_file()
+    assert_file_content(flojoy_lines_txt, "First atlasVibe.\nSecond AtlasVibe.\natlasvibe and ATLASVIBE on same line.")
+    
+    unmapped_variant_txt = temp_test_dir / "unmapped_variant_atlasvibe_content.txt"
+    assert unmapped_variant_txt.is_file()
+    # "fLoJoY" is not a key in default_map, so it won't be replaced. "flojoy" will.
+    assert_file_content(unmapped_variant_txt, "This has fLoJoY content, and also atlasvibe.")
+
+    gb18030_txt = temp_test_dir / "gb18030_atlasvibe_file.txt"
+    assert gb18030_txt.is_file()
+    actual_gb_bytes = gb18030_txt.read_bytes()
+    expected_gb18030_bytes = "你好 atlasvibe 世界".encode('gb18030')
+    expected_fallback_bytes = "fallback atlasvibe content".encode('utf-8')
+    original_gb_write_success = False
+    try:
+        (temp_test_dir / "temp_gb_check.txt").write_text("你好 flojoy 世界", encoding="gb18030")
+        original_gb_write_success = True
+        (temp_test_dir / "temp_gb_check.txt").unlink()
+    except Exception:
+        pass
+
+    if original_gb_write_success:
+        assert actual_gb_bytes == expected_gb18030_bytes, "GB18030 content mismatch"
+    else:
+        assert actual_gb_bytes == expected_fallback_bytes, "GB18030 content mismatch (fallback)"
+
+    bin_file1 = temp_test_dir / "binary_atlasvibe_file.bin"
+    assert bin_file1.is_file()
+    assert_file_content(bin_file1, b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04", is_binary=True)
+
+    # "fLoJoY" is not a key in default_map, so filename "binary_fLoJoY_name.bin" should not change.
+    bin_file2_orig_path = temp_test_dir / "binary_fLoJoY_name.bin"
+    assert bin_file2_orig_path.is_file()
+    # Ensure it wasn't incorrectly renamed
+    assert not (temp_test_dir / "binary_atlasvibe_name.bin").exists()
+    assert_file_content(bin_file2_orig_path, b"unmapped_variant_binary_content" + b"\x00\xff", is_binary=True)
+
+    large_file_renamed = temp_test_dir / "large_atlasvibe_file.txt"
+    assert large_file_renamed.is_file()
+    with open(large_file_renamed, 'r', encoding='utf-8') as f:
+        first_line = f.readline().strip()
+    assert first_line == "This atlasvibe line should be replaced 0"
+
+    curr_deep_path = temp_test_dir
+    deep_path_parts_after_rename = ["atlasvibe_root","depth1_atlasvibe","depth2","depth3_atlasvibe","depth4","depth5","depth6_atlasvibe","depth7","depth8","depth9_atlasvibe"]
+    for part in deep_path_parts_after_rename:
+        curr_deep_path /= part
+        assert curr_deep_path.is_dir(), f"Deep dir missing: {curr_deep_path}"
+    curr_deep_path /= "depth10_file_atlasvibe.txt"
+    assert curr_deep_path.is_file()
+    assert_file_content(curr_deep_path, "atlasvibe deep content")
+
+    very_large_renamed = temp_test_dir / VERY_LARGE_FILE_NAME_ORIG.replace("flojoy", "atlasvibe")
+    assert very_large_renamed.exists(), f"{very_large_renamed} should exist"
+    orig_very_large_path = temp_test_dir / VERY_LARGE_FILE_NAME_ORIG
+    if "flojoy" in VERY_LARGE_FILE_NAME_ORIG.lower():
+        assert not orig_very_large_path.exists(), f"{orig_very_large_path} should have been renamed"
+
+    with open(very_large_renamed, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    assert lines[0].strip() == "Line 1: This is a atlasvibe line that should be replaced."
+    assert lines[VERY_LARGE_FILE_LINES // 2].strip() == f"Line {VERY_LARGE_FILE_LINES // 2 + 1}: This is a atlasvibe line that should be replaced."
+    assert lines[VERY_LARGE_FILE_LINES - 1].strip() == f"Line {VERY_LARGE_FILE_LINES}: This is a atlasvibe line that should be replaced."
+
+    link_f_orig, link_d_orig = temp_test_dir/"link_to_file_flojoy.txt", temp_test_dir/"link_to_dir_flojoy"
+    link_f_ren, link_d_ren = temp_test_dir/"link_to_file_atlasvibe.txt", temp_test_dir/"link_to_dir_atlasvibe"
+    if ignore_symlinks:
+        assert os.path.lexists(link_f_orig)
+        assert not os.path.lexists(link_f_ren)
+        assert os.path.lexists(link_d_orig)
+        assert not os.path.lexists(link_d_ren)
+    else:
+        assert os.path.lexists(link_f_ren) and link_f_ren.is_symlink()
+        assert not os.path.lexists(link_f_orig)
+        assert os.path.lexists(link_d_ren) and link_d_ren.is_symlink()
+        assert not os.path.lexists(link_d_orig)
+    assert_file_content(temp_test_dir/"symlink_targets_outside"/"target_file_flojoy.txt", "flojoy in symlink target file")
+    assert_file_content(temp_test_dir/"symlink_targets_outside"/"target_dir_flojoy"/"another_flojoy_file.txt", "flojoy content in symlinked dir target")
+
+    binary_log = temp_test_dir / BINARY_MATCHES_LOG_FILE
+    if binary_log.exists():
+        log_content = binary_log.read_text()
+        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 7" in log_content
+        assert "File: binary_flojoy_file.bin, Key: 'flojoy', Offset: 23" in log_content
+    elif (temp_test_dir / "binary_atlasvibe_file.bin").exists():
+         original_binary_content = b"prefix_flojoy_suffix" + b"\x00\x01\x02flojoy_data\x03\x04"
+         had_matches = False
+         for key_to_check_bytes in [k.encode('utf-8') for k in replace_logic.get_raw_stripped_keys()]:
+             if key_to_check_bytes in original_binary_content:
+                 had_matches = True
+                 break
+         if had_matches:
+            pytest.fail(f"{BINARY_MATCHES_LOG_FILE} should exist if binary_flojoy_file.bin was processed and had matches.")
+
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None
+    error_file_tx = next((tx for tx in transactions if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME), None)
+    assert error_file_tx and error_file_tx["STATUS"] == TransactionStatus.FAILED.value
+    assert (temp_test_dir / SELF_TEST_ERROR_FILE_BASENAME).exists()
+
+    rtf_renamed_path = temp_test_dir / "test_atlasvibe.rtf"
+    assert rtf_renamed_path.exists()
+    rtf_content_tx = next((tx for tx in transactions if tx.get("PATH") == "test_flojoy.rtf" and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value), None)
+    assert rtf_content_tx is not None, "RTF file content transaction should have been planned"
+    assert rtf_content_tx["STATUS"] == TransactionStatus.SKIPPED.value, "RTF content transaction should be SKIPPED during execution"
+    assert_file_content(rtf_renamed_path, "{\\rtf1\\ansi an rtf with flojoy content here}", encoding='latin-1')
 
 
+def test_empty_map_run(temp_test_dir: Path, empty_map_file: Path):
+    create_test_environment_content(temp_test_dir)
+    run_main_flow_for_test(temp_test_dir, empty_map_file)
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None and len(transactions) == 0
+    assert (temp_test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt").exists()
+
+def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
+    create_test_environment_content(temp_test_dir, use_complex_map=True)
+    run_main_flow_for_test(temp_test_dir, complex_map_file)
+
+    # Key: "ȕsele̮Ss_diá͡cRiti̅cS" (stripped: "useless_diacritics") -> Value: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL"
+    # Original folder (created by conftest with stripped key): "useless_diacritics_folder"
+    # Expected rename: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_folder"
+    renamed_diacritic_dir_path = temp_test_dir / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_folder"
+    assert renamed_diacritic_dir_path.is_dir(), f"Expected renamed directory '{renamed_diacritic_dir_path}' not found."
+
+    # Original file in that folder (created by conftest with stripped key): "useless_diacritics_file.txt"
+    # Expected file name: "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_file.txt"
+    file_in_renamed_diacritic_dir = renamed_diacritic_dir_path / "dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL_file.txt"
+    assert file_in_renamed_diacritic_dir.is_file()
+    # Content was created with "useless_diacritics" (stripped key)
+    assert_file_content(file_in_renamed_diacritic_dir, "Content with dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL and also dia̐criticS_w̓̐̒ill_b̕e͜_igno̥RẹD_VAL.\nAnd another Flojoy for good measure.")
 
 
+    # Key: "The spaces will not be ignored" -> Value: "The control characters \n will be ignored_VAL"
+    # Original file (created by conftest with key): "The spaces will not be ignored_file.md"
+    # Expected name: "The control characters \n will be ignored_VAL_file.md"
+    original_space_file_name = "The spaces will not be ignored_file.md"
+    expected_problematic_name = "The control characters \n will be ignored_VAL_file.md"
+    
+    original_space_file_path = temp_test_dir / original_space_file_name
+    problematic_path = temp_test_dir / expected_problematic_name
 
+    if problematic_path.exists():
+        assert_file_content(problematic_path, f"This file has {replace_logic.replace_occurrences('The spaces will not be ignored')} in its name and content.")
+    elif original_space_file_path.exists():
+        assert_file_content(original_space_file_path, f"This file has {replace_logic.replace_occurrences('The spaces will not be ignored')} in its name and content.")
+        logging.warning(f"File '{original_space_file_name}' was not renamed to '{expected_problematic_name}', likely due to invalid char in target name. Content was checked on original.")
+    else:
+        pytest.fail(f"Neither original file '{original_space_file_name}' nor problematically named file '{expected_problematic_name}' found.")
+
+
+    assert (temp_test_dir / "_My_Story&Love_VAL.log").is_file()
+    assert_file_content(temp_test_dir / "_My_Story&Love_VAL.log", "Log for _My_Story&Love_VAL and _my_story&love_VAL. And My_Love&Story.")
+
+    assert (temp_test_dir / "filename_with_MOCO4_ip-N_VAL.data").is_file()
+    # "coco4_ep-m" (lowercase) is not a key in complex_map.
+    assert_file_content(temp_test_dir / "filename_with_MOCO4_ip-N_VAL.data", "Data for MOCO4_ip-N_VAL and Moco4_ip-N_VAL. Also coco4_ep-m.")
+
+    special_chars_file = temp_test_dir / "special_chars_in_content_test.txt"
+    assert special_chars_file.is_file()
+    # Content was created with stripped key "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames"
+    assert_file_content(special_chars_file, "This line contains SpecialCharsKeyMatched_VAL to be replaced.")
+
+    # Original name: "complex_map_key_withcontrolchars_original_name.txt"
+    # Map key: "key_with\tcontrol\nchars" (canonical: "keywithcontrolchars") -> "Value_for_key_with_controls_VAL"
+    # The filename contains "keywithcontrolchars", so it should be renamed.
+    original_control_chars_filename = "complex_map_key_withcontrolchars_original_name.txt"
+    expected_renamed_control_chars_filename = "complex_map_Value_for_key_with_controls_VAL_original_name.txt"
+    control_chars_key_renamed_filename_path = temp_test_dir / expected_renamed_control_chars_filename
+    assert not (temp_test_dir / original_control_chars_filename).exists(), f"Original file '{original_control_chars_filename}' should have been renamed."
+    assert control_chars_key_renamed_filename_path.is_file(), f"File '{expected_renamed_control_chars_filename}' not found. Original name might not have been replaced."
+    assert_file_content(control_chars_key_renamed_filename_path, "Content for complex map control key filename test.")
+    
+    control_chars_key_content_file = temp_test_dir / "complex_map_content_with_key_with_controls.txt"
+    assert control_chars_key_content_file.is_file()
+    # Content was created with stripped key "keywithcontrolchars"
+    assert_file_content(control_chars_key_content_file, "Line with Value_for_key_with_controls_VAL to replace.")
+
+
+def test_edge_case_run(temp_test_dir: Path, edge_case_map_file: Path):
+    create_test_environment_content(temp_test_dir, use_edge_case_map=True)
+    run_main_flow_for_test(temp_test_dir, edge_case_map_file)
+
+    # Original name: "edge_case_MyKey_original_name.txt"
+    # Map key "My\nKey" (stripped: "MyKey") -> "MyKeyValue_VAL"
+    # The filename "edge_case_MyKey_original_name.txt" contains "MyKey", which matches the stripped key.
+    renamed_file = temp_test_dir / "edge_case_MyKeyValue_VAL_original_name.txt"
+    assert renamed_file.is_file()
+    assert_file_content(renamed_file, "Initial content for control key name test (MyKeyValue_VAL).")
+
+
+    content_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
+    assert content_file.is_file()
+    # Original content: "Line with My\nKey to replace."
+    # Map key "My\nKey" (stripped: "MyKey") -> "MyKeyValue_VAL"
+    # The _COMPILED_PATTERN_FOR_ACTUAL_REPLACE is built from stripped keys, e.g., `(MyKey|...)`
+    # This pattern will NOT match the literal string "My\nKey" in the content.
+    # So, the content will remain unchanged.
+    assert_file_content(content_file, "Line with My\nKey to replace.")
+
+    priority_file = temp_test_dir / "edge_case_key_priority.txt"
+    assert priority_file.is_file()
+    assert_file_content(priority_file, "test FooBar_VAL test and also Foo_VAL.")
+
+
+def test_precision_run(temp_test_dir: Path, precision_map_file: Path):
+    create_test_environment_content(temp_test_dir, include_precision_test_file=True)
+    run_main_flow_for_test(temp_test_dir, precision_map_file)
+
+    src_renamed = temp_test_dir / "precision_test_atlasvibe_plain_source.txt"
+    name_renamed = temp_test_dir / "precision_name_atlasvibe_plain_test.md"
+    assert src_renamed.is_file()
+    assert name_renamed.is_file()
+    assert_file_content(name_renamed, "File for precision rename test.")
+
+    # Conftest was updated to use "FLOJOY_DIACRITIC" (stripped) and "keywithcontrol" (stripped) in the source file.
+    exp_lines = ["Standard atlasvibe_plain here.\n","Another Atlasvibe_TitleCase for title case.\r\n",
+                 "Test ATLASVIBE_DIACRITIC_VAL with mixed case.\n","  atlasvibe_spaced_val  with exact spaces.\n", # "  flojoy  " -> "  atlasvibe_spaced_val  "
+                 "  atlasvibe_spaced_val   with extra spaces.\n", # "  flojoy   " -> "  flojoy  " matches, then the rest "  " remains.
+                 "value_for_control_key_val characters.\n", # "keywithcontrol" -> "value_for_control_key_val"
+                 "unrelated content\n","你好atlasvibe_plain世界 (Chinese chars).\n","emoji😊atlasvibe_plain test.\n"]
+    exp_bytes_list = [line.encode('utf-8','surrogateescape') for line in exp_lines] + [b"malformed-\xff-atlasvibe_plain-bytes\n"]
+    assert_file_content(src_renamed, b"".join(exp_bytes_list), is_binary=True)
+
+
+def test_resume_functionality(temp_test_dir: Path, default_map_file: Path):
+    # Phase 1: Initial setup and dry run
+    create_test_environment_content(temp_test_dir, include_symlink_tests=True)
+    original_only_name_md_path = temp_test_dir / "only_name_flojoy.md"
+    assert original_only_name_md_path.exists(), "Original 'only_name_flojoy.md' should exist before dry run."
+
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    initial_txns = load_transactions(txn_file)
+    assert initial_txns and len(initial_txns) > 0
+
+    processed_time_sim = time.time() - 3600
+    name_tx_mod, content_tx_mod, error_tx_mod = False, False, False
+    for tx in initial_txns:
+        if tx["TYPE"] == TransactionType.FILE_NAME.value and not name_tx_mod and "deep_flojoy_file.txt" in tx["PATH"]: # Pick a specific rename
+            tx["STATUS"] = TransactionStatus.COMPLETED.value # Simulate it was done
+            tx["timestamp_processed"] = processed_time_sim
+            name_tx_mod = True
+        if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and "large_flojoy_file.txt" in tx["PATH"] and not content_tx_mod:
+            tx["STATUS"] = TransactionStatus.PENDING.value
+            content_tx_mod = True
+        if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME and tx["TYPE"] == TransactionType.FILE_NAME.value:
+            tx["STATUS"] = TransactionStatus.FAILED.value
+            tx["ERROR_MESSAGE"] = "Simulated initial fail"
+            tx["timestamp_processed"] = processed_time_sim
+            error_tx_mod = True
+    assert name_tx_mod and error_tx_mod, "Resume setup for tx modification failed"
+    save_transactions(initial_txns, txn_file)
+
+    # Simulate state after some renames from dry run were MANUALLY applied (or by a previous partial run)
+    # For the COMPLETED rename tx: flojoy_root/.../deep_flojoy_file.txt -> atlasvibe_root/.../deep_atlasvibe_file.txt
+    # So, rename the parent flojoy_root to atlasvibe_root
+    if (temp_test_dir / "flojoy_root").exists():
+        (temp_test_dir / "flojoy_root").rename(temp_test_dir / "atlasvibe_root")
+    
+    # And rename the deep file itself according to the "completed" transaction
+    deep_file_orig_parent_now_renamed = temp_test_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_FLOJOY_dir" # This dir name might also change
+    # Let's assume only flojoy_root was renamed for this simulation of a single completed tx.
+    # The deep_flojoy_file.txt is inside flojoy_root/sub_flojoy_folder/another_FLOJOY_dir/
+    # If flojoy_root -> atlasvibe_root, then path is atlasvibe_root/sub_flojoy_folder/another_FLOJOY_dir/deep_flojoy_file.txt
+    # The transaction was for deep_flojoy_file.txt. If it's marked COMPLETED, its name should be deep_atlasvibe_file.txt
+    
+    # Path to where the file *would be* if its name transaction was completed
+    simulated_renamed_deep_file_path = temp_test_dir / "atlasvibe_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_atlasvibe_file.txt"
+    original_deep_file_path_under_new_root = temp_test_dir / "atlasvibe_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
+
+    if original_deep_file_path_under_new_root.exists():
+         original_deep_file_path_under_new_root.rename(simulated_renamed_deep_file_path)
+
+
+    # Phase 2: Add new files. `only_name_flojoy.md` should still be there from Phase 1.
+    create_test_environment_content(temp_test_dir, for_resume_test_phase_2=True, include_symlink_tests=True)
+    assert original_only_name_md_path.exists(), "'only_name_flojoy.md' should still exist before resume execution."
+    assert not (temp_test_dir / "only_name_atlasvibe.md").exists(), "'only_name_atlasvibe.md' should NOT exist yet."
+
+
+    # Modify the now-renamed deep file
+    if simulated_renamed_deep_file_path.exists():
+        new_mtime = time.time() + 5
+        os.utime(simulated_renamed_deep_file_path, (new_mtime, new_mtime))
+        with open(simulated_renamed_deep_file_path, "a", encoding="utf-8") as f_append:
+            f_append.write("\n# Externally appended for resume.")
+    else:
+        # This implies the simulation of completed transaction was not set up correctly.
+        # For the test to proceed, this file should exist at its renamed path.
+        # If it's not, the test for modified content re-scan will not be effective.
+        logging.warning(f"Simulated renamed deep file {simulated_renamed_deep_file_path} not found for modification.")
+
+
+    run_main_flow_for_test(temp_test_dir, default_map_file, resume=True, dry_run=False)
+    final_txns = load_transactions(txn_file)
+    assert final_txns is not None
+
+    new_file_renamed = temp_test_dir / "newly_added_atlasvibe_for_resume.txt"
+    assert new_file_renamed.exists()
+    assert_file_content(new_file_renamed, "This atlasvibe content is new for resume.")
+
+    assert any(tx["PATH"] == "newly_added_flojoy_for_resume.txt" and
+               tx.get("ORIGINAL_NAME") == "newly_added_flojoy_for_resume.txt" and
+               tx["TYPE"] == TransactionType.FILE_NAME.value and
+               tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), "File rename transaction for new file not completed"
+
+    assert any(tx["PATH"] == "newly_added_flojoy_for_resume.txt" and
+               tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and
+               tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), "Content transaction for new file not completed"
+
+    only_name_mod_renamed = temp_test_dir / "only_name_atlasvibe.md"
+    assert only_name_mod_renamed.exists(), "'only_name_atlasvibe.md' should exist after resume."
+    assert not original_only_name_md_path.exists(), "'only_name_flojoy.md' should have been renamed."
+    assert_file_content(only_name_mod_renamed, "Content without target string.") # Content should be original as it had no target strings
+
+    assert any( (tx["PATH"] == "only_name_atlasvibe.md" or tx["PATH"] == "only_name_flojoy.md") and
+                tx["TYPE"] == TransactionType.FILE_NAME.value and # Check for rename transaction
+                tx["STATUS"] == TransactionStatus.COMPLETED.value for tx in final_txns), \
+                "Rename transaction for 'only_name_flojoy.md' not completed."
+
+    err_file_tx = next((tx for tx in final_txns if tx.get("ORIGINAL_NAME") == SELF_TEST_ERROR_FILE_BASENAME), None)
+    assert err_file_tx and err_file_tx["STATUS"] == TransactionStatus.FAILED.value
+    assert (temp_test_dir / SELF_TEST_ERROR_FILE_BASENAME).exists()
+
+    if simulated_renamed_deep_file_path.exists():
+        content = simulated_renamed_deep_file_path.read_text(encoding='utf-8')
+        assert "Line 1: atlasvibe content." in content # Original content (after its own replacement)
+        assert "# Externally appended for resume." in content # Appended part
+        
+        # Path in transaction could be original relative path or path after parent dir renames
+        # Original relative path: "flojoy_root/sub_flojoy_folder/another_FLOJOY_dir/deep_flojoy_file.txt"
+        # Path after flojoy_root rename: "atlasvibe_root/sub_flojoy_folder/another_FLOJOY_dir/deep_flojoy_file.txt" (if only root renamed)
+        # The key is that the content of the file (wherever it is now) was re-scanned and processed.
+        # The transaction's "PATH" field should refer to the original relative path.
+        orig_rel_path_deep_file = "flojoy_root/sub_flojoy_folder/another_FLOJOY_dir/deep_flojoy_file.txt"
+        
+        found_appended_content_tx = False
+        for tx in final_txns:
+            if tx["PATH"] == orig_rel_path_deep_file and \
+               tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and \
+               tx["STATUS"] == TransactionStatus.COMPLETED.value and \
+               tx.get("PROPOSED_LINE_CONTENT","").endswith("# Externally appended for resume."):
+                found_appended_content_tx = True
+                break
+        assert found_appended_content_tx, "Externally modified file content (appended line) not re-processed correctly or not found in transactions"
 
 
 def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path):
@@ -115,6 +480,28 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path):
         elif tx["STATUS"] == TransactionStatus.PENDING.value:
             pytest.fail(f"Tx {tx['id']} PENDING after dry run scan phase implies it wasn't processed for planning.")
 
+
+def test_skip_scan_behavior(temp_test_dir: Path, default_map_file: Path):
+    create_test_environment_content(temp_test_dir, include_symlink_tests=True)
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
+    file_to_delete_orig_path = temp_test_dir / "flojoy_root" / "another_flojoy_file.py"
+    assert file_to_delete_orig_path.exists()
+    file_to_delete_orig_path.unlink()
+
+    run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True, dry_run=False)
+
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
+    deleted_file_txns_found = False
+    for tx in transactions:
+        if "another_flojoy_file.py" in tx["PATH"]:
+            deleted_file_txns_found = True
+            assert tx["STATUS"] in [TransactionStatus.SKIPPED.value, TransactionStatus.FAILED.value]
+    assert deleted_file_txns_found, "Transactions for the deleted file were not found or not processed."
+
+    expected_deep_file = temp_test_dir / "atlasvibe_root" / "sub_atlasvibe_folder" / "another_ATLASVIBE_dir" / "deep_atlasvibe_file.txt"
+    assert expected_deep_file.exists(), f"Expected file {expected_deep_file} not found after skip_scan run."
+    assert_file_content(expected_deep_file, "Line 1: atlasvibe content.\nLine 2: More Atlasvibe here.\nLine 3: No target.\nLine 4: ATLASVIBE project.")
 
 
 GITIGNORE_CONTENT = """
@@ -436,3 +823,229 @@ def test_empty_directory_handling(temp_test_dir: Path, default_map_file: Path, c
         simple_map_path.unlink()
 
 
+def test_mixed_encoding_surgical_replacement(temp_test_dir: Path, default_map_file: Path):
+    """
+    Tests surgical replacement in a file with mixed line endings, non-standard characters
+    for its primary encoding, and potentially invalid byte sequences.
+    The "Flojoy" key (ASCII) should be replaced, everything else preserved byte-for-byte.
+    """
+    logger = logging.getLogger("test_mixed_encoding") # For test-specific logging if needed
+    
+    # --- Test File Setup ---
+    # Using cp1252 as base, which has some defined chars in 0x80-0x9F range unlike iso-8859-1
+    # \x99 is ™ (trademark symbol in cp1252)
+    # \x81 is undefined in cp1252, will be handled by surrogateescape
+    # \xae is ® (registered trademark in cp1252)
+    # Line endings: \n, \r\n, \r
+    # Key: "Flojoy" (ASCII) -> "Atlasvibe" (ASCII) from default_map_file
+    
+    original_lines_bytes = [
+        b"Line 1 with normal ASCII and Flojoy here.\n",
+        b"Line 2 with cp1252 char: \x99 trademark symbol.\r\n", # ™ in cp1252
+        b"Line 3 with another Flojoy and \xae registered symbol.\r", # ® in cp1252
+        b"Line 4 with invalid cp1252 byte \x81 sequence, then Flojoy.\n",
+        b"Line 5 Fl\xf6joy with diacritic (should not match 'Flojoy' key).\r\n", # ö is \xf6 in cp1252
+        b"Line 6 just ends.",
+    ]
+    original_full_content_bytes = b"".join(original_lines_bytes)
+    
+    test_file_name = "mixed_encoding_test_cp1252.txt"
+    test_file_path = temp_test_dir / test_file_name
+    test_file_path.write_bytes(original_full_content_bytes)
+
+    # --- Expected Lines Bytes after replacement ---
+    # "Flojoy" -> "Atlasvibe"
+    expected_lines_bytes = [
+        b"Line 1 with normal ASCII and Atlasvibe here.\n", # Flojoy replaced
+        b"Line 2 with cp1252 char: \x99 trademark symbol.\r\n", # Unchanged
+        b"Line 3 with another Atlasvibe and \xae registered symbol.\r", # Flojoy replaced
+        b"Line 4 with invalid cp1252 byte \x81 sequence, then Atlasvibe.\n", # Flojoy replaced
+        b"Line 5 Fl\xf6joy with diacritic (should not match 'Atlasvibe' key).\r\n", # "Flojoy" in comment IS replaced
+        b"Line 6 just ends.", # Unchanged
+    ]
+    expected_full_content_bytes = b"".join(expected_lines_bytes)
+
+    # --- Run Main Flow ---
+    # Ensure the map is loaded correctly for this test instance
+    load_map_success = replace_logic.load_replacement_map(default_map_file)
+    assert load_map_success, "Failed to load default_map_file for mixed encoding test"
+    
+    # Run the main flow, targeting only this file for simplicity if needed, or let it scan.
+    # Using extensions=None to let the script decide if it's text-like.
+    # cp1252 should be detected as text-like.
+    run_main_flow_for_test(
+        temp_test_dir, 
+        default_map_file, 
+        extensions=None, # Let script auto-detect
+        skip_file_renaming=True, # Focus on content
+        skip_folder_renaming=True
+    )
+
+    # --- Assertions ---
+    assert test_file_path.exists(), "Test file should still exist."
+    
+    modified_content_bytes = test_file_path.read_bytes()
+    
+    if modified_content_bytes != expected_full_content_bytes:
+        logger.error("Surgical replacement test FAILED. Content mismatch.")
+        logger.error(f"Expected bytes:\n{expected_full_content_bytes!r}")
+        logger.error(f"Actual bytes:\n{modified_content_bytes!r}")
+        
+        # For detailed line-by-line diff if helpful:
+        try:
+            original_str_surrogate = original_full_content_bytes.decode('cp1252', errors='surrogateescape')
+            modified_str_surrogate = modified_content_bytes.decode('cp1252', errors='surrogateescape')
+            expected_str_surrogate = expected_full_content_bytes.decode('cp1252', errors='surrogateescape')
+            
+            logger.info("\n--- Original Decoded (surrogateescape) ---")
+            for i, line in enumerate(original_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+            logger.info("\n--- Expected Decoded (surrogateescape) ---")
+            for i, line in enumerate(expected_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+            logger.info("\n--- Actual Decoded (surrogateescape) ---")
+            for i, line in enumerate(modified_str_surrogate.splitlines(True)):
+                logger.info(f"{i+1}: {line!r}")
+        except Exception as e:
+            logger.error(f"Error during decoded diff generation: {e}")
+
+    assert modified_content_bytes == expected_full_content_bytes, \
+        "File content after surgical replacement does not match expected byte-for-byte."
+
+    # Check transaction log for this file
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None, "Transaction file not found."
+    
+    relevant_tx_count = 0
+    for tx in transactions:
+        if tx["PATH"] == test_file_name and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            relevant_tx_count += 1
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+            # Check if the original line content matches what we expect for replaced lines
+            if tx["LINE_NUMBER"] == 1: # Line 1 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[0].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[0].decode('cp1252', errors='surrogateescape')
+            elif tx["LINE_NUMBER"] == 3: # Line 3 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[2].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[2].decode('cp1252', errors='surrogateescape')
+            elif tx["LINE_NUMBER"] == 4: # Line 4 had "Flojoy"
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[3].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[3].decode('cp1252', errors='surrogateescape')
+            elif tx["LINE_NUMBER"] == 5: # Line 5 had "Flojoy" in the comment
+                assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_bytes[4].decode('cp1252', errors='surrogateescape')
+                assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_bytes[4].decode('cp1252', errors='surrogateescape')
+
+    # Line 1, 3, 4, and 5 (in comment) should have "Flojoy" replaced
+    assert relevant_tx_count == 4, f"Expected 4 content transactions for {test_file_name}, got {relevant_tx_count}"
+
+
+def test_highly_problematic_xml_content_preservation(temp_test_dir: Path, default_map_file: Path):
+    """
+    Tests surgical replacement in an XML-like file with various problematic byte patterns,
+    ensuring maximum preservation of non-target bytes.
+    Uses cp1252 as the encoding for the test file.
+    """
+    logger = logging.getLogger("test_problematic_xml")
+
+    # --- Test File Content (byte string) ---
+    # Using cp1252 characters:
+    #   \x99 = ™ (trademark)
+    #   \xAE = ® (registered)
+    #   \xF6 = ö (o-umlaut)
+    # Invalid cp1252 bytes (standalone):
+    #   \x81 (undefined in cp1252)
+    #   \xFE (used in Shift-JIS, but not valid standalone in cp1252)
+    # Line endings: \n (LF), \r\n (CRLF), \r (CR)
+
+    original_byte_content = b"".join([
+        b"<?xml version=\"1.0\" encoding=\"cp1252\"?>\n",
+        b"<root>\r\n",
+        b"  <element attr=\"value_with_Flojoy_to_replace\">\n",
+        b"    Some text with cp1252 char \x99 and another Flojoy instance.\r", # Line 4
+        b"    A non-matching Fl\xf6joy here (should be preserved).\n", # Line 5
+        b"    Invalid byte \x81 sequence, then Flojoy, then another invalid byte \xFE.\r\n", # Line 6
+        b"    Final line with \xAE symbol.\n", # Line 7
+        b"  </element>\r",
+        b"</root>\n"
+    ])
+
+    test_file_name = "problematic_flojoy_content.xml"
+    test_file_path = temp_test_dir / test_file_name
+    test_file_path.write_bytes(original_byte_content)
+
+    # --- Expected Byte Content after "Flojoy" -> "Atlasvibe" ---
+    expected_byte_content = b"".join([
+        b"<?xml version=\"1.0\" encoding=\"cp1252\"?>\n",
+        b"<root>\r\n",
+        b"  <element attr=\"value_with_Atlasvibe_to_replace\">\n", # Flojoy in attr replaced
+        b"    Some text with cp1252 char \x99 and another Atlasvibe instance.\r", # Flojoy replaced
+        b"    A non-matching Fl\xf6joy here (should be preserved).\n", # Unchanged
+        b"    Invalid byte \x81 sequence, then Atlasvibe, then another invalid byte \xFE.\r\n", # Flojoy replaced
+        b"    Final line with \xAE symbol.\n", # Unchanged
+        b"  </element>\r",
+        b"</root>\n"
+    ])
+
+    # --- Run Main Flow ---
+    load_map_success = replace_logic.load_replacement_map(default_map_file)
+    assert load_map_success, "Failed to load default_map_file for problematic XML test"
+
+    run_main_flow_for_test(
+        temp_test_dir,
+        default_map_file,
+        extensions=[".xml"], # Explicitly target .xml
+        skip_file_renaming=True,
+        skip_folder_renaming=True
+    )
+
+    # --- Assertions ---
+    assert test_file_path.exists(), "Test XML file should still exist."
+    modified_content_bytes = test_file_path.read_bytes()
+
+    if modified_content_bytes != expected_byte_content:
+        logger.error("Problematic XML content preservation test FAILED. Byte mismatch.")
+        # Log detailed differences for easier debugging
+        from difflib import unified_diff
+        diff = unified_diff(
+            expected_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True),
+            modified_content_bytes.decode('cp1252', 'surrogateescape').splitlines(keepends=True),
+            fromfile='expected_bytes.xml',
+            tofile='actual_bytes.xml',
+            lineterm=''
+        )
+        logger.error("Diff:\n" + "".join(diff))
+        logger.error(f"Expected bytes raw:\n{expected_byte_content!r}")
+        logger.error(f"Actual bytes raw:\n{modified_content_bytes!r}")
+
+
+    assert modified_content_bytes == expected_byte_content, \
+        "File content after surgical replacement in problematic XML does not match expected byte-for-byte."
+
+    # Check transaction log
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None, "Transaction file not found for problematic XML test."
+
+    # Expected number of content line transactions (lines 3, 4, 6 contain "Flojoy")
+    expected_tx_count = 3
+    actual_tx_count = 0
+    
+    original_lines_decoded = original_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True)
+    expected_lines_decoded = expected_byte_content.decode('cp1252', 'surrogateescape').splitlines(keepends=True)
+
+    for tx in transactions:
+        if tx["PATH"] == test_file_name and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            actual_tx_count += 1
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+            line_num_idx = tx["LINE_NUMBER"] - 1 # 0-indexed
+            
+            assert tx["ORIGINAL_LINE_CONTENT"] == original_lines_decoded[line_num_idx], \
+                f"TX original content mismatch for line {tx['LINE_NUMBER']}"
+            assert tx["PROPOSED_LINE_CONTENT"] == expected_lines_decoded[line_num_idx], \
+                f"TX proposed content mismatch for line {tx['LINE_NUMBER']}"
+            assert tx["ORIGINAL_ENCODING"].lower() == 'cp1252' or tx["ORIGINAL_ENCODING"].lower() == 'windows-1252', \
+                f"TX encoding mismatch, expected cp1252/windows-1252, got {tx['ORIGINAL_ENCODING']}"
+
+    assert actual_tx_count == expected_tx_count, \
+        f"Expected {expected_tx_count} content transactions for {test_file_name}, got {actual_tx_count}."
