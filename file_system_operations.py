@@ -56,6 +56,8 @@
 #   6. Fallback to DEFAULT_ENCODING_FALLBACK.
 # - Modified functions to accept an optional logger argument.
 # - Replaced `print` statements for warnings/errors with logger calls.
+# - `get_file_encoding`: Refined logic to prioritize `cp1252` over `latin1` if both can decode a sample when `latin1` is suggested by chardet.
+# - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -78,6 +80,7 @@ import errno
 from striprtf.striprtf import rtf_to_text
 from isbinary import is_binary_file
 import logging
+import builtins # For patching open in tests
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
 
@@ -125,56 +128,84 @@ def _log_fs_op_message(level: int, message: str, logger: logging.Logger | None =
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging.Logger | None = None) -> str | None:
     if file_path.suffix.lower() == '.rtf':
-        return 'latin-1'
-    
+        return 'latin-1' # RTF is typically ASCII/latin1 based for control words
+
     try:
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
         if not raw_data:
-            return DEFAULT_ENCODING_FALLBACK
+            return DEFAULT_ENCODING_FALLBACK # Default for empty files
 
-        detected_by_chardet = chardet.detect(raw_data)
-        chardet_encoding: str | None = detected_by_chardet.get('encoding')
-        
-        normalized_chardet_encoding_candidate = None
-        if chardet_encoding:
-            norm_low = chardet_encoding.lower()
-            if norm_low in ('windows-1252', '1252'):
-                normalized_chardet_encoding_candidate = 'cp1252'
-            elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
-                normalized_chardet_encoding_candidate = 'latin1' 
-            else:
-                normalized_chardet_encoding_candidate = norm_low
-        
-        if normalized_chardet_encoding_candidate:
-            try:
-                raw_data.decode(normalized_chardet_encoding_candidate)
-                return normalized_chardet_encoding_candidate
-            except (UnicodeDecodeError, LookupError):
-                pass # Chardet's primary suggestion (normalized) failed
-
+        # 1. Try UTF-8 first as it's very common
         try:
             raw_data.decode('utf-8')
             return 'utf-8'
         except UnicodeDecodeError:
-            pass 
+            pass # Not UTF-8 or not clean UTF-8
+
+        # 2. Use chardet as a strong hint
+        detected_by_chardet = chardet.detect(raw_data)
+        chardet_encoding: str | None = detected_by_chardet.get('encoding')
         
-        # Try cp1252 if not already tried and failed via chardet normalization
-        if normalized_chardet_encoding_candidate != 'cp1252':
+        normalized_chardet_candidate = None
+        if chardet_encoding:
+            norm_low = chardet_encoding.lower()
+            if norm_low in ('windows-1252', '1252'):
+                normalized_chardet_candidate = 'cp1252'
+            elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
+                normalized_chardet_candidate = 'latin1'
+            else:
+                normalized_chardet_candidate = norm_low
+        
+        # If chardet suggests cp1252 and it decodes, use it.
+        if normalized_chardet_candidate == 'cp1252':
+            try:
+                raw_data.decode('cp1252')
+                return 'cp1252'
+            except (UnicodeDecodeError, LookupError):
+                pass
+        
+        # If chardet suggests latin1 and it decodes:
+        # also check if cp1252 decodes it. If so, prefer cp1252 as it's a superset.
+        if normalized_chardet_candidate == 'latin1':
+            try:
+                raw_data.decode('latin1') # Check if latin1 itself works
+                # If latin1 worked, see if cp1252 also works (cp1252 is a superset for relevant parts)
+                try:
+                    raw_data.decode('cp1252')
+                    return 'cp1252' # Prefer cp1252 if both work
+                except (UnicodeDecodeError, LookupError):
+                    return 'latin1' # cp1252 failed, but latin1 worked
+            except (UnicodeDecodeError, LookupError):
+                pass # latin1 failed
+
+        # If chardet suggested something else (not utf-8, cp1252, latin1) and it decodes
+        if normalized_chardet_candidate and \
+           normalized_chardet_candidate not in ['utf-8', 'cp1252', 'latin1']:
+            try:
+                raw_data.decode(normalized_chardet_candidate)
+                return normalized_chardet_candidate
+            except (UnicodeDecodeError, LookupError):
+                pass
+        
+        # 3. Fallback explicit checks if chardet was unhelpful or its suggestion failed
+        # Try cp1252 if not already successfully returned
+        if normalized_chardet_candidate != 'cp1252': # Avoid re-trying if chardet suggested and it failed
             try:
                 raw_data.decode('cp1252')
                 return 'cp1252'
             except UnicodeDecodeError:
                 pass
         
-        # Try latin1 if not already tried and failed via chardet normalization
-        if normalized_chardet_encoding_candidate != 'latin1':
+        # Try latin1 if not already successfully returned
+        if normalized_chardet_candidate != 'latin1': # Avoid re-trying
             try:
                 raw_data.decode('latin1')
                 return 'latin1'
             except UnicodeDecodeError:
                 pass
             
+        _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined beyond basic fallbacks. Chardet: {detected_by_chardet}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
         return DEFAULT_ENCODING_FALLBACK
             
     except Exception as e:
@@ -407,7 +438,7 @@ def load_transactions(json_file_path: Path, logger: logging.Logger | None = None
                 _log_fs_op_message(logging.WARNING, f"Failed to decode JSON from {path_to_try}: {jde}", logger)
             except Exception as e:
                 _log_fs_op_message(logging.WARNING, f"Failed to load transactions from {path_to_try}: {e}", logger)
-    if loaded_data is None:
+    if loaded_data is None and json_file_path.exists(): # Only log error if primary file existed and failed
         _log_fs_op_message(logging.ERROR, f"Could not load valid transactions from {json_file_path} or its backup.", logger)
     return None
 
@@ -648,11 +679,18 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    if resume or skip_scan:
+    # Initialize path_translation_map for resume mode based on non-dry_run completed renames
+    if resume:
         for tx in transactions:
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
+               tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
                tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
+                # Ensure ORIGINAL_NAME exists, as it's crucial for replace_occurrences
+                if "ORIGINAL_NAME" in tx:
+                    path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
+                else:
+                    _log_fs_op_message(logging.WARNING, f"Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot populate path_translation_map accurately for this entry.", logger)
+
 
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
@@ -663,9 +701,13 @@ def execute_all_transactions(
     max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
     current_overall_retry_attempt = 0
     
-    if resume or skip_scan:
+    # Reset DRY_RUN or FAILED (if resuming) transactions to PENDING
+    # This must happen *after* path_translation_map is initialized for resume,
+    # but *before* execution loop if we want to re-attempt FAILED ones.
+    if resume or skip_scan: # If skip_scan, we are executing a plan that might be from a dry run
         for tx_item_for_reset in transactions:
             current_tx_status_str = tx_item_for_reset.get("STATUS")
+            # If it's a dry run completion, reset to pending for actual execution
             if current_tx_status_str == TransactionStatus.COMPLETED.value and \
                tx_item_for_reset.get("ERROR_MESSAGE") == "DRY_RUN":
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
@@ -673,6 +715,7 @@ def execute_all_transactions(
                 tx_item_for_reset.pop('timestamp_processed', None)
                 tx_item_for_reset.pop('timestamp_next_retry', None)
                 tx_item_for_reset['retry_count'] = 0
+            # If resuming and it was previously FAILED, reset to PENDING to retry
             elif resume and current_tx_status_str == TransactionStatus.FAILED.value:
                 _log_fs_op_message(logging.INFO, f"Resuming FAILED tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})", logger)
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
