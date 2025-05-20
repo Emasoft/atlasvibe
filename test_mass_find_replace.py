@@ -42,6 +42,10 @@
 #   - `test_main_cli_missing_dependency`
 # - Added `test_edge_case_map_run` to verify behavior with edge case map.
 # - Added `test_skip_scan_with_previous_dry_run_renames` to verify skip_scan logic.
+# - Added `test_highly_problematic_xml_content_preservation` to test surgical replacement
+#   on a file with mixed line endings, cp1252 encoding, valid and invalid bytes for
+#   that encoding, and XML-like structures, ensuring byte-for-byte preservation
+#   except for the targeted ASCII key replacement.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -64,7 +68,7 @@ from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, S
 from file_system_operations import (
     load_transactions, TransactionStatus, TransactionType,
     BINARY_MATCHES_LOG_FILE, SELF_TEST_ERROR_FILE_BASENAME,
-    save_transactions, _is_retryable_os_error
+    save_transactions, _is_retryable_os_error, get_file_encoding
 )
 import replace_logic
 import file_system_operations # For mocking its functions
@@ -849,3 +853,96 @@ def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_ma
         if tx["TYPE"] != TransactionType.FILE_CONTENT_LINE.value or "flojoy" in tx["ORIGINAL_LINE_CONTENT"].lower(): # Only check relevant tx
             assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction {tx['id']} ({tx['PATH']}) should be COMPLETED."
             assert tx.get("ERROR_MESSAGE") is None or tx.get("ERROR_MESSAGE") == "DRY_RUN" # DRY_RUN might persist if not cleared by exec logic for some reason
+
+def test_highly_problematic_xml_content_preservation(temp_test_dir: Path, default_map_file: Path, caplog):
+    caplog.set_level(logging.INFO)
+    problem_file_name = "problematic_cp1252.xml"
+    problem_file_path = temp_test_dir / problem_file_name
+
+    # Content construction
+    # Using surrogate escapes for bytes that are invalid in cp1252 but we want to preserve
+    # 0x81 is \uDC81, 0xFE is \uDCFE
+    # cp1252 specific: ™ is 0x99 (\u2122 in Unicode but maps to 0x99 in cp1252), ® is 0xAE (\u00AE)
+    # Flöjoy: ö is 0xF6 in cp1252
+    original_unicode_content = (
+        "<root>\n"
+        "  <item value='Flojoy'>Content with Flojoy to replace.</item>\r\n"
+        "  <other attr='Fl\u00F6joy'>Fl\u00F6joy with diacritic (should not change).</other>\r" # Flöjoy
+        "  <special>Chars \u2122 and \u00AE.</special>\n" # ™ and ®
+        "  <invalid>Invalid bytes: \uDC81 and \uDCFE here.</invalid>\n"
+        "  <nested><deep>More Flojoy</deep></nested>\n"
+        "</root>"
+    )
+    original_bytes_cp1252 = original_unicode_content.encode('cp1252', errors='surrogateescape')
+    problem_file_path.write_bytes(original_bytes_cp1252)
+
+    # Verify encoding detection (optional, but good for sanity)
+    detected_encoding = get_file_encoding(problem_file_path, logger=caplog)
+    assert detected_encoding == 'cp1252', f"Expected cp1252 encoding, got {detected_encoding}"
+
+    # Run the main flow - content modification only
+    run_main_flow_for_test(
+        temp_test_dir, default_map_file,
+        extensions=[".xml"], # Ensure it processes .xml
+        skip_file_renaming=True, skip_folder_renaming=True, skip_content=False
+    )
+
+    # Construct expected bytes
+    # Replace "Flojoy" with "Atlasvibe" in the original byte sequence
+    # This is a bit manual but ensures we're checking byte-level preservation
+    expected_bytes_cp1252 = original_bytes_cp1252.replace(b"Flojoy", b"Atlasvibe")
+    
+    # Assertions
+    assert problem_file_path.exists(), "Problematic file should still exist."
+    modified_bytes = problem_file_path.read_bytes()
+
+    # Byte-for-byte comparison
+    assert modified_bytes == expected_bytes_cp1252, \
+        f"Byte-for-byte comparison failed.\nExpected:\n{expected_bytes_cp1252!r}\nGot:\n{modified_bytes!r}"
+
+    # Check transaction log
+    txn_file_path = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    assert txn_file_path.exists(), "Transaction file should exist."
+    transactions = load_transactions(txn_file_path)
+    assert transactions is not None, "Transactions should be loadable."
+
+    content_tx_found_count = 0
+    for tx in transactions:
+        if tx["PATH"] == problem_file_name and tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+            content_tx_found_count += 1
+            assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+            assert tx["ORIGINAL_ENCODING"] == "cp1252"
+            
+            # Check original and proposed lines
+            original_line_tx_unicode = tx["ORIGINAL_LINE_CONTENT"]
+            proposed_line_tx_unicode = tx["PROPOSED_LINE_CONTENT"]
+
+            if "Flojoy" in original_line_tx_unicode:
+                assert "Atlasvibe" in proposed_line_tx_unicode
+                # Ensure the rest of the line, including special chars and line endings, is preserved
+                # This requires careful reconstruction if we were to check unicode string equality here,
+                # but the byte-for-byte check of the whole file is more robust.
+                # For example, the line with "Flojoy" also has "\r\n"
+                if "Content with Flojoy to replace." in original_line_tx_unicode:
+                     assert original_line_tx_unicode.endswith("</item>\r\n")
+                     assert proposed_line_tx_unicode.endswith("</item>\r\n")
+            
+            if "Fl\u00F6joy" in original_line_tx_unicode: # Flöjoy
+                assert "Fl\u00F6joy" in proposed_line_tx_unicode # Should not change
+            
+            if "\uDC81" in original_line_tx_unicode: # Invalid byte surrogate
+                 assert "\uDC81" in proposed_line_tx_unicode # Should be preserved
+
+    assert content_tx_found_count == 2, f"Expected 2 content transactions for {problem_file_name}, got {content_tx_found_count}"
+    
+    # Ensure "Flöjoy" (diacritic) was not replaced
+    assert b"Fl\xf6joy" in modified_bytes, "Diacritic version 'Flöjoy' should not have been replaced."
+    # Ensure special cp1252 chars are present
+    assert b"\x99" in modified_bytes # ™
+    assert b"\xae" in modified_bytes # ®
+    # Ensure invalid bytes are present
+    assert b"\x81" in modified_bytes
+    assert b"\xfe" in modified_bytes
+    # Ensure mixed line endings are implicitly preserved by byte-for-byte check
+    # (e.g. original_bytes_cp1252 contained \n, \r\n, \r)
+    # The overall byte check covers this.
