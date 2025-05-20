@@ -38,15 +38,13 @@
 #   The modified file's bytes must exactly match the expected bytes (original file with only the target line surgically replaced and re-encoded).
 #   If not, the transaction fails, and the original file is preserved.
 # - Fixed Ruff E701 linting errors in `_execute_content_line_transaction` by moving `unlink` calls to new lines.
-# - `get_file_encoding`: Further refined encoding detection logic.
-#   1. RTF special case.
-#   2. Empty file check.
-#   3. Chardet detection.
-#   4. If chardet suggests a common single-byte Western encoding (cp1252, latin1, etc.) AND it decodes the sample, use it.
-#   5. Else, if chardet suggests UTF-8 (or UTF-8 decodes the sample if chardet's primary was different and failed), use UTF-8.
-#   6. Else, if chardet had another suggestion not yet tried that decodes the sample, use it.
-#   7. Else, try cp1252 as a general fallback if not already tried.
-#   8. Default to DEFAULT_ENCODING_FALLBACK.
+# - `get_file_encoding`: Revised logic again.
+#   1. RTF & Empty file checks.
+#   2. Chardet. If it suggests a common Western encoding AND it decodes the sample, use it.
+#   3. Else, try UTF-8. If it decodes, use it.
+#   4. Else, if chardet had another (non-Western, non-UTF-8) suggestion AND it decodes, use it.
+#   5. Else, try cp1252 as a general fallback if not already tried and failed.
+#   6. Default to DEFAULT_ENCODING_FALLBACK.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -130,11 +128,12 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
                 raw_data.decode(normalized_chardet_encoding_candidate)
                 return normalized_chardet_encoding_candidate
             except (UnicodeDecodeError, LookupError):
-                pass # This specific common encoding failed, fall through
+                pass 
 
         # 3. Try UTF-8 (if not already chardet's successful suggestion for a common western encoding)
         #    Also, if chardet suggested UTF-8, this will try it.
-        if normalized_chardet_encoding_candidate != 'utf-8':
+        if not (normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate == 'utf-8' and \
+                normalized_chardet_encoding_candidate in common_single_byte_western_encodings):
             try:
                 raw_data.decode('utf-8')
                 return 'utf-8'
@@ -157,7 +156,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
                 pass
         
         # 5. As a further fallback for Western-like content, try cp1252 directly if not already attempted and failed.
-        if normalized_chardet_encoding_candidate != 'cp1252': 
+        if not (normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate == 'cp1252'): 
             try:
                 raw_data.decode('cp1252')
                 return 'cp1252'
