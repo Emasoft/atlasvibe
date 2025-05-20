@@ -37,7 +37,7 @@ from pathlib import Path
 import os
 import shutil
 import time
-from typing import Any, Optional, Dict # Keep Any if specifically needed, Optional for custom_ignore_path_str, Dict for mock_tx_call_counts
+from typing import Any, Optional, Dict, Union # Keep Any if specifically needed, Optional for custom_ignore_path_str, Dict for mock_tx_call_counts
 import logging
 import json
 from unittest.mock import patch, MagicMock
@@ -282,8 +282,10 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # Original name: "complex_map_key_withcontrolchars_original_name.txt"
     # Map key: "key_with\tcontrol\nchars" (canonical: "keywithcontrolchars") -> "Value_for_key_with_controls_VAL"
     # The filename contains "keywithcontrolchars", so it should be renamed.
+    original_control_chars_filename = "complex_map_key_withcontrolchars_original_name.txt"
     expected_renamed_control_chars_filename = "complex_map_Value_for_key_with_controls_VAL_original_name.txt"
     control_chars_key_renamed_filename_path = temp_test_dir / expected_renamed_control_chars_filename
+    assert not (temp_test_dir / original_control_chars_filename).exists(), f"Original file '{original_control_chars_filename}' should have been renamed."
     assert control_chars_key_renamed_filename_path.is_file(), f"File '{expected_renamed_control_chars_filename}' not found. Original name might not have been replaced."
     assert_file_content(control_chars_key_renamed_filename_path, "Content for complex map control key filename test.")
     
