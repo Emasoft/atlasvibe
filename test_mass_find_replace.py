@@ -23,6 +23,9 @@
 # - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
 # - Added debug prints to show original keys and their stripped versions used for test data generation.
 # - Stripped keys used for test data generation are now also NFC normalized.
+# - `test_complex_map_run`: Corrected assertion for `control_chars_key_orig_filename`.
+#   The file *should* be renamed because its canonicalized name part matches a canonicalized key.
+#   The assertion now checks for the new, replaced name.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -276,9 +279,13 @@ def test_complex_map_run(temp_test_dir: Path, complex_map_file: Path):
     # Content was created with stripped key "charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames"
     assert_file_content(special_chars_file, "This line contains SpecialCharsKeyMatched_VAL to be replaced.")
 
-    control_chars_key_orig_filename = temp_test_dir / "complex_map_key_withcontrolchars_original_name.txt"
-    assert control_chars_key_orig_filename.is_file() # This file's name should not change
-    assert_file_content(control_chars_key_orig_filename, "Content for complex map control key filename test.")
+    # Original name: "complex_map_key_withcontrolchars_original_name.txt"
+    # Map key: "key_with\tcontrol\nchars" (canonical: "keywithcontrolchars") -> "Value_for_key_with_controls_VAL"
+    # The filename contains "keywithcontrolchars", so it should be renamed.
+    expected_renamed_control_chars_filename = "complex_map_Value_for_key_with_controls_VAL_original_name.txt"
+    control_chars_key_renamed_filename_path = temp_test_dir / expected_renamed_control_chars_filename
+    assert control_chars_key_renamed_filename_path.is_file(), f"File '{expected_renamed_control_chars_filename}' not found. Original name might not have been replaced."
+    assert_file_content(control_chars_key_renamed_filename_path, "Content for complex map control key filename test.")
     
     control_chars_key_content_file = temp_test_dir / "complex_map_content_with_key_with_controls.txt"
     assert control_chars_key_content_file.is_file()
