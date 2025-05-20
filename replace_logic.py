@@ -210,7 +210,7 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         # This should ideally not happen if the regex is built correctly from the map keys.
         if _DEBUG_REPLACE_LOGIC:
             print(f"  WARN: Key '{lookup_key}' NOT FOUND in _RAW_REPLACEMENT_MAPPING. This is unexpected.")
-            print(f"  Map keys for comparison (showing first 5 and lengths):")
+            print("  Map keys for comparison (showing first 5 and lengths):")
             for i, (k_map, v_map) in enumerate(_RAW_REPLACEMENT_MAPPING.items()):
                 if i < 5:
                     print(f"    MapKey: '{k_map}' (len {len(k_map)}, ords={[ord(c) for c in k_map]})")
