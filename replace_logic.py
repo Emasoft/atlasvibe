@@ -44,6 +44,8 @@
 # - `_actual_replace_callback`: Simplified to use `match.group(0)` directly as the lookup key.
 #   This is based on the understanding that the regex patterns are built from canonical keys
 #   and applied to an NFC-normalized string, so `match.group(0)` should be the canonical key.
+# - Added extensive debug logging to `load_replacement_map` and `_actual_replace_callback`
+#   to trace key canonicalization and map lookups, including character ordinals.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -62,6 +64,11 @@ _COMPILED_PATTERN_FOR_SCAN: re.Pattern | None = None # For initial scan. Now cas
 _MAPPING_LOADED: bool = False
 _SORTED_RAW_KEYS_FOR_REPLACE: list[str] = [] # Normalized stripped keys, sorted by length desc.
 _COMPILED_PATTERN_FOR_ACTUAL_REPLACE: re.Pattern | None = None # For actual replacement. Now case-sensitive.
+
+# --- START DEBUG CONFIG ---
+# Set to True to enable verbose debug prints in this module
+_DEBUG_REPLACE_LOGIC = False
+# --- END DEBUG CONFIG ---
 
 def strip_diacritics(text: str) -> str:
     if not isinstance(text, str):
@@ -103,69 +110,74 @@ def load_replacement_map(mapping_file_path: Path) -> bool:
         return False
 
     temp_raw_mapping: dict[str, str] = {}
-    for k, v_original in raw_mapping_from_json.items():
-        if not isinstance(k, str) or not isinstance(v_original, str):
-            print(f"Warning: Skipping invalid key-value pair (must be strings): {k}:{v_original}")
-            continue
-        temp_stripped_key = strip_control_characters(strip_diacritics(k))
-        normalized_stripped_key_case_preserved = unicodedata.normalize('NFC', temp_stripped_key)
-        
-        if not normalized_stripped_key_case_preserved:
-            print(f"Warning: Original key '{k}' became empty after stripping diacritics/controls. Skipping.")
+    if _DEBUG_REPLACE_LOGIC: print(f"DEBUG MAP LOAD: Loading map from {mapping_file_path.name}")
+    for k_orig_json, v_original in raw_mapping_from_json.items():
+        if not isinstance(k, str) or not isinstance(v_original, str): # k was not defined, should be k_orig_json
+            print(f"Warning: Skipping invalid key-value pair (must be strings): {k_orig_json}:{v_original}")
             continue
         
-        temp_raw_mapping[normalized_stripped_key_case_preserved] = v_original
+        # Canonicalization process for keys
+        temp_stripped_key_no_controls = strip_control_characters(k_orig_json)
+        temp_stripped_key_no_diacritics = strip_diacritics(temp_stripped_key_no_controls)
+        canonical_key = unicodedata.normalize('NFC', temp_stripped_key_no_diacritics)
+        
+        if not canonical_key: # Check if canonical key is empty
+            if _DEBUG_REPLACE_LOGIC: print(f"  DEBUG MAP LOAD: Original key '{k_orig_json}' (len {len(k_orig_json)}) became empty after canonicalization. Skipping.")
+            continue
+        
+        if _DEBUG_REPLACE_LOGIC:
+            print(f"  DEBUG MAP LOAD: JSON Key='{k_orig_json}' (len {len(k_orig_json)}, ords={[ord(c) for c in k_orig_json]})")
+            print(f"    -> NoControls='{temp_stripped_key_no_controls}' (len {len(temp_stripped_key_no_controls)}, ords={[ord(c) for c in temp_stripped_key_no_controls]})")
+            print(f"    -> NoDiacritics='{temp_stripped_key_no_diacritics}' (len {len(temp_stripped_key_no_diacritics)}, ords={[ord(c) for c in temp_stripped_key_no_diacritics]})")
+            print(f"    -> CanonicalKey (NFC)='{canonical_key}' (len {len(canonical_key)}, ords={[ord(c) for c in canonical_key]})")
+            print(f"    -> Maps to Value: '{v_original}'")
+
+        temp_raw_mapping[canonical_key] = v_original
+
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
-    # ---- START DEBUG PRINT (Map Loading Details) ----
-    # print(f"DEBUG (replace_logic.py): For map {mapping_file_path.name}:")
-    # for k_orig_json, v_val_json in raw_mapping_from_json.items(): # Iterate original JSON keys
-    #     s_key_internal = strip_control_characters(strip_diacritics(k_orig_json)) # How it's processed
-    #     normalized_s_key_internal = unicodedata.normalize('NFC', s_key_internal)
-    #     print(f"  Original JSON Key: '{k_orig_json}' -> Stripped (pre-NFC): '{s_key_internal}' -> Normalized Stripped for map logic: '{normalized_s_key_internal}' -> Maps to Value in JSON: '{v_val_json}'. In internal map as: '{normalized_s_key_internal}': '{_RAW_REPLACEMENT_MAPPING.get(normalized_s_key_internal, 'NOT_IN_FINAL_MAP_OR_EMPTY_STRIPPED_KEY')}'")
-    # print(f"  Final _RAW_REPLACEMENT_MAPPING internal state: {_RAW_REPLACEMENT_MAPPING}")
-    # ---- END DEBUG PRINT (Map Loading Details) ----
+    if _DEBUG_REPLACE_LOGIC:
+        print(f"DEBUG MAP LOAD: _RAW_REPLACEMENT_MAPPING populated with {len(_RAW_REPLACEMENT_MAPPING)} entries.")
+        # for i, (k_map,v_map) in enumerate(_RAW_REPLACEMENT_MAPPING.items()):
+        #     print(f"  Map Entry {i}: Key='{k_map}' (len={len(k_map)}, ords={[ord(c) for c in k_map]}) -> Value='{v_map}'")
+
 
     if not _RAW_REPLACEMENT_MAPPING:
         print("Warning: No valid replacement rules found in the mapping file after initial loading/stripping.")
-        _MAPPING_LOADED = True
+        _MAPPING_LOADED = True # Still mark as loaded, just empty
         return True
 
-    all_stripped_keys_for_recursion_check = set(_RAW_REPLACEMENT_MAPPING.keys())
-    for key_stripped_case_preserved, value_original_from_map in _RAW_REPLACEMENT_MAPPING.items(): # key_stripped_case_preserved is already normalized here
+    all_canonical_keys_for_recursion_check = set(_RAW_REPLACEMENT_MAPPING.keys())
+    for key_canonical, value_original_from_map in _RAW_REPLACEMENT_MAPPING.items():
         value_stripped_for_check = strip_control_characters(strip_diacritics(value_original_from_map))
         normalized_value_stripped_for_check = unicodedata.normalize('NFC', value_stripped_for_check)
-        if normalized_value_stripped_for_check in all_stripped_keys_for_recursion_check:
-            original_json_key_for_error = key_stripped_case_preserved # This key is already normalized
-            for orig_k, orig_v in raw_mapping_from_json.items():
-                # Compare against the normalized form of the original JSON key
-                if unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(orig_k))) == key_stripped_case_preserved and orig_v == value_original_from_map:
-                    original_json_key_for_error = orig_k # Report the true original key
+        if normalized_value_stripped_for_check in all_canonical_keys_for_recursion_check:
+            original_json_key_for_error_report = key_canonical 
+            for orig_k_json, orig_v_json in raw_mapping_from_json.items():
+                temp_s_k = strip_control_characters(strip_diacritics(orig_k_json))
+                norm_s_k = unicodedata.normalize('NFC', temp_s_k)
+                if norm_s_k == key_canonical and orig_v_json == value_original_from_map:
+                    original_json_key_for_error_report = orig_k_json
                     break
-            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error}', its stripped form '{value_stripped_for_check}' which normalizes to '{normalized_value_stripped_for_check}' is also a stripped key). This is disallowed. Aborting.")
+            print(f"ERROR: Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error_report}', its canonical form '{normalized_value_stripped_for_check}' is also a canonical key). This is disallowed. Aborting.")
             _RAW_REPLACEMENT_MAPPING = {}
             return False
 
-    pattern_keys_for_scan: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
-    pattern_keys_for_scan.sort(key=len, reverse=True)
-    try:
-        _COMPILED_PATTERN_FOR_SCAN = re.compile(r'(' + r'|'.join(pattern_keys_for_scan) + r')')
-    except re.error as e:
-        print(f"ERROR: Could not compile SCAN regex pattern: {e}. Regex tried: '{'(' + '|'.join(pattern_keys_for_scan) + ')'}'")
-        _RAW_REPLACEMENT_MAPPING = {}
-        return False
-
-    _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True)
+    pattern_keys_for_scan_and_replace: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
+    pattern_keys_for_scan_and_replace.sort(key=len, reverse=True) # Longest first for both patterns
     
+    _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True) # Keep this for reference if needed
+
+    combined_pattern_str = r'(' + r'|'.join(pattern_keys_for_scan_and_replace) + r')'
+    
+    if _DEBUG_REPLACE_LOGIC:
+        print(f"DEBUG MAP LOAD: Combined Regex Pattern String: {combined_pattern_str!r}")
+
     try:
-        # ---- START DEBUG PRINT (Regex String for ACTUAL_REPLACE - Commented Out) ----
-        # regex_string_for_actual_replace = r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')'
-        # print(f"DEBUG_REGEX_COMPILE: Compiling ACTUAL REPLACE pattern string: {regex_string_for_actual_replace!r}")
-        # ---- END DEBUG PRINT (Regex String for ACTUAL_REPLACE - Commented Out) ----
-        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = re.compile(r'(' + r'|'.join(map(re.escape, _SORTED_RAW_KEYS_FOR_REPLACE)) + r')')
+        _COMPILED_PATTERN_FOR_SCAN = re.compile(combined_pattern_str)
+        _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = _COMPILED_PATTERN_FOR_SCAN # Use the same compiled pattern
     except re.error as e:
-        print(f"ERROR: Could not compile ACTUAL REPLACE regex pattern: {e}")
+        print(f"ERROR: Could not compile regex pattern: {e}. Regex tried: '{combined_pattern_str}'")
         _RAW_REPLACEMENT_MAPPING = {}
-        _COMPILED_PATTERN_FOR_SCAN = None
         return False
         
     _MAPPING_LOADED = True
@@ -175,40 +187,67 @@ def get_scan_pattern() -> re.Pattern | None:
     return _COMPILED_PATTERN_FOR_SCAN if _MAPPING_LOADED else None
 
 def get_raw_stripped_keys() -> list[str]:
+    # This returns the canonical keys, sorted by length.
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    # The match.group(0) is a substring from the NFC-normalized input string.
-    # It was matched by a regex pattern that was an escaped version of a canonical key.
-    # Therefore, match.group(0) should directly be a canonical key.
+    # `match.group(0)` is the actual text segment matched in the input string.
+    # The input string to `re.sub` in `replace_occurrences` is NFC normalized.
+    # The regex pattern `_COMPILED_PATTERN_FOR_ACTUAL_REPLACE` is built from
+    # canonical keys (NFC, stripped diacritics, stripped controls).
+    # Therefore, `match.group(0)` IS one of these canonical keys.
     lookup_key = match.group(0)
     
-    # ---- START DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
-    # print(f"DEBUG_CALLBACK_HIT: Matched raw input segment (from NFC-normalized string): '{lookup_key}'")
-    # ---- END DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
-        
-    if lookup_key in _RAW_REPLACEMENT_MAPPING:
-        # print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}' for key '{lookup_key}'")
-        return _RAW_REPLACEMENT_MAPPING[lookup_key]
-        
-    # This fallback should ideally not be hit if the regex is correctly constructed
-    # from all keys in _RAW_REPLACEMENT_MAPPING.
-    # print(f"Warning: _actual_replace_callback fallback for key '{lookup_key}' (from matched segment '{match.group(0)}')")
-    return match.group(0) # Return the original matched segment if no replacement found
+    if _DEBUG_REPLACE_LOGIC:
+        print(f"DEBUG_CALLBACK: Matched segment (should be canonical key)='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})")
+
+    replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
+    
+    if replacement_value is not None:
+        if _DEBUG_REPLACE_LOGIC: print(f"  Found in map. Replacing with: '{replacement_value}'")
+        return replacement_value
+    else:
+        # This should ideally not happen if the regex is built correctly from the map keys.
+        if _DEBUG_REPLACE_LOGIC:
+            print(f"  WARN: Key '{lookup_key}' NOT FOUND in _RAW_REPLACEMENT_MAPPING. This is unexpected.")
+            print(f"  Map keys for comparison (showing first 5 and lengths):")
+            for i, (k_map, v_map) in enumerate(_RAW_REPLACEMENT_MAPPING.items()):
+                if i < 5:
+                    print(f"    MapKey: '{k_map}' (len {len(k_map)}, ords={[ord(c) for c in k_map]})")
+                elif i == 5:
+                    print(f"    ... and {len(_RAW_REPLACEMENT_MAPPING)-5} more keys.")
+                    break
+            # Detailed comparison if a specific key is expected:
+            # expected_key_debug = "useleSs_diacRiticS" # Example
+            # if expected_key_debug in _RAW_REPLACEMENT_MAPPING:
+            #     print(f"    Comparing with expected map key '{expected_key_debug}':")
+            #     print(f"    Lookup: '{lookup_key}' ({[ord(c) for c in lookup_key]})")
+            #     print(f"    MapKey: '{expected_key_debug}' ({[ord(c) for c in expected_key_debug]})")
+            #     print(f"    Equal? {lookup_key == expected_key_debug}")
+
+        return lookup_key # Return original matched segment
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
         return input_string
-    if not isinstance(input_string, str):
+    if not isinstance(input_string, str): # Should not happen with type hints, but good check
         return input_string
 
-    normalized_input_string = unicodedata.normalize('NFC', input_string)
+    # The regex patterns are built from canonical keys (NFC, stripped).
+    # Therefore, re.sub should operate on a string that is also canonicalized in the same way
+    # for these patterns to match.
+    # However, the surgical principle requires preserving non-matching parts of the *original* string.
+    # The current compromise is to NFC normalize the input string.
+    # The callback then needs to re-canonicalize the matched segment if the regex is broad.
+    # BUT, our regex is built from *already canonicalized* keys.
+    # So, it will only find occurrences of these canonical keys in the nfc_input_string.
+    
+    nfc_input_string = unicodedata.normalize('NFC', input_string)
+    
+    # if _DEBUG_REPLACE_LOGIC:
+    #     search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
+    #     print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}")
+    #     if search_result:
+    #         print(f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}")
 
-    # ---- START DEBUG PRINT (replace_occurrences search - Commented Out) ----
-    # search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input_string)
-    # print(f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {normalized_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}")
-    # if search_result:
-    #     print(f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}")
-    # ---- END DEBUG PRINT (replace_occurrences search - Commented Out) ----
-
-    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, normalized_input_string)
+    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, nfc_input_string)

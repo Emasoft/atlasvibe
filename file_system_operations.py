@@ -7,11 +7,10 @@
 #   - Refined logic:
 #     1. Handle RTF.
 #     2. Read sample. If empty, default.
-#     3. Use chardet.
-#     4. If chardet's encoding is a common Western single-byte (cp1252, windows-1252, iso-8859-1, latin-1) AND decodes sample, use it.
-#     5. Else, try UTF-8. If decodes sample, use it.
-#     6. Else, if chardet had an initial suggestion (not already tried and failed) AND it decodes sample, use it.
-#     7. Else, fallback to DEFAULT_ENCODING_FALLBACK.
+#     3. Try UTF-8 first. If decodes sample, use it.
+#     4. Else, use chardet. If chardet's encoding decodes sample, use it (after normalizing common aliases).
+#     5. Else, try cp1252 as a fallback.
+#     6. Else, use DEFAULT_ENCODING_FALLBACK.
 # - `scan_directory_for_occurrences`: Changed `item_abs_path.read_text(..., newline='')`
 #   to use `with open(item_abs_path, 'r', ..., newline='') as f: f.read()`
 #   to resolve the "unexpected keyword argument 'newline'" error seen in test logs.
@@ -86,51 +85,37 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         if not raw_data:
             return DEFAULT_ENCODING_FALLBACK
 
-        detected_by_chardet = chardet.detect(raw_data)
-        chardet_encoding: str | None = detected_by_chardet.get('encoding')
-        
-        common_single_byte_western = ['cp1252', 'windows-1252', 'iso-8859-1', 'latin1', 'latin-1', 'iso8859-15']
-        # Aliases for cp1252
-        if chardet_encoding and chardet_encoding.lower() in ('windows-1252', '1252'):
-            chardet_encoding = 'cp1252'
-        # Aliases for latin-1
-        if chardet_encoding and chardet_encoding.lower() in ('latin_1', 'iso-8859-1', 'iso8859_1'):
-            chardet_encoding = 'latin1'
-
-        # 1. Try chardet's suggestion if it's a common Western encoding and decodes the sample
-        if chardet_encoding and chardet_encoding.lower() in common_single_byte_western:
-            try:
-                raw_data.decode(chardet_encoding)
-                return chardet_encoding
-            except (UnicodeDecodeError, LookupError):
-                pass 
-
-        # 2. Try UTF-8 with high priority
+        # 1. Try UTF-8 first
         try:
             raw_data.decode('utf-8')
             return 'utf-8'
         except UnicodeDecodeError:
-            pass
+            pass # Not UTF-8, proceed
 
-        # 3. If UTF-8 failed, and chardet had an initial suggestion (that wasn't a common western one or failed earlier), try it now.
-        #    This handles cases like GB18030, etc., that chardet might pick up.
-        if chardet_encoding and chardet_encoding.lower() not in common_single_byte_western and chardet_encoding.lower() != 'utf-8':
-            try:
+        # 2. Use chardet
+        detected_by_chardet = chardet.detect(raw_data)
+        chardet_encoding: str | None = detected_by_chardet.get('encoding')
+        
+        if chardet_encoding:
+            norm_chardet_enc = chardet_encoding.lower()
+            # Normalize common aliases
+            if norm_chardet_enc in ('windows-1252', '1252'): chardet_encoding = 'cp1252'
+            elif norm_chardet_enc in ('latin_1', 'iso-8859-1', 'iso8859_1'): chardet_encoding = 'latin1'
+            # Add more aliases if needed
+
+            try: # Try chardet's (potentially normalized) suggestion
                 raw_data.decode(chardet_encoding)
                 return chardet_encoding
             except (UnicodeDecodeError, LookupError):
-                pass
-        
-        # 4. As a further fallback for Western-like content if UTF-8 and specific chardet failed,
-        #    try cp1252 directly if not already attempted and failed.
-        #    (This covers cases where chardet might have suggested ASCII or something else that failed, but it's actually cp1252)
-        if not (chardet_encoding and chardet_encoding.lower() == 'cp1252'): # if cp1252 wasn't chardet's primary (and failed)
-            try:
-                raw_data.decode('cp1252')
-                return 'cp1252'
-            except UnicodeDecodeError:
-                pass
-        
+                pass # Chardet's suggestion failed, fall through
+
+        # 3. If UTF-8 and chardet's suggestion failed, try cp1252 as a common fallback
+        try:
+            raw_data.decode('cp1252')
+            return 'cp1252'
+        except UnicodeDecodeError:
+            pass
+            
         return DEFAULT_ENCODING_FALLBACK
             
     except Exception:
