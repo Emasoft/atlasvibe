@@ -34,6 +34,9 @@
 #   encodings if it decodes the sample. Then try UTF-8. Then try other chardet guesses.
 #   Then try cp1252 as a general fallback. This aims to improve cp1252 detection.
 # - `get_file_encoding`: Corrected F821 Undefined name error by using the correct variable name `common_single_byte_western_encodings`.
+# - `_execute_content_line_transaction`: Implemented strict byte-for-byte verification after writing to a temporary file.
+#   The modified file's bytes must exactly match the expected bytes (original file with only the target line surgically replaced and re-encoded).
+#   If not, the transaction fails, and the original file is preserved.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -106,7 +109,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
             norm_low = chardet_encoding.lower()
             if norm_low in ('windows-1252', '1252'):
                 normalized_chardet_encoding = 'cp1252'
-            elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'): # Added iso-8859-15
+            elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
                 normalized_chardet_encoding = 'latin1' 
             else:
                 normalized_chardet_encoding = norm_low
@@ -119,8 +122,9 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
             except (UnicodeDecodeError, LookupError):
                 pass 
 
-        # 3. Try UTF-8 (if not already chardet's successful suggestion)
-        if normalized_chardet_encoding != 'utf-8': # Avoid re-trying if chardet already suggested utf-8 and it worked
+        # 3. Try UTF-8 (if not already chardet's successful suggestion for a common western encoding)
+        if not (normalized_chardet_encoding and normalized_chardet_encoding == 'utf-8' and \
+                normalized_chardet_encoding in common_single_byte_western_encodings): # Avoid re-trying if chardet already suggested utf-8 and it worked
             try:
                 raw_data.decode('utf-8')
                 return 'utf-8'
@@ -128,17 +132,16 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
                 pass 
 
         # 4. If chardet had an initial suggestion (and it wasn't one already tried and failed as a common western or UTF-8), try it now.
-        # This handles cases like GB18030, etc., that chardet might pick up.
         if chardet_encoding and chardet_encoding != normalized_chardet_encoding and \
            chardet_encoding.lower() not in (common_single_byte_western_encodings + ['utf-8']):
             try:
-                raw_data.decode(chardet_encoding) # Use original chardet suggestion if it's something else
+                raw_data.decode(chardet_encoding) 
                 return chardet_encoding
             except (UnicodeDecodeError, LookupError):
                 pass
         
         # 5. As a further fallback for Western-like content, try cp1252 directly if not already attempted and failed.
-        if normalized_chardet_encoding != 'cp1252': # Check if cp1252 was already tried via chardet (and failed)
+        if not (normalized_chardet_encoding and normalized_chardet_encoding == 'cp1252'): 
             try:
                 raw_data.decode('cp1252')
                 return 'cp1252'
@@ -497,14 +500,14 @@ def _execute_content_line_transaction(
 ) -> tuple[TransactionStatus, str | None, bool]:
     orig_rel_path = tx_item["PATH"]
     line_num = tx_item["LINE_NUMBER"]
-    orig_line_content = tx_item["ORIGINAL_LINE_CONTENT"]
+    orig_line_content_from_tx = tx_item["ORIGINAL_LINE_CONTENT"] # This was decoded with surrogateescape
     encoding = tx_item["ORIGINAL_ENCODING"] or DEFAULT_ENCODING_FALLBACK
     is_rtf = tx_item.get("IS_RTF", False)
 
-    actual_new_line_content = replace_occurrences(orig_line_content)
-    tx_item["PROPOSED_LINE_CONTENT"] = actual_new_line_content
+    actual_new_line_content_unicode = replace_occurrences(orig_line_content_from_tx)
+    tx_item["PROPOSED_LINE_CONTENT"] = actual_new_line_content_unicode
 
-    if actual_new_line_content == orig_line_content:
+    if actual_new_line_content_unicode == orig_line_content_from_tx:
         return TransactionStatus.SKIPPED, "Line content unchanged by replacement logic.", False
     try:
         current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
@@ -519,80 +522,90 @@ def _execute_content_line_transaction(
     if dry_run:
         return TransactionStatus.COMPLETED, "DRY_RUN", False
 
-    if is_rtf:
+    if is_rtf: # RTF content modification is complex and not byte-exact for replacements
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
 
     # Strict encoding check for the new content
     can_orig_be_strictly_encoded = False
     try:
-        orig_line_content.encode(encoding, 'strict')
+        orig_line_content_from_tx.encode(encoding, 'strict')
         can_orig_be_strictly_encoded = True
     except UnicodeEncodeError:
-        pass # Original already had issues from a strict perspective
+        pass 
 
     can_new_be_strictly_encoded = False
     try:
-        actual_new_line_content.encode(encoding, 'strict')
+        actual_new_line_content_unicode.encode(encoding, 'strict')
         can_new_be_strictly_encoded = True
     except UnicodeEncodeError:
         pass
     
     if can_orig_be_strictly_encoded and not can_new_be_strictly_encoded:
-        # Original line was strictly encodable, but the new line (after replacement) is not.
-        # This means the replacement value itself introduced characters not representable in the encoding.
         return TransactionStatus.FAILED, f"Replacement introduced characters unencodable in '{encoding}' (strict check). Original line was strictly encodable.", False
 
     temp_file_path: Path | None = None
+    original_file_bytes: bytes | None = None
     try:
         _ensure_within_sandbox(current_abs_path, root_dir, f"content write for {current_abs_path.name}")
-        temp_file_path = current_abs_path.with_name(f"{current_abs_path.name}.{uuid.uuid4()}.tmp")
-        line_processed_flag = False
-        # Read with newline='' to preserve original line endings
-        with open(current_abs_path,'r',encoding=encoding,errors='surrogateescape',newline='') as inf, \
-             open(temp_file_path,'w',encoding=encoding,errors='surrogateescape',newline='') as outf:
-            current_line_idx = 0
-            for current_line_in_file in inf:
-                current_line_idx += 1
-                if current_line_idx == line_num:
-                    line_processed_flag = True
-                    # Compare with original line content from transaction (which also had preserved newlines if scan was correct)
-                    if current_line_in_file == orig_line_content:
-                        outf.write(actual_new_line_content)
-                    else:
-                        # If content changed since scan, write current line and abort for this file to be safe
-                        outf.write(current_line_in_file)
-                        # Write rest of file as is
-                        for rest_line in inf:
-                            outf.write(rest_line)
-                        raise RuntimeError(f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content)}, Found: {repr(current_line_in_file)}")
-                else:
-                    outf.write(current_line_in_file)
-            if not line_processed_flag and line_num > current_line_idx: # Should not happen if scan was correct
-                raise RuntimeError(f"Line number {line_num} is out of bounds for file {current_abs_path} (file has {current_line_idx} lines).")
+        original_file_bytes = current_abs_path.read_bytes() # Read original for potential revert and for byte-exact check
         
-        if line_processed_flag: # Ensure the target line was actually found and processed
-            shutil.copymode(current_abs_path, temp_file_path)
-            os.replace(temp_file_path, current_abs_path)
-            temp_file_path = None # Prevent deletion in finally
-            return TransactionStatus.COMPLETED, None, False
-        # This case (line_processed_flag is False but no error raised) should be unlikely
-        return TransactionStatus.FAILED, "Content update logic error: target line not processed as expected.", False
+        temp_file_path = current_abs_path.with_name(f"{current_abs_path.name}.{uuid.uuid4()}.tmp")
+        
+        # Reconstruct the full file content with the single line replaced, then compare bytes
+        full_original_content_unicode = original_file_bytes.decode(encoding, errors='surrogateescape')
+        lines_unicode = full_original_content_unicode.splitlines(keepends=True)
+        if not lines_unicode and full_original_content_unicode: # Handle file with content but no newlines
+            lines_unicode = [full_original_content_unicode]
+
+        if not (0 <= line_num - 1 < len(lines_unicode)):
+            return TransactionStatus.FAILED, f"Line number {line_num} out of bounds for file {current_abs_path} (has {len(lines_unicode)} lines). File may have changed.", False
+
+        # Verify that the line from the transaction still matches the current line in the file
+        # This check is crucial because orig_line_content_from_tx was from the scan phase
+        current_line_in_file_decoded = lines_unicode[line_num - 1]
+        if current_line_in_file_decoded != orig_line_content_from_tx:
+            return TransactionStatus.FAILED, f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content_from_tx)}, Found: {repr(current_line_in_file_decoded)}", False
+
+        lines_unicode[line_num - 1] = actual_new_line_content_unicode
+        expected_new_full_content_unicode = "".join(lines_unicode)
+        
+        # Write to temp file using surrogateescape to preserve original unmappable bytes
+        with open(temp_file_path, 'w', encoding=encoding, errors='surrogateescape', newline='') as outf:
+            outf.write(expected_new_full_content_unicode)
+        
+        # Byte-for-byte verification
+        temp_file_bytes = temp_file_path.read_bytes()
+        expected_new_bytes = expected_new_full_content_unicode.encode(encoding, errors='surrogateescape')
+
+        if temp_file_bytes != expected_new_bytes:
+            if temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+            return TransactionStatus.FAILED, f"Byte-for-byte verification failed for {current_abs_path}. Temp file content did not match expected byte reconstruction.", False
+
+        shutil.copymode(current_abs_path, temp_file_path)
+        os.replace(temp_file_path, current_abs_path)
+        temp_file_path = None 
+        return TransactionStatus.COMPLETED, None, False
+
     except OSError as e:
+        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
         if _is_retryable_os_error(e):
             return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
         return TransactionStatus.FAILED, f"OS error: {e}", False
     except SandboxViolationError as sve:
+        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
-    except RuntimeError as rte: # Catch our specific "content changed" or "line out of bounds"
+    except RuntimeError as rte: 
+        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, str(rte), False
     except Exception as e:
+        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, f"Unexpected content update error for {current_abs_path}: {e}", False
     finally:
-        if temp_file_path and temp_file_path.exists():
+        if temp_file_path and temp_file_path.exists(): # Should only happen if an error occurred after temp file creation but before os.replace
             try:
                 temp_file_path.unlink(missing_ok=True)
-            except OSError: # nosec
-                pass # Best effort to clean up
+            except OSError: 
+                pass 
 
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path, dry_run: bool, resume: bool,
