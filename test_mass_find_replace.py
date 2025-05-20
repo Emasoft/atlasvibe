@@ -52,6 +52,7 @@
 # - `test_main_flow_resume_stat_error`: Made `Path.stat` mock conditional to only affect the target file for the resume stat check.
 # - `run_cli_command`: Corrected `script_path` to use `Path(__file__).resolve().parent / "mass_find_replace.py"` assuming test and script are siblings.
 # - `test_edge_case_map_run`: Corrected assertion for content of `renamed_mykey_name_file` to expect content replacement.
+# - Added `import builtins` to fix F821 linting error.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -69,6 +70,7 @@ import json
 from unittest.mock import patch, MagicMock, mock_open
 import sys
 import subprocess # For CLI tests
+import builtins # Added to fix F821
 
 from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, SCRIPT_NAME, YELLOW, RESET
 from file_system_operations import (
