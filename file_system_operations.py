@@ -33,6 +33,7 @@
 # - `get_file_encoding`: Further refined logic. Prioritize chardet's guess for common single-byte
 #   encodings if it decodes the sample. Then try UTF-8. Then try other chardet guesses.
 #   Then try cp1252 as a general fallback. This aims to improve cp1252 detection.
+# - `get_file_encoding`: Corrected F821 Undefined name error by using the correct variable name `common_single_byte_western_encodings`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -111,12 +112,12 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
                 normalized_chardet_encoding = norm_low
 
         # 2. If chardet suggests a common Western encoding, and it decodes the sample, prioritize it.
-        if normalized_chardet_encoding and normalized_chardet_encoding in common_single_byte_western:
+        if normalized_chardet_encoding and normalized_chardet_encoding in common_single_byte_western_encodings:
             try:
                 raw_data.decode(normalized_chardet_encoding)
                 return normalized_chardet_encoding
             except (UnicodeDecodeError, LookupError):
-                pass # This specific common encoding failed, fall through
+                pass 
 
         # 3. Try UTF-8 (if not already chardet's successful suggestion)
         if normalized_chardet_encoding != 'utf-8': # Avoid re-trying if chardet already suggested utf-8 and it worked
@@ -129,7 +130,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         # 4. If chardet had an initial suggestion (and it wasn't one already tried and failed as a common western or UTF-8), try it now.
         # This handles cases like GB18030, etc., that chardet might pick up.
         if chardet_encoding and chardet_encoding != normalized_chardet_encoding and \
-           chardet_encoding.lower() not in (common_single_byte_western + ['utf-8']):
+           chardet_encoding.lower() not in (common_single_byte_western_encodings + ['utf-8']):
             try:
                 raw_data.decode(chardet_encoding) # Use original chardet suggestion if it's something else
                 return chardet_encoding
