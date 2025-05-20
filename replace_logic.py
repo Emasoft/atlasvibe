@@ -37,6 +37,10 @@
 #   The debug print for `replace_occurrences` was updated accordingly.
 # - Commented out verbose debug prints related to map loading, regex compilation,
 #   callback hits, and search results within `replace_occurrences` to reduce verbosity.
+# - `_actual_replace_callback`: Reverted to canonicalizing `match.group(0)` for lookup.
+#   The matched text from `re.sub` (even on an NFC-normalized string with NFC-normalized patterns)
+#   should be re-canonicalized (strip diacritics, strip controls, NFC normalize) before
+#   being used as a key to look up in `_RAW_REPLACEMENT_MAPPING`. This ensures robustness.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -171,31 +175,25 @@ def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    # matched_text_in_input is a result of a regex match (built from NFC-normalized, stripped keys)
-    # against an NFC-normalized input string. So, it should already be in the correct
-    # (NFC-normalized, stripped key) form for direct lookup.
-    lookup_key = match.group(0)
+    # The match.group(0) is a substring from the NFC-normalized input string.
+    # It needs to be canonicalized (strip diacritics, strip controls, NFC normalize again, though NFC on an already NFC string is idempotent)
+    # to ensure it matches the canonical form of keys stored in _RAW_REPLACEMENT_MAPPING.
+    matched_text_segment = match.group(0)
+    temp_stripped_key = strip_control_characters(strip_diacritics(matched_text_segment))
+    lookup_key = unicodedata.normalize('NFC', temp_stripped_key)
     
     # ---- START DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
-    # print(f"DEBUG_CALLBACK_HIT: Matched raw input (from NFC-normalized string): '{lookup_key}'")
+    # print(f"DEBUG_CALLBACK_HIT: Matched raw input segment (from NFC-normalized string): '{matched_text_segment}', Canonicalized Lookup Key: '{lookup_key}'")
     # ---- END DEBUG PRINT (_actual_replace_callback HIT - Commented Out) ----
         
-    # ---- START DEBUG PRINT (_actual_replace_callback PROCESSED - Already Commented) ----
-    # print(f"DEBUG_CALLBACK_PROCESSED: Lookup Key (from match.group(0)): '{lookup_key!r}'")
-    # print(f"DEBUG_CALLBACK_PROCESSED: Is lookup_key '{lookup_key!r}' in _RAW_REPLACEMENT_MAPPING? {lookup_key in _RAW_REPLACEMENT_MAPPING}")
-    # if lookup_key in _RAW_REPLACEMENT_MAPPING:
-    #     print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}'")
-    # else:
-    #     # This case should be rare if regex is built correctly from map keys
-    #     print(f"DEBUG_CALLBACK_RETURNING: Original matched text because key '{lookup_key!r}' not in map. Map keys: {list(_RAW_REPLACEMENT_MAPPING.keys())}")
-    # ---- END DEBUG PRINT (_actual_replace_callback PROCESSED - Already Commented) ----
-    
     if lookup_key in _RAW_REPLACEMENT_MAPPING:
+        # print(f"DEBUG_CALLBACK_RETURNING: Value '{_RAW_REPLACEMENT_MAPPING[lookup_key]}' for key '{lookup_key}'")
         return _RAW_REPLACEMENT_MAPPING[lookup_key]
         
     # This fallback should ideally not be hit if the regex is correctly constructed
-    # print(f"Warning: _actual_replace_callback fallback for '{lookup_key}'")
-    return lookup_key
+    # from all keys in _RAW_REPLACEMENT_MAPPING and if canonicalization is consistent.
+    # print(f"Warning: _actual_replace_callback fallback for canonicalized key '{lookup_key}' (from matched segment '{matched_text_segment}')")
+    return matched_text_segment # Return the original matched segment if no replacement found (should be rare)
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
