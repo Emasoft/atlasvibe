@@ -37,6 +37,7 @@
 # - `_execute_content_line_transaction`: Implemented strict byte-for-byte verification after writing to a temporary file.
 #   The modified file's bytes must exactly match the expected bytes (original file with only the target line surgically replaced and re-encoded).
 #   If not, the transaction fails, and the original file is preserved.
+# - Fixed Ruff E701 linting errors in `_execute_content_line_transaction` by moving `unlink` calls to new lines.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -578,7 +579,8 @@ def _execute_content_line_transaction(
         expected_new_bytes = expected_new_full_content_unicode.encode(encoding, errors='surrogateescape')
 
         if temp_file_bytes != expected_new_bytes:
-            if temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+            if temp_file_path.exists():
+                temp_file_path.unlink(missing_ok=True)
             return TransactionStatus.FAILED, f"Byte-for-byte verification failed for {current_abs_path}. Temp file content did not match expected byte reconstruction.", False
 
         shutil.copymode(current_abs_path, temp_file_path)
@@ -587,18 +589,22 @@ def _execute_content_line_transaction(
         return TransactionStatus.COMPLETED, None, False
 
     except OSError as e:
-        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+        if temp_file_path and temp_file_path.exists():
+            temp_file_path.unlink(missing_ok=True)
         if _is_retryable_os_error(e):
             return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
         return TransactionStatus.FAILED, f"OS error: {e}", False
     except SandboxViolationError as sve:
-        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+        if temp_file_path and temp_file_path.exists():
+            temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, f"SandboxViolation: {sve}", False
     except RuntimeError as rte: 
-        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+        if temp_file_path and temp_file_path.exists():
+            temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, str(rte), False
     except Exception as e:
-        if temp_file_path and temp_file_path.exists(): temp_file_path.unlink(missing_ok=True)
+        if temp_file_path and temp_file_path.exists():
+            temp_file_path.unlink(missing_ok=True)
         return TransactionStatus.FAILED, f"Unexpected content update error for {current_abs_path}: {e}", False
     finally:
         if temp_file_path and temp_file_path.exists(): # Should only happen if an error occurred after temp file creation but before os.replace
