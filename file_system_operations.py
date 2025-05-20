@@ -45,6 +45,15 @@
 #   4. Else, if chardet had another (non-Western, non-UTF-8) suggestion AND it decodes, use it.
 #   5. Else, try cp1252 as a general fallback if not already tried and failed.
 #   6. Default to DEFAULT_ENCODING_FALLBACK.
+# - `get_file_encoding`: Final refined logic:
+#   1. RTF & Empty file checks.
+#   2. Chardet. If suggestion exists:
+#      a. Normalize aliases (cp1252, latin1).
+#      b. Try decoding with this normalized chardet suggestion. If success, return it.
+#   3. If chardet failed or no suggestion: Try UTF-8. If success, return it.
+#   4. If still no encoding: Try cp1252. If success, return it.
+#   5. If still no encoding: Try latin1. If success, return it.
+#   6. Fallback to DEFAULT_ENCODING_FALLBACK.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -106,60 +115,46 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240) -> str | None:
         if not raw_data:
             return DEFAULT_ENCODING_FALLBACK
 
-        # 1. Use chardet as a primary hint
+        # Attempt 1: Chardet's primary suggestion (with alias normalization)
         detected_by_chardet = chardet.detect(raw_data)
         chardet_encoding: str | None = detected_by_chardet.get('encoding')
         
-        common_single_byte_western_encodings = ['cp1252', 'windows-1252', 'iso-8859-1', 'latin1', 'latin-1', 'iso8859-15']
-        
-        normalized_chardet_encoding_candidate = None
         if chardet_encoding:
             norm_low = chardet_encoding.lower()
             if norm_low in ('windows-1252', '1252'):
-                normalized_chardet_encoding_candidate = 'cp1252'
+                chardet_encoding_to_try = 'cp1252'
             elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
-                normalized_chardet_encoding_candidate = 'latin1' 
+                chardet_encoding_to_try = 'latin1' 
             else:
-                normalized_chardet_encoding_candidate = norm_low
-
-        # 2. If chardet suggests a common Western encoding, and it decodes the sample, prioritize it.
-        if normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate in common_single_byte_western_encodings:
+                chardet_encoding_to_try = norm_low
+            
             try:
-                raw_data.decode(normalized_chardet_encoding_candidate)
-                return normalized_chardet_encoding_candidate
+                raw_data.decode(chardet_encoding_to_try)
+                return chardet_encoding_to_try
             except (UnicodeDecodeError, LookupError):
-                pass 
+                pass # Chardet's primary suggestion (normalized) failed
 
-        # 3. Try UTF-8 (if not already chardet's successful suggestion for a common western encoding)
-        #    Also, if chardet suggested UTF-8, this will try it.
-        if not (normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate == 'utf-8' and \
-                normalized_chardet_encoding_candidate in common_single_byte_western_encodings):
+        # Attempt 2: UTF-8 (if not already successfully tried via chardet)
+        if not (chardet_encoding and chardet_encoding.lower() == 'utf-8'):
             try:
                 raw_data.decode('utf-8')
                 return 'utf-8'
             except UnicodeDecodeError:
                 pass 
-        elif normalized_chardet_encoding_candidate == 'utf-8': # Chardet suggested UTF-8
-             try:
-                raw_data.decode('utf-8')
-                return 'utf-8'
-             except UnicodeDecodeError:
-                pass # Chardet's UTF-8 suggestion failed, fall through
 
-        # 4. If chardet had an initial suggestion (and it wasn't one already tried and failed as a common western or UTF-8), try it now.
-        if chardet_encoding and chardet_encoding != normalized_chardet_encoding_candidate and \
-           chardet_encoding.lower() not in (common_single_byte_western_encodings + ['utf-8']):
-            try:
-                raw_data.decode(chardet_encoding) 
-                return chardet_encoding
-            except (UnicodeDecodeError, LookupError):
-                pass
-        
-        # 5. As a further fallback for Western-like content, try cp1252 directly if not already attempted and failed.
-        if not (normalized_chardet_encoding_candidate and normalized_chardet_encoding_candidate == 'cp1252'): 
+        # Attempt 3: cp1252 (if not already successfully tried via chardet)
+        if not (chardet_encoding and chardet_encoding.lower() in ('cp1252', 'windows-1252')):
             try:
                 raw_data.decode('cp1252')
                 return 'cp1252'
+            except UnicodeDecodeError:
+                pass
+        
+        # Attempt 4: latin1 (if not already successfully tried via chardet)
+        if not (chardet_encoding and chardet_encoding.lower() in ('latin1', 'latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15')):
+            try:
+                raw_data.decode('latin1')
+                return 'latin1'
             except UnicodeDecodeError:
                 pass
             
@@ -573,12 +568,16 @@ def _execute_content_line_transaction(
             lines_unicode = [full_original_content_unicode]
 
         if not (0 <= line_num - 1 < len(lines_unicode)):
+            if temp_file_path.exists():
+                temp_file_path.unlink(missing_ok=True)
             return TransactionStatus.FAILED, f"Line number {line_num} out of bounds for file {current_abs_path} (has {len(lines_unicode)} lines). File may have changed.", False
 
         # Verify that the line from the transaction still matches the current line in the file
         # This check is crucial because orig_line_content_from_tx was from the scan phase
         current_line_in_file_decoded = lines_unicode[line_num - 1]
         if current_line_in_file_decoded != orig_line_content_from_tx:
+            if temp_file_path.exists():
+                temp_file_path.unlink(missing_ok=True)
             return TransactionStatus.FAILED, f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content_from_tx)}, Found: {repr(current_line_in_file_decoded)}", False
 
         lines_unicode[line_num - 1] = actual_new_line_content_unicode
