@@ -1,77 +1,9 @@
 # tests/test_mass_find_replace.py
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `test_mixed_encoding_surgical_replacement`: Corrected `expected_lines_bytes` for line 5.
-#   The string "Flojoy" within the comment `(should not match 'Flojoy' key)` IS a target
-#   for replacement by the default map, so it should become "Atlasvibe".
-# - `create_test_environment_content`:
-#   - Corrected deep path creation to be under `flojoy_root`.
-#   - For `use_complex_map`:
-#     - Changed `diacritic_test_folder_ȕsele̮Ss_diá͡cRiti̅cS` to `useless_diacritics_folder` (using stripped key for matching).
-#     - Changed `file_with_diacritics_ȕsele̮Ss_diá͡cRiti̅cS.txt` to `useless_diacritics_file.txt` (using stripped key for matching).
-#     - Content for the above file now uses `useless_diacritics` (stripped key).
-#     - Changed `file_with_spaces_The spaces will not be ignored.md` to `The spaces will not be ignored_file.md`.
-#     - Content for `complex_map_content_with_key_with_controls.txt` now uses `keywithcontrolchars` (stripped key).
-#     - Content for `special_chars_in_content_test.txt` now uses `charactersnotallowedinpathswillbeescapedwhensearchedinfilenamesandfoldernames` (stripped key).
-#   - For `include_precision_test_file`:
-#     - Changed "FLÖJOY_DIACRITIC" to "FLOJOY_DIACRITIC" (stripped key) in content.
-#     - Changed "key\twith\ncontrol" to "keywithcontrol" (stripped key) in content.
-#   - These changes aim to create file/folder names and content that literally contain the stripped version of the keys
-#     from the complex/precision maps, allowing the current `replace_logic.py` regex to match them.
-# - Refactored multiple statements on single lines to comply with E701 and E702 linting rules.
-# - Modernized type hints (selectively, keeping Union/Optional in assert_file_content as per user diff note).
-# - Imported strip_diacritics and strip_control_characters from replace_logic.
-# - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
-# - Added debug prints to show original keys and their stripped versions used for test data generation.
-# - Stripped keys used for test data generation are now also NFC normalized.
-# - `test_complex_map_run`: Corrected assertion for `control_chars_key_orig_filename`.
-#   The file *should* be renamed because its canonicalized name part matches a canonicalized key.
-#   The assertion now checks for the new, replaced name.
-# - Added new tests for `main_flow` and `main_cli` to increase coverage:
-#   - `test_main_flow_ignore_file_read_error`
-#   - `test_main_flow_ignore_pattern_compile_error`
-#   - `test_main_flow_prompt_user_cancels`
-#   - `test_main_flow_prompt_warning_empty_map_complex_skips`
-#   - `test_main_flow_resume_load_transactions_returns_none`
-#   - `test_main_flow_resume_load_transactions_returns_empty`
-#   - `test_main_flow_resume_stat_error`
-#   - `test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan`
-#   - `test_main_flow_scan_finds_nothing_actionable_with_map`
-#   - `test_main_cli_negative_timeout`
-#   - `test_main_cli_small_positive_timeout`
-#   - `test_main_cli_verbose_flag`
-#   - `test_main_cli_missing_dependency`
-# - Added `test_edge_case_map_run` to verify behavior with edge case map.
-# - Added `test_skip_scan_with_previous_dry_run_renames` to verify skip_scan logic.
-# - Added `test_highly_problematic_xml_content_preservation` to test surgical replacement
-#   on a file with mixed line endings, cp1252 encoding, valid and invalid bytes for
-#   that encoding, and XML-like structures, ensuring byte-for-byte preservation
-#   except for the targeted ASCII key replacement.
-# - `test_main_flow_ignore_file_read_error`: Made `builtins.open` mock conditional to only affect the ignore file.
-# - `test_main_flow_prompt_user_cancels`, `test_main_flow_prompt_warning_empty_map_complex_skips`: Changed assertions to use `caplog.text`.
-# - `test_main_flow_resume_load_transactions_returns_none`, `test_main_flow_resume_load_transactions_returns_empty`: Changed `assert_called_once` to `assert mock_load.call_count > 0`.
-# - `test_main_flow_resume_stat_error`: Made `Path.stat` mock conditional to only affect the target file for the resume stat check, and to avoid recursion with `resolve()`.
-# - `run_cli_command`: Corrected `SCRIPT_PATH_FOR_CLI_TESTS` to be relative to the project root (parent of tests dir).
-# - `test_edge_case_map_run`: Corrected assertion for content of `renamed_mykey_name_file` to expect content replacement.
-# - Added `import builtins` to fix F821 linting error.
-# - Corrected `TypeError: 'bool' object is not iterable` for caplog assertions by using `any(expected_msg in record.message for record in caplog.records)`.
-# - `test_main_cli_small_positive_timeout`: Changed CLI arg to "0.5" and ensured `mass_find_replace.py` handles `type=float` for timeout.
-# - `test_main_cli_missing_dependency`: Changed to patch `sys.exit` and call `main_cli()` directly.
-# - `test_edge_case_map_run`: Corrected expected renamed filename for `content_mykey_file` to `edge_case_content_with_MyKeyValue_VAL_controls.txt`.
-# - `test_main_flow_resume_stat_error`: Refined mock_stat_conditional to prevent recursion by using a re-entry guard.
-# - `SCRIPT_PATH_FOR_CLI_TESTS`: Changed from `parent.parent` to `parent` assuming `test_mass_find_replace.py` is in the project root.
-# - `test_main_cli_missing_dependency`: Changed to use `patch('builtins.__import__')` for more reliable simulation of missing modules.
-# - `test_edge_case_map_run`: Corrected assertion for content of `renamed_content_controls_file`. The content "My\nKey" should NOT be replaced by the rule for canonical "MyKey".
-# - `test_main_flow_resume_stat_error`: Changed `nonlocal _MOCK_STAT_CALLED_GUARD` to `global _MOCK_STAT_CALLED_GUARD` in `mock_stat_conditional`.
-# - `test_main_cli_small_positive_timeout`: Changed assertion to check `res_float.stderr` for Prefect logs.
-# - `test_main_cli_missing_dependency`: Relaxed assertion for `printed_error` to check for general error and only one of the missing modules.
-# - `test_skip_scan_with_previous_dry_run_renames`: Changed expected content to "atlasvibe..." to match the lowercase "flojoy" key from `default_mapping.json`.
-# - `test_main_flow_resume_stat_error`: Updated dummy_txns to include a "TYPE" key.
-# - `run_main_flow_for_test`: Removed direct call to `replace_logic.load_replacement_map` and related assertions. `main_flow` handles map loading.
-# - `test_skip_scan_with_previous_dry_run_renames`: Removed explicit call to `replace_logic.load_replacement_map` between test phases.
-# - `test_skip_scan_with_previous_dry_run_renames`: Changed caplog level to DEBUG.
-# - `test_skip_scan_with_previous_dry_run_renames`: Changed Path.exists() assertions to os.path.exists() for potentially more direct filesystem state checking.
-# - Deleted `test_skip_scan_with_previous_dry_run_renames` and added new, simpler `test_skip_scan_after_dry_run_single_file_rename_and_content`.
-# - `test_skip_scan_after_dry_run_single_file_rename_and_content`: Corrected call to `assert_file_content` by removing the message string from the encoding parameter.
+# - `run_main_flow_for_test`:
+#   - Added `verbose_mode: bool = False` to the function signature.
+#   - Passed the `verbose_mode` parameter to the `main_flow` call.
+# - `test_main_cli_verbose_flag`: Updated assertion to match the actual stdout message for verbose mode.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -117,7 +49,8 @@ def run_main_flow_for_test(
     force_execution: bool = True, ignore_symlinks_arg: bool = False, # custom_ignore_file can be str | None
     use_gitignore: bool = False, custom_ignore_file: str | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
-    timeout_minutes: int = 1, quiet_mode: bool = True # Default to quiet for tests
+    timeout_minutes: int = 1, quiet_mode: bool = True, # Default to quiet for tests
+    verbose_mode: bool = False # Added verbose_mode with a default
 ):
     # main_flow itself is responsible for calling replace_logic.load_replacement_map
     # and handling its success/failure. We rely on main_flow's internal checks.
@@ -137,7 +70,8 @@ def run_main_flow_for_test(
         use_gitignore=use_gitignore, custom_ignore_file_path=custom_ignore_file,
         skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming,
         skip_content=skip_content, timeout_minutes=timeout_minutes,
-        quiet_mode=quiet_mode
+        quiet_mode=quiet_mode,
+        verbose_mode=verbose_mode # Pass verbose_mode to main_flow
     )
 
 
@@ -797,7 +731,7 @@ def test_main_cli_verbose_flag(temp_test_dir: Path):
 
     args = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--verbose", "--force"]
     res = run_cli_command(args, cwd=temp_test_dir)
-    assert "Verbose mode enabled" in res.stdout
+    assert "Verbose mode requested. Prefect log level will be set to DEBUG if flow runs." in res.stdout
     assert res.returncode == 0
 
 def test_main_cli_missing_dependency(temp_test_dir: Path):
