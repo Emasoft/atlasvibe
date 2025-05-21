@@ -49,6 +49,7 @@
 # - Fixed Ruff linting errors: E701 (multiple statements on one line) and F821 (undefined name `k`).
 # - Modified `load_replacement_map` to accept an optional logger. Error/warning messages now use this logger if provided, otherwise fallback to print.
 # - Set `_DEBUG_REPLACE_LOGIC` to `False` by default.
+# - `_actual_replace_callback`: Re-canonicalize `match.group(0)` before map lookup to ensure robustness.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -213,10 +214,16 @@ def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
-    lookup_key = match.group(0)
+    matched_text_from_input = match.group(0)
+    
+    # Canonicalize the matched segment from the input string before lookup
+    temp_stripped_no_controls = strip_control_characters(matched_text_from_input)
+    temp_stripped_no_diacritics = strip_diacritics(temp_stripped_no_controls)
+    lookup_key = unicodedata.normalize('NFC', temp_stripped_no_diacritics)
     
     if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (should be canonical key)='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
+        _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (original from input)='{matched_text_from_input}'", _MODULE_LOGGER)
+        _log_message(logging.DEBUG, f"  Canonicalized lookup_key='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
 
     replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
     
@@ -226,15 +233,9 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         return replacement_value
     else:
         if _DEBUG_REPLACE_LOGIC:
-            _log_message(logging.WARNING, f"  WARN: Key '{lookup_key}' NOT FOUND in _RAW_REPLACEMENT_MAPPING. This is unexpected.", _MODULE_LOGGER)
-            _log_message(logging.DEBUG, "  Map keys for comparison (showing first 5 and lengths):", _MODULE_LOGGER)
-            for i, (k_map, v_map) in enumerate(_RAW_REPLACEMENT_MAPPING.items()):
-                if i < 5:
-                    _log_message(logging.DEBUG, f"    MapKey: '{k_map}' (len {len(k_map)}, ords={[ord(c) for c in k_map]})", _MODULE_LOGGER)
-                elif i == 5:
-                    _log_message(logging.DEBUG, f"    ... and {len(_RAW_REPLACEMENT_MAPPING)-5} more keys.", _MODULE_LOGGER)
-                    break
-        return lookup_key
+            _log_message(logging.WARNING, f"  WARN: Canonicalized lookup_key '{lookup_key}' NOT FOUND in _RAW_REPLACEMENT_MAPPING. This is unexpected if the regex matched.", _MODULE_LOGGER)
+            # For detailed debugging, one might print parts of _RAW_REPLACEMENT_MAPPING here
+        return matched_text_from_input # Return original segment if no replacement found (should ideally not happen if regex matched a key)
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:

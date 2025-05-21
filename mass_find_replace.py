@@ -13,6 +13,8 @@
 #   or `file_system_operations.py`. If these modules are missing, an `ImportError` will occur
 #   when the script is first loaded, before `main_cli` is even called.
 # - Corrected F821 Undefined name error: `abs_r_dir` changed to `abs_root_dir` in `main_flow` when calling `execute_all_transactions`.
+# - `main_flow`: Added try-except OSError around file checking loop in resume logic to handle stat errors gracefully.
+# - `main_cli`: Re-added import checks for critical dependencies (`prefect`, `chardet`) at the beginning of the function.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -177,17 +179,19 @@ def main_flow(
                          path_last_processed_time[tx["PATH"]] = max(path_last_processed_time.get(tx["PATH"],0.0), tx_ts)
                 
                 for item_fs in abs_root_dir.rglob("*"):
-                    if item_fs.is_file() and not item_fs.is_symlink():
-                        try:
+                    try: # Added try for OSError during item_fs.is_file() or item_fs.stat()
+                        if item_fs.is_file() and not item_fs.is_symlink():
                             rel_p = str(item_fs.relative_to(abs_root_dir)).replace("\\","/")
-                            if final_ignore_spec and final_ignore_spec.match_file(rel_p):
-                                continue # type: ignore
+                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): # type: ignore
+                                continue 
                             mtime = item_fs.stat().st_mtime
                             if rel_p in path_last_processed_time and mtime > path_last_processed_time[rel_p]:
                                 logger.info(f"File '{rel_p}' (mtime:{mtime:.0f}) modified after last process (ts:{path_last_processed_time[rel_p]:.0f}). Re-scan.")
                                 paths_to_force_rescan.add(rel_p)
-                        except Exception as e:
-                            logger.warning(f"Could not stat {item_fs} for resume: {e}")
+                    except OSError as e: # Catch OSError from is_file() or stat()
+                        logger.warning(f"Could not access or stat {item_fs} during resume check: {e}")
+                    except Exception as e: # General catch for other errors within this item's processing
+                        logger.warning(f"Unexpected error processing {item_fs} during resume check: {e}")
         
         found_txns = scan_directory_for_occurrences(
             root_dir=abs_root_dir, excluded_dirs=exclude_dirs, excluded_files=exclude_files,
@@ -234,12 +238,14 @@ def main_flow(
 
 
 def main_cli() -> None:
-    # Top-level imports in mass_find_replace.py (or its direct imports like file_system_operations)
-    # already handle the case where essential modules like prefect, chardet, etc., are missing.
-    # If they are missing, an ImportError will be raised when the script is first loaded,
-    # before main_cli() is even called.
-    # Thus, explicit checks here for those specific modules are redundant.
-    # The script will fail earlier if these core dependencies are not met.
+    try:
+        # These are critical for the script's core functionality.
+        # If they are missing, the script cannot run Prefect flows or handle encodings.
+        import prefect 
+        import chardet 
+    except ImportError as e:
+        sys.stderr.write(RED + f"CRITICAL ERROR: Missing core dependencies: {e}. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+        sys.exit(1)
 
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "

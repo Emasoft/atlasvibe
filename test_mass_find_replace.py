@@ -732,7 +732,7 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
     with patch('pathlib.Path.stat', new=mock_stat_conditional):
         run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
     
-    assert any(f"Could not stat {Path(target_path_to_mock_stat_str)} for resume: Simulated stat error" in record.message for record in caplog.records)
+    assert any(f"Could not access or stat {temp_test_dir / processed_file_rel} during resume check: Simulated stat error" in record.message for record in caplog.records)
 
 
 def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_dir: Path, default_map_file: Path, caplog):
@@ -776,12 +776,13 @@ def test_main_cli_small_positive_timeout(temp_test_dir: Path, capsys):
     test_args_float = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--timeout", "0.5", "--force"]
     res_float = run_cli_command(test_args_float, cwd=temp_test_dir)
     assert f"{YELLOW}Warning: --timeout value 0.5 increased to minimum 1 minute.{RESET}" in res_float.stdout
-    assert "Scan complete" in res_float.stdout or "No transactions found" in res_float.stdout or "phase complete" in res_float.stdout
+    # Check stderr for Prefect logs
+    assert "Scan complete" in res_float.stderr or "No transactions found" in res_float.stderr or "phase complete" in res_float.stderr
     assert res_float.returncode == 0
 
     test_args_zero = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--timeout", "0", "--force"]
     res_zero = run_cli_command(test_args_zero, cwd=temp_test_dir)
-    assert "Warning: --timeout value increased to minimum 1 minute." not in res_zero.stdout
+    assert "Warning: --timeout value increased to minimum 1 minute." not in res_zero.stdout # This warning is for <1 and !=0
     assert res_zero.returncode == 0
 
 
@@ -801,16 +802,19 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
     # Modules to simulate as missing
     modules_to_mock_missing = {"prefect", "chardet"}
 
-    def mocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+    def mocked_import(name, globals_arg=None, locals_arg=None, fromlist=(), level=0): # Renamed to avoid conflict
         if name in modules_to_mock_missing:
             raise ImportError(f"Simulated missing module: {name}")
-        return original_import(name, globals, locals, fromlist, level)
+        return original_import(name, globals_arg, locals_arg, fromlist, level)
 
     with patch.object(sys, 'argv', [str(SCRIPT_PATH_FOR_CLI_TESTS), str(temp_test_dir)]):
         with patch.object(sys, 'exit') as mock_exit:
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
                 with patch('builtins.__import__', side_effect=mocked_import):
                     try:
+                        # We need to ensure that the script's own top-level imports fail,
+                        # or that main_cli itself tries to import them.
+                        # The current main_cli re-adds these checks.
                         main_cli()
                     except SystemExit as e:
                         # Allow SystemExit to be caught by mock_exit if it's raised by main_cli
@@ -818,11 +822,11 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
                 
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
-                assert "CRITICAL ERROR: Missing dependencies:" in printed_error
+                assert "CRITICAL ERROR: Missing core dependencies:" in printed_error
                 if "prefect" in modules_to_mock_missing:
-                    assert "prefect" in printed_error
+                    assert "prefect" in printed_error or "Simulated missing module: prefect" in printed_error
                 if "chardet" in modules_to_mock_missing:
-                    assert "chardet" in printed_error
+                    assert "chardet" in printed_error or "Simulated missing module: chardet" in printed_error
 
 
 # --- Tests for specific scenarios from checklist ---
