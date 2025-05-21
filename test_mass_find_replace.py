@@ -65,6 +65,7 @@
 # - `test_main_cli_small_positive_timeout`: Changed assertion to check `res_float.stderr` for Prefect logs.
 # - `test_main_cli_missing_dependency`: Relaxed assertion for `printed_error` to check for general error and only one of the missing modules.
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed expected content to "atlasvibe..." to match the lowercase "flojoy" key from `default_mapping.json`.
+# - `test_main_flow_resume_stat_error`: Updated dummy_txns to include a "TYPE" key.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -695,7 +696,11 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
     # that Path.stat() would be called on for the target file during the resume check.
     target_path_to_mock_stat_str = str((temp_test_dir / processed_file_rel).resolve(strict=True))
     
-    dummy_txns = [{"PATH": processed_file_rel, "STATUS": TransactionStatus.COMPLETED.value, "timestamp_processed": time.time() - 1000}]
+    # Ensure dummy transaction has a TYPE, as execute_all_transactions expects it for resume logic
+    dummy_txns = [{"PATH": processed_file_rel, 
+                   "TYPE": TransactionType.FILE_CONTENT_LINE.value, # Added TYPE
+                   "STATUS": TransactionStatus.COMPLETED.value, 
+                   "timestamp_processed": time.time() - 1000}]
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     save_transactions(dummy_txns, txn_file)
 
