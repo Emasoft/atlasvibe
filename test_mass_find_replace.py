@@ -57,6 +57,7 @@
 # - `test_main_cli_small_positive_timeout`: Changed CLI arg to "0.5" and ensured `mass_find_replace.py` handles `type=float` for timeout.
 # - `test_main_cli_missing_dependency`: Changed to patch `sys.exit` and call `main_cli()` directly.
 # - `test_edge_case_map_run`: Corrected expected renamed filename for `content_mykey_file` to `edge_case_content_with_MyKeyValue_VAL_controls.txt`.
+# - `test_main_flow_resume_stat_error`: Refined mock_stat_conditional to prevent recursion by comparing string representations of resolved paths.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -104,17 +105,11 @@ def run_main_flow_for_test(
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     timeout_minutes: int = 1, quiet_mode: bool = True # Default to quiet for tests
 ):
-    # Ensure replace_logic is freshly initialized for this run if map_file is provided
-    # This is crucial because replace_logic uses global state.
-    # main_flow itself calls load_replacement_map, which resets the state.
-    # The call in run_main_flow_for_test is mostly for test-side assertions before main_flow runs.
-    
-    # Create a logger instance for replace_logic.load_replacement_map if not using caplog
     test_setup_logger = logging.getLogger("test_setup_replace_logic")
-    if not test_setup_logger.handlers: # Avoid adding multiple handlers if called multiple times
-        handler = logging.NullHandler() # Or use a StreamHandler for debugging this part
+    if not test_setup_logger.handlers: 
+        handler = logging.NullHandler() 
         test_setup_logger.addHandler(handler)
-        test_setup_logger.setLevel(logging.DEBUG) # Or whatever level is needed
+        test_setup_logger.setLevel(logging.DEBUG) 
 
     load_map_success = replace_logic.load_replacement_map(map_file, logger=test_setup_logger) 
     if map_file.name != "empty_mapping.json": 
@@ -687,8 +682,7 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
     processed_file_rel = "file_with_floJoy_lines.txt"
-    # Resolve target_path_to_mock_stat once before the mock
-    target_path_to_mock_stat = (temp_test_dir / processed_file_rel).resolve()
+    target_path_to_mock_stat_str = str((temp_test_dir / processed_file_rel).resolve())
     
     dummy_txns = [{"PATH": processed_file_rel, "STATUS": TransactionStatus.COMPLETED.value, "timestamp_processed": time.time() - 1000}]
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
@@ -696,25 +690,15 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
 
     original_path_stat = Path.stat
     def mock_stat_conditional(self_path_obj, *args, **kwargs):
-        # Compare resolved paths to ensure consistency, but resolve self_path_obj carefully
-        # to avoid recursion if self_path_obj.resolve() itself calls stat.
-        # A safer comparison is direct string comparison of resolved paths if possible,
-        # or comparing Path objects that are already resolved.
-        if self_path_obj.is_absolute(): # If already absolute, compare directly
-            if self_path_obj == target_path_to_mock_stat:
-                raise OSError("Simulated stat error")
-        elif (temp_test_dir / self_path_obj).resolve() == target_path_to_mock_stat:
-             # This case might be tricky if self_path_obj is relative and resolve() calls stat
-             # For this specific test, the path being iterated in main_flow is absolute.
-             # The check `item_fs.stat().st_mtime` is on `item_fs` which is an absolute path from rglob.
-             # So, `self_path_obj` in the mock will be absolute.
+        # Compare string representations of resolved paths to avoid recursion via .resolve()
+        if str(self_path_obj.resolve(strict=False)) == target_path_to_mock_stat_str:
             raise OSError("Simulated stat error")
         return original_path_stat(self_path_obj, *args, **kwargs)
 
     with patch('pathlib.Path.stat', new=mock_stat_conditional):
         run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
     
-    assert any(f"Could not stat {target_path_to_mock_stat} for resume: Simulated stat error" in record.message for record in caplog.records)
+    assert any(f"Could not stat {Path(target_path_to_mock_stat_str)} for resume: Simulated stat error" in record.message for record in caplog.records)
 
 
 def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_dir: Path, default_map_file: Path, caplog):
@@ -737,21 +721,7 @@ def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_
 
 
 # --- CLI Tests ---
-# Assumes test_mass_find_replace.py is in root/ and mass_find_replace.py is in root/
-# Or, if tests are in tests/, then mass_find_replace.py is in parent of tests/
-# Based on pytest rootdir, mass_find_replace.py is in the same dir as this test file (or a subdir)
-# If test file is in rootdir/tests, script is in rootdir.
-# If test file is in rootdir, script is in rootdir.
-# The error "can't open file '/Users/emanuelesabetta/Code/ATLASVIBE/mass_find_replace.py'"
-# and rootdir "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe" means the script is being
-# sought one level *above* the project root.
-# This implies SCRIPT_PATH_FOR_CLI_TESTS should point to "atlasvibe/mass_find_replace.py"
-# relative to "/Users/emanuelesabetta/Code/ATLASVIBE/"
-# Or, more simply, relative to the test file's location.
-# If test_mass_find_replace.py is in "atlasvibe" (the rootdir), then script is also there.
-SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent / "mass_find_replace.py")
-if not SCRIPT_PATH_FOR_CLI_TESTS.exists(): # Fallback if tests are in a 'tests' subdirectory
-    SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent.parent / "mass_find_replace.py")
+SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent.parent / "mass_find_replace.py").resolve()
 
 
 def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -798,16 +768,16 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
     if "chardet" in sys.modules:
         del sys.modules["chardet"]
 
-    # Patch sys.argv for the direct call to main_cli
-    # Provide minimal valid args: the directory.
-    # The script should attempt imports before full argument parsing if __name__ == "__main__".
     with patch.object(sys, 'argv', [str(SCRIPT_PATH_FOR_CLI_TESTS), str(temp_test_dir)]):
         with patch.object(sys, 'exit') as mock_exit:
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
                 try:
-                    main_cli() # Call directly
-                except SystemExit as e: # Catch sys.exit if it's raised
-                    mock_exit(e.code) # Call the mock with the same exit code
+                    # We need to ensure the import checks at the start of main_cli are triggered
+                    # This means the __name__ == "__main__" block won't run, so the checks
+                    # must be inside main_cli itself.
+                    main_cli() 
+                except SystemExit as e: 
+                    mock_exit(e.code) 
 
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
@@ -815,7 +785,6 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
                 assert "prefect" in printed_error
                 assert "chardet" in printed_error
     
-    # Restore sys.modules to avoid affecting other tests
     sys.modules = original_sys_modules
     if "prefect" not in sys.modules and "prefect" in original_sys_modules:
         import prefect # type: ignore
@@ -838,11 +807,11 @@ def test_edge_case_map_run(temp_test_dir: Path, edge_case_map_file: Path, caplog
     assert_file_content(renamed_mykey_name_file, "Initial content for control key name test (MyKeyValue_VAL).")
 
     orig_content_controls_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
-    # This file's name contains "MyKey" and "controls".
-    # "MyKey" (canonical) -> "MyKeyValue_VAL"
-    # "KeyWithControls" (canonical) -> "ControlValue_VAL"
-    # "MyKey" is shorter and appears. "KeyWithControls" is not directly in the name.
-    # So, "MyKey" in the name should be replaced.
+    # Name contains "MyKey" and "controls". "MyKey" is canonical for "My\nKey".
+    # "KeyWithControls" is canonical for "Key\nWith\tControls".
+    # "MyKey" is shorter and will be found first if both were applicable for the same segment.
+    # Here, "MyKey" is in the name. "KeyWithControls" is not.
+    # So, "MyKey" in the name becomes "MyKeyValue_VAL".
     expected_content_controls_new_name = "edge_case_content_with_MyKeyValue_VAL_controls.txt"
     renamed_content_controls_file = temp_test_dir / expected_content_controls_new_name
 
@@ -883,8 +852,11 @@ def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_ma
     assert (temp_test_dir / orig_sub_file_rel).exists()
     assert_file_content(temp_test_dir / orig_file_rel, "flojoy content line 1\nflojoy content line 2")
 
-    # Ensure replace_logic map is correctly loaded for the second run
-    replace_logic.load_replacement_map(default_map_file, logger=logging.getLogger("test_skip_scan_phase2_loader"))
+    # Explicitly reload map to ensure fresh state for replace_logic, as it uses globals
+    # This is important because run_main_flow_for_test calls it internally too.
+    test_setup_logger = logging.getLogger("test_skip_scan_phase2_loader")
+    replace_logic.load_replacement_map(default_map_file, logger=test_setup_logger)
+
 
     run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True, dry_run=False, force_execution=True, extensions=[".txt"])
 

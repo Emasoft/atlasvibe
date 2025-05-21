@@ -7,6 +7,7 @@
 #   `load_transactions`, `save_transactions`, `execute_all_transactions`).
 # - Changed `argparse` type for `--timeout` from `int` to `float` to allow inputs like "0.5".
 # - Added `int()` casting for `args.timeout` before passing to `main_flow` if it's not 0.
+# - Moved import checks from `if __name__ == "__main__":` block to the beginning of `main_cli()`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -228,6 +229,33 @@ def main_flow(
 
 
 def main_cli() -> None:
+    # Moved import checks to the beginning of main_cli
+    missing_deps = []
+    try:
+        import prefect
+    except ImportError:
+        missing_deps.append("prefect")
+    try:
+        import chardet
+    except ImportError:
+        missing_deps.append("chardet")
+    try:
+        import pathspec
+    except ImportError:
+        missing_deps.append("pathspec")
+    try:
+        from striprtf.striprtf import rtf_to_text
+    except ImportError:
+        missing_deps.append("striprtf")
+    try:
+        from isbinary import is_binary_file
+    except ImportError:
+        missing_deps.append("isbinary")
+
+    if missing_deps:
+        sys.stderr.write(f"CRITICAL ERROR: Missing dependencies: {', '.join(missing_deps)}.\nPlease ensure all dependencies are installed (e.g., pip install prefect chardet pathspec striprtf isbinary).\n")
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
                     "It operates in three phases: Scan, Plan (creating a transaction log), and Execute. "
@@ -272,7 +300,7 @@ def main_cli() -> None:
 
     timeout_val_for_flow: int
     if args.timeout < 0:
-        parser.error("--timeout cannot be negative.")
+        parser.error("--timeout cannot be negative.") # argparse handles exit
     if args.timeout == 0:
         timeout_val_for_flow = 0
     elif args.timeout < 1.0:
@@ -298,41 +326,14 @@ def main_cli() -> None:
               args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
               args.use_gitignore, args.custom_ignore_file,
               args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, 
-              timeout_val_for_flow, # Pass validated and converted int
+              timeout_val_for_flow, 
               args.quiet 
              )
 
 if __name__ == "__main__":
     try:
-        missing = []
-        try:
-            import prefect
-        except ImportError:
-            missing.append("prefect")
-        try:
-            import chardet
-        except ImportError:
-            missing.append("chardet")
-        try:
-            import pathspec
-        except ImportError:
-            missing.append("pathspec")
-        try:
-            from striprtf.striprtf import rtf_to_text
-        except ImportError:
-            missing.append("striprtf")
-        try:
-            from isbinary import is_binary_file
-        except ImportError:
-            missing.append("isbinary")
-
-        if missing:
-            raise ImportError(f"Missing dependencies: {', '.join(missing)}")
         main_cli()
-    except ImportError as e:
-        sys.stderr.write(f"CRITICAL ERROR: {e}.\nPlease ensure all dependencies are installed (e.g., pip install prefect chardet pathspec striprtf isbinary).\n")
-        sys.exit(1)
-    except Exception as e:
+    except Exception as e: # Catch any other unexpected error from main_cli or main_flow if not caught internally
         sys.stderr.write(RED + f"An unexpected error occurred in __main__: {e}" + RESET + "\n")
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
