@@ -69,6 +69,7 @@
 # - `run_main_flow_for_test`: Removed direct call to `replace_logic.load_replacement_map` and related assertions. `main_flow` handles map loading.
 # - `test_skip_scan_with_previous_dry_run_renames`: Removed explicit call to `replace_logic.load_replacement_map` between test phases.
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed caplog level to DEBUG.
+# - `test_skip_scan_with_previous_dry_run_renames`: Changed Path.exists() assertions to os.path.exists() for potentially more direct filesystem state checking.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -895,17 +896,27 @@ def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_ma
     expected_content_val = "atlasvibe" 
     renamed_sub_file_rel = f"{renamed_folder_rel}/another_{expected_content_val}_file.txt" # Use lowercase for filename part
 
+    # Use os.path.exists for these critical assertions to align with internal checks
+    # and avoid potential Path object caching issues in the test environment.
+    orig_file_abs_str = str(temp_test_dir / orig_file_rel)
+    renamed_file_abs_str = str(temp_test_dir / renamed_file_rel)
+    orig_folder_abs_str = str(temp_test_dir / orig_folder_rel)
+    renamed_folder_abs_str = str(temp_test_dir / renamed_folder_rel)
+    orig_sub_file_abs_str = str(temp_test_dir / orig_sub_file_rel) # Original full path to sub-file
+    renamed_sub_file_abs_str = str(temp_test_dir / renamed_sub_file_rel) # Expected new full path to sub-file
 
-    assert not (temp_test_dir / orig_file_rel).exists(), "Original file should be renamed."
-    assert (temp_test_dir / renamed_file_rel).exists(), "Renamed file should exist."
-    assert_file_content(temp_test_dir / renamed_file_rel, f"{expected_content_val} content line 1\n{expected_content_val} content line 2")
+    assert not os.path.exists(orig_file_abs_str), f"Original file '{orig_file_abs_str}' should be renamed."
+    assert os.path.exists(renamed_file_abs_str), f"Renamed file '{renamed_file_abs_str}' should exist."
+    assert_file_content(Path(renamed_file_abs_str), f"{expected_content_val} content line 1\n{expected_content_val} content line 2")
 
-    assert not (temp_test_dir / orig_folder_rel).exists(), "Original folder should be renamed."
-    assert (temp_test_dir / renamed_folder_rel).exists(), "Renamed folder should exist."
+    assert not os.path.exists(orig_folder_abs_str), f"Original folder '{orig_folder_abs_str}' should be renamed."
+    assert os.path.exists(renamed_folder_abs_str), f"Renamed folder '{renamed_folder_abs_str}' should exist."
     
-    assert not (temp_test_dir / orig_sub_file_rel).exists(), "Original sub-file path should not exist." 
-    assert (temp_test_dir / renamed_sub_file_rel).exists(), "Renamed sub-file should exist in renamed folder."
-    assert_file_content(temp_test_dir / renamed_sub_file_rel, f"{expected_content_val} in subfolder")
+    # The original path to the sub-file (e.g., .../flojoy_folder_to_rename/another_flojoy_file.txt) should not exist
+    # because its parent folder was renamed.
+    assert not os.path.exists(orig_sub_file_abs_str), f"Original sub-file path '{orig_sub_file_abs_str}' should not exist."
+    assert os.path.exists(renamed_sub_file_abs_str), f"Renamed sub-file '{renamed_sub_file_abs_str}' should exist in renamed folder."
+    assert_file_content(Path(renamed_sub_file_abs_str), f"{expected_content_val} in subfolder")
 
     transactions_final = load_transactions(txn_file_path)
     assert transactions_final is not None
