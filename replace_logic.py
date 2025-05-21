@@ -56,6 +56,8 @@
 # - Set `_DEBUG_REPLACE_LOGIC` to `True` to enable debug logs for diagnosing test failures.
 # - Added `reset_module_state()` function to explicitly clear all global states.
 # - `load_replacement_map()` no longer resets globals itself; relies on `reset_module_state()` being called prior.
+# - Enhanced `_log_message` to use a fallback `_DEFAULT_DEBUG_LOGGER` for DEBUG messages when `_DEBUG_REPLACE_LOGIC` is True, ensuring visibility.
+# - Added debug log in `_actual_replace_callback` to show the state of `_RAW_REPLACEMENT_MAPPING` keys at the time of lookup.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -68,6 +70,7 @@ from pathlib import Path
 from typing import Dict as TypingDict, Optional as TypingOptional # Retain for clarity if needed for older type checkers or specific constructs
 import unicodedata
 import logging
+import sys # For sys.stdout in fallback logger
 
 # --- Module-level state ---
 _RAW_REPLACEMENT_MAPPING: dict[str, str] = {} # Stores (normalized stripped key) -> (stripped value) from JSON.
@@ -81,6 +84,16 @@ _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
 # Set to True to enable verbose debug prints in this module
 _DEBUG_REPLACE_LOGIC = True
 # --- END DEBUG CONFIG ---
+
+# Fallback logger for critical debug messages when _DEBUG_REPLACE_LOGIC is True
+_DEFAULT_DEBUG_LOGGER = logging.getLogger(__name__ + "_debug_fallback")
+if not _DEFAULT_DEBUG_LOGGER.handlers: # Avoid adding multiple handlers if module is reloaded
+    _handler = logging.StreamHandler(sys.stdout)
+    _formatter = logging.Formatter('%(asctime)s - %(name)s - RL_DBG: %(message)s') # Prefix RL_DBG
+    _handler.setFormatter(_formatter)
+    _DEFAULT_DEBUG_LOGGER.addHandler(_handler)
+    _DEFAULT_DEBUG_LOGGER.setLevel(logging.DEBUG)
+
 
 def reset_module_state():
     """
@@ -102,10 +115,21 @@ def reset_module_state():
 def _log_message(level: int, message: str, logger: logging.Logger | None = None):
     """Helper to log messages using provided logger or print as fallback."""
     effective_logger = logger if logger else _MODULE_LOGGER
+    
+    if _DEBUG_REPLACE_LOGIC and level == logging.DEBUG:
+        # Use the fallback logger for DEBUG messages when _DEBUG_REPLACE_LOGIC is True
+        # This ensures visibility even if the main logger setup is problematic.
+        _DEFAULT_DEBUG_LOGGER.debug(message) # Already prefixed by _DEFAULT_DEBUG_LOGGER's formatter
+        # Optionally, also log to the intended logger if it's different and available
+        if effective_logger and effective_logger is not _DEFAULT_DEBUG_LOGGER:
+            effective_logger.log(level, message)
+        return
+
     if effective_logger:
         effective_logger.log(level, message)
     else:
-        # Fallback to print if no logger is available (e.g., during direct script use or testing without logger setup)
+        # Fallback to print for non-debug messages if no logger is available
+        # or for debug messages if _DEBUG_REPLACE_LOGIC is False and no logger.
         prefix = ""
         if level == logging.ERROR:
             prefix = "ERROR: "
@@ -113,9 +137,11 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
             prefix = "WARNING: "
         elif level == logging.INFO:
             prefix = "INFO: "
-        elif level == logging.DEBUG: # Added for debug fallback
-            prefix = "DEBUG: "
-        print(f"{prefix}{message}")
+        # For DEBUG level, if _DEBUG_REPLACE_LOGIC is False, it won't be printed here
+        # unless explicitly handled by a logger that's None.
+        # This path is mostly for ERROR/WARNING/INFO when no logger is set.
+        if level >= logging.INFO: # Only print INFO and above if no logger
+            print(f"{prefix}{message}")
 
 
 def strip_diacritics(text: str) -> str:
@@ -189,7 +215,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
 
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
     if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG MAP LOAD: _RAW_REPLACEMENT_MAPPING populated with {len(_RAW_REPLACEMENT_MAPPING)} entries.", logger)
+        _log_message(logging.DEBUG, f"DEBUG MAP LOAD: _RAW_REPLACEMENT_MAPPING populated with {len(_RAW_REPLACEMENT_MAPPING)} entries: {list(_RAW_REPLACEMENT_MAPPING.keys())[:10]}...", logger)
 
     if not _RAW_REPLACEMENT_MAPPING:
         _log_message(logging.WARNING, "No valid replacement rules found in the mapping file after initial loading/stripping.", logger)
@@ -250,6 +276,8 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
     if _DEBUG_REPLACE_LOGIC:
         _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (original from input)='{matched_text_from_input}'", _MODULE_LOGGER)
         _log_message(logging.DEBUG, f"  Canonicalized lookup_key='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
+        _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING at callback (first 5 keys): {list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}...", _MODULE_LOGGER)
+
 
     replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
     
@@ -264,7 +292,7 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
                        f"Returning original matched text.")
         _log_message(logging.WARNING, warning_msg, _MODULE_LOGGER)
         if _DEBUG_REPLACE_LOGIC: 
-            _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER)
+            _log_message(logging.DEBUG, f"  Full _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER)
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
