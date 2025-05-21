@@ -60,6 +60,8 @@
 # - Added debug log in `_actual_replace_callback` to show the state of `_RAW_REPLACEMENT_MAPPING` keys at the time of lookup.
 # - Added direct print to sys.stderr in `_actual_replace_callback` for critical debug info.
 # - Added direct print to sys.stderr at the entry of `replace_occurrences` for critical debug.
+# - Modified `_log_message` to print DEBUG messages to `sys.stderr` if `_DEBUG_REPLACE_LOGIC` is True. Removed `_DEFAULT_DEBUG_LOGGER`.
+# - Changed direct `print` calls in `_actual_replace_callback` and `replace_occurrences` to use `_log_message(logging.DEBUG, ...)`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -72,7 +74,7 @@ from pathlib import Path
 from typing import Dict as TypingDict, Optional as TypingOptional # Retain for clarity if needed for older type checkers or specific constructs
 import unicodedata
 import logging
-import sys # For sys.stdout in fallback logger
+import sys # For sys.stdout/stderr in fallback logger
 
 # --- Module-level state ---
 _RAW_REPLACEMENT_MAPPING: dict[str, str] = {} # Stores (normalized stripped key) -> (stripped value) from JSON.
@@ -86,16 +88,6 @@ _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
 # Set to True to enable verbose debug prints in this module
 _DEBUG_REPLACE_LOGIC = True
 # --- END DEBUG CONFIG ---
-
-# Fallback logger for critical debug messages when _DEBUG_REPLACE_LOGIC is True
-_DEFAULT_DEBUG_LOGGER = logging.getLogger(__name__ + "_debug_fallback")
-if not _DEFAULT_DEBUG_LOGGER.handlers: # Avoid adding multiple handlers if module is reloaded
-    _handler = logging.StreamHandler(sys.stdout)
-    _formatter = logging.Formatter('%(asctime)s - %(name)s - RL_DBG: %(message)s') # Prefix RL_DBG
-    _handler.setFormatter(_formatter)
-    _DEFAULT_DEBUG_LOGGER.addHandler(_handler)
-    _DEFAULT_DEBUG_LOGGER.setLevel(logging.DEBUG)
-
 
 def reset_module_state():
     """
@@ -119,13 +111,13 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
     effective_logger = logger if logger else _MODULE_LOGGER
     
     if _DEBUG_REPLACE_LOGIC and level == logging.DEBUG:
-        # Use the fallback logger for DEBUG messages when _DEBUG_REPLACE_LOGIC is True
-        # This ensures visibility even if the main logger setup is problematic.
-        _DEFAULT_DEBUG_LOGGER.debug(message) # Already prefixed by _DEFAULT_DEBUG_LOGGER's formatter
-        # Optionally, also log to the intended logger if it's different and available
-        if effective_logger and effective_logger is not _DEFAULT_DEBUG_LOGGER: # Avoid double logging if same
+        # Print DEBUG messages directly to stderr when _DEBUG_REPLACE_LOGIC is True
+        print(f"RL_DBG_STDERR: {message}", file=sys.stderr)
+        sys.stderr.flush()
+        # Optionally, also log to the intended logger if it's different
+        if effective_logger:
             effective_logger.debug(message)
-        return # Handled
+        return
 
     # For other levels, or if not _DEBUG_REPLACE_LOGIC for DEBUG level
     if effective_logger:
@@ -138,7 +130,11 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
             prefix = "WARNING: "
         elif level == logging.INFO:
             prefix = "INFO: "
-        print(f"{prefix}{message}")
+        print(f"{prefix}{message}", file=sys.stderr if level >= logging.WARNING else sys.stdout)
+        if level >= logging.WARNING:
+            sys.stderr.flush()
+        else:
+            sys.stdout.flush()
 
 
 def strip_diacritics(text: str) -> str:
@@ -161,8 +157,6 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
     global _RAW_REPLACEMENT_MAPPING, _COMPILED_PATTERN_FOR_SCAN, _MAPPING_LOADED, \
            _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER
 
-    # State is assumed to be clean or reset by caller via reset_module_state()
-    # Set the module logger for this loading context
     _MODULE_LOGGER = logger
 
     try:
@@ -184,8 +178,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         return False
 
     temp_raw_mapping: dict[str, str] = {}
-    if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG MAP LOAD: Loading map from {mapping_file_path.name}", logger)
+    _log_message(logging.DEBUG, f"DEBUG MAP LOAD: Loading map from {mapping_file_path.name}", logger)
 
     for k_orig_json, v_original in raw_mapping_from_json.items():
         if not isinstance(k_orig_json, str) or not isinstance(v_original, str):
@@ -197,26 +190,23 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         canonical_key = unicodedata.normalize('NFC', temp_stripped_key_no_diacritics)
         
         if not canonical_key:
-            if _DEBUG_REPLACE_LOGIC:
-                _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: Original key '{k_orig_json}' (len {len(k_orig_json)}) became empty after canonicalization. Skipping.", logger)
+            _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: Original key '{k_orig_json}' (len {len(k_orig_json)}) became empty after canonicalization. Skipping.", logger)
             continue
         
-        if _DEBUG_REPLACE_LOGIC:
-            _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: JSON Key='{k_orig_json}' (len {len(k_orig_json)}, ords={[ord(c) for c in k_orig_json]})", logger)
-            _log_message(logging.DEBUG, f"    -> NoControls='{temp_stripped_key_no_controls}' (len {len(temp_stripped_key_no_controls)}, ords={[ord(c) for c in temp_stripped_key_no_controls]})", logger)
-            _log_message(logging.DEBUG, f"    -> NoDiacritics='{temp_stripped_key_no_diacritics}' (len {len(temp_stripped_key_no_diacritics)}, ords={[ord(c) for c in temp_stripped_key_no_diacritics]})", logger)
-            _log_message(logging.DEBUG, f"    -> CanonicalKey (NFC)='{canonical_key}' (len {len(canonical_key)}, ords={[ord(c) for c in canonical_key]})", logger)
-            _log_message(logging.DEBUG, f"    -> Maps to Value: '{v_original}'", logger)
+        _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: JSON Key='{k_orig_json}' (len {len(k_orig_json)}, ords={[ord(c) for c in k_orig_json]})", logger)
+        _log_message(logging.DEBUG, f"    -> NoControls='{temp_stripped_key_no_controls}' (len {len(temp_stripped_key_no_controls)}, ords={[ord(c) for c in temp_stripped_key_no_controls]})", logger)
+        _log_message(logging.DEBUG, f"    -> NoDiacritics='{temp_stripped_key_no_diacritics}' (len {len(temp_stripped_key_no_diacritics)}, ords={[ord(c) for c in temp_stripped_key_no_diacritics]})", logger)
+        _log_message(logging.DEBUG, f"    -> CanonicalKey (NFC)='{canonical_key}' (len {len(canonical_key)}, ords={[ord(c) for c in canonical_key]})", logger)
+        _log_message(logging.DEBUG, f"    -> Maps to Value: '{v_original}'", logger)
 
         temp_raw_mapping[canonical_key] = v_original
 
     _RAW_REPLACEMENT_MAPPING = temp_raw_mapping
-    if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG MAP LOAD: _RAW_REPLACEMENT_MAPPING populated with {len(_RAW_REPLACEMENT_MAPPING)} entries: {list(_RAW_REPLACEMENT_MAPPING.keys())[:10]}...", logger)
+    _log_message(logging.DEBUG, f"DEBUG MAP LOAD: _RAW_REPLACEMENT_MAPPING populated with {len(_RAW_REPLACEMENT_MAPPING)} entries: {list(_RAW_REPLACEMENT_MAPPING.keys())[:10]}...", logger)
 
     if not _RAW_REPLACEMENT_MAPPING:
         _log_message(logging.WARNING, "No valid replacement rules found in the mapping file after initial loading/stripping.", logger)
-        _MAPPING_LOADED = True # Considered loaded, even if empty
+        _MAPPING_LOADED = True 
         return True
 
     all_canonical_keys_for_recursion_check = set(_RAW_REPLACEMENT_MAPPING.keys())
@@ -232,7 +222,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
                     original_json_key_for_error_report = orig_k_json
                     break
             _log_message(logging.ERROR, f"Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error_report}', its canonical form '{normalized_value_stripped_for_check}' is also a canonical key). This is disallowed. Aborting.", logger)
-            _RAW_REPLACEMENT_MAPPING = {} # Clear partially populated map
+            _RAW_REPLACEMENT_MAPPING = {} 
             return False
 
     pattern_keys_for_scan_and_replace: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
@@ -242,15 +232,14 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
 
     combined_pattern_str = r'(' + r'|'.join(pattern_keys_for_scan_and_replace) + r')'
     
-    if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG MAP LOAD: Combined Regex Pattern String: {combined_pattern_str!r}", logger)
+    _log_message(logging.DEBUG, f"DEBUG MAP LOAD: Combined Regex Pattern String: {combined_pattern_str!r}", logger)
 
     try:
         _COMPILED_PATTERN_FOR_SCAN = re.compile(combined_pattern_str)
         _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = _COMPILED_PATTERN_FOR_SCAN
     except re.error as e:
         _log_message(logging.ERROR, f"Could not compile regex pattern: {e}. Regex tried: '{combined_pattern_str}'", logger)
-        _RAW_REPLACEMENT_MAPPING = {} # Clear map
+        _RAW_REPLACEMENT_MAPPING = {} 
         return False
         
     _MAPPING_LOADED = True
@@ -265,52 +254,35 @@ def get_raw_stripped_keys() -> list[str]:
 def _actual_replace_callback(match: re.Match[str]) -> str:
     matched_text_from_input = match.group(0)
     
-    # Canonicalize the matched segment from the input string before lookup
     temp_stripped_no_controls = strip_control_characters(matched_text_from_input)
     temp_stripped_no_diacritics = strip_diacritics(temp_stripped_no_controls)
     lookup_key = unicodedata.normalize('NFC', temp_stripped_no_diacritics)
     
-    if _DEBUG_REPLACE_LOGIC:
-        _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (original from input)='{matched_text_from_input}'", _MODULE_LOGGER)
-        _log_message(logging.DEBUG, f"  Canonicalized lookup_key='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
-        _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING at callback (first 5 keys): {list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}...", _MODULE_LOGGER)
-        # Direct print to stderr for critical debugging
-        print(f"RL_CALLBACK_DBG_STDERR: lookup_key='{lookup_key}', map_keys_sample={list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}", file=sys.stderr)
-        sys.stderr.flush()
-
+    _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (original from input)='{matched_text_from_input}'", _MODULE_LOGGER)
+    _log_message(logging.DEBUG, f"  Canonicalized lookup_key='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
+    _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING at callback (first 5 keys): {list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}...", _MODULE_LOGGER)
 
     replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
     
     if replacement_value is not None:
-        if _DEBUG_REPLACE_LOGIC:
-            _log_message(logging.DEBUG, f"  Found in map. Replacing with: '{replacement_value}'", _MODULE_LOGGER)
+        _log_message(logging.DEBUG, f"  Found in map. Replacing with: '{replacement_value}'", _MODULE_LOGGER)
         return replacement_value
     else:
         warning_msg = (f"REPLACE_LOGIC_WARN_CALLBACK_LOOKUP_FAILED: lookup_key '{lookup_key}' (ords={[ord(c) for c in lookup_key]}) "
                        f"derived from matched_text_from_input '{matched_text_from_input}' (ords={[ord(c) for c in matched_text_from_input]}) "
                        f"NOT FOUND in _RAW_REPLACEMENT_MAPPING (size: {len(_RAW_REPLACEMENT_MAPPING)}). "
                        f"Returning original matched text.")
-        
-        # Log to main/module logger at WARNING
-        if _MODULE_LOGGER:
-            _MODULE_LOGGER.warning(warning_msg)
-        else: # Fallback if no module logger
-            print(f"WARNING: {warning_msg}")
-
-        if _DEBUG_REPLACE_LOGIC:
-            # Also ensure it's visible via the default debug logger if debugging is on
-            _DEFAULT_DEBUG_LOGGER.warning(f"DEBUG_FALLBACK_WARN: {warning_msg}")
-            _DEFAULT_DEBUG_LOGGER.debug(f"  Full _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...")
+        _log_message(logging.WARNING, warning_msg, _MODULE_LOGGER) # Goes to main logger or print
+        _log_message(logging.DEBUG, f"  Full _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER) # Goes to stderr if _DEBUG_REPLACE_LOGIC
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
-    if _DEBUG_REPLACE_LOGIC:
-        # CRITICAL DIAGNOSTIC PRINT to stderr
-        print(f"RL_REPLACE_OCC_ENTRY_STDERR: input='{input_string[:30].encode('unicode_escape').decode() if isinstance(input_string, str) else input_string!r}', "
-              f"_MAPPING_LOADED={_MAPPING_LOADED}, "
-              f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
-              f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}", file=sys.stderr)
-        sys.stderr.flush()
+    entry_debug_msg = (f"REPLACE_OCC_ENTRY: input='{input_string[:30].encode('unicode_escape').decode() if isinstance(input_string, str) else input_string!r}', "
+                       f"_MAPPING_LOADED={_MAPPING_LOADED}, "
+                       f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
+                       f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}")
+    _log_message(logging.DEBUG, entry_debug_msg, _MODULE_LOGGER)
+
 
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Early exit. _MAPPING_LOADED={_MAPPING_LOADED}, "
@@ -318,14 +290,13 @@ def replace_occurrences(input_string: str) -> str:
                                    f"_RAW_REPLACEMENT_MAPPING is {'Empty' if not _RAW_REPLACEMENT_MAPPING else 'Populated'}", _MODULE_LOGGER)
         return input_string
     if not isinstance(input_string, str):
-        return input_string # Should not happen if called from Python, but good check
+        return input_string 
     
     nfc_input_string = unicodedata.normalize('NFC', input_string)
     
-    if _DEBUG_REPLACE_LOGIC:
-        search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
-        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
-        if search_result:
-            _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}", _MODULE_LOGGER)
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
+    _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
+    if search_result:
+        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}", _MODULE_LOGGER)
 
     return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, nfc_input_string)
