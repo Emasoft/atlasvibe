@@ -12,6 +12,7 @@
 #   from `main_cli` because these are already handled by top-level imports in `mass_find_replace.py`
 #   or `file_system_operations.py`. If these modules are missing, an `ImportError` will occur
 #   when the script is first loaded, before `main_cli` is even called.
+# - Corrected F821 Undefined name error: `abs_r_dir` changed to `abs_root_dir` in `main_flow` when calling `execute_all_transactions`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -221,7 +222,7 @@ def main_flow(
 
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
-    stats = execute_all_transactions(txn_json_path, abs_r_dir, dry_run, resume, timeout_minutes,
+    stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
                                      skip_scan, logger=logger) # Pass logger
     logger.info(f"{op_type} phase complete. Stats: {stats}")
