@@ -50,6 +50,7 @@
 # - Modified `load_replacement_map` to accept an optional logger. Error/warning messages now use this logger if provided, otherwise fallback to print.
 # - Set `_DEBUG_REPLACE_LOGIC` to `False` by default.
 # - `_actual_replace_callback`: Re-canonicalize `match.group(0)` before map lookup to ensure robustness.
+# - `_actual_replace_callback`: Added a non-debug, warning-level log if a lookup_key is not found in _RAW_REPLACEMENT_MAPPING.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -232,10 +233,11 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
             _log_message(logging.DEBUG, f"  Found in map. Replacing with: '{replacement_value}'", _MODULE_LOGGER)
         return replacement_value
     else:
-        if _DEBUG_REPLACE_LOGIC:
-            _log_message(logging.WARNING, f"  WARN: Canonicalized lookup_key '{lookup_key}' NOT FOUND in _RAW_REPLACEMENT_MAPPING. This is unexpected if the regex matched.", _MODULE_LOGGER)
-            # For detailed debugging, one might print parts of _RAW_REPLACEMENT_MAPPING here
-        return matched_text_from_input # Return original segment if no replacement found (should ideally not happen if regex matched a key)
+        # This log will now appear even if _DEBUG_REPLACE_LOGIC is False, to help diagnose persistent issues.
+        _log_message(logging.WARNING, f"REPLACE_LOGIC_WARN: Callback lookup_key '{lookup_key}' (from matched: '{matched_text_from_input}') NOT FOUND in _RAW_REPLACEMENT_MAPPING. Map size: {len(_RAW_REPLACEMENT_MAPPING)}. Returning original matched text.", _MODULE_LOGGER)
+        if _DEBUG_REPLACE_LOGIC: # More detailed dump if debug is on
+            _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING keys: {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER) # Print some keys
+        return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
