@@ -26,6 +26,7 @@
 # - `prefect_test_settings`: Extended to set `PREFECT_HOME` to a temporary directory
 #   for the test session to isolate Prefect's SQLite database and prevent locking issues.
 #   Also disables `PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS`.
+# - `prefect_test_settings`: Added `PREFECT_TEST_MODE="True"` to further optimize Prefect for testing environments.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -53,20 +54,23 @@ def prefect_test_settings(tmp_path_factory):
     """
     Session-scoped fixture to configure Prefect settings for the test environment.
     Disables the ephemeral API server, sets PREFECT_HOME to a temporary directory,
-    and disables usage stats to prevent logging errors and database conflicts.
+    disables usage stats, and enables PREFECT_TEST_MODE to prevent logging errors
+    and database conflicts.
     """
     original_api_setting = os.environ.get("PREFECT_API_EPHEMERAL_SERVER_ENABLED")
-    os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
-
     original_prefect_home = os.environ.get("PREFECT_HOME")
+    original_usage_stats = os.environ.get("PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS")
+    original_test_mode = os.environ.get("PREFECT_TEST_MODE")
+
+    os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
     temp_prefect_home = tmp_path_factory.mktemp("prefect_home_session")
     os.environ["PREFECT_HOME"] = str(temp_prefect_home)
-    
-    original_usage_stats = os.environ.get("PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS")
     os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"] = "false"
+    os.environ["PREFECT_TEST_MODE"] = "True"
 
     yield
 
+    # Restore original settings
     if original_api_setting is None:
         if "PREFECT_API_EPHEMERAL_SERVER_ENABLED" in os.environ:
             del os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"]
@@ -85,9 +89,11 @@ def prefect_test_settings(tmp_path_factory):
     else:
         os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"] = original_usage_stats
 
-    # tmp_path_factory should handle cleanup of temp_prefect_home
-    # If explicit cleanup is desired and causes issues, it can be added here:
-    # shutil.rmtree(temp_prefect_home, ignore_errors=True)
+    if original_test_mode is None:
+        if "PREFECT_TEST_MODE" in os.environ:
+            del os.environ["PREFECT_TEST_MODE"]
+    else:
+        os.environ["PREFECT_TEST_MODE"] = original_test_mode
 
 
 def create_test_environment_content(
