@@ -67,6 +67,7 @@
 # - `execute_all_transactions`: Changed `path_translation_map` pre-population to only occur if `resume=True`.
 #   For `skip_scan` without `resume`, the map starts empty.
 # - `_execute_rename_transaction`: Added more diagnostic prints and a hard check after `Path.rename()` to verify on-disk state.
+# - `_execute_rename_transaction`: Changed on-disk verification after rename to use `os.path.exists(str(path))` to align with test assertions.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -559,11 +560,11 @@ def _execute_rename_transaction(
     except Exception as e:
         return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
     
-    print(f"FS_OP_RENAME_STDERR: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', lexists={os.path.lexists(current_abs_path)}", file=sys.stderr)
+    print(f"FS_OP_RENAME_STDERR: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', os.path.exists={os.path.exists(str(current_abs_path))}", file=sys.stderr)
     sys.stderr.flush()
 
-    if not os.path.lexists(current_abs_path):
-        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found by lexists before rename.", False
+    if not os.path.exists(str(current_abs_path)): # Use os.path.exists for consistency with test
+        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found by os.path.exists before rename.", False
         
     new_name = replace_occurrences(orig_name)
     if new_name == orig_name:
@@ -583,7 +584,7 @@ def _execute_rename_transaction(
         _ensure_within_sandbox(current_abs_path, root_dir, f"rename src '{orig_name}'")
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename dest '{new_name}'")
 
-        if os.path.lexists(new_abs_path):
+        if os.path.exists(str(new_abs_path)): # Use os.path.exists
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
         
         print(f"FS_OP_RENAME_STDERR: Executing: Path('{current_abs_path}').rename('{new_abs_path}')", file=sys.stderr)
@@ -591,12 +592,15 @@ def _execute_rename_transaction(
         
         Path(current_abs_path).rename(new_abs_path)
         
-        rename_successful_on_disk = os.path.lexists(new_abs_path) and not os.path.lexists(current_abs_path)
-        print(f"FS_OP_RENAME_STDERR: After rename attempt: new_abs_path ('{new_abs_path}') exists: {os.path.lexists(new_abs_path)}. old_abs_path ('{current_abs_path}') exists: {os.path.lexists(current_abs_path)}. rename_successful_on_disk: {rename_successful_on_disk}", file=sys.stderr)
+        new_path_exists_after_rename = os.path.exists(str(new_abs_path))
+        old_path_gone_after_rename = not os.path.exists(str(current_abs_path))
+        rename_successful_on_disk = new_path_exists_after_rename and old_path_gone_after_rename
+
+        print(f"FS_OP_RENAME_STDERR: After rename attempt (using os.path.exists): new_abs_path ('{new_abs_path}') exists: {new_path_exists_after_rename}. old_abs_path ('{current_abs_path}') exists: {not old_path_gone_after_rename}. rename_successful_on_disk: {rename_successful_on_disk}", file=sys.stderr)
         sys.stderr.flush()
 
         if not rename_successful_on_disk:
-            return TransactionStatus.FAILED, f"Rename of '{current_abs_path}' to '{new_abs_path}' did not complete as expected on disk (new_exists={os.path.lexists(new_abs_path)}, old_exists={os.path.lexists(current_abs_path)}).", False
+            return TransactionStatus.FAILED, f"Rename of '{current_abs_path}' to '{new_abs_path}' did not complete as expected on disk (new_exists={new_path_exists_after_rename}, old_gone={old_path_gone_after_rename}).", False
 
         path_translation_map[orig_rel_path] = new_name
         path_cache.pop(orig_rel_path, None) 
