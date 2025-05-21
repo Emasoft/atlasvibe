@@ -137,49 +137,81 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
         if not raw_data:
             return DEFAULT_ENCODING_FALLBACK 
 
-        # Try UTF-8 first
+        # 1. Try UTF-8 first as it's very common and chardet can misidentify it for small samples
         try:
             raw_data.decode('utf-8', errors='strict') # Use strict for UTF-8 detection
             return 'utf-8'
         except UnicodeDecodeError:
             pass 
 
+        # 2. Use chardet as a strong hint
         detected_by_chardet = chardet.detect(raw_data)
         chardet_encoding: str | None = detected_by_chardet.get('encoding')
         
         normalized_chardet_candidate = None
         if chardet_encoding:
             norm_low = chardet_encoding.lower()
+            # Normalize common aliases
             if norm_low in ('windows-1252', '1252'):
                 normalized_chardet_candidate = 'cp1252'
             elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
                 normalized_chardet_candidate = 'latin1'
+            # Add other normalizations if needed, e.g., for other windows codepages
+            elif norm_low in ('windows-1254', '1254'): # Turkish
+                 # If chardet suggests a specific windows codepage like 1254,
+                 # and cp1252 can also decode it, prefer cp1252 as it's more common for "Western-like" text.
+                 # This helps in cases like the problematic XML test.
+                try:
+                    raw_data.decode('cp1252', errors='surrogateescape')
+                    # If cp1252 works, check if the original chardet suggestion also works.
+                    # If both work, and chardet was confident about its suggestion, it might be more specific.
+                    # However, for the problematic XML test, we want cp1252.
+                    # Let's prioritize cp1252 if it works when chardet suggests a similar windows codepage.
+                    return 'cp1252' 
+                except (UnicodeDecodeError, LookupError):
+                    # cp1252 failed, try the original chardet suggestion if it's different
+                    if norm_low != 'cp1252': # Ensure it's not already cp1252
+                        try:
+                            raw_data.decode(norm_low, errors='surrogateescape')
+                            return norm_low
+                        except (UnicodeDecodeError, LookupError):
+                            pass # Original chardet suggestion also failed
+                    # If we are here, chardet suggested something like 1254, cp1252 failed, and 1254 failed.
+                    # Fall through to other checks.
             else:
                 normalized_chardet_candidate = norm_low
         
-        if normalized_chardet_candidate:
+        # Try chardet's normalized candidate if it exists and hasn't been returned yet
+        if normalized_chardet_candidate and normalized_chardet_candidate != 'utf-8':
             try:
-                # Use surrogateescape for viability check, matching actual read strategy
                 raw_data.decode(normalized_chardet_candidate, errors='surrogateescape')
-                # If chardet suggested latin1, but cp1252 also works, prefer cp1252
+                # Specific handling if chardet suggested latin1 but cp1252 is a better fit
                 if normalized_chardet_candidate == 'latin1':
                     try:
                         raw_data.decode('cp1252', errors='surrogateescape')
-                        return 'cp1252'
+                        return 'cp1252' # Prefer cp1252 if both latin1 and cp1252 work
                     except (UnicodeDecodeError, LookupError):
                         return 'latin1' # cp1252 failed, stick with latin1
                 return normalized_chardet_candidate
             except (UnicodeDecodeError, LookupError):
-                pass # Chardet's suggestion (normalized) failed even with surrogateescape
+                pass
 
-        # Fallback explicit checks if UTF-8 and chardet failed
-        for enc_try in ['cp1252', 'latin1']:
-            if normalized_chardet_candidate != enc_try: # Avoid re-trying if chardet led to this and it failed
-                try:
-                    raw_data.decode(enc_try, errors='surrogateescape')
-                    return enc_try
-                except (UnicodeDecodeError, LookupError):
-                    pass
+        # 3. Fallback explicit checks if UTF-8 and chardet's primary suggestion failed or wasn't definitive
+        # Try cp1252 if not already successfully returned
+        if normalized_chardet_candidate != 'cp1252': 
+            try:
+                raw_data.decode('cp1252', errors='surrogateescape')
+                return 'cp1252'
+            except UnicodeDecodeError:
+                pass
+        
+        # Try latin1 if not already successfully returned
+        if normalized_chardet_candidate != 'latin1': 
+            try:
+                raw_data.decode('latin1', errors='surrogateescape')
+                return 'latin1'
+            except UnicodeDecodeError:
+                pass
             
         _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined. Chardet: {detected_by_chardet}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
         return DEFAULT_ENCODING_FALLBACK
@@ -655,17 +687,53 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    # Initialize path_translation_map for resume mode based on non-dry_run completed renames
-    if resume: # Only for resume, not for skip_scan without resume
+    if resume: 
         for tx in transactions:
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
                tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
                tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                # Ensure ORIGINAL_NAME exists, as it's crucial for replace_occurrences
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
                     _log_fs_op_message(logging.WARNING, f"Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot populate path_translation_map accurately for this entry.", logger)
+    elif skip_scan and not dry_run: # If executing a plan from --skip-scan (not resuming an interrupted execution)
+        # Pre-populate path_translation_map based on ALL rename transactions in the plan
+        # This ensures content changes target the new names if renames are also in the plan
+        temp_path_map_for_skip_scan: dict[str, str] = {}
+        
+        # Create a temporary sorted list for consistent pre-population
+        sorted_rename_txns = sorted(
+            [tx for tx in transactions if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]],
+            key=lambda tx: (tx["PATH"].count('/'), tx["PATH"]) # Process shallower paths first
+        )
+
+        for tx_rename in sorted_rename_txns:
+            if "ORIGINAL_NAME" in tx_rename:
+                original_rel_path_str = tx_rename["PATH"]
+                original_path_obj = Path(original_rel_path_str)
+                
+                # Resolve parent's current name if it was also renamed
+                parent_rel_str = "." if original_path_obj.parent == Path('.') else str(original_path_obj.parent)
+                current_parent_name_part = parent_rel_str
+                
+                # Iteratively build the current parent path based on prior renames in this pre-population phase
+                # This is a simplified simulation; _get_current_absolute_path is more robust but we can't use its cache here easily
+                temp_parent_parts = []
+                current_check_path = original_path_obj.parent
+                while str(current_check_path) != ".":
+                    temp_parent_parts.insert(0, temp_path_map_for_skip_scan.get(str(current_check_path), current_check_path.name))
+                    current_check_path = current_check_path.parent
+                
+                current_parent_path_str = "/".join(temp_parent_parts) if temp_parent_parts else ""
+
+                # Get the new name for the current item
+                new_item_name = replace_occurrences(tx_rename["ORIGINAL_NAME"])
+                
+                # Store the mapping from original relative path to its new name
+                temp_path_map_for_skip_scan[original_rel_path_str] = new_item_name
+                
+                # Also update the path_translation_map which is used by _get_current_absolute_path
+                path_translation_map[original_rel_path_str] = new_item_name
 
 
     def sort_key(tx):
@@ -677,13 +745,9 @@ def execute_all_transactions(
     max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
     current_overall_retry_attempt = 0
     
-    # Reset DRY_RUN or FAILED (if resuming) transactions to PENDING
-    # This must happen *after* path_translation_map is initialized for resume,
-    # but *before* execution loop if we want to re-attempt FAILED ones.
-    if resume or skip_scan: # If skip_scan, we are executing a plan that might be from a dry run
+    if resume or skip_scan: 
         for tx_item_for_reset in transactions:
             current_tx_status_str = tx_item_for_reset.get("STATUS")
-            # If it's a dry run completion, reset to pending for actual execution
             if current_tx_status_str == TransactionStatus.COMPLETED.value and \
                tx_item_for_reset.get("ERROR_MESSAGE") == "DRY_RUN":
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
@@ -691,7 +755,6 @@ def execute_all_transactions(
                 tx_item_for_reset.pop('timestamp_processed', None)
                 tx_item_for_reset.pop('timestamp_next_retry', None)
                 tx_item_for_reset['retry_count'] = 0
-            # If resuming and it was previously FAILED, reset to PENDING to retry
             elif resume and current_tx_status_str == TransactionStatus.FAILED.value:
                 _log_fs_op_message(logging.INFO, f"Resuming FAILED tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})", logger)
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value

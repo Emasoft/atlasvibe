@@ -258,7 +258,7 @@ def main_cli() -> None:
     execution_group.add_argument("--skip-scan", action="store_true", help=f"Skip scan phase; use existing '{MAIN_TRANSACTION_FILE_NAME}' in the root directory for execution.")
     execution_group.add_argument("--resume", action="store_true", help="Resume operation from existing transaction file, attempting to complete pending/failed items and scan for new/modified ones.")
     execution_group.add_argument("--force", "--yes", "-y", action="store_true", help="Force execution without confirmation prompt (use with caution).")
-    parser.add_argument("--timeout", type=float, default=10.0, metavar="MINUTES",  # Changed type to float
+    parser.add_argument("--timeout", type=float, default=10.0, metavar="MINUTES",
                         help="Maximum minutes for the retry phase when files are locked/inaccessible. "
                              "Set to 0 for indefinite retries (until CTRL-C). Minimum 1 minute if not 0. Default: 10 minutes.")
     
