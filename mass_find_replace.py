@@ -31,18 +31,14 @@ from pathlib import Path
 import sys
 import logging # Added for setting logger level
 from typing import Any # Keep Any if specifically needed
-import json
 import traceback
-import time 
 import pathspec 
 
 from prefect import flow, get_run_logger
 
 from file_system_operations import (
     scan_directory_for_occurrences, save_transactions, load_transactions,
-    execute_all_transactions, TransactionStatus, TransactionType,
-    TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE,
-    load_ignore_patterns 
+    execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
 )
 import replace_logic
 
