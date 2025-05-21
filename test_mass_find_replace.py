@@ -758,7 +758,7 @@ def test_main_cli_small_positive_timeout(temp_test_dir: Path, capsys):
     # Test with 0 (indefinite) - no warning
     test_args_zero = [str(temp_test_dir), "--mapping-file", str(dummy_map), "--timeout", "0", "--force"]
     res_zero = run_cli_command(test_args_zero, cwd=temp_test_dir)
-    assert f"Warning: --timeout value increased to minimum 1 minute." not in res_zero.stdout
+    assert "Warning: --timeout value increased to minimum 1 minute." not in res_zero.stdout
     assert res_zero.returncode == 0
 
 
