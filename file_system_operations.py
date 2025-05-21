@@ -61,6 +61,8 @@
 # - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
 # - `scan_directory_for_occurrences`: Added try-except OSError around item property checks (is_dir, is_file, is_symlink) to handle stat errors gracefully.
 # - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map and in sort_key.
+# - Added direct print to stderr in `execute_all_transactions` before dispatching a transaction.
+# - Added direct print to stderr at the entry of `_execute_content_line_transaction`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -84,6 +86,7 @@ from striprtf.striprtf import rtf_to_text
 from isbinary import is_binary_file
 import logging
 import builtins # For patching open in tests
+import sys # For direct stderr prints
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
 
@@ -587,6 +590,10 @@ def _execute_content_line_transaction(
     path_translation_map: dict[str, str], path_cache: dict[str, Path], dry_run: bool,
     logger: logging.Logger | None = None
 ) -> tuple[TransactionStatus, str | None, bool]:
+    # CRITICAL DIAGNOSTIC PRINT
+    print(f"FS_OP_EXEC_CONTENT_ENTRY_STDERR: tx_path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER')}, dry_run={dry_run}", file=sys.stderr)
+    sys.stderr.flush()
+
     orig_rel_path = tx_item["PATH"]
     line_num = tx_item["LINE_NUMBER"]
     orig_line_content_from_tx = tx_item["ORIGINAL_LINE_CONTENT"]
@@ -714,11 +721,12 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    if resume: 
+    if resume or (skip_scan and not dry_run): # Populate map for resume OR for skip_scan actual execution
         for tx in transactions:
-            tx_type = tx.get("TYPE") # Safely get TYPE
+            tx_type = tx.get("TYPE") 
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
                tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+                # For skip_scan, even DRY_RUN completed renames are used to build the map
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
@@ -726,8 +734,7 @@ def execute_all_transactions(
     
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
-        # Use .get() for "TYPE" to avoid KeyError if a transaction is malformed
-        return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) # Default to 3 for unknown types to sort last
+        return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
@@ -759,7 +766,7 @@ def execute_all_transactions(
         for tx_item in transactions:
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
             current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
-            tx_type = tx_item.get("TYPE") # Safely get TYPE
+            tx_type = tx_item.get("TYPE") 
 
             if (skip_folder_renaming and tx_type == TransactionType.FOLDER_NAME.value) or \
                (skip_file_renaming and tx_type == TransactionType.FILE_NAME.value) or \
@@ -787,6 +794,10 @@ def execute_all_transactions(
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
+                # CRITICAL DIAGNOSTIC PRINT
+                print(f"FS_OP_EXEC_ALL_ATTEMPTING_STDERR: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", file=sys.stderr)
+                sys.stderr.flush()
+
                 new_stat_from_exec: TransactionStatus
                 err_msg_from_exec: str | None = None
                 final_prop_content_for_log: str | None = None
@@ -802,7 +813,7 @@ def execute_all_transactions(
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_type}", False
                 except Exception as e_outer:
                     new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Outer execution error: {e_outer}", False
-                    _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) # Changed from print
+                    _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) 
 
                 if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
                     retry_count = tx_item.get('retry_count', 0)
