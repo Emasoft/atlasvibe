@@ -58,6 +58,7 @@
 # - Replaced `print` statements for warnings/errors with logger calls.
 # - `get_file_encoding`: Refined logic to prioritize `cp1252` over `latin1` if both can decode a sample when `latin1` is suggested by chardet.
 # - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
+# - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -128,22 +129,21 @@ def _log_fs_op_message(level: int, message: str, logger: logging.Logger | None =
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging.Logger | None = None) -> str | None:
     if file_path.suffix.lower() == '.rtf':
-        return 'latin-1' # RTF is typically ASCII/latin1 based for control words
+        return 'latin-1' 
 
     try:
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
         if not raw_data:
-            return DEFAULT_ENCODING_FALLBACK # Default for empty files
+            return DEFAULT_ENCODING_FALLBACK 
 
-        # 1. Try UTF-8 first as it's very common
+        # Try UTF-8 first
         try:
-            raw_data.decode('utf-8')
+            raw_data.decode('utf-8', errors='strict') # Use strict for UTF-8 detection
             return 'utf-8'
         except UnicodeDecodeError:
-            pass # Not UTF-8 or not clean UTF-8
+            pass 
 
-        # 2. Use chardet as a strong hint
         detected_by_chardet = chardet.detect(raw_data)
         chardet_encoding: str | None = detected_by_chardet.get('encoding')
         
@@ -157,55 +157,31 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
             else:
                 normalized_chardet_candidate = norm_low
         
-        # If chardet suggests cp1252 and it decodes, use it.
-        if normalized_chardet_candidate == 'cp1252':
+        if normalized_chardet_candidate:
             try:
-                raw_data.decode('cp1252')
-                return 'cp1252'
-            except (UnicodeDecodeError, LookupError):
-                pass
-        
-        # If chardet suggests latin1 and it decodes:
-        # also check if cp1252 decodes it. If so, prefer cp1252 as it's a superset.
-        if normalized_chardet_candidate == 'latin1':
-            try:
-                raw_data.decode('latin1') # Check if latin1 itself works
-                # If latin1 worked, see if cp1252 also works (cp1252 is a superset for relevant parts)
-                try:
-                    raw_data.decode('cp1252')
-                    return 'cp1252' # Prefer cp1252 if both work
-                except (UnicodeDecodeError, LookupError):
-                    return 'latin1' # cp1252 failed, but latin1 worked
-            except (UnicodeDecodeError, LookupError):
-                pass # latin1 failed
-
-        # If chardet suggested something else (not utf-8, cp1252, latin1) and it decodes
-        if normalized_chardet_candidate and \
-           normalized_chardet_candidate not in ['utf-8', 'cp1252', 'latin1']:
-            try:
-                raw_data.decode(normalized_chardet_candidate)
+                # Use surrogateescape for viability check, matching actual read strategy
+                raw_data.decode(normalized_chardet_candidate, errors='surrogateescape')
+                # If chardet suggested latin1, but cp1252 also works, prefer cp1252
+                if normalized_chardet_candidate == 'latin1':
+                    try:
+                        raw_data.decode('cp1252', errors='surrogateescape')
+                        return 'cp1252'
+                    except (UnicodeDecodeError, LookupError):
+                        return 'latin1' # cp1252 failed, stick with latin1
                 return normalized_chardet_candidate
             except (UnicodeDecodeError, LookupError):
-                pass
-        
-        # 3. Fallback explicit checks if chardet was unhelpful or its suggestion failed
-        # Try cp1252 if not already successfully returned
-        if normalized_chardet_candidate != 'cp1252': # Avoid re-trying if chardet suggested and it failed
-            try:
-                raw_data.decode('cp1252')
-                return 'cp1252'
-            except UnicodeDecodeError:
-                pass
-        
-        # Try latin1 if not already successfully returned
-        if normalized_chardet_candidate != 'latin1': # Avoid re-trying
-            try:
-                raw_data.decode('latin1')
-                return 'latin1'
-            except UnicodeDecodeError:
-                pass
+                pass # Chardet's suggestion (normalized) failed even with surrogateescape
+
+        # Fallback explicit checks if UTF-8 and chardet failed
+        for enc_try in ['cp1252', 'latin1']:
+            if normalized_chardet_candidate != enc_try: # Avoid re-trying if chardet led to this and it failed
+                try:
+                    raw_data.decode(enc_try, errors='surrogateescape')
+                    return enc_try
+                except (UnicodeDecodeError, LookupError):
+                    pass
             
-        _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined beyond basic fallbacks. Chardet: {detected_by_chardet}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
+        _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined. Chardet: {detected_by_chardet}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
         return DEFAULT_ENCODING_FALLBACK
             
     except Exception as e:
@@ -680,7 +656,7 @@ def execute_all_transactions(
     abs_r_dir = root_dir
 
     # Initialize path_translation_map for resume mode based on non-dry_run completed renames
-    if resume:
+    if resume: # Only for resume, not for skip_scan without resume
         for tx in transactions:
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
                tx.get("ERROR_MESSAGE") != "DRY_RUN" and \

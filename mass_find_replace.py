@@ -5,6 +5,8 @@
 # - Passed the Prefect logger from `main_flow` to `replace_logic.load_replacement_map`
 #   and to `file_system_operations` functions (`scan_directory_for_occurrences`,
 #   `load_transactions`, `save_transactions`, `execute_all_transactions`).
+# - Changed `argparse` type for `--timeout` from `int` to `float` to allow inputs like "0.5".
+# - Added `int()` casting for `args.timeout` before passing to `main_flow` if it's not 0.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -47,7 +49,7 @@ def main_flow(
     dry_run: bool, skip_scan: bool, resume: bool, force_execution: bool,
     ignore_symlinks_arg: bool, use_gitignore: bool, custom_ignore_file_path: str | None,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
-    timeout_minutes: int,
+    timeout_minutes: int, # Expecting int here
     quiet_mode: bool # Added for controlling print statements
 ):
     logger = get_run_logger()
@@ -256,7 +258,7 @@ def main_cli() -> None:
     execution_group.add_argument("--skip-scan", action="store_true", help=f"Skip scan phase; use existing '{MAIN_TRANSACTION_FILE_NAME}' in the root directory for execution.")
     execution_group.add_argument("--resume", action="store_true", help="Resume operation from existing transaction file, attempting to complete pending/failed items and scan for new/modified ones.")
     execution_group.add_argument("--force", "--yes", "-y", action="store_true", help="Force execution without confirmation prompt (use with caution).")
-    execution_group.add_argument("--timeout", type=int, default=10, metavar="MINUTES", 
+    parser.add_argument("--timeout", type=float, default=10.0, metavar="MINUTES",  # Changed type to float
                         help="Maximum minutes for the retry phase when files are locked/inaccessible. "
                              "Set to 0 for indefinite retries (until CTRL-C). Minimum 1 minute if not 0. Default: 10 minutes.")
     
@@ -268,12 +270,18 @@ def main_cli() -> None:
     if not args.quiet:
         print(f"{BLUE}{SCRIPT_NAME}{RESET}")
 
+    timeout_val_for_flow: int
     if args.timeout < 0:
         parser.error("--timeout cannot be negative.")
-    if args.timeout != 0 and args.timeout < 1 :
+    if args.timeout == 0:
+        timeout_val_for_flow = 0
+    elif args.timeout < 1.0:
         if not args.quiet:
-            print(f"{YELLOW}Warning: --timeout value increased to minimum 1 minute.{RESET}")
-        args.timeout = 1 
+            print(f"{YELLOW}Warning: --timeout value {args.timeout} increased to minimum 1 minute.{RESET}")
+        timeout_val_for_flow = 1
+    else:
+        timeout_val_for_flow = int(args.timeout)
+
 
     auto_exclude_basenames = [
         MAIN_TRANSACTION_FILE_NAME,
@@ -289,8 +297,9 @@ def main_cli() -> None:
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
               args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
               args.use_gitignore, args.custom_ignore_file,
-              args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, args.timeout,
-              args.quiet # Pass quiet mode to main_flow
+              args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, 
+              timeout_val_for_flow, # Pass validated and converted int
+              args.quiet 
              )
 
 if __name__ == "__main__":
