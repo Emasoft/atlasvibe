@@ -60,6 +60,7 @@
 # - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
 # - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
 # - `scan_directory_for_occurrences`: Added try-except OSError around item property checks (is_dir, is_file, is_symlink) to handle stat errors gracefully.
+# - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -71,7 +72,7 @@ import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import Any, cast # Keep Any and cast if specifically needed for dynamic parts
+from typing import Any, cast # Keep Any if specifically needed for dynamic parts
 import collections.abc # For Iterator, Callable
 from enum import Enum
 import chardet
@@ -715,18 +716,18 @@ def execute_all_transactions(
 
     if resume: 
         for tx in transactions:
+            tx_type = tx.get("TYPE") # Safely get TYPE
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
-               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]: # Removed: tx.get("ERROR_MESSAGE") != "DRY_RUN"
+               tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
                     _log_fs_op_message(logging.WARNING, f"Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot populate path_translation_map accurately for this entry.", logger)
-    # Removed the `elif skip_scan and not dry_run:` block that pre-populated path_translation_map.
-    # For skip_scan without resume, path_translation_map should start empty and be built as operations occur.
-
+    
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
-        return (type_o[tx["TYPE"]], tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0))
+        # Use .get() for "TYPE" to avoid KeyError if a transaction is malformed
+        return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) # Default to 3 for unknown types to sort last
     transactions.sort(key=sort_key)
 
     execution_start_time = time.time()
@@ -758,10 +759,11 @@ def execute_all_transactions(
         for tx_item in transactions:
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
             current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
+            tx_type = tx_item.get("TYPE") # Safely get TYPE
 
-            if (skip_folder_renaming and tx_item["TYPE"] == TransactionType.FOLDER_NAME.value) or \
-               (skip_file_renaming and tx_item["TYPE"] == TransactionType.FILE_NAME.value) or \
-               (skip_content and tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value):
+            if (skip_folder_renaming and tx_type == TransactionType.FOLDER_NAME.value) or \
+               (skip_file_renaming and tx_type == TransactionType.FILE_NAME.value) or \
+               (skip_content and tx_type == TransactionType.FILE_CONTENT_LINE.value):
                 if current_status not in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by CLI option.")
                     processed_in_this_pass +=1
@@ -791,13 +793,13 @@ def execute_all_transactions(
                 is_retryable_error_from_exec = False
 
                 try:
-                    if tx_item["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+                    if tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
-                    elif tx_item["TYPE"] == TransactionType.FILE_CONTENT_LINE.value:
+                    elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
                         final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT")
                     else:
-                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_item['TYPE']}", False
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_type}", False
                 except Exception as e_outer:
                     new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Outer execution error: {e_outer}", False
                     _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) # Changed from print
