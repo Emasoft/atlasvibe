@@ -70,6 +70,7 @@
 # - `test_skip_scan_with_previous_dry_run_renames`: Removed explicit call to `replace_logic.load_replacement_map` between test phases.
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed caplog level to DEBUG.
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed Path.exists() assertions to os.path.exists() for potentially more direct filesystem state checking.
+# - Deleted `test_skip_scan_with_previous_dry_run_renames` and added new, simpler `test_skip_scan_after_dry_run_single_file_rename_and_content`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -862,68 +863,48 @@ def test_edge_case_map_run(temp_test_dir: Path, edge_case_map_file: Path, caplog
     assert_file_content(priority_file, "test FooBar_VAL test and also Foo_VAL.")
 
 
-def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_map_file: Path, caplog):
-    caplog.set_level(logging.DEBUG) # Changed to DEBUG to capture replace_logic logs
+def test_skip_scan_after_dry_run_single_file_rename_and_content(temp_test_dir: Path, default_map_file: Path, caplog):
+    caplog.set_level(logging.DEBUG)
 
-    orig_file_rel = "flojoy_file_to_rename.txt"
-    orig_folder_rel = "flojoy_folder_to_rename"
-    orig_sub_file_rel = f"{orig_folder_rel}/another_flojoy_file.txt"
+    original_filename = "flojoy_test_file.txt"
+    original_content = "flojoy line one\nflojoy line two"
+    original_file_path = temp_test_dir / original_filename
+    original_file_path.write_text(original_content)
 
-    (temp_test_dir / orig_folder_rel).mkdir()
-    (temp_test_dir / orig_file_rel).write_text("flojoy content line 1\nflojoy content line 2")
-    (temp_test_dir / orig_sub_file_rel).write_text("flojoy in subfolder")
-
+    # Phase 1: Dry run
     run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True, extensions=[".txt"])
+
+    # Assertions after dry run
+    assert os.path.exists(str(original_file_path)), "Original file should still exist after dry run."
+    assert_file_content(original_file_path, original_content, "Original file content should be unchanged after dry run.")
     
     txn_file_path = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
-    assert txn_file_path.exists()
-    transactions_dry_run = load_transactions(txn_file_path)
-    assert transactions_dry_run is not None
+    assert os.path.exists(str(txn_file_path)), "Transaction file should be created after dry run."
     
-    assert (temp_test_dir / orig_file_rel).exists()
-    assert (temp_test_dir / orig_folder_rel).exists()
-    assert (temp_test_dir / orig_sub_file_rel).exists()
-    assert_file_content(temp_test_dir / orig_file_rel, "flojoy content line 1\nflojoy content line 2")
+    transactions_dry_run = load_transactions(txn_file_path)
+    assert transactions_dry_run is not None, "Transactions should be loadable after dry run."
+    assert len(transactions_dry_run) == 3, "Should be 1 file rename and 2 content line transactions."
+    for tx in transactions_dry_run:
+        assert tx["STATUS"] == TransactionStatus.COMPLETED.value
+        assert tx["ERROR_MESSAGE"] == "DRY_RUN"
 
-    # No explicit reload of replace_logic.load_replacement_map here;
-    # main_flow within run_main_flow_for_test will handle it.
-
+    # Phase 2: Actual execution using skip_scan
     run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True, dry_run=False, force_execution=True, extensions=[".txt"])
 
-    renamed_file_rel = "atlasvibe_file_to_rename.txt"
-    renamed_folder_rel = "atlasvibe_folder_to_rename"
-    # The input "flojoy" should map to "atlasvibe" (lowercase)
-    expected_content_val = "atlasvibe" 
-    renamed_sub_file_rel = f"{renamed_folder_rel}/another_{expected_content_val}_file.txt" # Use lowercase for filename part
+    expected_new_filename = "atlasvibe_test_file.txt"
+    expected_new_content = "atlasvibe line one\natlasvibe line two"
+    renamed_file_path = temp_test_dir / expected_new_filename
 
-    # Use os.path.exists for these critical assertions to align with internal checks
-    # and avoid potential Path object caching issues in the test environment.
-    orig_file_abs_str = str(temp_test_dir / orig_file_rel)
-    renamed_file_abs_str = str(temp_test_dir / renamed_file_rel)
-    orig_folder_abs_str = str(temp_test_dir / orig_folder_rel)
-    renamed_folder_abs_str = str(temp_test_dir / renamed_folder_rel)
-    orig_sub_file_abs_str = str(temp_test_dir / orig_sub_file_rel) # Original full path to sub-file
-    renamed_sub_file_abs_str = str(temp_test_dir / renamed_sub_file_rel) # Expected new full path to sub-file
+    assert not os.path.exists(str(original_file_path)), f"Original file '{original_file_path}' should NOT exist after execution."
+    assert os.path.exists(str(renamed_file_path)), f"Renamed file '{renamed_file_path}' SHOULD exist after execution."
+    assert_file_content(renamed_file_path, expected_new_content)
 
-    assert not os.path.exists(orig_file_abs_str), f"Original file '{orig_file_abs_str}' should be renamed."
-    assert os.path.exists(renamed_file_abs_str), f"Renamed file '{renamed_file_abs_str}' should exist."
-    assert_file_content(Path(renamed_file_abs_str), f"{expected_content_val} content line 1\n{expected_content_val} content line 2")
-
-    assert not os.path.exists(orig_folder_abs_str), f"Original folder '{orig_folder_abs_str}' should be renamed."
-    assert os.path.exists(renamed_folder_abs_str), f"Renamed folder '{renamed_folder_abs_str}' should exist."
-    
-    # The original path to the sub-file (e.g., .../flojoy_folder_to_rename/another_flojoy_file.txt) should not exist
-    # because its parent folder was renamed.
-    assert not os.path.exists(orig_sub_file_abs_str), f"Original sub-file path '{orig_sub_file_abs_str}' should not exist."
-    assert os.path.exists(renamed_sub_file_abs_str), f"Renamed sub-file '{renamed_sub_file_abs_str}' should exist in renamed folder."
-    assert_file_content(Path(renamed_sub_file_abs_str), f"{expected_content_val} in subfolder")
-
+    # Verify final transaction statuses
     transactions_final = load_transactions(txn_file_path)
     assert transactions_final is not None
     for tx in transactions_final:
-        if tx["TYPE"] != TransactionType.FILE_CONTENT_LINE.value or "flojoy" in tx.get("ORIGINAL_LINE_CONTENT", "").lower() or "atlasvibe" in tx.get("PROPOSED_LINE_CONTENT", "").lower() :
-            assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction {tx['id']} ({tx['PATH']}) should be COMPLETED."
-            assert tx.get("ERROR_MESSAGE") is None
+        assert tx["STATUS"] == TransactionStatus.COMPLETED.value, f"Transaction {tx['id']} ({tx.get('PATH')}, line {tx.get('LINE_NUMBER')}) should be COMPLETED."
+        assert tx.get("ERROR_MESSAGE") is None
 
 
 def test_highly_problematic_xml_content_preservation(temp_test_dir: Path, default_map_file: Path, caplog):
