@@ -4,6 +4,10 @@
 #   - Added `verbose_mode: bool = False` to the function signature.
 #   - Passed the `verbose_mode` parameter to the `main_flow` call.
 # - `test_main_cli_verbose_flag`: Updated assertion to match the actual stdout message for verbose mode.
+# - `run_cli_command`: Modified to explicitly pass Prefect-related environment variables
+#   (PREFECT_API_EPHEMERAL_SERVER_ENABLED, PREFECT_HOME, PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS, PREFECT_TEST_MODE)
+#   to the subprocess environment. This ensures that CLI tests run with the same Prefect
+#   test configuration as direct flow calls.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -696,7 +700,21 @@ SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent / "mass_find_replac
 
 def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProcess:
     command = [sys.executable, str(SCRIPT_PATH_FOR_CLI_TESTS)] + args_list
-    return subprocess.run(command, capture_output=True, text=True, cwd=cwd)
+    
+    # Inherit current environment and add/override Prefect test settings
+    env = os.environ.copy()
+    env["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
+    env["PREFECT_TEST_MODE"] = "True"
+    # PREFECT_HOME is set by the session fixture, so it should be inherited via os.environ.copy()
+    # If PREFECT_HOME was not set, Prefect would use default user-specific location.
+    # For CLI tests, ensuring PREFECT_HOME is also isolated if needed would be good,
+    # but the session fixture in conftest.py already handles this for the main pytest process.
+    # The key is that the subprocess needs to know it's in a test/ephemeral mode.
+    if "PREFECT_HOME" not in env: # Ensure PREFECT_HOME is set for subprocess if not already
+        env["PREFECT_HOME"] = str(cwd / ".prefect_cli_test_home") 
+        Path(env["PREFECT_HOME"]).mkdir(parents=True, exist_ok=True)
+
+    return subprocess.run(command, capture_output=True, text=True, cwd=cwd, env=env)
 
 def test_main_cli_negative_timeout(temp_test_dir: Path):
     res = run_cli_command([str(temp_test_dir), "--timeout", "-5"], cwd=temp_test_dir)
