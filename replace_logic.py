@@ -51,6 +51,8 @@
 # - Set `_DEBUG_REPLACE_LOGIC` to `False` by default.
 # - `_actual_replace_callback`: Re-canonicalize `match.group(0)` before map lookup to ensure robustness.
 # - `_actual_replace_callback`: Added a non-debug, warning-level log if a lookup_key is not found in _RAW_REPLACEMENT_MAPPING.
+# - Added diagnostic log to `replace_occurrences` for early exit conditions.
+# - Enhanced "NOT FOUND" warning in `_actual_replace_callback` with more details and character ordinals.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -91,6 +93,8 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
             prefix = "WARNING: "
         elif level == logging.INFO:
             prefix = "INFO: "
+        elif level == logging.DEBUG: # Added for debug fallback
+            prefix = "DEBUG: "
         print(f"{prefix}{message}")
 
 
@@ -233,14 +237,21 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
             _log_message(logging.DEBUG, f"  Found in map. Replacing with: '{replacement_value}'", _MODULE_LOGGER)
         return replacement_value
     else:
-        # This log will now appear even if _DEBUG_REPLACE_LOGIC is False, to help diagnose persistent issues.
-        _log_message(logging.WARNING, f"REPLACE_LOGIC_WARN: Callback lookup_key '{lookup_key}' (from matched: '{matched_text_from_input}') NOT FOUND in _RAW_REPLACEMENT_MAPPING. Map size: {len(_RAW_REPLACEMENT_MAPPING)}. Returning original matched text.", _MODULE_LOGGER)
-        if _DEBUG_REPLACE_LOGIC: # More detailed dump if debug is on
-            _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING keys: {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER) # Print some keys
+        warning_msg = (f"REPLACE_LOGIC_WARN_CALLBACK_LOOKUP_FAILED: lookup_key '{lookup_key}' (ords={[ord(c) for c in lookup_key]}) "
+                       f"derived from matched_text_from_input '{matched_text_from_input}' (ords={[ord(c) for c in matched_text_from_input]}) "
+                       f"NOT FOUND in _RAW_REPLACEMENT_MAPPING (size: {len(_RAW_REPLACEMENT_MAPPING)}). "
+                       f"Returning original matched text.")
+        _log_message(logging.WARNING, warning_msg, _MODULE_LOGGER)
+        if _DEBUG_REPLACE_LOGIC: 
+            _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER)
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
+        # This log message will help diagnose if globals are not set as expected.
+        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Early exit. _MAPPING_LOADED={_MAPPING_LOADED}, "
+                                   f"_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is {'None' if _COMPILED_PATTERN_FOR_ACTUAL_REPLACE is None else 'Set'}, "
+                                   f"_RAW_REPLACEMENT_MAPPING is {'Empty' if not _RAW_REPLACEMENT_MAPPING else 'Populated'}", _MODULE_LOGGER)
         return input_string
     if not isinstance(input_string, str):
         return input_string
