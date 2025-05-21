@@ -68,6 +68,7 @@
 #   For `skip_scan` without `resume`, the map starts empty.
 # - `_execute_rename_transaction`: Added more diagnostic prints and a hard check after `Path.rename()` to verify on-disk state.
 # - `_execute_rename_transaction`: Changed on-disk verification after rename to use `os.path.exists(str(path))` to align with test assertions.
+# - `_execute_content_line_transaction`: Modified to use original path for `current_abs_path` when `dry_run` is True.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -635,20 +636,29 @@ def _execute_content_line_transaction(
 
     if actual_new_line_content_unicode == orig_line_content_from_tx:
         return TransactionStatus.SKIPPED, "Line content unchanged by replacement logic.", False
-    try:
-        current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
-    except FileNotFoundError:
-        return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
-    except Exception as e:
-        return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
-    if current_abs_path.is_symlink():
+
+    current_abs_path: Path
+    if dry_run:
+        # For dry run content checks, always use the original path,
+        # as the file rename hasn't actually happened on disk.
+        current_abs_path = root_dir / Path(orig_rel_path)
+    else:
+        try:
+            current_abs_path = _get_current_absolute_path(orig_rel_path, root_dir, path_translation_map, path_cache)
+        except FileNotFoundError:
+            return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
+        except Exception as e:
+            return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
+
+    if current_abs_path.is_symlink(): # This check is fine for both dry and real runs
         return TransactionStatus.SKIPPED, f"'{current_abs_path}' is a symlink; content modification skipped.", False
     if not current_abs_path.is_file():
         return TransactionStatus.SKIPPED, f"'{current_abs_path}' not found or not a file.", False
-    if dry_run:
+    
+    if dry_run: # If it passed the checks above and is a dry_run, it's COMPLETED (for planning)
         return TransactionStatus.COMPLETED, "DRY_RUN", False
 
-    if is_rtf:
+    if is_rtf: # This check is after dry_run, so it only applies to actual execution
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
 
     can_orig_be_strictly_encoded = False
