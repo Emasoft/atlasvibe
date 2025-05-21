@@ -15,6 +15,7 @@
 # - Corrected F821 Undefined name error: `abs_r_dir` changed to `abs_root_dir` in `main_flow` when calling `execute_all_transactions`.
 # - `main_flow`: Added try-except OSError around file checking loop in resume logic to handle stat errors gracefully.
 # - `main_cli`: Re-added import checks for critical dependencies (`prefect`, `chardet`) at the beginning of the function.
+# - `main_flow`: Added call to `replace_logic.reset_module_state()` before loading map.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -61,6 +62,10 @@ def main_flow(
     quiet_mode: bool # Added for controlling print statements
 ):
     logger = get_run_logger()
+    
+    # Explicitly reset replace_logic module state before any operations for this flow run
+    replace_logic.reset_module_state()
+
     abs_root_dir = Path(directory).resolve(strict=False) 
     if not abs_root_dir.is_dir(): 
         logger.error(f"Error: Root directory '{abs_root_dir}' not found or not a directory.")

@@ -54,6 +54,8 @@
 # - Added diagnostic log to `replace_occurrences` for early exit conditions.
 # - Enhanced "NOT FOUND" warning in `_actual_replace_callback` with more details and character ordinals.
 # - Set `_DEBUG_REPLACE_LOGIC` to `True` to enable debug logs for diagnosing test failures.
+# - Added `reset_module_state()` function to explicitly clear all global states.
+# - `load_replacement_map()` no longer resets globals itself; relies on `reset_module_state()` being called prior.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -79,6 +81,23 @@ _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
 # Set to True to enable verbose debug prints in this module
 _DEBUG_REPLACE_LOGIC = True
 # --- END DEBUG CONFIG ---
+
+def reset_module_state():
+    """
+    Resets all global module-level variables to their initial states.
+    This is crucial for ensuring a clean state when the module's functions
+    might be called multiple times within the same process, e.g., in tests
+    or sequential script runs.
+    """
+    global _RAW_REPLACEMENT_MAPPING, _COMPILED_PATTERN_FOR_SCAN, _MAPPING_LOADED, \
+           _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER
+    
+    _RAW_REPLACEMENT_MAPPING = {}
+    _COMPILED_PATTERN_FOR_SCAN = None
+    _MAPPING_LOADED = False
+    _SORTED_RAW_KEYS_FOR_REPLACE = []
+    _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = None
+    _MODULE_LOGGER = None # Reset logger; it will be (re)set by load_replacement_map
 
 def _log_message(level: int, message: str, logger: logging.Logger | None = None):
     """Helper to log messages using provided logger or print as fallback."""
@@ -111,16 +130,17 @@ def strip_control_characters(text: str) -> str:
     return "".join(ch for ch in text if unicodedata.category(ch)[0] != 'C')
 
 def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None = None) -> bool:
+    """
+    Loads and processes the replacement mapping from the given JSON file.
+    Assumes that `reset_module_state()` has been called prior to this function
+    if a clean state is required.
+    """
     global _RAW_REPLACEMENT_MAPPING, _COMPILED_PATTERN_FOR_SCAN, _MAPPING_LOADED, \
            _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER
 
-    _MODULE_LOGGER = logger # Store logger for use by other functions in this module if needed
-
-    _RAW_REPLACEMENT_MAPPING = {}
-    _COMPILED_PATTERN_FOR_SCAN = None
-    _MAPPING_LOADED = False
-    _SORTED_RAW_KEYS_FOR_REPLACE = []
-    _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = None
+    # State is assumed to be clean or reset by caller via reset_module_state()
+    # Set the module logger for this loading context
+    _MODULE_LOGGER = logger
 
     try:
         with open(mapping_file_path, 'r', encoding='utf-8') as f:
@@ -173,7 +193,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
 
     if not _RAW_REPLACEMENT_MAPPING:
         _log_message(logging.WARNING, "No valid replacement rules found in the mapping file after initial loading/stripping.", logger)
-        _MAPPING_LOADED = True
+        _MAPPING_LOADED = True # Considered loaded, even if empty
         return True
 
     all_canonical_keys_for_recursion_check = set(_RAW_REPLACEMENT_MAPPING.keys())
@@ -189,7 +209,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
                     original_json_key_for_error_report = orig_k_json
                     break
             _log_message(logging.ERROR, f"Recursive mapping potential! Value '{value_original_from_map}' (for original JSON key '{original_json_key_for_error_report}', its canonical form '{normalized_value_stripped_for_check}' is also a canonical key). This is disallowed. Aborting.", logger)
-            _RAW_REPLACEMENT_MAPPING = {}
+            _RAW_REPLACEMENT_MAPPING = {} # Clear partially populated map
             return False
 
     pattern_keys_for_scan_and_replace: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
@@ -207,7 +227,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = _COMPILED_PATTERN_FOR_SCAN
     except re.error as e:
         _log_message(logging.ERROR, f"Could not compile regex pattern: {e}. Regex tried: '{combined_pattern_str}'", logger)
-        _RAW_REPLACEMENT_MAPPING = {}
+        _RAW_REPLACEMENT_MAPPING = {} # Clear map
         return False
         
     _MAPPING_LOADED = True
