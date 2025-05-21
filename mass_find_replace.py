@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - `main_flow`: Changed type hint for `path_last_processed_time` from `Dict[str, float]` to `dict[str, float]`.
+# - `main_flow`: Added `verbose_mode` parameter. If True, the Prefect run logger's level is set to `logging.DEBUG`.
+# - `main_cli`: Passed `args.verbose` to `main_flow` for the new `verbose_mode` parameter.
+# - `main_cli`: Added a comment to clarify that `quiet_mode` also suppresses the confirmation prompt.
 # - Removed commented-out `import logging` and `import prefect.runtime`.
 # - Passed the Prefect logger from `main_flow` to `replace_logic.load_replacement_map`
 #   and to `file_system_operations` functions (`scan_directory_for_occurrences`,
@@ -25,7 +29,8 @@
 import argparse
 from pathlib import Path
 import sys
-from typing import Any, Dict # Keep Any if specifically needed, Dict for path_last_processed_time
+import logging # Added for setting logger level
+from typing import Any # Keep Any if specifically needed
 import json
 import traceback
 import time 
@@ -58,10 +63,14 @@ def main_flow(
     dry_run: bool, skip_scan: bool, resume: bool, force_execution: bool,
     ignore_symlinks_arg: bool, use_gitignore: bool, custom_ignore_file_path: str | None,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
-    timeout_minutes: int, # Expecting int here
-    quiet_mode: bool # Added for controlling print statements
+    timeout_minutes: int, 
+    quiet_mode: bool,
+    verbose_mode: bool # Added for controlling logger verbosity
 ):
     logger = get_run_logger()
+    if verbose_mode:
+        logger.setLevel(logging.DEBUG)
+        logger.debug("Verbose mode enabled. Logger set to DEBUG level.")
     
     # Explicitly reset replace_logic module state before any operations for this flow run
     replace_logic.reset_module_state()
@@ -87,7 +96,7 @@ def main_flow(
         return
 
     map_file_path = Path(mapping_file).resolve()
-    if not replace_logic.load_replacement_map(map_file_path, logger=logger): # Pass logger
+    if not replace_logic.load_replacement_map(map_file_path, logger=logger): 
         logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}")
         return
     if not replace_logic._MAPPING_LOADED: 
@@ -112,7 +121,7 @@ def main_flow(
             except Exception as e:
                 logger.warning(f"{YELLOW}Warning: Could not read .gitignore file {gitignore_path}: {e}{RESET}")
         elif not quiet_mode:
-            logger.info(".gitignore not found in root, skipping.") # Only log if not quiet
+            logger.info(".gitignore not found in root, skipping.") 
     if custom_ignore_file_path:
         custom_ignore_abs_path = Path(custom_ignore_file_path).resolve()
         if custom_ignore_abs_path.is_file():
@@ -132,7 +141,9 @@ def main_flow(
             logger.error(f"Error compiling combined ignore patterns: {e}")
             final_ignore_spec = None 
 
-    if not dry_run and not force_execution and not resume and not quiet_mode: # Suppress prompt if quiet
+    # Confirmation prompt. Suppressed by dry_run, force_execution, resume, or quiet_mode.
+    # Note: quiet_mode suppressing an interactive prompt is a specific design choice here.
+    if not dry_run and not force_execution and not resume and not quiet_mode: 
         print(f"{BLUE}--- Proposed Operation ---{RESET}")
         print(f"Root Directory: {abs_root_dir}")
         print(f"Replacement Map File: {map_file_path}")
@@ -162,40 +173,41 @@ def main_flow(
         confirm = input("Proceed with these changes? (yes/no): ")
         if confirm.lower() != 'yes':
             print("Operation cancelled by user.")
+            logger.info("Operation cancelled by user via prompt.")
             return
 
     if not skip_scan:
         logger.info(f"Scanning '{abs_root_dir}'...")
         current_txns_for_resume: list[dict[str,Any]] | None = None
         paths_to_force_rescan: set[str] = set()
-        if resume and txn_json_path.exists(): # type: ignore
+        if resume and txn_json_path.exists(): 
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
-            current_txns_for_resume = load_transactions(txn_json_path, logger=logger) # Pass logger
+            current_txns_for_resume = load_transactions(txn_json_path, logger=logger) 
             if current_txns_for_resume is None:
                 logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
             elif not current_txns_for_resume:
                 logger.warning(f"{YELLOW}Warn: Txn file empty. Fresh scan.{RESET}")
             else:
                 logger.info("Checking for files modified since last processing...")
-                path_last_processed_time: Dict[str, float] = {} # Using typing.Dict as per user note in diff
-                for tx in current_txns_for_resume: # type: ignore
+                path_last_processed_time: dict[str, float] = {} 
+                for tx in current_txns_for_resume: 
                     tx_ts = tx.get("timestamp_processed", 0.0)
                     if tx.get("STATUS") in [TransactionStatus.COMPLETED.value, TransactionStatus.FAILED.value] and tx_ts > 0:
                          path_last_processed_time[tx["PATH"]] = max(path_last_processed_time.get(tx["PATH"],0.0), tx_ts)
                 
                 for item_fs in abs_root_dir.rglob("*"):
-                    try: # Added try for OSError during item_fs.is_file() or item_fs.stat()
+                    try: 
                         if item_fs.is_file() and not item_fs.is_symlink():
                             rel_p = str(item_fs.relative_to(abs_root_dir)).replace("\\","/")
-                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): # type: ignore
+                            if final_ignore_spec and final_ignore_spec.match_file(rel_p): 
                                 continue 
                             mtime = item_fs.stat().st_mtime
                             if rel_p in path_last_processed_time and mtime > path_last_processed_time[rel_p]:
                                 logger.info(f"File '{rel_p}' (mtime:{mtime:.0f}) modified after last process (ts:{path_last_processed_time[rel_p]:.0f}). Re-scan.")
                                 paths_to_force_rescan.add(rel_p)
-                    except OSError as e: # Catch OSError from is_file() or stat()
+                    except OSError as e: 
                         logger.warning(f"Could not access or stat {item_fs} during resume check: {e}")
-                    except Exception as e: # General catch for other errors within this item's processing
+                    except Exception as e: 
                         logger.warning(f"Unexpected error processing {item_fs} during resume check: {e}")
         
         found_txns = scan_directory_for_occurrences(
@@ -205,10 +217,10 @@ def main_flow(
             resume_from_transactions=current_txns_for_resume if resume else None,
             paths_to_force_rescan=paths_to_force_rescan if resume else None,
             skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming, skip_content=skip_content,
-            logger=logger # Pass logger
+            logger=logger 
         )
         
-        save_transactions(found_txns or [], txn_json_path, logger=logger) # Pass logger
+        save_transactions(found_txns or [], txn_json_path, logger=logger) 
         logger.info(f"Scan complete. {len(found_txns or [])} transactions planned in '{txn_json_path}'")
         if not found_txns:
             logger.info("No actionable occurrences found by scan." if replace_logic._RAW_REPLACEMENT_MAPPING else "Map empty and no scannable items found, or all items ignored.")
@@ -224,7 +236,7 @@ def main_flow(
         if not (skip_file_renaming and skip_folder_renaming and skip_content):
              logger.info("Map is empty. No string-based replacements will occur.")
 
-    txns_for_exec = load_transactions(txn_json_path, logger=logger) # Pass logger
+    txns_for_exec = load_transactions(txn_json_path, logger=logger) 
     if not txns_for_exec: 
         logger.info(f"No transactions found in {txn_json_path} to execute. Exiting.")
         return
@@ -233,7 +245,7 @@ def main_flow(
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
     stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
-                                     skip_scan, logger=logger) # Pass logger
+                                     skip_scan, logger=logger) 
     logger.info(f"{op_type} phase complete. Stats: {stats}")
     logger.info(f"Review '{txn_json_path}' for a detailed log of changes and their statuses.")
     
@@ -244,8 +256,6 @@ def main_flow(
 
 def main_cli() -> None:
     try:
-        # These are critical for the script's core functionality.
-        # If they are missing, the script cannot run Prefect flows or handle encodings.
         import prefect 
         import chardet 
     except ImportError as e:
@@ -287,8 +297,8 @@ def main_cli() -> None:
                              "Set to 0 for indefinite retries (until CTRL-C). Minimum 1 minute if not 0. Default: 10 minutes.")
     
     output_group = parser.add_argument_group('Output Control')
-    output_group.add_argument("--quiet", "-q", action="store_true", help="Suppress initial script name print and some informational messages from direct print statements (Prefect logs are separate).")
-    output_group.add_argument("--verbose", action="store_true", help="Enable more verbose output during operation (currently has limited additional effect beyond standard logging).")
+    output_group.add_argument("--quiet", "-q", action="store_true", help="Suppress initial script name print and some informational messages from direct print statements (Prefect logs are separate). Also suppresses the confirmation prompt, implying 'yes'.")
+    output_group.add_argument("--verbose", action="store_true", help="Enable more verbose output, setting Prefect logger to DEBUG level.")
     args = parser.parse_args()
 
     if not args.quiet:
@@ -296,7 +306,7 @@ def main_cli() -> None:
 
     timeout_val_for_flow: int
     if args.timeout < 0:
-        parser.error("--timeout cannot be negative.") # argparse handles exit
+        parser.error("--timeout cannot be negative.") 
     if args.timeout == 0:
         timeout_val_for_flow = 0
     elif args.timeout < 1.0:
@@ -316,20 +326,22 @@ def main_cli() -> None:
     final_exclude_files = list(set(args.exclude_files + auto_exclude_basenames))
     
     if args.verbose and not args.quiet:
-        print("Verbose mode enabled (effect on logging may vary).")
+        # This print is for CLI verbosity; Prefect logger verbosity is handled in main_flow
+        print("Verbose mode requested. Prefect log level will be set to DEBUG if flow runs.")
 
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
               args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
               args.use_gitignore, args.custom_ignore_file,
               args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, 
               timeout_val_for_flow, 
-              args.quiet 
+              args.quiet,
+              args.verbose # Pass verbose flag to the flow
              )
 
 if __name__ == "__main__":
     try:
         main_cli()
-    except Exception as e: # Catch any other unexpected error from main_cli or main_flow if not caught internally
+    except Exception as e: 
         sys.stderr.write(RED + f"An unexpected error occurred in __main__: {e}" + RESET + "\n")
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
