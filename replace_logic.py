@@ -58,6 +58,7 @@
 # - `load_replacement_map()` no longer resets globals itself; relies on `reset_module_state()` being called prior.
 # - Enhanced `_log_message` to use a fallback `_DEFAULT_DEBUG_LOGGER` for DEBUG messages when `_DEBUG_REPLACE_LOGIC` is True, ensuring visibility.
 # - Added debug log in `_actual_replace_callback` to show the state of `_RAW_REPLACEMENT_MAPPING` keys at the time of lookup.
+# - Added direct print to sys.stderr in `_actual_replace_callback` for critical debug info.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -121,15 +122,14 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
         # This ensures visibility even if the main logger setup is problematic.
         _DEFAULT_DEBUG_LOGGER.debug(message) # Already prefixed by _DEFAULT_DEBUG_LOGGER's formatter
         # Optionally, also log to the intended logger if it's different and available
-        if effective_logger and effective_logger is not _DEFAULT_DEBUG_LOGGER:
-            effective_logger.log(level, message)
-        return
+        if effective_logger and effective_logger is not _DEFAULT_DEBUG_LOGGER: # Avoid double logging if same
+            effective_logger.debug(message)
+        return # Handled
 
+    # For other levels, or if not _DEBUG_REPLACE_LOGIC for DEBUG level
     if effective_logger:
         effective_logger.log(level, message)
-    else:
-        # Fallback to print for non-debug messages if no logger is available
-        # or for debug messages if _DEBUG_REPLACE_LOGIC is False and no logger.
+    elif level >= logging.INFO: # Fallback print for INFO and above if no logger
         prefix = ""
         if level == logging.ERROR:
             prefix = "ERROR: "
@@ -137,11 +137,7 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
             prefix = "WARNING: "
         elif level == logging.INFO:
             prefix = "INFO: "
-        # For DEBUG level, if _DEBUG_REPLACE_LOGIC is False, it won't be printed here
-        # unless explicitly handled by a logger that's None.
-        # This path is mostly for ERROR/WARNING/INFO when no logger is set.
-        if level >= logging.INFO: # Only print INFO and above if no logger
-            print(f"{prefix}{message}")
+        print(f"{prefix}{message}")
 
 
 def strip_diacritics(text: str) -> str:
@@ -277,6 +273,9 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         _log_message(logging.DEBUG, f"DEBUG_CALLBACK: Matched segment (original from input)='{matched_text_from_input}'", _MODULE_LOGGER)
         _log_message(logging.DEBUG, f"  Canonicalized lookup_key='{lookup_key}' (len {len(lookup_key)}, ords={[ord(c) for c in lookup_key]})", _MODULE_LOGGER)
         _log_message(logging.DEBUG, f"  _RAW_REPLACEMENT_MAPPING at callback (first 5 keys): {list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}...", _MODULE_LOGGER)
+        # Direct print to stderr for critical debugging
+        print(f"RL_CALLBACK_DBG_STDERR: lookup_key='{lookup_key}', map_keys_sample={list(_RAW_REPLACEMENT_MAPPING.keys())[:5]}", file=sys.stderr)
+        sys.stderr.flush()
 
 
     replacement_value = _RAW_REPLACEMENT_MAPPING.get(lookup_key)
@@ -290,9 +289,17 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
                        f"derived from matched_text_from_input '{matched_text_from_input}' (ords={[ord(c) for c in matched_text_from_input]}) "
                        f"NOT FOUND in _RAW_REPLACEMENT_MAPPING (size: {len(_RAW_REPLACEMENT_MAPPING)}). "
                        f"Returning original matched text.")
-        _log_message(logging.WARNING, warning_msg, _MODULE_LOGGER)
-        if _DEBUG_REPLACE_LOGIC: 
-            _log_message(logging.DEBUG, f"  Full _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...", _MODULE_LOGGER)
+        
+        # Log to main/module logger at WARNING
+        if _MODULE_LOGGER:
+            _MODULE_LOGGER.warning(warning_msg)
+        else: # Fallback if no module logger
+            print(f"WARNING: {warning_msg}")
+
+        if _DEBUG_REPLACE_LOGIC:
+            # Also ensure it's visible via the default debug logger if debugging is on
+            _DEFAULT_DEBUG_LOGGER.warning(f"DEBUG_FALLBACK_WARN: {warning_msg}")
+            _DEFAULT_DEBUG_LOGGER.debug(f"  Full _RAW_REPLACEMENT_MAPPING keys (first 20): {list(_RAW_REPLACEMENT_MAPPING.keys())[:20]}...")
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
