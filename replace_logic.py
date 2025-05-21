@@ -59,6 +59,7 @@
 # - Enhanced `_log_message` to use a fallback `_DEFAULT_DEBUG_LOGGER` for DEBUG messages when `_DEBUG_REPLACE_LOGIC` is True, ensuring visibility.
 # - Added debug log in `_actual_replace_callback` to show the state of `_RAW_REPLACEMENT_MAPPING` keys at the time of lookup.
 # - Added direct print to sys.stderr in `_actual_replace_callback` for critical debug info.
+# - Added direct print to sys.stderr at the entry of `replace_occurrences` for critical debug.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -303,18 +304,25 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
+    if _DEBUG_REPLACE_LOGIC:
+        # CRITICAL DIAGNOSTIC PRINT to stderr
+        print(f"RL_REPLACE_OCC_ENTRY_STDERR: input='{input_string[:30].encode('unicode_escape').decode() if isinstance(input_string, str) else input_string!r}', "
+              f"_MAPPING_LOADED={_MAPPING_LOADED}, "
+              f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
+              f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}", file=sys.stderr)
+        sys.stderr.flush()
+
     if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
-        # This log message will help diagnose if globals are not set as expected.
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Early exit. _MAPPING_LOADED={_MAPPING_LOADED}, "
                                    f"_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is {'None' if _COMPILED_PATTERN_FOR_ACTUAL_REPLACE is None else 'Set'}, "
                                    f"_RAW_REPLACEMENT_MAPPING is {'Empty' if not _RAW_REPLACEMENT_MAPPING else 'Populated'}", _MODULE_LOGGER)
         return input_string
     if not isinstance(input_string, str):
-        return input_string
+        return input_string # Should not happen if called from Python, but good check
     
     nfc_input_string = unicodedata.normalize('NFC', input_string)
     
-    if _DEBUG_REPLACE_LOGIC: # Moved this block to be always active if _DEBUG_REPLACE_LOGIC is True
+    if _DEBUG_REPLACE_LOGIC:
         search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
         if search_result:
