@@ -8,6 +8,9 @@
 #   (PREFECT_API_EPHEMERAL_SERVER_ENABLED, PREFECT_HOME, PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS, PREFECT_TEST_MODE)
 #   to the subprocess environment. This ensures that CLI tests run with the same Prefect
 #   test configuration as direct flow calls.
+# - `run_cli_command`: Added `if "PREFECT_API_URL" in env: del env["PREFECT_API_URL"]`
+#   to ensure that any inherited PREFECT_API_URL from the parent environment is removed
+#   before running the CLI subprocess, allowing PREFECT_TEST_MODE to correctly use a local backend.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -705,6 +708,9 @@ def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProc
     env = os.environ.copy()
     env["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
     env["PREFECT_TEST_MODE"] = "True"
+    if "PREFECT_API_URL" in env: # Ensure PREFECT_API_URL is not inherited if set externally
+        del env["PREFECT_API_URL"]
+        
     # PREFECT_HOME is set by the session fixture, so it should be inherited via os.environ.copy()
     # If PREFECT_HOME was not set, Prefect would use default user-specific location.
     # For CLI tests, ensuring PREFECT_HOME is also isolated if needed would be good,

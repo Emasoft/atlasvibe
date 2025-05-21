@@ -22,6 +22,8 @@
 # - `main_flow`: Added call to `replace_logic.reset_module_state()` before loading map.
 # - `main_cli`: Changed dependency check for `prefect` and `chardet` to use `importlib.util.find_spec` to resolve F401 Ruff errors.
 # - Added `import importlib.util` for the `find_spec` calls.
+# - `main_cli`: Wrapped `importlib.util.find_spec` calls in try-except ImportError
+#   to correctly handle errors raised by mocked imports in tests.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -255,10 +257,17 @@ def main_flow(
 
 def main_cli() -> None:
     missing_deps = []
-    if importlib.util.find_spec("prefect") is None:
-        missing_deps.append("prefect")
-    if importlib.util.find_spec("chardet") is None:
-        missing_deps.append("chardet")
+    try:
+        if importlib.util.find_spec("prefect") is None:
+            missing_deps.append("prefect")
+    except ImportError: # Handle cases where find_spec itself might trigger the mocked import error in tests
+        missing_deps.append("prefect (import error during check)")
+
+    try:
+        if importlib.util.find_spec("chardet") is None:
+            missing_deps.append("chardet")
+    except ImportError:
+        missing_deps.append("chardet (import error during check)")
     
     if missing_deps:
         missing_deps_str = ", ".join(missing_deps)
