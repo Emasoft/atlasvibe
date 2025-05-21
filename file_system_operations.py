@@ -63,6 +63,7 @@
 # - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map and in sort_key.
 # - Added direct print to stderr in `execute_all_transactions` before dispatching a transaction.
 # - Added direct print to stderr at the entry of `_execute_content_line_transaction`.
+# - Added diagnostic print at the start of the main loop in `execute_all_transactions` to show each transaction being iterated.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -764,6 +765,10 @@ def execute_all_transactions(
         items_still_requiring_retry = []
 
         for tx_item in transactions:
+            # CRITICAL DIAGNOSTIC PRINT - Show every transaction being iterated
+            print(f"FS_OP_EXEC_ALL_ITERATING_TX_STDERR: {tx_item}", file=sys.stderr)
+            sys.stderr.flush()
+
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
             current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
             tx_type = tx_item.get("TYPE") 
