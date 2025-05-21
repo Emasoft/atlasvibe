@@ -20,6 +20,8 @@
 # - `main_flow`: Added try-except OSError around file checking loop in resume logic to handle stat errors gracefully.
 # - `main_cli`: Re-added import checks for critical dependencies (`prefect`, `chardet`) at the beginning of the function.
 # - `main_flow`: Added call to `replace_logic.reset_module_state()` before loading map.
+# - `main_cli`: Changed dependency check for `prefect` and `chardet` to use `importlib.util.find_spec` to resolve F401 Ruff errors.
+# - Added `import importlib.util` for the `find_spec` calls.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -33,6 +35,7 @@ import logging # Added for setting logger level
 from typing import Any # Keep Any if specifically needed
 import traceback
 import pathspec 
+import importlib.util # Added for find_spec
 
 from prefect import flow, get_run_logger
 
@@ -251,11 +254,15 @@ def main_flow(
 
 
 def main_cli() -> None:
-    try:
-        import prefect 
-        import chardet 
-    except ImportError as e:
-        sys.stderr.write(RED + f"CRITICAL ERROR: Missing core dependencies: {e}. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+    missing_deps = []
+    if importlib.util.find_spec("prefect") is None:
+        missing_deps.append("prefect")
+    if importlib.util.find_spec("chardet") is None:
+        missing_deps.append("chardet")
+    
+    if missing_deps:
+        missing_deps_str = ", ".join(missing_deps)
+        sys.stderr.write(RED + f"CRITICAL ERROR: Missing core dependencies: {missing_deps_str}. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
         sys.exit(1)
 
     parser = argparse.ArgumentParser(
