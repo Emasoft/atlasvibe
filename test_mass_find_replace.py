@@ -71,6 +71,7 @@
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed caplog level to DEBUG.
 # - `test_skip_scan_with_previous_dry_run_renames`: Changed Path.exists() assertions to os.path.exists() for potentially more direct filesystem state checking.
 # - Deleted `test_skip_scan_with_previous_dry_run_renames` and added new, simpler `test_skip_scan_after_dry_run_single_file_rename_and_content`.
+# - `test_skip_scan_after_dry_run_single_file_rename_and_content`: Corrected call to `assert_file_content` by removing the message string from the encoding parameter.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -876,7 +877,7 @@ def test_skip_scan_after_dry_run_single_file_rename_and_content(temp_test_dir: P
 
     # Assertions after dry run
     assert os.path.exists(str(original_file_path)), "Original file should still exist after dry run."
-    assert_file_content(original_file_path, original_content, "Original file content should be unchanged after dry run.")
+    assert_file_content(original_file_path, original_content) # Corrected: Removed message from encoding param
     
     txn_file_path = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     assert os.path.exists(str(txn_file_path)), "Transaction file should be created after dry run."
