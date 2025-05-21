@@ -59,6 +59,7 @@
 # - `get_file_encoding`: Refined logic to prioritize `cp1252` over `latin1` if both can decode a sample when `latin1` is suggested by chardet.
 # - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
 # - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
+# - `scan_directory_for_occurrences`: Added try-except OSError around item property checks (is_dir, is_file, is_symlink) to handle stat errors gracefully.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -223,24 +224,32 @@ def _walk_for_scan(
     logger: logging.Logger | None = None
 ) -> collections.abc.Iterator[Path]:
     for item_path_from_rglob in root_dir.rglob("*"):
-        if ignore_symlinks and item_path_from_rglob.is_symlink():
+        try:
+            if ignore_symlinks and item_path_from_rglob.is_symlink():
+                continue
+            is_excluded_by_dir_arg = any(item_path_from_rglob == ex_dir or \
+                                    (ex_dir.is_dir() and str(item_path_from_rglob).startswith(str(ex_dir) + os.sep))
+                                    for ex_dir in excluded_dirs_abs)
+            if is_excluded_by_dir_arg:
+                continue
+            if ignore_spec:
+                try:
+                    path_rel_to_root_for_spec = item_path_from_rglob.relative_to(root_dir)
+                    if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
+                       (item_path_from_rglob.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
+                        continue
+                except ValueError: # Not relative, should not happen with rglob from root
+                    pass 
+                except Exception as e_spec: # Catch other pathspec errors
+                    _log_fs_op_message(logging.WARNING, f"Error during ignore_spec matching for {item_path_from_rglob} relative to {root_dir}: {e_spec}", logger)
+            yield item_path_from_rglob
+        except OSError as e_os: # Catch OSError from is_symlink, is_dir
+            _log_fs_op_message(logging.WARNING, f"OS error accessing attributes of {item_path_from_rglob}: {e_os}. Skipping item.", logger)
             continue
-        is_excluded_by_dir_arg = any(item_path_from_rglob == ex_dir or \
-                                   (ex_dir.is_dir() and str(item_path_from_rglob).startswith(str(ex_dir) + os.sep))
-                                   for ex_dir in excluded_dirs_abs)
-        if is_excluded_by_dir_arg:
+        except Exception as e_gen: # Catch any other unexpected error for this item
+            _log_fs_op_message(logging.ERROR, f"Unexpected error processing item {item_path_from_rglob} in _walk_for_scan: {e_gen}. Skipping item.", logger)
             continue
-        if ignore_spec:
-            try:
-                path_rel_to_root_for_spec = item_path_from_rglob.relative_to(root_dir)
-                if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
-                   (item_path_from_rglob.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
-                    continue
-            except ValueError:
-                pass
-            except Exception as e:
-                _log_fs_op_message(logging.WARNING, f"Error during ignore_spec matching for {item_path_from_rglob} relative to {root_dir}: {e}", logger)
-        yield item_path_from_rglob
+
 
 def _get_current_absolute_path(
     original_relative_path_str: str, root_dir: Path,
@@ -300,44 +309,64 @@ def scan_directory_for_occurrences(
     binary_log_path = abs_root_dir / BINARY_MATCHES_LOG_FILE
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec, logger=logger)
-    first_item = next(item_iterator, None)
-    if first_item is None:
-        return []
-    def combined_iterator() -> collections.abc.Iterator[Path]:
-        if first_item:
-            yield first_item
-        yield from item_iterator
+    
+    # Combined iterator logic moved into _walk_for_scan for simplicity if first_item handling is not strictly needed here.
+    # If it was for a specific pre-check, that logic would need to be re-evaluated.
+    # For now, directly iterate.
 
-    for item_abs_path in combined_iterator():
+    for item_abs_path in item_iterator: # Use the robust iterator
         try:
             relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
-        except ValueError:
+        except ValueError: # Should be rare if _walk_for_scan yields paths from root_dir.rglob
+            _log_fs_op_message(logging.WARNING, f"Could not get relative path for {item_abs_path} against {abs_root_dir}. Skipping.", logger)
             continue
+        
         if item_abs_path.name in excluded_basenames or relative_path_str in excluded_relative_paths_set:
             continue
 
         original_name = item_abs_path.name
         searchable_name = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(original_name)))
+        
+        item_is_dir = False
+        item_is_file = False
+        item_is_symlink = False
+        try:
+            item_is_symlink = item_abs_path.is_symlink() # Symlink check first
+            if not item_is_symlink: # Only check is_dir/is_file if not a symlink we're ignoring for type
+                item_is_dir = item_abs_path.is_dir()
+                item_is_file = item_abs_path.is_file()
+            elif ignore_symlinks: # If it is a symlink and we ignore all symlinks
+                 continue
+            else: # It's a symlink, and we are not ignoring all symlinks (we might rename the link itself)
+                 item_is_file = True # Treat symlinks to files as files for name replacement purposes
+                 # Symlinks to dirs are also treated as "files" for name replacement of the link itself
+        except OSError as e_stat:
+            _log_fs_op_message(logging.WARNING, f"OS error checking type of {item_abs_path}: {e_stat}. Skipping item.", logger)
+            continue
+
+
         if (scan_pattern and scan_pattern.search(searchable_name)) and \
            (replace_occurrences(original_name) != original_name):
             tx_type_val: str | None = None
-            if item_abs_path.is_dir() and not item_abs_path.is_symlink():
+            if item_is_dir: # True only if not a symlink and is_dir() was true
                 if not skip_folder_renaming:
                     tx_type_val = TransactionType.FOLDER_NAME.value
-            elif item_abs_path.is_file() or item_abs_path.is_symlink():
+            elif item_is_file or item_is_symlink: # True if is_file() or is_symlink() (and not ignore_symlinks)
                 if not skip_file_renaming:
                     tx_type_val = TransactionType.FILE_NAME.value
+            
             if tx_type_val:
                 tx_id_tuple = (relative_path_str, tx_type_val, 0)
                 if tx_id_tuple not in existing_transaction_ids:
                     processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":tx_type_val, "PATH":relative_path_str, "ORIGINAL_NAME":original_name, "LINE_NUMBER":0, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                     existing_transaction_ids.add(tx_id_tuple)
 
-        if not skip_content and item_abs_path.is_file() and not item_abs_path.is_symlink():
+        if not skip_content and item_is_file: # Only process content if it's a regular file
             is_rtf = item_abs_path.suffix.lower() == '.rtf'
             try:
                 is_bin = is_binary_file(str(item_abs_path))
-            except FileNotFoundError:
+            except FileNotFoundError: # Should not happen if item_is_file is true
+                _log_fs_op_message(logging.WARNING, f"File not found for binary check: {item_abs_path}. Skipping content scan.", logger)
                 continue
             except Exception as e_isbin:
                 _log_fs_op_message(logging.WARNING, f"Could not determine if {item_abs_path} is binary: {e_isbin}. Skipping content scan.", logger)
@@ -361,8 +390,10 @@ def scan_directory_for_occurrences(
                                 with open(binary_log_path, 'a', encoding='utf-8') as log_f:
                                     log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
                                 offset = idx + len(key_bytes)
-                    except Exception as e:
-                        _log_fs_op_message(logging.WARNING, f"Error processing binary {item_abs_path} for logging: {e}", logger)
+                    except OSError as e_bin_read: # Catch OS errors during binary read
+                        _log_fs_op_message(logging.WARNING, f"OS error reading binary file {item_abs_path} for logging: {e_bin_read}", logger)
+                    except Exception as e_bin_proc: # Catch other errors
+                        _log_fs_op_message(logging.WARNING, f"Error processing binary {item_abs_path} for logging: {e_bin_proc}", logger)
                 continue
 
             if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
@@ -384,22 +415,28 @@ def scan_directory_for_occurrences(
                     if not rtf_source_str:
                         rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
                     file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
-                    file_encoding = 'utf-8'
-                except Exception as e:
-                    _log_fs_op_message(logging.WARNING, f"Error extracting text from RTF {item_abs_path}: {e}", logger)
+                    file_encoding = 'utf-8' # Content is now plain text
+                except OSError as e_rtf_read:
+                     _log_fs_op_message(logging.WARNING, f"OS error reading RTF file {item_abs_path}: {e_rtf_read}", logger)
+                     continue
+                except Exception as e_rtf_proc:
+                    _log_fs_op_message(logging.WARNING, f"Error extracting text from RTF {item_abs_path}: {e_rtf_proc}", logger)
                     continue
             else:
                 file_encoding = get_file_encoding(item_abs_path, logger=logger) or DEFAULT_ENCODING_FALLBACK
                 try:
                     with open(item_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f_scan:
                         file_content_for_scan = f_scan.read()
-                except Exception as e:
-                    _log_fs_op_message(logging.WARNING, f"Error reading text file {item_abs_path} (enc:{file_encoding}): {e}", logger)
+                except OSError as e_txt_read:
+                    _log_fs_op_message(logging.WARNING, f"OS error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_read}", logger)
                     continue
-
+                except Exception as e_txt_proc: # Catch other errors like LookupError for encoding
+                    _log_fs_op_message(logging.WARNING, f"Error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_proc}", logger)
+                    continue
+            
             if file_content_for_scan is not None:
                 lines_for_scan = file_content_for_scan.splitlines(keepends=True)
-                if not lines_for_scan and file_content_for_scan:
+                if not lines_for_scan and file_content_for_scan: # Handle files with no newlines but content
                     lines_for_scan = [file_content_for_scan]
 
                 for line_idx, line_content in enumerate(lines_for_scan):
