@@ -66,6 +66,7 @@
 # - Added diagnostic print at the start of the main loop in `execute_all_transactions` to show each transaction being iterated.
 # - `execute_all_transactions`: Changed `path_translation_map` pre-population to only occur if `resume=True`.
 #   For `skip_scan` without `resume`, the map starts empty.
+# - `_execute_rename_transaction`: Added more diagnostic prints and a hard check after `Path.rename()` to verify on-disk state.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -557,28 +558,51 @@ def _execute_rename_transaction(
         return TransactionStatus.SKIPPED, f"Parent for '{orig_rel_path}' not found.", False
     except Exception as e:
         return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
+    
+    print(f"FS_OP_RENAME_STDERR: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', lexists={os.path.lexists(current_abs_path)}", file=sys.stderr)
+    sys.stderr.flush()
+
     if not os.path.lexists(current_abs_path):
-        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' not found by lexists.", False
+        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found by lexists before rename.", False
+        
     new_name = replace_occurrences(orig_name)
     if new_name == orig_name:
         return TransactionStatus.SKIPPED, "Name unchanged by replacement logic.", False
+    
     new_abs_path = current_abs_path.with_name(new_name)
+
     if not dry_run and orig_name == SELF_TEST_ERROR_FILE_BASENAME:
         return TransactionStatus.FAILED, "Simulated rename error for self-test.", False
+        
     if dry_run:
         path_translation_map[orig_rel_path] = new_name
         path_cache.pop(orig_rel_path, None)
         return TransactionStatus.COMPLETED, "DRY_RUN", False
+        
     try:
         _ensure_within_sandbox(current_abs_path, root_dir, f"rename src '{orig_name}'")
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename dest '{new_name}'")
+
         if os.path.lexists(new_abs_path):
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
+        
+        print(f"FS_OP_RENAME_STDERR: Executing: Path('{current_abs_path}').rename('{new_abs_path}')", file=sys.stderr)
+        sys.stderr.flush()
+        
         Path(current_abs_path).rename(new_abs_path)
+        
+        rename_successful_on_disk = os.path.lexists(new_abs_path) and not os.path.lexists(current_abs_path)
+        print(f"FS_OP_RENAME_STDERR: After rename attempt: new_abs_path ('{new_abs_path}') exists: {os.path.lexists(new_abs_path)}. old_abs_path ('{current_abs_path}') exists: {os.path.lexists(current_abs_path)}. rename_successful_on_disk: {rename_successful_on_disk}", file=sys.stderr)
+        sys.stderr.flush()
+
+        if not rename_successful_on_disk:
+            return TransactionStatus.FAILED, f"Rename of '{current_abs_path}' to '{new_abs_path}' did not complete as expected on disk (new_exists={os.path.lexists(new_abs_path)}, old_exists={os.path.lexists(current_abs_path)}).", False
+
         path_translation_map[orig_rel_path] = new_name
-        path_cache.pop(orig_rel_path, None)
-        path_cache[orig_rel_path] = new_abs_path
+        path_cache.pop(orig_rel_path, None) 
+        path_cache[orig_rel_path] = new_abs_path 
         return TransactionStatus.COMPLETED, None, False
+        
     except OSError as e:
         if _is_retryable_os_error(e):
             return TransactionStatus.RETRY_LATER, f"OS error (retryable): {e}", True
@@ -593,7 +617,6 @@ def _execute_content_line_transaction(
     path_translation_map: dict[str, str], path_cache: dict[str, Path], dry_run: bool,
     logger: logging.Logger | None = None
 ) -> tuple[TransactionStatus, str | None, bool]:
-    # CRITICAL DIAGNOSTIC PRINT
     print(f"FS_OP_EXEC_CONTENT_ENTRY_STDERR: tx_path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER')}, dry_run={dry_run}", file=sys.stderr)
     sys.stderr.flush()
 
@@ -731,6 +754,8 @@ def execute_all_transactions(
                tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
                tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
                 if "ORIGINAL_NAME" in tx:
+                    # When resuming, the new name is what replace_occurrences would produce from ORIGINAL_NAME
+                    # This assumes the replacement map hasn't changed in a way that alters the output for this key.
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
                     _log_fs_op_message(logging.WARNING, f"Resuming: Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot accurately reflect this rename in path translation map for subsequent transactions in this run.", logger)
@@ -769,7 +794,6 @@ def execute_all_transactions(
         items_still_requiring_retry = []
 
         for tx_item in transactions:
-            # CRITICAL DIAGNOSTIC PRINT - Show every transaction being iterated
             print(f"FS_OP_EXEC_ALL_ITERATING_TX_STDERR: {tx_item}", file=sys.stderr)
             sys.stderr.flush()
 
@@ -803,7 +827,6 @@ def execute_all_transactions(
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
-                # CRITICAL DIAGNOSTIC PRINT
                 print(f"FS_OP_EXEC_ALL_ATTEMPTING_STDERR: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", file=sys.stderr)
                 sys.stderr.flush()
 
