@@ -61,6 +61,7 @@
 # - `SCRIPT_PATH_FOR_CLI_TESTS`: Changed from `parent.parent` to `parent` assuming `test_mass_find_replace.py` is in the project root.
 # - `test_main_cli_missing_dependency`: Changed to use `patch('builtins.__import__')` for more reliable simulation of missing modules.
 # - `test_edge_case_map_run`: Corrected assertion for content of `renamed_content_controls_file`. The content "My\nKey" should NOT be replaced by the rule for canonical "MyKey".
+# - `test_main_flow_resume_stat_error`: Changed `nonlocal _MOCK_STAT_CALLED_GUARD` to `global _MOCK_STAT_CALLED_GUARD` in `mock_stat_conditional`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -700,7 +701,7 @@ def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path
     _MOCK_STAT_CALLED_GUARD = False # Reset guard for each test run
 
     def mock_stat_conditional(self_path_obj, *args, **kwargs):
-        nonlocal _MOCK_STAT_CALLED_GUARD
+        global _MOCK_STAT_CALLED_GUARD # Use global to modify the module-level guard
         # Check if the path object being stat-ed is our target
         # We compare string representations of resolved paths to be robust
         # The guard prevents recursion if resolve() itself calls stat() on the same path.
