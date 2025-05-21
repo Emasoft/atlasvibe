@@ -20,9 +20,12 @@
 # - Programmatically generated stripped keys for complex and precision maps to ensure alignment with replace_logic.
 # - Added debug prints to show original keys and their stripped versions used for test data generation.
 # - Stripped keys used for test data generation are now also NFC normalized.
-# - Added `prefect_test_settings` session-scoped autouse fixture to disable
+# - `prefect_test_settings` session-scoped autouse fixture to disable
 #   Prefect's ephemeral API server during tests. This aims to prevent the
 #   `ValueError: I/O operation on closed file` during Prefect's shutdown logging.
+# - `prefect_test_settings`: Extended to set `PREFECT_HOME` to a temporary directory
+#   for the test session to isolate Prefect's SQLite database and prevent locking issues.
+#   Also disables `PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -46,19 +49,46 @@ VERY_LARGE_FILE_LINES = 10000
 VERY_LARGE_FILE_MATCH_INTERVAL = 500
 
 @pytest.fixture(scope="session", autouse=True)
-def prefect_test_settings():
+def prefect_test_settings(tmp_path_factory):
     """
     Session-scoped fixture to configure Prefect settings for the test environment.
-    Disables the ephemeral API server to prevent logging errors on shutdown with pytest.
+    Disables the ephemeral API server, sets PREFECT_HOME to a temporary directory,
+    and disables usage stats to prevent logging errors and database conflicts.
     """
-    original_setting = os.environ.get("PREFECT_API_EPHEMERAL_SERVER_ENABLED")
+    original_api_setting = os.environ.get("PREFECT_API_EPHEMERAL_SERVER_ENABLED")
     os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
+
+    original_prefect_home = os.environ.get("PREFECT_HOME")
+    temp_prefect_home = tmp_path_factory.mktemp("prefect_home_session")
+    os.environ["PREFECT_HOME"] = str(temp_prefect_home)
+    
+    original_usage_stats = os.environ.get("PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS")
+    os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"] = "false"
+
     yield
-    if original_setting is None:
+
+    if original_api_setting is None:
         if "PREFECT_API_EPHEMERAL_SERVER_ENABLED" in os.environ:
             del os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"]
     else:
-        os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = original_setting
+        os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = original_api_setting
+
+    if original_prefect_home is None:
+        if "PREFECT_HOME" in os.environ:
+            del os.environ["PREFECT_HOME"]
+    else:
+        os.environ["PREFECT_HOME"] = original_prefect_home
+        
+    if original_usage_stats is None:
+        if "PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS" in os.environ:
+            del os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"]
+    else:
+        os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"] = original_usage_stats
+
+    # tmp_path_factory should handle cleanup of temp_prefect_home
+    # If explicit cleanup is desired and causes issues, it can be added here:
+    # shutil.rmtree(temp_prefect_home, ignore_errors=True)
+
 
 def create_test_environment_content(
     base_dir: Path,
