@@ -310,14 +310,10 @@ def scan_directory_for_occurrences(
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec, logger=logger)
     
-    # Combined iterator logic moved into _walk_for_scan for simplicity if first_item handling is not strictly needed here.
-    # If it was for a specific pre-check, that logic would need to be re-evaluated.
-    # For now, directly iterate.
-
-    for item_abs_path in item_iterator: # Use the robust iterator
+    for item_abs_path in item_iterator:
         try:
             relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
-        except ValueError: # Should be rare if _walk_for_scan yields paths from root_dir.rglob
+        except ValueError:
             _log_fs_op_message(logging.WARNING, f"Could not get relative path for {item_abs_path} against {abs_root_dir}. Skipping.", logger)
             continue
         
@@ -331,15 +327,14 @@ def scan_directory_for_occurrences(
         item_is_file = False
         item_is_symlink = False
         try:
-            item_is_symlink = item_abs_path.is_symlink() # Symlink check first
-            if not item_is_symlink: # Only check is_dir/is_file if not a symlink we're ignoring for type
+            item_is_symlink = item_abs_path.is_symlink()
+            if not item_is_symlink:
                 item_is_dir = item_abs_path.is_dir()
                 item_is_file = item_abs_path.is_file()
-            elif ignore_symlinks: # If it is a symlink and we ignore all symlinks
+            elif ignore_symlinks:
                  continue
-            else: # It's a symlink, and we are not ignoring all symlinks (we might rename the link itself)
-                 item_is_file = True # Treat symlinks to files as files for name replacement purposes
-                 # Symlinks to dirs are also treated as "files" for name replacement of the link itself
+            else: 
+                 item_is_file = True # Treat symlinks as files for name replacement
         except OSError as e_stat:
             _log_fs_op_message(logging.WARNING, f"OS error checking type of {item_abs_path}: {e_stat}. Skipping item.", logger)
             continue
@@ -348,10 +343,10 @@ def scan_directory_for_occurrences(
         if (scan_pattern and scan_pattern.search(searchable_name)) and \
            (replace_occurrences(original_name) != original_name):
             tx_type_val: str | None = None
-            if item_is_dir: # True only if not a symlink and is_dir() was true
+            if item_is_dir:
                 if not skip_folder_renaming:
                     tx_type_val = TransactionType.FOLDER_NAME.value
-            elif item_is_file or item_is_symlink: # True if is_file() or is_symlink() (and not ignore_symlinks)
+            elif item_is_file or item_is_symlink: # If it's a symlink not ignored, its name can be processed
                 if not skip_file_renaming:
                     tx_type_val = TransactionType.FILE_NAME.value
             
@@ -361,11 +356,11 @@ def scan_directory_for_occurrences(
                     processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":tx_type_val, "PATH":relative_path_str, "ORIGINAL_NAME":original_name, "LINE_NUMBER":0, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                     existing_transaction_ids.add(tx_id_tuple)
 
-        if not skip_content and item_is_file: # Only process content if it's a regular file
+        if not skip_content and item_is_file: # Only process content if it's a regular file (not a symlink to a dir, not a dir itself)
             is_rtf = item_abs_path.suffix.lower() == '.rtf'
             try:
                 is_bin = is_binary_file(str(item_abs_path))
-            except FileNotFoundError: # Should not happen if item_is_file is true
+            except FileNotFoundError: 
                 _log_fs_op_message(logging.WARNING, f"File not found for binary check: {item_abs_path}. Skipping content scan.", logger)
                 continue
             except Exception as e_isbin:
@@ -390,9 +385,9 @@ def scan_directory_for_occurrences(
                                 with open(binary_log_path, 'a', encoding='utf-8') as log_f:
                                     log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
                                 offset = idx + len(key_bytes)
-                    except OSError as e_bin_read: # Catch OS errors during binary read
+                    except OSError as e_bin_read: 
                         _log_fs_op_message(logging.WARNING, f"OS error reading binary file {item_abs_path} for logging: {e_bin_read}", logger)
-                    except Exception as e_bin_proc: # Catch other errors
+                    except Exception as e_bin_proc: 
                         _log_fs_op_message(logging.WARNING, f"Error processing binary {item_abs_path} for logging: {e_bin_proc}", logger)
                 continue
 

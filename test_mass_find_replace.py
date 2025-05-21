@@ -64,7 +64,7 @@
 # - `test_main_flow_resume_stat_error`: Changed `nonlocal _MOCK_STAT_CALLED_GUARD` to `global _MOCK_STAT_CALLED_GUARD` in `mock_stat_conditional`.
 # - `test_main_cli_small_positive_timeout`: Changed assertion to check `res_float.stderr` for Prefect logs.
 # - `test_main_cli_missing_dependency`: Relaxed assertion for `printed_error` to check for general error and only one of the missing modules.
-# - `test_skip_scan_with_previous_dry_run_renames`: Changed expected content to "ATLASVIBE..." to match the last overriding key in `default_mapping.json`.
+# - `test_skip_scan_with_previous_dry_run_renames`: Changed expected content to "atlasvibe..." to match the lowercase "flojoy" key from `default_mapping.json`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -896,9 +896,9 @@ def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_ma
 
     renamed_file_rel = "atlasvibe_file_to_rename.txt"
     renamed_folder_rel = "atlasvibe_folder_to_rename"
-    # The expected content should reflect the last value in the map for keys that canonicalize to "flojoy"
-    expected_content_val = "ATLASVIBE" # From "FLOJOY": "ATLASVIBE"
-    renamed_sub_file_rel = f"{renamed_folder_rel}/another_{expected_content_val.lower()}_file.txt"
+    # The input "flojoy" should map to "atlasvibe" (lowercase)
+    expected_content_val = "atlasvibe" 
+    renamed_sub_file_rel = f"{renamed_folder_rel}/another_{expected_content_val}_file.txt" # Use lowercase for filename part
 
 
     assert not (temp_test_dir / orig_file_rel).exists(), "Original file should be renamed."
