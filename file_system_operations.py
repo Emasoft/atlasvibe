@@ -334,7 +334,9 @@ def scan_directory_for_occurrences(
             elif ignore_symlinks:
                  continue
             else: 
-                 item_is_file = True # Treat symlinks as files for name replacement
+                 # For name replacement, treat symlinks (to files or dirs) as if they are files
+                 # so their names can be processed. Content is handled based on actual type.
+                 item_is_file = True # This allows symlink name to be processed by file logic
         except OSError as e_stat:
             _log_fs_op_message(logging.WARNING, f"OS error checking type of {item_abs_path}: {e_stat}. Skipping item.", logger)
             continue
@@ -343,10 +345,10 @@ def scan_directory_for_occurrences(
         if (scan_pattern and scan_pattern.search(searchable_name)) and \
            (replace_occurrences(original_name) != original_name):
             tx_type_val: str | None = None
-            if item_is_dir:
+            if item_is_dir: # True only if not a symlink and is_dir() was true
                 if not skip_folder_renaming:
                     tx_type_val = TransactionType.FOLDER_NAME.value
-            elif item_is_file or item_is_symlink: # If it's a symlink not ignored, its name can be processed
+            elif item_is_file or item_is_symlink: # True if is_file() or is_symlink() (and not ignore_symlinks)
                 if not skip_file_renaming:
                     tx_type_val = TransactionType.FILE_NAME.value
             
@@ -356,92 +358,100 @@ def scan_directory_for_occurrences(
                     processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":tx_type_val, "PATH":relative_path_str, "ORIGINAL_NAME":original_name, "LINE_NUMBER":0, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                     existing_transaction_ids.add(tx_id_tuple)
 
-        if not skip_content and item_is_file: # Only process content if it's a regular file (not a symlink to a dir, not a dir itself)
-            is_rtf = item_abs_path.suffix.lower() == '.rtf'
+        # Content processing should only happen for actual files, not symlinks to directories
+        # and only if item_is_file was true (meaning it's a file or a symlink we are considering for content if it points to a file)
+        # The `item_abs_path.is_file()` check inside this block will resolve the symlink if it's one.
+        if not skip_content:
             try:
-                is_bin = is_binary_file(str(item_abs_path))
-            except FileNotFoundError: 
-                _log_fs_op_message(logging.WARNING, f"File not found for binary check: {item_abs_path}. Skipping content scan.", logger)
-                continue
-            except Exception as e_isbin:
-                _log_fs_op_message(logging.WARNING, f"Could not determine if {item_abs_path} is binary: {e_isbin}. Skipping content scan.", logger)
-                continue
-
-            if is_bin and not is_rtf:
-                if raw_keys_for_binary_search:
+                if item_abs_path.is_file(): # This resolves symlinks to files
+                    is_rtf = item_abs_path.suffix.lower() == '.rtf'
                     try:
-                        with open(item_abs_path, 'rb') as bf:
-                            content_bytes = bf.read()
-                        for key_str in raw_keys_for_binary_search:
+                        is_bin = is_binary_file(str(item_abs_path))
+                    except FileNotFoundError: 
+                        _log_fs_op_message(logging.WARNING, f"File not found for binary check: {item_abs_path}. Skipping content scan.", logger)
+                        continue
+                    except Exception as e_isbin:
+                        _log_fs_op_message(logging.WARNING, f"Could not determine if {item_abs_path} is binary: {e_isbin}. Skipping content scan.", logger)
+                        continue
+
+                    if is_bin and not is_rtf:
+                        if raw_keys_for_binary_search:
                             try:
-                                key_bytes = key_str.encode('utf-8')
-                            except UnicodeEncodeError:
-                                continue
-                            offset = 0
-                            while True:
-                                idx = content_bytes.find(key_bytes, offset)
-                                if idx == -1:
-                                    break
-                                with open(binary_log_path, 'a', encoding='utf-8') as log_f:
-                                    log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
-                                offset = idx + len(key_bytes)
-                    except OSError as e_bin_read: 
-                        _log_fs_op_message(logging.WARNING, f"OS error reading binary file {item_abs_path} for logging: {e_bin_read}", logger)
-                    except Exception as e_bin_proc: 
-                        _log_fs_op_message(logging.WARNING, f"Error processing binary {item_abs_path} for logging: {e_bin_proc}", logger)
-                continue
+                                with open(item_abs_path, 'rb') as bf:
+                                    content_bytes = bf.read()
+                                for key_str in raw_keys_for_binary_search:
+                                    try:
+                                        key_bytes = key_str.encode('utf-8')
+                                    except UnicodeEncodeError:
+                                        continue
+                                    offset = 0
+                                    while True:
+                                        idx = content_bytes.find(key_bytes, offset)
+                                        if idx == -1:
+                                            break
+                                        with open(binary_log_path, 'a', encoding='utf-8') as log_f:
+                                            log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
+                                        offset = idx + len(key_bytes)
+                            except OSError as e_bin_read: 
+                                _log_fs_op_message(logging.WARNING, f"OS error reading binary file {item_abs_path} for logging: {e_bin_read}", logger)
+                            except Exception as e_bin_proc: 
+                                _log_fs_op_message(logging.WARNING, f"Error processing binary {item_abs_path} for logging: {e_bin_proc}", logger)
+                        continue
 
-            if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
-                 continue
+                    if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
+                        continue
 
-            file_content_for_scan: str | None = None
-            file_encoding = DEFAULT_ENCODING_FALLBACK
+                    file_content_for_scan: str | None = None
+                    file_encoding = DEFAULT_ENCODING_FALLBACK
 
-            if is_rtf:
-                try:
-                    rtf_source_bytes = item_abs_path.read_bytes()
-                    rtf_source_str = ""
-                    for enc_try in ['latin-1', 'cp1252', 'utf-8']:
+                    if is_rtf:
                         try:
-                            rtf_source_str = rtf_source_bytes.decode(enc_try)
-                            break
-                        except UnicodeDecodeError:
-                            pass
-                    if not rtf_source_str:
-                        rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
-                    file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
-                    file_encoding = 'utf-8' # Content is now plain text
-                except OSError as e_rtf_read:
-                     _log_fs_op_message(logging.WARNING, f"OS error reading RTF file {item_abs_path}: {e_rtf_read}", logger)
-                     continue
-                except Exception as e_rtf_proc:
-                    _log_fs_op_message(logging.WARNING, f"Error extracting text from RTF {item_abs_path}: {e_rtf_proc}", logger)
-                    continue
-            else:
-                file_encoding = get_file_encoding(item_abs_path, logger=logger) or DEFAULT_ENCODING_FALLBACK
-                try:
-                    with open(item_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f_scan:
-                        file_content_for_scan = f_scan.read()
-                except OSError as e_txt_read:
-                    _log_fs_op_message(logging.WARNING, f"OS error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_read}", logger)
-                    continue
-                except Exception as e_txt_proc: # Catch other errors like LookupError for encoding
-                    _log_fs_op_message(logging.WARNING, f"Error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_proc}", logger)
-                    continue
-            
-            if file_content_for_scan is not None:
-                lines_for_scan = file_content_for_scan.splitlines(keepends=True)
-                if not lines_for_scan and file_content_for_scan: # Handle files with no newlines but content
-                    lines_for_scan = [file_content_for_scan]
+                            rtf_source_bytes = item_abs_path.read_bytes()
+                            rtf_source_str = ""
+                            for enc_try in ['latin-1', 'cp1252', 'utf-8']:
+                                try:
+                                    rtf_source_str = rtf_source_bytes.decode(enc_try)
+                                    break
+                                except UnicodeDecodeError:
+                                    pass
+                            if not rtf_source_str:
+                                rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
+                            file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
+                            file_encoding = 'utf-8' # Content is now plain text
+                        except OSError as e_rtf_read:
+                            _log_fs_op_message(logging.WARNING, f"OS error reading RTF file {item_abs_path}: {e_rtf_read}", logger)
+                            continue
+                        except Exception as e_rtf_proc:
+                            _log_fs_op_message(logging.WARNING, f"Error extracting text from RTF {item_abs_path}: {e_rtf_proc}", logger)
+                            continue
+                    else:
+                        file_encoding = get_file_encoding(item_abs_path, logger=logger) or DEFAULT_ENCODING_FALLBACK
+                        try:
+                            with open(item_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f_scan:
+                                file_content_for_scan = f_scan.read()
+                        except OSError as e_txt_read:
+                            _log_fs_op_message(logging.WARNING, f"OS error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_read}", logger)
+                            continue
+                        except Exception as e_txt_proc: # Catch other errors like LookupError for encoding
+                            _log_fs_op_message(logging.WARNING, f"Error reading text file {item_abs_path} (enc:{file_encoding}): {e_txt_proc}", logger)
+                            continue
+                    
+                    if file_content_for_scan is not None:
+                        lines_for_scan = file_content_for_scan.splitlines(keepends=True)
+                        if not lines_for_scan and file_content_for_scan: # Handle files with no newlines but content
+                            lines_for_scan = [file_content_for_scan]
 
-                for line_idx, line_content in enumerate(lines_for_scan):
-                    searchable_line_content = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(line_content)))
-                    if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
-                       (replace_occurrences(line_content) != line_content):
-                        tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
-                        if tx_id_tuple not in existing_transaction_ids:
-                            processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
-                            existing_transaction_ids.add(tx_id_tuple)
+                        for line_idx, line_content in enumerate(lines_for_scan):
+                            searchable_line_content = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(line_content)))
+                            if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
+                               (replace_occurrences(line_content) != line_content):
+                                tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
+                                if tx_id_tuple not in existing_transaction_ids:
+                                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
+                                    existing_transaction_ids.add(tx_id_tuple)
+            except OSError as e_stat_content: # Catch OSError from item_abs_path.is_file()
+                _log_fs_op_message(logging.WARNING, f"OS error checking if {item_abs_path} is a file for content processing: {e_stat_content}. Skipping content scan for this item.", logger)
+
     return processed_transactions
 
 def load_transactions(json_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
