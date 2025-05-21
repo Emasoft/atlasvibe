@@ -60,7 +60,7 @@
 # - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
 # - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
 # - `scan_directory_for_occurrences`: Added try-except OSError around item property checks (is_dir, is_file, is_symlink) to handle stat errors gracefully.
-# - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map.
+# - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map and in sort_key.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -505,7 +505,7 @@ def update_transaction_status_in_list(
             elif new_status not in [TransactionStatus.FAILED, TransactionStatus.RETRY_LATER] :
                 tx_item.pop('ERROR_MESSAGE', None)
 
-            if tx_item['TYPE'] == TransactionType.FILE_CONTENT_LINE.value and proposed_content_after_execution is not None:
+            if tx_item.get('TYPE') == TransactionType.FILE_CONTENT_LINE.value and proposed_content_after_execution is not None: # Safe access to TYPE
                 tx_item['PROPOSED_LINE_CONTENT'] = proposed_content_after_execution
 
             if new_status in [TransactionStatus.COMPLETED, TransactionStatus.FAILED]:

@@ -826,8 +826,7 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
                 assert "CRITICAL ERROR: Missing core dependencies:" in printed_error
-                # Check if at least one of the simulated missing modules is mentioned
-                # The error message will likely only contain the first one that fails.
+                # Check if the first missing module ("prefect") is mentioned
                 assert "prefect" in printed_error or "Simulated missing module: prefect" in printed_error
 
 
