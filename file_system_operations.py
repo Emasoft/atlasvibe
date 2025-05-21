@@ -64,6 +64,8 @@
 # - Added direct print to stderr in `execute_all_transactions` before dispatching a transaction.
 # - Added direct print to stderr at the entry of `_execute_content_line_transaction`.
 # - Added diagnostic print at the start of the main loop in `execute_all_transactions` to show each transaction being iterated.
+# - `execute_all_transactions`: Changed `path_translation_map` pre-population to only occur if `resume=True`.
+#   For `skip_scan` without `resume`, the map starts empty.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -722,16 +724,18 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_r_dir = root_dir
 
-    if resume or (skip_scan and not dry_run): # Populate map for resume OR for skip_scan actual execution
+    if resume: # Populate map ONLY if resuming a previous non-dry run
         for tx in transactions:
-            tx_type = tx.get("TYPE") 
+            tx_type = tx.get("TYPE")
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
+               tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
                tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                # For skip_scan, even DRY_RUN completed renames are used to build the map
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
-                    _log_fs_op_message(logging.WARNING, f"Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot populate path_translation_map accurately for this entry.", logger)
+                    _log_fs_op_message(logging.WARNING, f"Resuming: Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot accurately reflect this rename in path translation map for subsequent transactions in this run.", logger)
+    # For skip_scan without resume, path_translation_map remains empty initially.
+    # It will be populated as rename transactions are processed in this run.
     
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
