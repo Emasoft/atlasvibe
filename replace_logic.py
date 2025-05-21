@@ -53,6 +53,7 @@
 # - `_actual_replace_callback`: Added a non-debug, warning-level log if a lookup_key is not found in _RAW_REPLACEMENT_MAPPING.
 # - Added diagnostic log to `replace_occurrences` for early exit conditions.
 # - Enhanced "NOT FOUND" warning in `_actual_replace_callback` with more details and character ordinals.
+# - Set `_DEBUG_REPLACE_LOGIC` to `True` to enable debug logs for diagnosing test failures.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -76,7 +77,7 @@ _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
 
 # --- START DEBUG CONFIG ---
 # Set to True to enable verbose debug prints in this module
-_DEBUG_REPLACE_LOGIC = False
+_DEBUG_REPLACE_LOGIC = True
 # --- END DEBUG CONFIG ---
 
 def _log_message(level: int, message: str, logger: logging.Logger | None = None):
@@ -258,10 +259,10 @@ def replace_occurrences(input_string: str) -> str:
     
     nfc_input_string = unicodedata.normalize('NFC', input_string)
     
-    # if _DEBUG_REPLACE_LOGIC:
-    #     search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
-    #     _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
-    #     if search_result:
-    #         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}", _MODULE_LOGGER)
+    if _DEBUG_REPLACE_LOGIC: # Moved this block to be always active if _DEBUG_REPLACE_LOGIC is True
+        search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)
+        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
+        if search_result:
+            _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}", _MODULE_LOGGER)
 
     return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, nfc_input_string)

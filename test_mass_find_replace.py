@@ -68,6 +68,7 @@
 # - `test_main_flow_resume_stat_error`: Updated dummy_txns to include a "TYPE" key.
 # - `run_main_flow_for_test`: Removed direct call to `replace_logic.load_replacement_map` and related assertions. `main_flow` handles map loading.
 # - `test_skip_scan_with_previous_dry_run_renames`: Removed explicit call to `replace_logic.load_replacement_map` between test phases.
+# - `test_skip_scan_with_previous_dry_run_renames`: Changed caplog level to DEBUG.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -861,7 +862,7 @@ def test_edge_case_map_run(temp_test_dir: Path, edge_case_map_file: Path, caplog
 
 
 def test_skip_scan_with_previous_dry_run_renames(temp_test_dir: Path, default_map_file: Path, caplog):
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG) # Changed to DEBUG to capture replace_logic logs
 
     orig_file_rel = "flojoy_file_to_rename.txt"
     orig_folder_rel = "flojoy_folder_to_rename"
