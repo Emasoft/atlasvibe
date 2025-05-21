@@ -15,27 +15,24 @@ from pathlib import Path
 import os
 import shutil
 import time
-from typing import Any, Optional, Dict, Union # Keep Any if specifically needed, Optional for custom_ignore_path_str, Dict for mock_tx_call_counts
+from typing import Optional, Dict # Keep Any if specifically needed, Optional for custom_ignore_path_str, Dict for mock_tx_call_counts
 import logging
 import json
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch
 import sys
 import subprocess # For CLI tests
 import builtins # Added to fix F821
 
-from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, SCRIPT_NAME, YELLOW, RESET
+from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
 from file_system_operations import (
     load_transactions, TransactionStatus, TransactionType,
-    BINARY_MATCHES_LOG_FILE, SELF_TEST_ERROR_FILE_BASENAME,
-    save_transactions, _is_retryable_os_error, get_file_encoding
+    BINARY_MATCHES_LOG_FILE, save_transactions, get_file_encoding
 )
 import replace_logic
 import file_system_operations # For mocking its functions
-import pathspec # For mocking its methods
 
 from conftest import (
-    create_test_environment_content, assert_file_content,
-    VERY_LARGE_FILE_NAME_ORIG, VERY_LARGE_FILE_NAME_REPLACED, VERY_LARGE_FILE_LINES
+    create_test_environment_content, assert_file_content
 )
 
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
@@ -246,7 +243,7 @@ def test_binary_detection_and_processing_with_isbinary_lib(temp_test_dir: Path, 
             assert content_tx_found, f"Expected content transaction for text-like file {filename} which contained a match."
             if file_path.suffix.lower() != '.rtf':
                 changed_content_str = file_path.read_text(encoding='utf-8', errors='surrogateescape')
-                all_map_keys_lower = {k.lower() for k in replace_logic.get_raw_stripped_keys()} # These are stripped keys
+                {k.lower() for k in replace_logic.get_raw_stripped_keys()} # These are stripped keys
                 # Check against original map keys (unstripped, lowercased) to ensure no original forms remain (json.loads returns Any)
                 original_unstripped_keys_lower = {k.lower() for k,v in json.loads(default_map_file.read_text())["REPLACEMENT_MAPPING"].items()}
 
@@ -687,7 +684,7 @@ def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_
     if txn_file.exists():
         txn_file.unlink()
     txn_file.write_text("this is not json") 
-    with patch('mass_find_replace.load_transactions', return_value=None) as mock_load_tx:
+    with patch('mass_find_replace.load_transactions', return_value=None):
         run_main_flow_for_test(temp_test_dir, default_map_file, skip_scan=True)
     assert any(f"No transactions found in {txn_file.resolve()} to execute. Exiting." in record.message for record in caplog.records)
 
