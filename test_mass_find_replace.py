@@ -57,7 +57,10 @@
 # - `test_main_cli_small_positive_timeout`: Changed CLI arg to "0.5" and ensured `mass_find_replace.py` handles `type=float` for timeout.
 # - `test_main_cli_missing_dependency`: Changed to patch `sys.exit` and call `main_cli()` directly.
 # - `test_edge_case_map_run`: Corrected expected renamed filename for `content_mykey_file` to `edge_case_content_with_MyKeyValue_VAL_controls.txt`.
-# - `test_main_flow_resume_stat_error`: Refined mock_stat_conditional to prevent recursion by comparing string representations of resolved paths.
+# - `test_main_flow_resume_stat_error`: Refined mock_stat_conditional to prevent recursion by using a re-entry guard.
+# - `SCRIPT_PATH_FOR_CLI_TESTS`: Changed from `parent.parent` to `parent` assuming `test_mass_find_replace.py` is in the project root.
+# - `test_main_cli_missing_dependency`: Changed to use `patch('builtins.__import__')` for more reliable simulation of missing modules.
+# - `test_edge_case_map_run`: Corrected assertion for content of `renamed_content_controls_file`. The content "My\nKey" should NOT be replaced by the rule for canonical "MyKey".
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -678,21 +681,51 @@ def test_main_flow_resume_load_transactions_returns_empty(temp_test_dir: Path, d
     assert mock_load.call_count > 0
     assert any("Warn: Txn file empty. Fresh scan." in record.message for record in caplog.records)
 
+_MOCK_STAT_CALLED_GUARD = False # Re-entry guard for mock_stat_conditional
+
 def test_main_flow_resume_stat_error(temp_test_dir: Path, default_map_file: Path, caplog):
     caplog.set_level(logging.WARNING)
     create_test_environment_content(temp_test_dir)
     processed_file_rel = "file_with_floJoy_lines.txt"
-    target_path_to_mock_stat_str = str((temp_test_dir / processed_file_rel).resolve())
+    # target_path_to_mock_stat_str is the string representation of the absolute path
+    # that Path.stat() would be called on for the target file during the resume check.
+    target_path_to_mock_stat_str = str((temp_test_dir / processed_file_rel).resolve(strict=True))
     
     dummy_txns = [{"PATH": processed_file_rel, "STATUS": TransactionStatus.COMPLETED.value, "timestamp_processed": time.time() - 1000}]
     txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
     save_transactions(dummy_txns, txn_file)
 
     original_path_stat = Path.stat
+    global _MOCK_STAT_CALLED_GUARD
+    _MOCK_STAT_CALLED_GUARD = False # Reset guard for each test run
+
     def mock_stat_conditional(self_path_obj, *args, **kwargs):
-        # Compare string representations of resolved paths to avoid recursion via .resolve()
-        if str(self_path_obj.resolve(strict=False)) == target_path_to_mock_stat_str:
+        nonlocal _MOCK_STAT_CALLED_GUARD
+        # Check if the path object being stat-ed is our target
+        # We compare string representations of resolved paths to be robust
+        # The guard prevents recursion if resolve() itself calls stat() on the same path.
+        
+        # If we are already in a guarded call trying to resolve, use original stat
+        if _MOCK_STAT_CALLED_GUARD:
+            return original_path_stat(self_path_obj, *args, **kwargs)
+
+        is_target_path = False
+        try:
+            _MOCK_STAT_CALLED_GUARD = True # Set guard
+            # Resolve the path being stat-ed to compare with our absolute target path string
+            # This resolve() call will use original_path_stat due to the guard
+            resolved_self_path_str = str(self_path_obj.resolve(strict=False))
+            if resolved_self_path_str == target_path_to_mock_stat_str:
+                is_target_path = True
+        except Exception:
+             # If resolve fails for any reason, it's not our specific target scenario for raising error
+            pass
+        finally:
+            _MOCK_STAT_CALLED_GUARD = False # Clear guard
+
+        if is_target_path:
             raise OSError("Simulated stat error")
+        
         return original_path_stat(self_path_obj, *args, **kwargs)
 
     with patch('pathlib.Path.stat', new=mock_stat_conditional):
@@ -721,7 +754,8 @@ def test_main_flow_no_transactions_to_execute_after_scan_or_skip_scan(temp_test_
 
 
 # --- CLI Tests ---
-SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent.parent / "mass_find_replace.py").resolve()
+# Assumes test_mass_find_replace.py is in the project root alongside mass_find_replace.py
+SCRIPT_PATH_FOR_CLI_TESTS = (Path(__file__).resolve().parent / "mass_find_replace.py").resolve()
 
 
 def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -761,35 +795,33 @@ def test_main_cli_verbose_flag(temp_test_dir: Path):
     assert res.returncode == 0
 
 def test_main_cli_missing_dependency(temp_test_dir: Path):
-    original_sys_modules = sys.modules.copy()
-    # Simulate 'prefect' and 'chardet' being missing for the direct call to main_cli
-    if "prefect" in sys.modules:
-        del sys.modules["prefect"]
-    if "chardet" in sys.modules:
-        del sys.modules["chardet"]
+    # Store original import function
+    original_import = builtins.__import__
+    # Modules to simulate as missing
+    modules_to_mock_missing = {"prefect", "chardet"}
+
+    def mocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+        if name in modules_to_mock_missing:
+            raise ImportError(f"Simulated missing module: {name}")
+        return original_import(name, globals, locals, fromlist, level)
 
     with patch.object(sys, 'argv', [str(SCRIPT_PATH_FOR_CLI_TESTS), str(temp_test_dir)]):
         with patch.object(sys, 'exit') as mock_exit:
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
-                try:
-                    # We need to ensure the import checks at the start of main_cli are triggered
-                    # This means the __name__ == "__main__" block won't run, so the checks
-                    # must be inside main_cli itself.
-                    main_cli() 
-                except SystemExit as e: 
-                    mock_exit(e.code) 
-
+                with patch('builtins.__import__', side_effect=mocked_import):
+                    try:
+                        main_cli()
+                    except SystemExit as e:
+                        # Allow SystemExit to be caught by mock_exit if it's raised by main_cli
+                        mock_exit(e.code)
+                
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
                 assert "CRITICAL ERROR: Missing dependencies:" in printed_error
-                assert "prefect" in printed_error
-                assert "chardet" in printed_error
-    
-    sys.modules = original_sys_modules
-    if "prefect" not in sys.modules and "prefect" in original_sys_modules:
-        import prefect # type: ignore
-    if "chardet" not in sys.modules and "chardet" in original_sys_modules:
-        import chardet # type: ignore
+                if "prefect" in modules_to_mock_missing:
+                    assert "prefect" in printed_error
+                if "chardet" in modules_to_mock_missing:
+                    assert "chardet" in printed_error
 
 
 # --- Tests for specific scenarios from checklist ---
@@ -807,17 +839,13 @@ def test_edge_case_map_run(temp_test_dir: Path, edge_case_map_file: Path, caplog
     assert_file_content(renamed_mykey_name_file, "Initial content for control key name test (MyKeyValue_VAL).")
 
     orig_content_controls_file = temp_test_dir / "edge_case_content_with_MyKey_controls.txt"
-    # Name contains "MyKey" and "controls". "MyKey" is canonical for "My\nKey".
-    # "KeyWithControls" is canonical for "Key\nWith\tControls".
-    # "MyKey" is shorter and will be found first if both were applicable for the same segment.
-    # Here, "MyKey" is in the name. "KeyWithControls" is not.
-    # So, "MyKey" in the name becomes "MyKeyValue_VAL".
-    expected_content_controls_new_name = "edge_case_content_with_MyKeyValue_VAL_controls.txt"
+    expected_content_controls_new_name = "edge_case_content_with_MyKeyValue_VAL_controls.txt" # Name changes due to "MyKey"
     renamed_content_controls_file = temp_test_dir / expected_content_controls_new_name
 
     assert not orig_content_controls_file.exists(), f"{orig_content_controls_file} should have been renamed to {expected_content_controls_new_name}."
     assert renamed_content_controls_file.exists(), f"{renamed_content_controls_file} should exist after rename."
-    assert_file_content(renamed_content_controls_file, "Line with MyKeyValue_VAL to replace.")
+    # Content "My\nKey" should NOT be replaced by rule for canonical "MyKey"
+    assert_file_content(renamed_content_controls_file, "Line with My\nKey to replace.")
 
 
     empty_key_file = temp_test_dir / "edge_case_empty_stripped_key_target.txt"

@@ -8,6 +8,10 @@
 # - Changed `argparse` type for `--timeout` from `int` to `float` to allow inputs like "0.5".
 # - Added `int()` casting for `args.timeout` before passing to `main_flow` if it's not 0.
 # - Moved import checks from `if __name__ == "__main__":` block to the beginning of `main_cli()`.
+# - Removed redundant import checks for `prefect`, `chardet`, `pathspec`, `striprtf`, `isbinary`
+#   from `main_cli` because these are already handled by top-level imports in `mass_find_replace.py`
+#   or `file_system_operations.py`. If these modules are missing, an `ImportError` will occur
+#   when the script is first loaded, before `main_cli` is even called.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -217,7 +221,7 @@ def main_flow(
 
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
-    stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
+    stats = execute_all_transactions(txn_json_path, abs_r_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
                                      skip_scan, logger=logger) # Pass logger
     logger.info(f"{op_type} phase complete. Stats: {stats}")
@@ -229,32 +233,12 @@ def main_flow(
 
 
 def main_cli() -> None:
-    # Moved import checks to the beginning of main_cli
-    missing_deps = []
-    try:
-        import prefect
-    except ImportError:
-        missing_deps.append("prefect")
-    try:
-        import chardet
-    except ImportError:
-        missing_deps.append("chardet")
-    try:
-        import pathspec
-    except ImportError:
-        missing_deps.append("pathspec")
-    try:
-        from striprtf.striprtf import rtf_to_text
-    except ImportError:
-        missing_deps.append("striprtf")
-    try:
-        from isbinary import is_binary_file
-    except ImportError:
-        missing_deps.append("isbinary")
-
-    if missing_deps:
-        sys.stderr.write(f"CRITICAL ERROR: Missing dependencies: {', '.join(missing_deps)}.\nPlease ensure all dependencies are installed (e.g., pip install prefect chardet pathspec striprtf isbinary).\n")
-        sys.exit(1)
+    # Top-level imports in mass_find_replace.py (or its direct imports like file_system_operations)
+    # already handle the case where essential modules like prefect, chardet, etc., are missing.
+    # If they are missing, an ImportError will be raised when the script is first loaded,
+    # before main_cli() is even called.
+    # Thus, explicit checks here for those specific modules are redundant.
+    # The script will fail earlier if these core dependencies are not met.
 
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "

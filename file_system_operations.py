@@ -178,18 +178,19 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
             try:
                 raw_data.decode(normalized_chardet_candidate, errors='surrogateescape')
                 if normalized_chardet_candidate == 'latin1':
+                    # If latin1 was suggested and works, check if cp1252 also works, as it's a more specific superset for Western text
                     try:
                         raw_data.decode('cp1252', errors='surrogateescape')
                         return 'cp1252' 
                     except (UnicodeDecodeError, LookupError):
-                        return 'latin1' 
+                        return 'latin1' # cp1252 failed, stick with latin1
                 return normalized_chardet_candidate
             except (UnicodeDecodeError, LookupError):
                 pass
 
         # 3. Fallback explicit checks if UTF-8 and chardet's primary suggestion failed or wasn't definitive
         for enc_try in ['cp1252', 'latin1']:
-            if normalized_chardet_candidate != enc_try: 
+            if normalized_chardet_candidate != enc_try: # Avoid re-trying if it was chardet's candidate and failed
                 try:
                     raw_data.decode(enc_try, errors='surrogateescape')
                     return enc_try
@@ -673,28 +674,13 @@ def execute_all_transactions(
     if resume: 
         for tx in transactions:
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
-               tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
-               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+               tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]: # Removed: tx.get("ERROR_MESSAGE") != "DRY_RUN"
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
                 else:
                     _log_fs_op_message(logging.WARNING, f"Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot populate path_translation_map accurately for this entry.", logger)
-    elif skip_scan and not dry_run: 
-        # Pre-populate path_translation_map based on ALL rename transactions in the plan
-        # This ensures content changes target the new names if renames are also in the plan
-        # Create a temporary sorted list for consistent pre-population
-        # Sort by path depth (number of slashes) then by path string
-        # This ensures parent directories are processed before their children for map construction
-        sorted_rename_txns = sorted(
-            [tx for tx in transactions if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]],
-            key=lambda tx: (tx["PATH"].count('/'), tx["PATH"]) 
-        )
-        for tx_rename in sorted_rename_txns:
-            if "ORIGINAL_NAME" in tx_rename:
-                # The key in path_translation_map is the original relative path.
-                # The value is the new name (not new relative path).
-                path_translation_map[tx_rename["PATH"]] = replace_occurrences(tx_rename["ORIGINAL_NAME"])
-
+    # Removed the `elif skip_scan and not dry_run:` block that pre-populated path_translation_map.
+    # For skip_scan without resume, path_translation_map should start empty and be built as operations occur.
 
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
