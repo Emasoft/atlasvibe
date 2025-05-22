@@ -144,6 +144,8 @@ Create a Python script using Prefect to find and replace all occurrences of spec
     *   **Skip Scan (`--skip-scan`)**: Uses an existing transaction file for execution.
     *   **Resume (`--resume`)**: Resumes from an existing transaction file, re-scanning modified files and processing incomplete transactions.
     *   **Force Execution (`--force` or `-y`)**: Skips the confirmation prompt.
+    *   **Interactive Mode (`-i` or `--interactive`)**: Prompts the user for approval before each individual transaction is executed. Allows approving, skipping, or quitting the entire process.
+    *   **Self-Test (`--self-test`)**: Installs development dependencies (if needed) and runs the script's automated tests (`pytest test_mass_find_replace.py`).
     *   **Selective Skipping**: Flags to skip file renaming, folder renaming, or content modification.
     *   **Timeout for Retries**: Configurable timeout for retrying operations on locked files.
     *   **Quiet/Verbose Output**: Flags to control logging verbosity.

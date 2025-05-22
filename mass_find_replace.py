@@ -27,6 +27,10 @@
 # - `main_cli`: Changed symlink handling flag from `--ignore-symlinks` to `--process-symlink-names`.
 #   The default behavior is now to IGNORE symlinks for renaming unless `--process-symlink-names` is specified.
 #   The `ignore_symlinks_arg` passed to `main_flow` is now `not args.process_symlink_names`.
+# - Added `--self-test` CLI option to install dev dependencies and run pytest.
+# - Added `-i` / `--interactive` CLI option for interactive transaction approval.
+# - Passed `interactive_mode` flag from `main_cli` to `main_flow` and then to `execute_all_transactions`.
+# - Defined `DIM` ANSI escape code.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -41,6 +45,7 @@ from typing import Any # Keep Any if specifically needed
 import traceback
 import pathspec 
 import importlib.util # Added for find_spec
+import subprocess # Added for self-test
 
 from prefect import flow, get_run_logger
 
@@ -59,6 +64,7 @@ RED = "\033[91m"
 RESET = "\033[0m"
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
+DIM = "\033[2m"
 
 @flow(name="Mass Find and Replace Orchestration Flow", log_prints=True)
 def main_flow(
@@ -69,7 +75,8 @@ def main_flow(
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
     timeout_minutes: int, 
     quiet_mode: bool,
-    verbose_mode: bool # Added for controlling logger verbosity
+    verbose_mode: bool, # Added for controlling logger verbosity
+    interactive_mode: bool # Added for interactive transaction approval
 ):
     logger = get_run_logger()
     if verbose_mode:
@@ -145,9 +152,8 @@ def main_flow(
             logger.error(f"Error compiling combined ignore patterns: {e}")
             final_ignore_spec = None 
 
-    # Confirmation prompt. Suppressed by dry_run, force_execution, resume, or quiet_mode.
-    # Note: quiet_mode suppressing an interactive prompt is a specific design choice here.
-    if not dry_run and not force_execution and not resume and not quiet_mode: 
+    # Confirmation prompt. Suppressed by dry_run, force_execution, resume, quiet_mode, or interactive_mode.
+    if not dry_run and not force_execution and not resume and not quiet_mode and not interactive_mode: 
         print(f"{BLUE}--- Proposed Operation ---{RESET}")
         print(f"Root Directory: {abs_root_dir}")
         print(f"Replacement Map File: {map_file_path}")
@@ -252,7 +258,7 @@ def main_flow(
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
     stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
-                                     skip_scan, logger=logger) 
+                                     skip_scan, interactive_mode, logger=logger) 
     logger.info(f"{op_type} phase complete. Stats: {stats}")
     logger.info(f"Review '{txn_json_path}' for a detailed log of changes and their statuses.")
     
@@ -261,12 +267,33 @@ def main_flow(
         logger.info(f"{YELLOW}Note: Matches were found in binary files. See '{binary_log}' for details. Binary file content was NOT modified.{RESET}")
 
 
+def _run_subprocess_command(command: list[str], description: str) -> bool:
+    """Helper to run a subprocess command and print status."""
+    print(f"{BLUE}Running: {' '.join(command)}{RESET}")
+    try:
+        process = subprocess.run(command, check=False, capture_output=True, text=True)
+        if process.stdout:
+            print(f"{GREEN}Output from {description}:{RESET}\n{process.stdout}")
+        if process.stderr:
+            print(f"{YELLOW}Errors/Warnings from {description}:{RESET}\n{process.stderr}")
+        if process.returncode != 0:
+            print(f"{RED}Error: {description} failed with return code {process.returncode}.{RESET}")
+            return False
+        print(f"{GREEN}{description} completed successfully.{RESET}")
+        return True
+    except FileNotFoundError:
+        print(f"{RED}Error: Command for {description} not found. Is it installed and in PATH? ({command[0]}){RESET}")
+        return False
+    except Exception as e:
+        print(f"{RED}An unexpected error occurred while running {description}: {e}{RESET}")
+        return False
+
 def main_cli() -> None:
     missing_deps = []
     try:
         if importlib.util.find_spec("prefect") is None:
             missing_deps.append("prefect")
-    except ImportError: # Handle cases where find_spec itself might trigger the mocked import error in tests
+    except ImportError: 
         missing_deps.append("prefect (import error during check)")
 
     try:
@@ -313,6 +340,7 @@ def main_cli() -> None:
     execution_group.add_argument("--skip-scan", action="store_true", help=f"Skip scan phase; use existing '{MAIN_TRANSACTION_FILE_NAME}' in the root directory for execution.")
     execution_group.add_argument("--resume", action="store_true", help="Resume operation from existing transaction file, attempting to complete pending/failed items and scan for new/modified ones.")
     execution_group.add_argument("--force", "--yes", "-y", action="store_true", help="Force execution without confirmation prompt (use with caution).")
+    execution_group.add_argument("-i", "--interactive", action="store_true", help="Run in interactive mode, prompting for approval before each change.")
     parser.add_argument("--timeout", type=float, default=10.0, metavar="MINUTES",
                         help="Maximum minutes for the retry phase when files are locked/inaccessible. "
                              "Set to 0 for indefinite retries (until CTRL-C). Minimum 1 minute if not 0. Default: 10 minutes.")
@@ -320,7 +348,34 @@ def main_cli() -> None:
     output_group = parser.add_argument_group('Output Control')
     output_group.add_argument("--quiet", "-q", action="store_true", help="Suppress initial script name print and some informational messages from direct print statements (Prefect logs are separate). Also suppresses the confirmation prompt, implying 'yes'.")
     output_group.add_argument("--verbose", action="store_true", help="Enable more verbose output, setting Prefect logger to DEBUG level.")
+    
+    dev_group = parser.add_argument_group('Developer Options')
+    dev_group.add_argument("--self-test", action="store_true", help="Run automated tests for this script.")
+
     args = parser.parse_args()
+
+    if args.self_test:
+        print(f"{BLUE}--- Running Self-Tests ---{RESET}")
+        
+        # Try installing with uv first, then fallback to pip
+        install_cmd_uv = [sys.executable, "-m", "uv", "pip", "install", "-e", ".[dev]"]
+        install_cmd_pip = [sys.executable, "-m", "pip", "install", "-e", ".[dev]"]
+        
+        print(f"{BLUE}Attempting to install/update dev dependencies using 'uv'...{RESET}")
+        install_success = _run_subprocess_command(install_cmd_uv, "uv dev dependency installation")
+        
+        if not install_success:
+            print(f"{YELLOW}'uv' command failed or not found. Attempting with 'pip'...{RESET}")
+            install_success = _run_subprocess_command(install_cmd_pip, "pip dev dependency installation")
+
+        if not install_success:
+            print(f"{RED}Failed to install dev dependencies. Aborting self-tests.{RESET}")
+            sys.exit(1)
+            
+        pytest_cmd = [sys.executable, "-m", "pytest", "test_mass_find_replace.py"]
+        print(f"{BLUE}Running pytest...{RESET}")
+        test_passed = _run_subprocess_command(pytest_cmd, "pytest execution")
+        sys.exit(0 if test_passed else 1)
 
     if not args.quiet:
         print(f"{BLUE}{SCRIPT_NAME}{RESET}")
@@ -347,11 +402,8 @@ def main_cli() -> None:
     final_exclude_files = list(set(args.exclude_files + auto_exclude_basenames))
     
     if args.verbose and not args.quiet:
-        # This print is for CLI verbosity; Prefect logger verbosity is handled in main_flow
         print("Verbose mode requested. Prefect log level will be set to DEBUG if flow runs.")
 
-    # If --process-symlink-names is True, then ignore_symlinks_arg should be False (i.e., don't ignore them).
-    # If --process-symlink-names is False (default), then ignore_symlinks_arg should be True (i.e., do ignore them).
     ignore_symlinks_param = not args.process_symlink_names
 
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
@@ -360,7 +412,8 @@ def main_cli() -> None:
               args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, 
               timeout_val_for_flow, 
               args.quiet,
-              args.verbose # Pass verbose flag to the flow
+              args.verbose,
+              args.interactive # Pass interactive mode flag
              )
 
 if __name__ == "__main__":

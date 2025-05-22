@@ -57,3 +57,35 @@
     *   [X] Note the design's flexibility for future raw Unicode keys (current key processing is at map load; if removed, core replacement logic adapts).
 2.  [X] **Code Review**: Perform a final pass over all modified files for clarity, comments, and adherence to guidelines.
 3.  [X] **Remove/Refine Debug Prints**: Clean up extensive debug prints, leaving only essential/toggleable ones. (Converted `print` to logger calls, `_DEBUG_REPLACE_LOGIC` flag in place and default False).
+
+## IV. New Features
+
+1.  [ ] **Implement `--self-test` CLI option**:
+    *   [ ] Add `--self-test` argument to `argparse` in `mass_find_replace.py`.
+    *   [ ] In `main_cli()`, if `--self-test` is present:
+        *   [ ] Print an informative message.
+        *   [ ] Attempt to run `uv pip install -e .[dev]`.
+        *   [ ] If `uv` fails or is not found, attempt `pip install -e .[dev]`.
+        *   [ ] If dependency installation fails, print an error and exit.
+        *   [ ] Run `pytest test_mass_find_replace.py` using `subprocess.run`.
+        *   [ ] Exit with pytest's return code.
+2.  [ ] **Implement Interactive Mode (`-i`, `--interactive`)**:
+    *   [ ] Add `-i` / `--interactive` argument to `argparse` in `mass_find_replace.py`.
+    *   [ ] Pass the `interactive_mode` flag through `main_flow` to `execute_all_transactions` in `file_system_operations.py`.
+    *   [ ] In `execute_all_transactions`:
+        *   [ ] If `interactive_mode` is true and not `dry_run`:
+            *   [ ] Before processing a `PENDING` transaction:
+                *   [ ] Define ANSI color codes (DIM, BOLD, specific colors for original/proposed).
+                *   [ ] Create helper `_get_user_interactive_choice` function.
+                *   [ ] Display transaction type (Rename File/Folder, Modify Content).
+                *   [ ] For renames: Show original path, original name, proposed name.
+                *   [ ] For content: Show file path, line number, encoding.
+                *   [ ] For content: Read the file (using `_get_current_absolute_path` and current `path_translation_map` to get the correct version of the file if prior renames in this run occurred).
+                *   [ ] For content: Display 2 lines of context before (dimmed), the original target line (dimmed), the proposed target line (highlighted), and 2 lines of context after (dimmed).
+                *   [ ] Prompt user: `Approve? (A/Approve, S/Skip, Q/Quit): `
+                *   [ ] If 'A': Proceed with execution.
+                *   [ ] If 'S': Update transaction to `SKIPPED` with "Skipped by user" message, save transactions, continue to next.
+                *   [ ] If 'Q': Log/print "Operation aborted by user", save transactions, and terminate the execution loop (remaining PENDING transactions stay PENDING).
+    *   [ ] Ensure the main confirmation prompt is skipped if interactive mode is active.
+3.  [ ] **Update `NOTES.md`** with documentation for `--self-test` and interactive mode.
+4.  [ ] **Update `tasks_checklist.md`** with the status of these new tasks.
