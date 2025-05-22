@@ -79,6 +79,9 @@
 # - Enhanced `_get_user_interactive_choice` to highlight all occurrences of matched key strings in the original name/line.
 # - Added `_highlight_string` helper function for coloring matched keys.
 # - Removed unused `current_overall_retry_attempt` from `execute_all_transactions` as the complex retry loop was simplified for interactive mode.
+# - Reinstated and enhanced the main retry loop in `execute_all_transactions` for robust automated retries,
+#   respecting timeouts and max passes, with exponential backoff for `RETRY_LATER` items.
+#   This works alongside interactive mode.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -904,6 +907,13 @@ def execute_all_transactions(
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
         return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
     transactions.sort(key=sort_key)
+
+    execution_start_time = time.time()
+    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 # Max passes for non-interactive or if timeout is 0
+    if interactive_mode and global_timeout_minutes !=0 : # For interactive, allow fewer passes if timeout is set
+        max_overall_retry_passes = 5 
+    
+    current_overall_retry_attempt = 0
     
     if resume or skip_scan: 
         for tx_item_for_reset in transactions:
@@ -922,82 +932,158 @@ def execute_all_transactions(
                 tx_item_for_reset.pop('timestamp_processed', None)
                 tx_item_for_reset.pop('timestamp_next_retry', None)
                 tx_item_for_reset['retry_count'] = 0
+            elif resume and current_tx_status_str == TransactionStatus.RETRY_LATER.value: # Also reset RETRY_LATER on resume
+                _log_fs_op_message(logging.INFO, f"Resuming RETRY_LATER tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})", logger)
+                tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
+                tx_item_for_reset.pop('timestamp_next_retry', None)
+
 
     user_quit_interactive = False
-    for tx_item in transactions:
-        if user_quit_interactive:
-            if tx_item.get("STATUS") == TransactionStatus.PENDING.value: 
-                 update_transaction_status_in_list(transactions, tx_item["id"], TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.")
-            continue 
+    while True: # Main retry loop
+        processed_in_this_pass = 0
+        items_still_requiring_retry = []
 
-        _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ITERATING_TX: {tx_item}", logger)
+        for tx_item in transactions:
+            if user_quit_interactive:
+                if tx_item.get("STATUS") == TransactionStatus.PENDING.value: 
+                    update_transaction_status_in_list(transactions, tx_item["id"], TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.")
+                continue 
 
-        tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
-        current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
-        tx_type = tx_item.get("TYPE") 
+            _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ITERATING_TX: {tx_item}", logger)
 
-        if (skip_folder_renaming and tx_type == TransactionType.FOLDER_NAME.value) or \
-           (skip_file_renaming and tx_type == TransactionType.FILE_NAME.value) or \
-           (skip_content and tx_type == TransactionType.FILE_CONTENT_LINE.value):
-            if current_status not in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
-                update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by CLI option.")
-            continue
+            tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
+            current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
+            tx_type = tx_item.get("TYPE") 
 
-        if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
-            continue
-
-        if current_status == TransactionStatus.IN_PROGRESS and not resume: 
-            current_status = TransactionStatus.PENDING
-        
-        if current_status == TransactionStatus.RETRY_LATER:
-            if tx_item.get("timestamp_next_retry", 0) > time.time():
+            if (skip_folder_renaming and tx_type == TransactionType.FOLDER_NAME.value) or \
+               (skip_file_renaming and tx_type == TransactionType.FILE_NAME.value) or \
+               (skip_content and tx_type == TransactionType.FILE_CONTENT_LINE.value):
+                if current_status not in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
+                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by CLI option.")
+                    processed_in_this_pass +=1
                 continue
-            else:
+
+            if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
+                continue
+
+            if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: 
                 current_status = TransactionStatus.PENDING
-        
-        tx_item["STATUS"] = current_status.value 
-
-        if current_status == TransactionStatus.PENDING:
-            if interactive_mode and not dry_run:
-                user_choice = _get_user_interactive_choice(tx_item, abs_r_dir, path_translation_map, path_cache, logger)
-                if user_choice == 'skip':
-                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by user in interactive mode.")
-                    save_transactions(transactions, transactions_file_path, logger=logger)
-                    continue
-                elif user_choice == 'quit':
-                    _log_fs_op_message(logging.INFO, "Operation aborted by user in interactive mode.", logger)
-                    print(f"{YELLOW_FG}Operation aborted by user.{RESET_STYLE}")
-                    user_quit_interactive = True
-                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.") 
-                    save_transactions(transactions, transactions_file_path, logger=logger)
-                    continue 
             
-            update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
-            _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ATTEMPTING: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", logger)
+            if current_status == TransactionStatus.RETRY_LATER:
+                if tx_item.get("timestamp_next_retry", 0) > time.time():
+                    items_still_requiring_retry.append(tx_item)
+                    continue
+                else: # Retry time is due
+                    current_status = TransactionStatus.PENDING 
+            
+            tx_item["STATUS"] = current_status.value 
 
-            new_stat_from_exec: TransactionStatus
-            err_msg_from_exec: str | None = None
-            final_prop_content_for_log: str | None = None
-            is_retryable_error_from_exec = False
+            if current_status == TransactionStatus.PENDING:
+                if interactive_mode and not dry_run:
+                    user_choice = _get_user_interactive_choice(tx_item, abs_r_dir, path_translation_map, path_cache, logger)
+                    if user_choice == 'skip':
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by user in interactive mode.")
+                        save_transactions(transactions, transactions_file_path, logger=logger)
+                        processed_in_this_pass +=1
+                        continue
+                    elif user_choice == 'quit':
+                        _log_fs_op_message(logging.INFO, "Operation aborted by user in interactive mode.", logger)
+                        print(f"{YELLOW_FG}Operation aborted by user.{RESET_STYLE}")
+                        user_quit_interactive = True
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.") 
+                        save_transactions(transactions, transactions_file_path, logger=logger)
+                        processed_in_this_pass +=1
+                        continue 
+                
+                update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
+                _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ATTEMPTING: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", logger)
 
-            try:
-                if tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                    new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
-                elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
-                    new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
-                    final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT")
-                else:
-                    new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_type}", False
-            except Exception as e_outer:
-                new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Outer execution error: {e_outer}", False
-                _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) 
+                new_stat_from_exec: TransactionStatus
+                err_msg_from_exec: str | None = None
+                final_prop_content_for_log: str | None = None
+                is_retryable_error_from_exec = False
 
-            if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
-                _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) requires retry. Error: {err_msg_from_exec}", logger)
+                try:
+                    if tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
+                    elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
+                        final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT")
+                    else:
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_type}", False
+                except Exception as e_outer:
+                    new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Outer execution error: {e_outer}", False
+                    _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) 
 
-            update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
+                if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
+                    retry_count = tx_item.get('retry_count', 0) # Already incremented by update_transaction_status_in_list
+                    base_delay_seconds = 2 # Shorter base for quicker retries initially
+                    max_backoff_seconds = 120 # Max 2 minutes for a single backoff
+                    # Exponential backoff: 2^0*2=2s, 2^1*2=4s, 2^2*2=8s, ...
+                    backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds)
+                    tx_item['timestamp_next_retry'] = time.time() + backoff_seconds
+                    _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count + 1}). Error: {err_msg_from_exec}", logger)
+                    items_still_requiring_retry.append(tx_item)
+
+                update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
+                save_transactions(transactions, transactions_file_path, logger=logger)
+                processed_in_this_pass += 1
+        
+        current_overall_retry_attempt += 1
+
+        if user_quit_interactive: # If user quit, no more retries needed for this run
+            break
+
+        if not items_still_requiring_retry:
+            _log_fs_op_message(logging.DEBUG, "No items require further retry in this pass. Exiting retry loop.", logger)
+            break # All items processed or failed definitively
+
+        timed_out = False
+        if global_timeout_minutes > 0 and (time.time() - execution_start_time) / 60 >= global_timeout_minutes:
+            _log_fs_op_message(logging.INFO, f"Global execution timeout of {global_timeout_minutes} minutes reached.", logger)
+            timed_out = True
+        
+        max_retries_hit = False
+        if current_overall_retry_attempt >= max_overall_retry_passes:
+            _log_fs_op_message(logging.WARNING, f"Max retry passes ({max_overall_retry_passes}) reached.", logger)
+            max_retries_hit = True
+        
+        if timed_out or max_retries_hit:
+            failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached."
+            for tx_item_failed_retry in items_still_requiring_retry:
+                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: # Check if it's still marked for retry
+                    update_transaction_status_in_list(transactions, tx_item_failed_retry["id"], TransactionStatus.FAILED, failure_reason)
             save_transactions(transactions, transactions_file_path, logger=logger)
+            break # Exit main retry loop
 
+        if items_still_requiring_retry: # If there are items, but no timeout/max_pass condition met
+            next_due_retry_timestamp = min(itx.get("timestamp_next_retry", float('inf')) for itx in items_still_requiring_retry)
+            sleep_duration = max(0.1, next_due_retry_timestamp - time.time())
+
+            if global_timeout_minutes > 0:
+                remaining_time_budget = (execution_start_time + global_timeout_minutes * 60) - time.time()
+                if remaining_time_budget <= 0: # Double check timeout before sleep
+                    _log_fs_op_message(logging.INFO, f"Global execution timeout of {global_timeout_minutes} minutes reached (checked before sleep).", logger)
+                    for tx_item_timeout_retry in items_still_requiring_retry:
+                         if tx_item_timeout_retry["STATUS"] == TransactionStatus.RETRY_LATER.value:
+                            update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
+                    save_transactions(transactions, transactions_file_path, logger=logger)
+                    break
+                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) # Cap sleep to 60s or remaining budget
+            else: # Indefinite timeout
+                sleep_duration = min(sleep_duration, 60.0) # Cap sleep to 60s
+
+            if sleep_duration > 0.05 :
+                 _log_fs_op_message(logging.INFO, f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.", logger)
+                 time.sleep(sleep_duration)
+            else: # Very short or no sleep needed if next retry is immediate
+                time.sleep(0.05) 
+        elif not processed_in_this_pass: # No items require retry, and nothing was processed in this pass
+            _log_fs_op_message(logging.DEBUG, "No items processed and no items require retry. Exiting retry loop.", logger)
+            break
+
+
+    # Final pass to update stats for any items skipped due to user quitting interactively
     if user_quit_interactive:
         for tx_item_final_skip_check in transactions:
             if tx_item_final_skip_check.get("STATUS") == TransactionStatus.PENDING.value:
