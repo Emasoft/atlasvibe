@@ -91,7 +91,6 @@ import errno
 from striprtf.striprtf import rtf_to_text
 from isbinary import is_binary_file
 import logging
-import builtins # For patching open in tests
 import sys # For direct stderr prints
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
