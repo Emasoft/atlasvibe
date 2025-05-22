@@ -11,6 +11,9 @@
 # - `run_cli_command`: Added `if "PREFECT_API_URL" in env: del env["PREFECT_API_URL"]`
 #   to ensure that any inherited PREFECT_API_URL from the parent environment is removed
 #   before running the CLI subprocess, allowing PREFECT_TEST_MODE to correctly use a local backend.
+# - `run_cli_command`: Explicitly set `env["PREFECT_API_URL"] = ""` for subprocesses to ensure Prefect uses local/ephemeral backend.
+# - `test_main_cli_missing_dependency`: Updated to correctly use `mock_exit.side_effect = SystemExit`
+#   and `pytest.raises(SystemExit)` to verify that `main_cli` attempts to exit and that `sys.exit(1)` is called.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -708,8 +711,7 @@ def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProc
     env = os.environ.copy()
     env["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
     env["PREFECT_TEST_MODE"] = "True"
-    if "PREFECT_API_URL" in env: # Ensure PREFECT_API_URL is not inherited if set externally
-        del env["PREFECT_API_URL"]
+    env["PREFECT_API_URL"] = "" # Explicitly set to empty to force local/ephemeral
         
     # PREFECT_HOME is set by the session fixture, so it should be inherited via os.environ.copy()
     # If PREFECT_HOME was not set, Prefect would use default user-specific location.
@@ -768,16 +770,13 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
 
     with patch.object(sys, 'argv', [str(SCRIPT_PATH_FOR_CLI_TESTS), str(temp_test_dir)]):
         with patch.object(sys, 'exit') as mock_exit:
+            mock_exit.side_effect = SystemExit # Make the mock raise SystemExit
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
                 with patch('builtins.__import__', side_effect=mocked_import):
-                    try:
-                        # We need to ensure that the script's own top-level imports fail,
-                        # or that main_cli itself tries to import them.
-                        # The current main_cli re-adds these checks.
+                    with pytest.raises(SystemExit) as excinfo:
                         main_cli()
-                    except SystemExit as e:
-                        # Allow SystemExit to be caught by mock_exit if it's raised by main_cli
-                        mock_exit(e.code)
+                    
+                    assert excinfo.value.code == 1
                 
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
