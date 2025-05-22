@@ -82,6 +82,8 @@
 # - Reinstated and enhanced the main retry loop in `execute_all_transactions` for robust automated retries,
 #   respecting timeouts and max passes, with exponential backoff for `RETRY_LATER` items.
 #   This works alongside interactive mode.
+# - `execute_all_transactions`: If `resume` is true, reset `IN_PROGRESS` transactions to `PENDING`.
+# - `execute_all_transactions`: Simplified `max_overall_retry_passes` logic; removed special case for interactive mode.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -903,18 +905,7 @@ def execute_all_transactions(
                 else:
                     _log_fs_op_message(logging.WARNING, f"Resuming: Transaction {tx.get('id')} for path {tx.get('PATH')} is a completed rename but missing ORIGINAL_NAME. Cannot accurately reflect this rename in path translation map for subsequent transactions in this run.", logger)
     
-    def sort_key(tx):
-        type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
-        return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
-    transactions.sort(key=sort_key)
-
-    execution_start_time = time.time()
-    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 # Max passes for non-interactive or if timeout is 0
-    if interactive_mode and global_timeout_minutes !=0 : # For interactive, allow fewer passes if timeout is set
-        max_overall_retry_passes = 5 
-    
-    current_overall_retry_attempt = 0
-    
+    # Reset relevant statuses at the beginning of execution if resuming or skipping scan
     if resume or skip_scan: 
         for tx_item_for_reset in transactions:
             current_tx_status_str = tx_item_for_reset.get("STATUS")
@@ -932,12 +923,26 @@ def execute_all_transactions(
                 tx_item_for_reset.pop('timestamp_processed', None)
                 tx_item_for_reset.pop('timestamp_next_retry', None)
                 tx_item_for_reset['retry_count'] = 0
-            elif resume and current_tx_status_str == TransactionStatus.RETRY_LATER.value: # Also reset RETRY_LATER on resume
+            elif resume and current_tx_status_str == TransactionStatus.RETRY_LATER.value: 
                 _log_fs_op_message(logging.INFO, f"Resuming RETRY_LATER tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})", logger)
                 tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
                 tx_item_for_reset.pop('timestamp_next_retry', None)
+            elif resume and current_tx_status_str == TransactionStatus.IN_PROGRESS.value:
+                _log_fs_op_message(logging.INFO, f"Resuming IN_PROGRESS tx as PENDING: {tx_item_for_reset.get('id','N/A')} ({tx_item_for_reset.get('PATH','N/A')})", logger)
+                tx_item_for_reset["STATUS"] = TransactionStatus.PENDING.value
+                tx_item_for_reset.pop('timestamp_last_attempt', None)
+                tx_item_for_reset.pop('ERROR_MESSAGE', None)
 
 
+    def sort_key(tx):
+        type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
+        return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
+    transactions.sort(key=sort_key)
+
+    execution_start_time = time.time()
+    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
+    current_overall_retry_attempt = 0
+    
     user_quit_interactive = False
     while True: # Main retry loop
         processed_in_this_pass = 0
@@ -966,6 +971,8 @@ def execute_all_transactions(
             if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
                 continue
 
+            # If an item was IN_PROGRESS from a previous crashed run, and it's the first pass of a non-resume run, reset it.
+            # This is less likely now with the IN_PROGRESS reset for resume=True at the start.
             if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: 
                 current_status = TransactionStatus.PENDING
             
@@ -1016,13 +1023,13 @@ def execute_all_transactions(
                     _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) 
 
                 if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
-                    retry_count = tx_item.get('retry_count', 0) # Already incremented by update_transaction_status_in_list
-                    base_delay_seconds = 2 # Shorter base for quicker retries initially
-                    max_backoff_seconds = 120 # Max 2 minutes for a single backoff
-                    # Exponential backoff: 2^0*2=2s, 2^1*2=4s, 2^2*2=8s, ...
-                    backoff_seconds = min( (2 ** retry_count) * base_delay_seconds, max_backoff_seconds)
+                    # retry_count is incremented by update_transaction_status_in_list
+                    retry_count_for_backoff = tx_item.get('retry_count', 0) # Get current (already incremented) count
+                    base_delay_seconds = 2 
+                    max_backoff_seconds = 120 
+                    backoff_seconds = min( (2 ** retry_count_for_backoff) * base_delay_seconds, max_backoff_seconds)
                     tx_item['timestamp_next_retry'] = time.time() + backoff_seconds
-                    _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count + 1}). Error: {err_msg_from_exec}", logger)
+                    _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) set to RETRY_LATER. Next attempt in ~{backoff_seconds:.0f}s (Attempt {retry_count_for_backoff}). Error: {err_msg_from_exec}", logger)
                     items_still_requiring_retry.append(tx_item)
 
                 update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
@@ -1031,12 +1038,12 @@ def execute_all_transactions(
         
         current_overall_retry_attempt += 1
 
-        if user_quit_interactive: # If user quit, no more retries needed for this run
+        if user_quit_interactive: 
             break
 
         if not items_still_requiring_retry:
             _log_fs_op_message(logging.DEBUG, "No items require further retry in this pass. Exiting retry loop.", logger)
-            break # All items processed or failed definitively
+            break 
 
         timed_out = False
         if global_timeout_minutes > 0 and (time.time() - execution_start_time) / 60 >= global_timeout_minutes:
@@ -1051,34 +1058,34 @@ def execute_all_transactions(
         if timed_out or max_retries_hit:
             failure_reason = "Global timeout reached." if timed_out else "Max retry passes reached."
             for tx_item_failed_retry in items_still_requiring_retry:
-                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: # Check if it's still marked for retry
+                if tx_item_failed_retry["STATUS"] == TransactionStatus.RETRY_LATER.value: 
                     update_transaction_status_in_list(transactions, tx_item_failed_retry["id"], TransactionStatus.FAILED, failure_reason)
             save_transactions(transactions, transactions_file_path, logger=logger)
-            break # Exit main retry loop
+            break 
 
-        if items_still_requiring_retry: # If there are items, but no timeout/max_pass condition met
+        if items_still_requiring_retry: 
             next_due_retry_timestamp = min(itx.get("timestamp_next_retry", float('inf')) for itx in items_still_requiring_retry)
             sleep_duration = max(0.1, next_due_retry_timestamp - time.time())
 
             if global_timeout_minutes > 0:
                 remaining_time_budget = (execution_start_time + global_timeout_minutes * 60) - time.time()
-                if remaining_time_budget <= 0: # Double check timeout before sleep
+                if remaining_time_budget <= 0: 
                     _log_fs_op_message(logging.INFO, f"Global execution timeout of {global_timeout_minutes} minutes reached (checked before sleep).", logger)
                     for tx_item_timeout_retry in items_still_requiring_retry:
                          if tx_item_timeout_retry["STATUS"] == TransactionStatus.RETRY_LATER.value:
                             update_transaction_status_in_list(transactions, tx_item_timeout_retry["id"], TransactionStatus.FAILED, "Global timeout reached during retry phase.")
                     save_transactions(transactions, transactions_file_path, logger=logger)
                     break
-                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) # Cap sleep to 60s or remaining budget
-            else: # Indefinite timeout
-                sleep_duration = min(sleep_duration, 60.0) # Cap sleep to 60s
+                sleep_duration = min(sleep_duration, remaining_time_budget, 60.0) 
+            else: 
+                sleep_duration = min(sleep_duration, 60.0) 
 
             if sleep_duration > 0.05 :
                  _log_fs_op_message(logging.INFO, f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.", logger)
                  time.sleep(sleep_duration)
-            else: # Very short or no sleep needed if next retry is immediate
+            else: 
                 time.sleep(0.05) 
-        elif not processed_in_this_pass: # No items require retry, and nothing was processed in this pass
+        elif not processed_in_this_pass: 
             _log_fs_op_message(logging.DEBUG, "No items processed and no items require retry. Exiting retry loop.", logger)
             break
 
