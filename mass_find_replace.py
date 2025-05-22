@@ -24,6 +24,9 @@
 # - Added `import importlib.util` for the `find_spec` calls.
 # - `main_cli`: Wrapped `importlib.util.find_spec` calls in try-except ImportError
 #   to correctly handle errors raised by mocked imports in tests.
+# - `main_cli`: Changed symlink handling flag from `--ignore-symlinks` to `--process-symlink-names`.
+#   The default behavior is now to IGNORE symlinks for renaming unless `--process-symlink-names` is specified.
+#   The `ignore_symlinks_arg` passed to `main_flow` is now `not args.process_symlink_names`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -161,7 +164,10 @@ def main_flow(
             print(f"Custom Ignore File: {custom_ignore_file_path}")
         if final_ignore_spec:
             print(f"Effective ignore patterns: {len(final_ignore_spec.patterns)} compiled from ignore files.") # type: ignore
-        print(f"Ignore Symlinks: {ignore_symlinks_arg}")
+        
+        symlink_processing_message = "Symlinks will be ignored (names not renamed, targets not processed for content)." if ignore_symlinks_arg else "Symlink names WILL BE PROCESSED for renaming; targets not processed for content."
+        print(f"Symlink Handling: {symlink_processing_message}")
+
         print(f"Skip File Renaming: {skip_file_renaming}")
         print(f"Skip Folder Renaming: {skip_folder_renaming}")
         print(f"Skip Content Modification: {skip_content}")
@@ -292,7 +298,10 @@ def main_cli() -> None:
     ignore_group.add_argument("--ignore-file", dest="custom_ignore_file", metavar="PATH", help="Path to a custom .gitignore-style file for additional exclusions.")
     
     symlink_group = parser.add_argument_group('Symlink Handling')
-    symlink_group.add_argument("--ignore-symlinks", action="store_true", help="If set, symlinks will be ignored (not renamed, targets not processed). Default is to rename symlink names but not follow them for content modification.")
+    symlink_group.add_argument("--process-symlink-names", action="store_true", 
+                               help="If set, symlink names WILL BE PROCESSED for renaming. "
+                                    "Default: symlink names are NOT processed for renaming. "
+                                    "Symlink targets are never followed for content modification by this script.")
     
     skip_group = parser.add_argument_group('Skip Operation Options')
     skip_group.add_argument("--skip-file-renaming", action="store_true", help="Skip all file renaming operations.")
@@ -341,8 +350,12 @@ def main_cli() -> None:
         # This print is for CLI verbosity; Prefect logger verbosity is handled in main_flow
         print("Verbose mode requested. Prefect log level will be set to DEBUG if flow runs.")
 
+    # If --process-symlink-names is True, then ignore_symlinks_arg should be False (i.e., don't ignore them).
+    # If --process-symlink-names is False (default), then ignore_symlinks_arg should be True (i.e., do ignore them).
+    ignore_symlinks_param = not args.process_symlink_names
+
     main_flow(args.directory, args.mapping_file, args.extensions, args.exclude_dirs, final_exclude_files,
-              args.dry_run, args.skip_scan, args.resume, args.force, args.ignore_symlinks,
+              args.dry_run, args.skip_scan, args.resume, args.force, ignore_symlinks_param,
               args.use_gitignore, args.custom_ignore_file,
               args.skip_file_renaming, args.skip_folder_renaming, args.skip_content, 
               timeout_val_for_flow, 
