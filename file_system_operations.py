@@ -78,6 +78,7 @@
 # - Context display for content transactions in interactive mode.
 # - Enhanced `_get_user_interactive_choice` to highlight all occurrences of matched key strings in the original name/line.
 # - Added `_highlight_string` helper function for coloring matched keys.
+# - Removed unused `current_overall_retry_attempt` from `execute_all_transactions` as the complex retry loop was simplified for interactive mode.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -903,10 +904,6 @@ def execute_all_transactions(
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
         return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
     transactions.sort(key=sort_key)
-
-    # execution_start_time = time.time() # Keep for potential re-introduction of retry loop
-    # max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 # Keep for retry loop
-    current_overall_retry_attempt = 0 # Keep for retry loop
     
     if resume or skip_scan: 
         for tx_item_for_reset in transactions:
@@ -949,7 +946,7 @@ def execute_all_transactions(
         if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
             continue
 
-        if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: # Should be current_overall_retry_attempt, not global
+        if current_status == TransactionStatus.IN_PROGRESS and not resume: 
             current_status = TransactionStatus.PENDING
         
         if current_status == TransactionStatus.RETRY_LATER:
@@ -958,7 +955,7 @@ def execute_all_transactions(
             else:
                 current_status = TransactionStatus.PENDING
         
-        tx_item["STATUS"] = current_status.value # Update status in tx_item before potential interactive prompt
+        tx_item["STATUS"] = current_status.value 
 
         if current_status == TransactionStatus.PENDING:
             if interactive_mode and not dry_run:
@@ -971,7 +968,6 @@ def execute_all_transactions(
                     _log_fs_op_message(logging.INFO, "Operation aborted by user in interactive mode.", logger)
                     print(f"{YELLOW_FG}Operation aborted by user.{RESET_STYLE}")
                     user_quit_interactive = True
-                    # Mark current as skipped before continuing to mark others if loop wasn't broken
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.") 
                     save_transactions(transactions, transactions_file_path, logger=logger)
                     continue 
@@ -998,13 +994,10 @@ def execute_all_transactions(
 
             if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
                 _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) requires retry. Error: {err_msg_from_exec}", logger)
-                # For interactive mode, RETRY_LATER means it will be picked up by --resume if user runs again.
-                # No automatic retry loop here for interactive mode to keep it simple.
 
             update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
             save_transactions(transactions, transactions_file_path, logger=logger)
 
-    # Final pass to update stats for any items skipped due to user quitting interactively
     if user_quit_interactive:
         for tx_item_final_skip_check in transactions:
             if tx_item_final_skip_check.get("STATUS") == TransactionStatus.PENDING.value:
