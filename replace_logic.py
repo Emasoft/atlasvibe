@@ -62,6 +62,7 @@
 # - Added direct print to sys.stderr at the entry of `replace_occurrences` for critical debug.
 # - Modified `_log_message` to print DEBUG messages to `sys.stderr` if `_DEBUG_REPLACE_LOGIC` is True. Removed `_DEFAULT_DEBUG_LOGGER`.
 # - Changed direct `print` calls in `_actual_replace_callback` and `replace_occurrences` to use `_log_message(logging.DEBUG, ...)`.
+# - Changed `_DEBUG_REPLACE_LOGIC` default value from `True` to `False`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -85,7 +86,7 @@ _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
 
 # --- START DEBUG CONFIG ---
 # Set to True to enable verbose debug prints in this module
-_DEBUG_REPLACE_LOGIC = True
+_DEBUG_REPLACE_LOGIC = False
 # --- END DEBUG CONFIG ---
 
 def reset_module_state():

@@ -69,6 +69,8 @@
 # - `_execute_rename_transaction`: Added more diagnostic prints and a hard check after `Path.rename()` to verify on-disk state.
 # - `_execute_rename_transaction`: Changed on-disk verification after rename to use `os.path.exists(str(path))` to align with test assertions.
 # - `_execute_content_line_transaction`: Modified to use original path for `current_abs_path` when `dry_run` is True.
+# - Converted direct `print(..., file=sys.stderr)` calls in `execute_all_transactions`, `_execute_rename_transaction`,
+#   and `_execute_content_line_transaction` to use `_log_fs_op_message(logging.DEBUG, ...)` for better log level control.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -560,8 +562,7 @@ def _execute_rename_transaction(
     except Exception as e:
         return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
     
-    print(f"FS_OP_RENAME_STDERR: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', os.path.exists={os.path.exists(str(current_abs_path))}", file=sys.stderr)
-    sys.stderr.flush()
+    _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', os.path.exists={os.path.exists(str(current_abs_path))}", logger)
 
     if not os.path.exists(str(current_abs_path)): # Use os.path.exists for consistency with test
         return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found by os.path.exists before rename.", False
@@ -587,8 +588,7 @@ def _execute_rename_transaction(
         if os.path.exists(str(new_abs_path)): # Use os.path.exists
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
         
-        print(f"FS_OP_RENAME_STDERR: Executing: Path('{current_abs_path}').rename('{new_abs_path}')", file=sys.stderr)
-        sys.stderr.flush()
+        _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: Executing: Path('{current_abs_path}').rename('{new_abs_path}')", logger)
         
         Path(current_abs_path).rename(new_abs_path)
         
@@ -596,8 +596,7 @@ def _execute_rename_transaction(
         old_path_gone_after_rename = not os.path.exists(str(current_abs_path))
         rename_successful_on_disk = new_path_exists_after_rename and old_path_gone_after_rename
 
-        print(f"FS_OP_RENAME_STDERR: After rename attempt (using os.path.exists): new_abs_path ('{new_abs_path}') exists: {new_path_exists_after_rename}. old_abs_path ('{current_abs_path}') exists: {not old_path_gone_after_rename}. rename_successful_on_disk: {rename_successful_on_disk}", file=sys.stderr)
-        sys.stderr.flush()
+        _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: After rename attempt (using os.path.exists): new_abs_path ('{new_abs_path}') exists: {new_path_exists_after_rename}. old_abs_path ('{current_abs_path}') exists: {not old_path_gone_after_rename}. rename_successful_on_disk: {rename_successful_on_disk}", logger)
 
         if not rename_successful_on_disk:
             return TransactionStatus.FAILED, f"Rename of '{current_abs_path}' to '{new_abs_path}' did not complete as expected on disk (new_exists={new_path_exists_after_rename}, old_gone={old_path_gone_after_rename}).", False
@@ -621,8 +620,7 @@ def _execute_content_line_transaction(
     path_translation_map: dict[str, str], path_cache: dict[str, Path], dry_run: bool,
     logger: logging.Logger | None = None
 ) -> tuple[TransactionStatus, str | None, bool]:
-    print(f"FS_OP_EXEC_CONTENT_ENTRY_STDERR: tx_path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER')}, dry_run={dry_run}", file=sys.stderr)
-    sys.stderr.flush()
+    _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_CONTENT_ENTRY: tx_path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER')}, dry_run={dry_run}", logger)
 
     orig_rel_path = tx_item["PATH"]
     line_num = tx_item["LINE_NUMBER"]
@@ -807,8 +805,7 @@ def execute_all_transactions(
         items_still_requiring_retry = []
 
         for tx_item in transactions:
-            print(f"FS_OP_EXEC_ALL_ITERATING_TX_STDERR: {tx_item}", file=sys.stderr)
-            sys.stderr.flush()
+            _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ITERATING_TX: {tx_item}", logger)
 
             tx_id = tx_item.setdefault("id", str(uuid.uuid4()))
             current_status = TransactionStatus(tx_item.get("STATUS", TransactionStatus.PENDING.value))
@@ -840,8 +837,7 @@ def execute_all_transactions(
             if current_status == TransactionStatus.PENDING:
                 update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
 
-                print(f"FS_OP_EXEC_ALL_ATTEMPTING_STDERR: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", file=sys.stderr)
-                sys.stderr.flush()
+                _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ATTEMPTING: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", logger)
 
                 new_stat_from_exec: TransactionStatus
                 err_msg_from_exec: str | None = None
