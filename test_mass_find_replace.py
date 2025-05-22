@@ -14,6 +14,10 @@
 # - `run_cli_command`: Explicitly set `env["PREFECT_API_URL"] = ""` for subprocesses to ensure Prefect uses local/ephemeral backend.
 # - `test_main_cli_missing_dependency`: Updated to correctly use `mock_exit.side_effect = SystemExit`
 #   and `pytest.raises(SystemExit)` to verify that `main_cli` attempts to exit and that `sys.exit(1)` is called.
+# - `test_main_cli_missing_dependency`: Changed mocking strategy to patch `importlib.util.find_spec` directly
+#   to ensure it returns None for the simulated missing dependencies.
+# - `run_cli_command`: Ensured `PREFECT_API_URL` is deleted from the subprocess environment if present,
+#   to rely on `PREFECT_TEST_MODE` for local backend selection.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -31,7 +35,8 @@ import json
 from unittest.mock import patch
 import sys
 import subprocess # For CLI tests
-import builtins # Added to fix F821
+import builtins 
+import importlib.util # For mocking find_spec
 
 from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
 from file_system_operations import (
@@ -711,14 +716,12 @@ def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProc
     env = os.environ.copy()
     env["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
     env["PREFECT_TEST_MODE"] = "True"
-    env["PREFECT_API_URL"] = "" # Explicitly set to empty to force local/ephemeral
+    
+    # Explicitly remove PREFECT_API_URL if it exists to ensure local/ephemeral mode is used
+    if "PREFECT_API_URL" in env:
+        del env["PREFECT_API_URL"]
         
-    # PREFECT_HOME is set by the session fixture, so it should be inherited via os.environ.copy()
-    # If PREFECT_HOME was not set, Prefect would use default user-specific location.
-    # For CLI tests, ensuring PREFECT_HOME is also isolated if needed would be good,
-    # but the session fixture in conftest.py already handles this for the main pytest process.
-    # The key is that the subprocess needs to know it's in a test/ephemeral mode.
-    if "PREFECT_HOME" not in env: # Ensure PREFECT_HOME is set for subprocess if not already
+    if "PREFECT_HOME" not in env: 
         env["PREFECT_HOME"] = str(cwd / ".prefect_cli_test_home") 
         Path(env["PREFECT_HOME"]).mkdir(parents=True, exist_ok=True)
 
@@ -758,21 +761,19 @@ def test_main_cli_verbose_flag(temp_test_dir: Path):
     assert res.returncode == 0
 
 def test_main_cli_missing_dependency(temp_test_dir: Path):
-    # Store original import function
-    original_import = builtins.__import__
-    # Modules to simulate as missing
+    original_find_spec = importlib.util.find_spec
     modules_to_mock_missing = {"prefect", "chardet"}
 
-    def mocked_import(name, globals_arg=None, locals_arg=None, fromlist=(), level=0): # Renamed to avoid conflict
+    def mocked_find_spec(name, package=None):
         if name in modules_to_mock_missing:
-            raise ImportError(f"Simulated missing module: {name}")
-        return original_import(name, globals_arg, locals_arg, fromlist, level)
+            return None # Simulate module not found
+        return original_find_spec(name, package)
 
     with patch.object(sys, 'argv', [str(SCRIPT_PATH_FOR_CLI_TESTS), str(temp_test_dir)]):
         with patch.object(sys, 'exit') as mock_exit:
             mock_exit.side_effect = SystemExit # Make the mock raise SystemExit
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
-                with patch('builtins.__import__', side_effect=mocked_import):
+                with patch('importlib.util.find_spec', side_effect=mocked_find_spec):
                     with pytest.raises(SystemExit) as excinfo:
                         main_cli()
                     
@@ -781,8 +782,8 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
                 mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
                 assert "CRITICAL ERROR: Missing core dependencies:" in printed_error
-                # Check if the first missing module ("prefect") is mentioned
-                assert "prefect" in printed_error or "Simulated missing module: prefect" in printed_error
+                assert "prefect" in printed_error 
+                assert "chardet" in printed_error
 
 
 # --- Tests for specific scenarios from checklist ---
