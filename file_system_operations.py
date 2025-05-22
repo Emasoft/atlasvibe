@@ -76,6 +76,8 @@
 # - Added ANSI color codes for interactive mode display.
 # - Helper function `_get_user_interactive_choice` to handle user input.
 # - Context display for content transactions in interactive mode.
+# - Enhanced `_get_user_interactive_choice` to highlight all occurrences of matched key strings in the original name/line.
+# - Added `_highlight_string` helper function for coloring matched keys.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -99,6 +101,7 @@ from striprtf.striprtf import rtf_to_text
 from isbinary import is_binary_file
 import logging
 import sys # For direct stderr prints
+import re # For highlighting in interactive mode
 
 from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
 
@@ -760,65 +763,104 @@ def _execute_content_line_transaction(
             except OSError: 
                 pass 
 
+def _highlight_string(text: str, pattern: re.Pattern | None, color: str) -> str:
+    """Highlights occurrences of pattern in text with the given color."""
+    if not pattern or not text:
+        return text
+    
+    # Use NFC normalized version of text for matching, as pattern is based on canonical keys
+    nfc_text = unicodedata.normalize('NFC', text)
+    
+    # Substitute matches in the NFC text with colored versions
+    # The lambda function gets the matched object `m` and wraps `m.group(0)` (the matched string)
+    # with color codes.
+    highlighted_nfc_text = pattern.sub(lambda m: f"{color}{m.group(0)}{RESET_STYLE}", nfc_text)
+    
+    # If the original text was different from its NFC form, it's complex to map highlights back perfectly.
+    # For display, showing the highlighted NFC form is the most straightforward and consistent
+    # with how the matching logic (which uses NFC) operates.
+    # If text == nfc_text, then highlighted_nfc_text is directly applicable to original structure.
+    # If they differ, user sees highlights on the NFC normalized version.
+    return highlighted_nfc_text
+
+
 def _get_user_interactive_choice(tx_item: dict[str, Any], root_dir: Path, path_translation_map: dict[str, str], path_cache: dict[str, Path], logger: logging.Logger | None) -> str:
     """Displays transaction details and prompts user for action in interactive mode."""
     print(f"\n{MAGENTA_FG}--- Interactive Mode: Pending Transaction ---{RESET_STYLE}")
     tx_type = tx_item.get("TYPE")
     tx_path = tx_item.get("PATH", "N/A")
+    scan_pattern = get_scan_pattern() # Get the compiled regex pattern for highlighting
 
     if tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
         item_kind = "Folder" if tx_type == TransactionType.FOLDER_NAME.value else "File"
         original_name = tx_item.get("ORIGINAL_NAME", "N/A")
         proposed_name = replace_occurrences(original_name)
+        
+        highlighted_original_name = _highlight_string(original_name, scan_pattern, RED_FG)
+        
         print(f"{CYAN_FG}Action:{RESET_STYLE} Rename {item_kind}")
         print(f"{CYAN_FG}Path:{RESET_STYLE}   {tx_path}")
-        print(f"{DIM_STYLE}Original Name:{RESET_STYLE} {original_name}")
+        print(f"{DIM_STYLE}Original Name:{RESET_STYLE} {DIM_STYLE}{highlighted_original_name}{RESET_STYLE}")
         print(f"{YELLOW_FG}Proposed Name:{RESET_STYLE} {proposed_name}")
     
     elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
         line_num = tx_item.get("LINE_NUMBER", "N/A")
-        original_line = tx_item.get("ORIGINAL_LINE_CONTENT", "")
-        proposed_line = replace_occurrences(original_line) 
+        original_line_content = tx_item.get("ORIGINAL_LINE_CONTENT", "")
+        # Proposed line is already calculated and stored if scan was done, or will be by _execute_content_line_transaction
+        # For display, we re-calculate it here to show the user.
+        proposed_line_content = replace_occurrences(original_line_content) 
         encoding = tx_item.get("ORIGINAL_ENCODING", "N/A")
 
         print(f"{CYAN_FG}Action:{RESET_STYLE} Modify File Content")
         print(f"{CYAN_FG}File:{RESET_STYLE}   {tx_path} (Line: {line_num}, Encoding: {encoding})")
         
         try:
-            # Get current absolute path for reading context
             current_abs_path_for_context = _get_current_absolute_path(tx_path, root_dir, path_translation_map, path_cache)
             if current_abs_path_for_context.is_file():
                 full_content_bytes = current_abs_path_for_context.read_bytes()
                 full_content_unicode = full_content_bytes.decode(encoding, errors='surrogateescape')
                 all_lines = full_content_unicode.splitlines(keepends=True)
-                if not all_lines and full_content_unicode: # Handle files with no newlines but content
+                if not all_lines and full_content_unicode:
                     all_lines = [full_content_unicode]
 
-                context_start_idx = max(0, line_num - 3)
-                context_end_idx = min(len(all_lines), line_num + 2)
+                actual_line_num_for_array = line_num -1 # Adjust for 0-based indexing
+
+                context_start_idx = max(0, actual_line_num_for_array - 2)
+                context_end_idx = min(len(all_lines), actual_line_num_for_array + 3)
                 
                 print(f"{DIM_STYLE}--- Context ---{RESET_STYLE}")
                 for i in range(context_start_idx, context_end_idx):
-                    line_to_print = all_lines[i].rstrip('\r\n')
-                    if i == line_num - 1: # Target line
-                        print(f"{DIM_STYLE}Original Line {i+1}:{RESET_STYLE} {line_to_print}")
-                        print(f"{YELLOW_FG}{BOLD_STYLE}Proposed Line {i+1}:{RESET_STYLE}{YELLOW_FG} {proposed_line.rstrip(os.linesep)}{RESET_STYLE}")
-                    else:
-                        print(f"{DIM_STYLE}Line {i+1}:{RESET_STYLE} {DIM_STYLE}{line_to_print}{RESET_STYLE}")
+                    line_to_print_raw = all_lines[i]
+                    # Rstrip only for display to avoid messing with calculations or actual content
+                    display_line = line_to_print_raw.rstrip('\r\n') 
+
+                    if i == actual_line_num_for_array: # Target line
+                        highlighted_original_line = _highlight_string(display_line, scan_pattern, RED_FG)
+                        print(f"{DIM_STYLE}Original Line {i+1}:{RESET_STYLE} {DIM_STYLE}{highlighted_original_line}{RESET_STYLE}")
+                        
+                        # Display proposed line (already has replacements applied)
+                        # No need to highlight proposed line's keys, as they should be values now.
+                        # We could highlight the *differences* but that's more complex.
+                        print(f"{YELLOW_FG}{BOLD_STYLE}Proposed Line {i+1}:{RESET_STYLE}{YELLOW_FG} {proposed_line_content.rstrip(os.linesep)}{RESET_STYLE}")
+                    else: # Context lines
+                        # For context lines, do not highlight internal matches to keep focus on target line
+                        print(f"{DIM_STYLE}Line {i+1}:{RESET_STYLE} {DIM_STYLE}{display_line}{RESET_STYLE}")
                 print(f"{DIM_STYLE}---------------{RESET_STYLE}")
-            else:
+            else: # File not found for context
                 print(f"{RED_FG}Could not read file for context: {current_abs_path_for_context}{RESET_STYLE}")
-                print(f"{DIM_STYLE}Original Line:{RESET_STYLE} {original_line.rstrip(os.linesep)}")
-                print(f"{YELLOW_FG}Proposed Line:{RESET_STYLE} {proposed_line.rstrip(os.linesep)}")
+                highlighted_original_line = _highlight_string(original_line_content.rstrip(os.linesep), scan_pattern, RED_FG)
+                print(f"{DIM_STYLE}Original Line:{RESET_STYLE} {DIM_STYLE}{highlighted_original_line}{RESET_STYLE}")
+                print(f"{YELLOW_FG}Proposed Line:{RESET_STYLE} {proposed_line_content.rstrip(os.linesep)}")
 
         except Exception as e:
             _log_fs_op_message(logging.WARNING, f"Error reading file for interactive context ({tx_path}): {e}", logger)
             print(f"{RED_FG}Error getting context. Displaying raw lines:{RESET_STYLE}")
-            print(f"{DIM_STYLE}Original Line:{RESET_STYLE} {original_line.rstrip(os.linesep)}")
-            print(f"{YELLOW_FG}Proposed Line:{RESET_STYLE} {proposed_line.rstrip(os.linesep)}")
-    else:
+            highlighted_original_line = _highlight_string(original_line_content.rstrip(os.linesep), scan_pattern, RED_FG)
+            print(f"{DIM_STYLE}Original Line:{RESET_STYLE} {DIM_STYLE}{highlighted_original_line}{RESET_STYLE}")
+            print(f"{YELLOW_FG}Proposed Line:{RESET_STYLE} {proposed_line_content.rstrip(os.linesep)}")
+    else: # Unknown transaction type
         print(f"{RED_FG}Unknown transaction type: {tx_type}{RESET_STYLE}")
-        return 's' # Default to skip for unknown
+        return 's' 
 
     while True:
         choice = input(f"{BLUE_FG}Approve? ({GREEN_FG}A/Approve{BLUE_FG}, {YELLOW_FG}S/Skip{BLUE_FG}, {RED_FG}Q/Quit{BLUE_FG}): {RESET_STYLE}").lower()
@@ -862,9 +904,9 @@ def execute_all_transactions(
         return (type_o.get(tx.get("TYPE"), 3), tx["PATH"].count('/'), tx["PATH"], tx.get("LINE_NUMBER",0)) 
     transactions.sort(key=sort_key)
 
-    execution_start_time = time.time()
-    max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
-    current_overall_retry_attempt = 0
+    # execution_start_time = time.time() # Keep for potential re-introduction of retry loop
+    # max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20 # Keep for retry loop
+    current_overall_retry_attempt = 0 # Keep for retry loop
     
     if resume or skip_scan: 
         for tx_item_for_reset in transactions:
@@ -887,9 +929,9 @@ def execute_all_transactions(
     user_quit_interactive = False
     for tx_item in transactions:
         if user_quit_interactive:
-            if tx_item.get("STATUS") == TransactionStatus.PENDING.value: # Mark remaining PENDING as SKIPPED
+            if tx_item.get("STATUS") == TransactionStatus.PENDING.value: 
                  update_transaction_status_in_list(transactions, tx_item["id"], TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.")
-            continue # Skip processing further items if user quit
+            continue 
 
         _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ITERATING_TX: {tx_item}", logger)
 
@@ -907,17 +949,16 @@ def execute_all_transactions(
         if current_status in [TransactionStatus.COMPLETED, TransactionStatus.SKIPPED, TransactionStatus.FAILED]:
             continue
 
-        if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0:
+        if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: # Should be current_overall_retry_attempt, not global
             current_status = TransactionStatus.PENDING
         
         if current_status == TransactionStatus.RETRY_LATER:
             if tx_item.get("timestamp_next_retry", 0) > time.time():
-                # items_still_requiring_retry.append(tx_item) # This loop structure is different now
                 continue
             else:
                 current_status = TransactionStatus.PENDING
         
-        tx_item["STATUS"] = current_status.value
+        tx_item["STATUS"] = current_status.value # Update status in tx_item before potential interactive prompt
 
         if current_status == TransactionStatus.PENDING:
             if interactive_mode and not dry_run:
@@ -930,11 +971,11 @@ def execute_all_transactions(
                     _log_fs_op_message(logging.INFO, "Operation aborted by user in interactive mode.", logger)
                     print(f"{YELLOW_FG}Operation aborted by user.{RESET_STYLE}")
                     user_quit_interactive = True
-                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.") # Mark current as skipped
+                    # Mark current as skipped before continuing to mark others if loop wasn't broken
+                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.") 
                     save_transactions(transactions, transactions_file_path, logger=logger)
                     continue 
-                # 'approve' falls through to normal processing
-
+            
             update_transaction_status_in_list(transactions, tx_id, TransactionStatus.IN_PROGRESS)
             _log_fs_op_message(logging.DEBUG, f"FS_OP_EXEC_ALL_ATTEMPTING: tx_id='{tx_id}', type='{tx_type}', path='{tx_item.get('PATH')}', line={tx_item.get('LINE_NUMBER', 'N/A')}, status_before_exec_call='IN_PROGRESS', dry_run={dry_run}", logger)
 
@@ -956,18 +997,20 @@ def execute_all_transactions(
                 _log_fs_op_message(logging.CRITICAL, f"CRITICAL outer error processing tx {tx_id}: {e_outer}", logger) 
 
             if new_stat_from_exec == TransactionStatus.RETRY_LATER and is_retryable_error_from_exec:
-                # Retry logic will be handled by the outer loop structure if we re-introduce it,
-                # or simply marked for next run if interactive. For now, just log.
                 _log_fs_op_message(logging.INFO, f"Transaction {tx_id} ({tx_item['PATH']}) requires retry. Error: {err_msg_from_exec}", logger)
-                # items_still_requiring_retry.append(tx_item) # If outer loop is added
+                # For interactive mode, RETRY_LATER means it will be picked up by --resume if user runs again.
+                # No automatic retry loop here for interactive mode to keep it simple.
 
             update_transaction_status_in_list(transactions, tx_id, new_stat_from_exec, err_msg_from_exec, final_prop_content_for_log, is_retryable_error_from_exec)
             save_transactions(transactions, transactions_file_path, logger=logger)
-            # processed_in_this_pass += 1 # If outer loop is added
 
-    # Simplified retry loop (removed for now, as interactive mode changes flow)
-    # The original retry loop logic would need significant adjustments for interactive mode.
-    # For now, RETRY_LATER items will remain as such and can be picked up by --resume.
+    # Final pass to update stats for any items skipped due to user quitting interactively
+    if user_quit_interactive:
+        for tx_item_final_skip_check in transactions:
+            if tx_item_final_skip_check.get("STATUS") == TransactionStatus.PENDING.value:
+                update_transaction_status_in_list(transactions, tx_item_final_skip_check["id"], TransactionStatus.SKIPPED, "Operation aborted by user in interactive mode.")
+        save_transactions(transactions, transactions_file_path, logger=logger)
+
 
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
     for t in transactions:
