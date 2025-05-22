@@ -13,11 +13,8 @@
 #   before running the CLI subprocess, allowing PREFECT_TEST_MODE to correctly use a local backend.
 # - `run_cli_command`: Explicitly set `env["PREFECT_API_URL"] = ""` for subprocesses to ensure Prefect uses local/ephemeral backend.
 # - `test_main_cli_missing_dependency`: Updated to correctly use `mock_exit.side_effect = SystemExit`
-#   and `pytest.raises(SystemExit)` to verify that `main_cli` attempts to exit and that `sys.exit(1)` is called.
-# - `test_main_cli_missing_dependency`: Changed mocking strategy to patch `importlib.util.find_spec` directly
-#   to ensure it returns None for the simulated missing dependencies.
-# - `run_cli_command`: Ensured `PREFECT_API_URL` is deleted from the subprocess environment if present,
-#   to rely on `PREFECT_TEST_MODE` for local backend selection.
+#   and `pytest.raises(SystemExit)` to verify that `main_cli` attempts to exit. Changed assertion to `mock_exit.assert_called_once_with(1)`.
+# - `run_cli_command`: Ensured `PREFECT_API_URL` is explicitly set to `""` in the subprocess environment.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -717,9 +714,8 @@ def run_cli_command(args_list: list[str], cwd: Path) -> subprocess.CompletedProc
     env["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "false"
     env["PREFECT_TEST_MODE"] = "True"
     
-    # Explicitly remove PREFECT_API_URL if it exists to ensure local/ephemeral mode is used
-    if "PREFECT_API_URL" in env:
-        del env["PREFECT_API_URL"]
+    # Explicitly set PREFECT_API_URL to empty string for local/ephemeral mode
+    env["PREFECT_API_URL"] = ""
         
     if "PREFECT_HOME" not in env: 
         env["PREFECT_HOME"] = str(cwd / ".prefect_cli_test_home") 
@@ -774,12 +770,11 @@ def test_main_cli_missing_dependency(temp_test_dir: Path):
             mock_exit.side_effect = SystemExit # Make the mock raise SystemExit
             with patch.object(sys.stderr, 'write') as mock_stderr_write:
                 with patch('importlib.util.find_spec', side_effect=mocked_find_spec):
-                    with pytest.raises(SystemExit) as excinfo:
+                    with pytest.raises(SystemExit): # Check that SystemExit is raised
                         main_cli()
                     
-                    assert excinfo.value.code == 1
+                    mock_exit.assert_called_once_with(1) # Check that sys.exit was called with 1
                 
-                mock_exit.assert_called_once_with(1)
                 printed_error = "".join(call.args[0] for call in mock_stderr_write.call_args_list)
                 assert "CRITICAL ERROR: Missing core dependencies:" in printed_error
                 assert "prefect" in printed_error 
