@@ -15,6 +15,7 @@
 # - `test_main_cli_missing_dependency`: Updated to correctly use `mock_exit.side_effect = SystemExit`
 #   and `pytest.raises(SystemExit)` to verify that `main_cli` attempts to exit. Changed assertion to `mock_exit.assert_called_once_with(1)`.
 # - `run_cli_command`: Ensured `PREFECT_API_URL` is explicitly set to `""` in the subprocess environment.
+# - `run_main_flow_for_test`: Added `interactive_mode: bool = False` parameter and passed it to `main_flow`.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -59,7 +60,8 @@ def run_main_flow_for_test(
     use_gitignore: bool = False, custom_ignore_file: str | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     timeout_minutes: int = 1, quiet_mode: bool = True, # Default to quiet for tests
-    verbose_mode: bool = False # Added verbose_mode with a default
+    verbose_mode: bool = False, # Added verbose_mode with a default
+    interactive_mode: bool = False # Added interactive_mode with a default
 ):
     # main_flow itself is responsible for calling replace_logic.load_replacement_map
     # and handling its success/failure. We rely on main_flow's internal checks.
@@ -80,7 +82,8 @@ def run_main_flow_for_test(
         skip_file_renaming=skip_file_renaming, skip_folder_renaming=skip_folder_renaming,
         skip_content=skip_content, timeout_minutes=timeout_minutes,
         quiet_mode=quiet_mode,
-        verbose_mode=verbose_mode # Pass verbose_mode to main_flow
+        verbose_mode=verbose_mode, # Pass verbose_mode to main_flow
+        interactive_mode=interactive_mode # Pass interactive_mode to main_flow
     )
 
 
