@@ -34,7 +34,6 @@
 # Refer to the LICENSE file for more details.
 
 import pytest
-import shutil
 import json
 from pathlib import Path
 import os
