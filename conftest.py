@@ -30,3 +30,11 @@ def create_test_environment_content():
             (test_dir / "symlink_to_external").symlink_to(symlink_target / "external_flojoy.txt")
         return test_dir
     return _create
+
+@pytest.fixture
+def assert_file_content():
+    """Helper to validate file content matches expectations"""
+    def _assert(file_path: Path, expected_content: str):
+        content = file_path.read_text(encoding='utf-8')
+        assert content == expected_content
+    return _assert
