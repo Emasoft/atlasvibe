@@ -1,39 +1,47 @@
 # conftest.py
 import pytest
+import json
 from pathlib import Path
 
 @pytest.fixture
-def create_test_environment_content():
-    """Fixture to create a standardized test directory structure with files."""
-    def _create(tmp_path: Path):
-        test_dir = tmp_path / "test_run"
-        test_dir.mkdir()
-        
-        # Create sample directories
-        (test_dir / "flojoy_root").mkdir()
-        (test_dir / "flojoy_root" / "sub_flojoy_folder").mkdir()
-        (test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir()
-        deep_file = test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
-        deep_file.write_text("This file contains FLOJOY multiple times: Flojoy floJoy")
-        
-        # Create excluded items
-        (test_dir / "excluded_flojoy_dir").mkdir()
-        (test_dir / "excluded_flojoy_dir" / "excluded_file.txt").write_text("FLOJOY content")
-        (test_dir / "exclude_this_flojoy_file.txt").write_text("Flojoy exclusion test")
-        
-        # Create symlink tests if needed
-        include_symlink_tests = False
-        if include_symlink_tests:
-            symlink_target = test_dir / "symlink_targets_outside"
-            symlink_target.mkdir()
-            (symlink_target / "external_flojoy.txt").write_text("External FLOJOY")
-            (test_dir / "symlink_to_external").symlink_to(symlink_target / "external_flojoy.txt")
-        return test_dir
-    return _create
+def temp_test_dir(tmp_path: Path):
+    """Fixture that creates a full test directory structure"""
+    test_dir = tmp_path / "test_run"
+    test_dir.mkdir()
+    
+    # Create sample directories and files
+    (test_dir / "flojoy_root").mkdir()
+    (test_dir / "flojoy_root" / "sub_flojoy_folder").mkdir()
+    (test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir()
+    deep_file = test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
+    deep_file.write_text("This file contains FLOJOY multiple times: Flojoy floJoy")
+    
+    # Create excluded items
+    (test_dir / "excluded_flojoy_dir").mkdir()
+    (test_dir / "excluded_flojoy_dir" / "excluded_file.txt").write_text("FLOJOY content")
+    (test_dir / "exclude_this_flojoy_file.txt").write_text("Flojoy exclusion test")
+    
+    return test_dir
 
 @pytest.fixture
+def default_map_file(temp_test_dir: Path):
+    """Fixture that creates a default replacement mapping file"""
+    map_file = temp_test_dir / "replacement_mapping.json"
+    map_content = {
+        "REPLACEMENT_MAPPING": {
+            "flojoy": "atlasvibe",
+            "Flojoy": "Atlasvibe",
+            "floJoy": "atlasVibe",
+            "FloJoy": "AtlasVibe",
+            "FLOJOY": "ATLASVIBE"
+        }
+    }
+    map_file.write_text(json.dumps(map_content))
+    return map_file
+
+# Keep the existing assert_file_content fixture
+@pytest.fixture
 def assert_file_content():
-    """Helper to validate file content matches expectations"""
     def _assert(file_path: Path, expected_content: str):
         content = file_path.read_text(encoding='utf-8')
         assert content == expected_content
