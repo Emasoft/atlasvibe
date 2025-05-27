@@ -58,19 +58,60 @@ def run_main_flow_for_test(
     )
 
 # Example test updated to remove environment setup
-def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path):
-    # No create_test_environment_content call
+def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_file_content):
+    # Get reference to test file before changes
     orig_deep_file_path = temp_test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
     original_content = orig_deep_file_path.read_text(encoding='utf-8')
+    
+    # Run the dry run operation
     run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
+    
+    # Verify original file remains unchanged
     assert orig_deep_file_path.exists()
-    # Use the provided assert_file_content fixture
-    conftest.assert_file_content(orig_deep_file_path, original_content)
+    assert_file_content(orig_deep_file_path, original_content)
+    
+    # Verify no actual renaming occurred
     assert not (temp_test_dir / "atlasvibe_root").exists()
+    
+    # Load and validate transactions
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
+    
+    # Count different transaction types
+    name_txs = [tx for tx in transactions if tx["TYPE"] in (TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value)]
+    content_txs = [tx for tx in transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
+    
+    # Should have 2 name transactions (folder and file)
+    assert len(name_txs) == 2
+    # Should have 3 content transactions (3 lines in file)
+    assert len(content_txs) == 3
+    
+    # Verify all transactions are marked completed with dry run flag
     for tx in transactions:
         if tx["STATUS"] == TransactionStatus.COMPLETED.value:
-            assert tx.get("ERROR_MESSAGE") == "DRY_RUN" or tx.get("PROPOSED_LINE_CONTENT") is not None or tx["TYPE"] != TransactionType.FILE_CONTENT_LINE.value
-        elif tx["STATUS"] == TransactionStatus.PENDING.value:
-            pytest.fail(f"Tx {tx['id']} PENDING after dry run scan phase implies it wasn't processed for planning.")
+            assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
+        else:
+            pytest.fail(f"Transaction {tx['id']} in unexpected state {tx['STATUS']}")
+def test_interactive_mode_approval(temp_test_dir: Path, default_map_file: Path, monkeypatch):
+    # Mock user input to approve first transaction then quit
+    monkeypatch.setattr(builtins, "input", lambda _: "a\nq\n")
+    
+    # Run in interactive mode
+    run_main_flow_for_test(
+        temp_test_dir, 
+        default_map_file,
+        interactive_mode=True,
+        quiet_mode=False  # Need to see prompts
+    )
+    
+    # Load transactions
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
+    
+    # Verify first transaction was completed
+    first_tx = transactions[0]
+    assert first_tx["STATUS"] == TransactionStatus.COMPLETED.value
+    
+    # Verify at least one transaction was skipped due to quit
+    skipped_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.SKIPPED.value]
+    assert len(skipped_txs) > 0
