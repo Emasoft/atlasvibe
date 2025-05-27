@@ -1,46 +1,32 @@
 # conftest.py
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `prefect_test_settings` fixture:
-#   - Configures Prefect to run with ephemeral API server enabled during tests.
-#   - Sets `PREFECT_HOME` to a temporary directory for test isolation.
-#   - Disables project usage stats.
-#   - Sets `PREFECT_TEST_MODE` to "true" for test environment.
-#   - Restores original environment variables after tests.
-#
-# Copyright (c) 2024 Emasoft
-#
-# This software is licensed under the MIT License.
-# Refer to the LICENSE file for more details.
-
 import pytest
-import os
-import tempfile
+from pathlib import Path
 
-@pytest.fixture(scope="session", autouse=True)
-def prefect_test_settings():
-    """Configure Prefect for testing with ephemeral API server."""
-    original_env = {
-        "PREFECT_API_EPHEMERAL_SERVER_ENABLED": os.environ.get("PREFECT_API_EPHEMERAL_SERVER_ENABLED"),
-        "PREFECT_HOME": os.environ.get("PREFECT_HOME"),
-        "PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS": os.environ.get("PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"),
-        "PREFECT_TEST_MODE": os.environ.get("PREFECT_TEST_MODE"),
-    }
-
-    # Set test environment variables
-    os.environ["PREFECT_API_EPHEMERAL_SERVER_ENABLED"] = "true"
-    os.environ["PREFECT_HOME"] = str(tempfile.mkdtemp(prefix="prefect_home"))
-    os.environ["PREFECT_SETTINGS_SEND_PROJECT_USAGE_STATS"] = "false"
-    os.environ["PREFECT_TEST_MODE"] = "true"
-
-    yield
-
-    # Restore original environment variables
-    for key, value in original_env.items():
-        if value is None:
-            if key in os.environ:
-                del os.environ[key]
-        else:
-            os.environ[key] = value
+@pytest.fixture
+def create_test_environment_content():
+    """Fixture to create a standardized test directory structure with files."""
+    def _create(tmp_path: Path):
+        test_dir = tmp_path / "test_run"
+        test_dir.mkdir()
+        
+        # Create sample directories
+        (test_dir / "flojoy_root").mkdir()
+        (test_dir / "flojoy_root" / "sub_flojoy_folder").mkdir()
+        (test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir").mkdir()
+        deep_file = test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
+        deep_file.write_text("This file contains FLOJOY multiple times: Flojoy floJoy")
+        
+        # Create excluded items
+        (test_dir / "excluded_flojoy_dir").mkdir()
+        (test_dir / "excluded_flojoy_dir" / "excluded_file.txt").write_text("FLOJOY content")
+        (test_dir / "exclude_this_flojoy_file.txt").write_text("Flojoy exclusion test")
+        
+        # Create symlink tests if needed
+        include_symlink_tests = False
+        if include_symlink_tests:
+            symlink_target = test_dir / "symlink_targets_outside"
+            symlink_target.mkdir()
+            (symlink_target / "external_flojoy.txt").write_text("External FLOJOY")
+            (test_dir / "symlink_to_external").symlink_to(symlink_target / "external_flojoy.txt")
+        return test_dir
+    return _create
