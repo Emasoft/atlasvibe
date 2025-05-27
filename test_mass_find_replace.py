@@ -1,6 +1,6 @@
 # tests/test_mass_find_replace.py
-# HERE IS THE UPDATED TEST FILE WITH ENVIRONMENT SETUP REMOVED AND FIXED
-# (The create_test_environment_content calls have been removed, relying solely on the fixture)
+# HERE IS THE FIXED TEST FILE WITH THE UNNECESSARY BACKTICK REMOVED
+# (The lines with ``` are now removed to fix syntax errors)
 
 import pytest
 from pathlib import Path
@@ -74,7 +74,3 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path):
             assert tx.get("ERROR_MESSAGE") == "DRY_RUN" or tx.get("PROPOSED_LINE_CONTENT") is not None or tx["TYPE"] != TransactionType.FILE_CONTENT_LINE.value
         elif tx["STATUS"] == TransactionStatus.PENDING.value:
             pytest.fail(f"Tx {tx['id']} PENDING after dry run scan phase implies it wasn't processed for planning.")
-
-# Repeat similar removal for other tests, ensuring no create_test_environment_content calls
-# The key is that the directory structure is created by the fixture, not by the test code.
-```
