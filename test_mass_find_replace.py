@@ -16,7 +16,7 @@ import subprocess
 import builtins
 import importlib.util
 
-from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
+from mass_find_replace import main_flow, main_cli, YELLOW, RESET
 from file_system_operations import (
     load_transactions, save_transactions, TransactionStatus, TransactionType
 )
