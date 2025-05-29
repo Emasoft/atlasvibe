@@ -45,3 +45,11 @@ def assert_file_content():
         content = file_path.read_text(encoding='utf-8')
         assert content == expected_content
     return _assert
+
+@pytest.fixture(scope="session", autouse=True)
+def prefect_server_cleanup():
+    """Cleanup Prefect server after all tests finish"""
+    yield
+    # Force cleanup of any remaining Prefect processes
+    from prefect.utilities.processutils import kill_on_interrupt
+    kill_on_interrupt()
