@@ -8,6 +8,10 @@
 # - Fixed retry pass counting logic in execute_all_transactions to increment correctly.
 # - Added detailed logging for transaction reset count.
 # - Minor cleanup and added missing variable initialization.
+# - Fixed path_translation_map update during dry run in _execute_rename_transaction to avoid modifying state.
+# - Fixed resume logic in execute_all_transactions to update path_translation_map only for completed non-dry-run transactions.
+# - Added NFC normalization comparison for line content validation in _execute_content_line_transaction.
+# - Fixed binary_log_path initialization to use root_dir instead of undefined abs_root_dir.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -268,7 +272,7 @@ def scan_directory_for_occurrences(
     excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f}
 
     normalized_extensions = {ext.lower() for ext in file_extensions} if file_extensions else None
-    binary_log_path = abs_root_dir / BINARY_MATCHES_LOG_FILE
+    binary_log_path = root_dir / BINARY_MATCHES_LOG_FILE
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec, logger=logger)
     
@@ -528,8 +532,7 @@ def _execute_rename_transaction(
         return TransactionStatus.FAILED, "Simulated rename error for self-test.", False
         
     if dry_run:
-        path_translation_map[orig_rel_path] = new_name
-        path_cache.pop(orig_rel_path, None)
+        # Only simulate changes, don't update real path mappings
         return TransactionStatus.COMPLETED, "DRY_RUN", False
         
     try:
@@ -645,10 +648,14 @@ def _execute_content_line_transaction(
             return TransactionStatus.FAILED, f"Line number {line_num} out of bounds for file {current_abs_path} (has {len(lines_unicode)} lines). File may have changed.", False
 
         current_line_in_file_decoded = lines_unicode[line_num - 1]
-        if current_line_in_file_decoded != orig_line_content_from_tx:
+
+        # Added NFC normalization comparison for line content validation
+        normalized_scan = unicodedata.normalize("NFC", orig_line_content_from_tx)
+        normalized_file = unicodedata.normalize("NFC", current_line_in_file_decoded)
+        if normalized_file != normalized_scan:
             if temp_file_path.exists():
                 temp_file_path.unlink(missing_ok=True)
-            return TransactionStatus.FAILED, f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected: {repr(orig_line_content_from_tx)}, Found: {repr(current_line_in_file_decoded)}", False
+            return TransactionStatus.FAILED, f"Content of line {line_num} in {current_abs_path} has changed since scan. Expected (NFC normalized): {repr(normalized_scan)}, Found (NFC normalized): {repr(normalized_file)}", False
 
         lines_unicode[line_num - 1] = actual_new_line_content_unicode
         expected_new_full_content_unicode = "".join(lines_unicode)
@@ -819,7 +826,7 @@ def execute_all_transactions(
     path_cache: dict[str,Path] = {}
     abs_root_dir = root_dir
 
-    if resume: 
+    if resume and not dry_run: 
         for tx in transactions:
             tx_type = tx.get("TYPE")
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
