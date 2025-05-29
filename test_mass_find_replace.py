@@ -82,12 +82,17 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_fi
     name_txs = [tx for tx in transactions if tx["TYPE"] in (TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value)]
     content_txs = [tx for tx in transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
     
-    # 3 folders + 1 file = 4 name transactions
+    # Should have 4 name transactions: 
+    # - flojoy_root (folder)
+    # - sub_flojoy_folder (folder)
+    # - another_FLOJOY_dir (folder)
+    # - deep_flojoy_file.txt (file)
     assert len(name_txs) == 4
+    
     # Only file has 1 content transaction
     assert len(content_txs) == 1
     
-    # Verify all five transactions are handled
+    # Verify all five transactions are handled as dry_run
     completed_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.COMPLETED.value]
     assert len(completed_txs) == 5
     for tx in completed_txs:
