@@ -15,6 +15,7 @@ import sys
 import subprocess
 import builtins
 import importlib.util
+import replace_logic
 
 from mass_find_replace import main_flow, main_cli, BINARY_MATCHES_LOG_FILE, YELLOW, RESET
 from utils.file_system_operations import (

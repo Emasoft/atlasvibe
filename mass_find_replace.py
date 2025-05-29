@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Refactored imports to avoid circular dependencies by importing file_system_operations and Prefect modules inside functions.
-# - Removed top-level imports of file_system_operations and Prefect to prevent import errors.
-# - Kept replace_logic import at top-level as it is safe.
+# - Added missing imports for logging, pathlib.Path, pathspec, subprocess, typing.Any.
+# - Moved imports inside main_flow and main_cli where appropriate to avoid circular dependencies.
+# - Fixed all undefined name errors reported by ruff.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -34,6 +34,10 @@ def main_flow(
     verbose_mode: bool,
     interactive_mode: bool
 ):
+    import logging
+    from pathlib import Path
+    import pathspec
+
     from prefect import flow, get_run_logger
     from utils.file_system_operations import (
         scan_directory_for_occurrences, save_transactions, load_transactions,
@@ -247,6 +251,7 @@ def main_flow(
 
 def _run_subprocess_command(command: list[str], description: str) -> bool:
     """Helper to run a subprocess command and print status."""
+    import subprocess
     print(f"{BLUE}Running: {' '.join(command)}{RESET}")
     try:
         process = subprocess.run(command, check=False, capture_output=True, text=True)
@@ -270,6 +275,10 @@ def main_cli() -> None:
     import sys
     import traceback
     import importlib.util
+    import argparse
+    from pathlib import Path
+    import pathspec
+    from utils.file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
     try:
         if importlib.util.find_spec("prefect") is None:
@@ -286,8 +295,6 @@ def main_cli() -> None:
     except ImportError:
         sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet (import error during check). Please install all required packages." + RESET + "\n")
         sys.exit(1)
-
-    import argparse
 
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
