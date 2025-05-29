@@ -2,6 +2,7 @@
 import pytest
 import json
 from pathlib import Path
+import os
 
 @pytest.fixture
 def temp_test_dir(tmp_path: Path):
@@ -50,6 +51,18 @@ def assert_file_content():
 def prefect_server_cleanup():
     """Cleanup Prefect server after all tests finish"""
     yield
-    # Force cleanup of any remaining Prefect processes
-    from prefect.utilities.processutils import kill_on_interrupt
-    kill_on_interrupt()
+    import psutil
+    from prefect import get_client
+    
+    current_pid = os.getpid()
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if "prefect" in proc.name().lower() and current_pid != proc.ppid():
+                proc.terminate()
+        except psutil.NoSuchProcess:
+            continue
+    
+    try:
+        get_client()._cache.clear()
+    except Exception:
+        pass

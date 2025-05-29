@@ -40,13 +40,6 @@
 # - Fixed Ruff E701 linting errors in `_execute_content_line_transaction` by moving `unlink` calls to new lines.
 # - `get_file_encoding`: Revised logic again.
 #   1. RTF & Empty file checks.
-#   2. Chardet. If it suggests a common Western encoding AND it decodes the sample, use it.
-#   3. Else, try UTF-8. If it decodes, use it.
-#   4. Else, if chardet had another (non-Western, non-UTF-8) suggestion AND it decodes, use it.
-#   5. Else, try cp1252 as a general fallback if not already tried and failed.
-#   6. Default to DEFAULT_ENCODING_FALLBACK.
-# - `get_file_encoding`: Final refined logic:
-#   1. RTF & Empty file checks.
 #   2. Chardet. If suggestion exists:
 #      a. Normalize aliases (cp1252, latin1).
 #      b. Try decoding with this normalized chardet suggestion. If success, return it.
@@ -588,10 +581,10 @@ def _execute_rename_transaction(
     except Exception as e:
         return TransactionStatus.FAILED, f"Error resolving path for '{orig_rel_path}': {e}", False
     
-    _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', os.path.exists={os.path.exists(str(current_abs_path))}", logger)
+    _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: Attempting rename for orig_rel_path='{orig_rel_path}'. current_abs_path='{current_abs_path}', exists={current_abs_path.exists()}", logger)
 
-    if not os.path.exists(str(current_abs_path)): # Use os.path.exists for consistency with test
-        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found by os.path.exists before rename.", False
+    if not current_abs_path.exists():
+        return TransactionStatus.SKIPPED, f"Item '{current_abs_path}' (derived from '{orig_rel_path}') not found before rename.", False
         
     new_name = replace_occurrences(orig_name)
     if new_name == orig_name:
@@ -611,18 +604,18 @@ def _execute_rename_transaction(
         _ensure_within_sandbox(current_abs_path, root_dir, f"rename src '{orig_name}'")
         _ensure_within_sandbox(new_abs_path, root_dir, f"rename dest '{new_name}'")
 
-        if os.path.exists(str(new_abs_path)): # Use os.path.exists
+        if new_abs_path.exists():
             return TransactionStatus.SKIPPED, f"Target path '{new_abs_path}' for new name already exists.", False
         
         _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: Executing: Path('{current_abs_path}').rename('{new_abs_path}')", logger)
         
         Path(current_abs_path).rename(new_abs_path)
         
-        new_path_exists_after_rename = os.path.exists(str(new_abs_path))
-        old_path_gone_after_rename = not os.path.exists(str(current_abs_path))
+        new_path_exists_after_rename = new_abs_path.exists()
+        old_path_gone_after_rename = not current_abs_path.exists()
         rename_successful_on_disk = new_path_exists_after_rename and old_path_gone_after_rename
 
-        _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: After rename attempt (using os.path.exists): new_abs_path ('{new_abs_path}') exists: {new_path_exists_after_rename}. old_abs_path ('{current_abs_path}') exists: {not old_path_gone_after_rename}. rename_successful_on_disk: {rename_successful_on_disk}", logger)
+        _log_fs_op_message(logging.DEBUG, f"FS_OP_RENAME: After rename attempt: new_abs_path exists: {new_path_exists_after_rename}. old_abs_path exists: {not old_path_gone_after_rename}. rename_successful_on_disk: {rename_successful_on_disk}", logger)
 
         if not rename_successful_on_disk:
             return TransactionStatus.FAILED, f"Rename of '{current_abs_path}' to '{new_abs_path}' did not complete as expected on disk (new_exists={new_path_exists_after_rename}, old_gone={old_path_gone_after_rename}).", False
@@ -898,7 +891,6 @@ def execute_all_transactions(
         for tx in transactions:
             tx_type = tx.get("TYPE")
             if tx.get("STATUS") == TransactionStatus.COMPLETED.value and \
-               tx.get("ERROR_MESSAGE") != "DRY_RUN" and \
                tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
                 if "ORIGINAL_NAME" in tx:
                     path_translation_map[tx["PATH"]] = replace_occurrences(tx["ORIGINAL_NAME"])
