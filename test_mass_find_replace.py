@@ -39,8 +39,6 @@ def run_main_flow_for_test(
     interactive_mode: bool = False,
     process_symlink_names: bool = False
 ):
-    from tests.conftest import temp_test_dir, default_map_file, assert_file_content
-
     final_exclude_dirs = exclude_dirs if exclude_dirs is not None else DEFAULT_EXCLUDE_DIRS_REL
     base_exclude_files = exclude_files if exclude_files is not None else DEFAULT_EXCLUDE_FILES_REL
     additional_excludes = [map_file.name, BINARY_MATCHES_LOG_FILE]
