@@ -17,7 +17,7 @@ import builtins
 import importlib.util
 
 from mass_find_replace import main_flow, main_cli, YELLOW, RESET
-from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType
+from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE
 import replace_logic
 
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
