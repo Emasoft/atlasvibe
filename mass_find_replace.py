@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added missing imports for logging, pathlib.Path, pathspec, subprocess, typing.Any.
-# - Moved imports inside main_flow and main_cli where appropriate to avoid circular dependencies.
-# - Fixed all undefined name errors reported by ruff.
+# - Fixed import paths for file_system_operations to remove non-existent 'utils' package prefix.
+# - Updated imports in main_flow and main_cli to import directly from 'file_system_operations'.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -40,7 +39,8 @@ def main_flow(
     from typing import Any
 
     from prefect import flow, get_run_logger
-    from utils.file_system_operations import (
+    # Fix imports to match actual module structure
+    from file_system_operations import (
         scan_directory_for_occurrences, save_transactions, load_transactions,
         execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
     )
@@ -280,7 +280,7 @@ def main_cli() -> None:
     from pathlib import Path
     import pathspec
     from typing import Any
-    from utils.file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
+    from file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
     try:
         if importlib.util.find_spec("prefect") is None:
