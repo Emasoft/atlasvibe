@@ -42,6 +42,7 @@ def default_map_file(temp_test_dir: Path):
 
 @pytest.fixture
 def assert_file_content():
+    """Helper fixture to assert file content matches expected string"""
     def _assert(file_path: Path, expected_content: str):
         content = file_path.read_text(encoding='utf-8')
         assert content == expected_content

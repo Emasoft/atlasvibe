@@ -240,7 +240,7 @@ def load_ignore_patterns(ignore_file_path: Path, logger: logging.Logger | None =
     if not ignore_file_path.is_file():
         return None
     try:
-        with open(ignore_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(ignore_file_path, 'r', encoding=DEFAULT_ENCODING_FALLBACK, errors='ignore') as f:
             patterns = f.readlines()
         valid_patterns = [p for p in (line.strip() for line in patterns) if p and not p.startswith('#')]
         return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns) if valid_patterns else None
@@ -1091,7 +1091,7 @@ def execute_all_transactions(
 
 
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
-    for t in transactions:
+    for t in transactions:  # F601: dict key can be replaced with list literal
         status_key = t.get("STATUS", TransactionStatus.PENDING.value).lower()
         stats[status_key] = stats.get(status_key, 0) + 1
     return stats

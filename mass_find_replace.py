@@ -29,8 +29,24 @@
 #   The `ignore_symlinks_arg` passed to `main_flow` is now `not args.process_symlink_names`.
 # - Added `--self-test` CLI option to install dev dependencies and run pytest.
 # - Added `-i` / `--interactive` CLI option for interactive transaction approval.
-# - Passed `interactive_mode` flag from `main_cli` to `main_flow` and then to `execute_all_transactions`.
-# - Defined `DIM` ANSI escape code.
+# - Passed `interactive_mode` flag from `main_cli` to `main_flow` and then to `execute_all_transactions` in `file_system_operations.py`.
+# - In `execute_all_transactions`:
+#   - If `interactive_mode` is true and not `dry_run`:
+#     - Before processing a `PENDING` transaction:
+#       - Define ANSI color codes (DIM, BOLD, specific colors for original/proposed).
+#       - Create helper `_get_user_interactive_choice` function.
+#       - Display transaction type (Rename File/Folder, Modify Content).
+#       - For renames: Show original path, original name (with matches highlighted), proposed name.
+#       - For content: Show file path, line number, encoding.
+#       - For content: Read the file (using `_get_current_absolute_path` and current `path_translation_map` to get the correct version of the file if prior renames in this run occurred).
+#       - For content: Display 2 lines of context before (dimmed), the original target line (dimmed, with matches highlighted), the proposed target line (highlighted), and 2 lines of context after (dimmed).
+#       - Prompt user: `Approve? (A/Approve, S/Skip, Q/Quit): `
+#       - If 'A': Proceed with execution.
+#       - If 'S': Update transaction to `SKIPPED` with "Skipped by user" message, save transactions, continue to next.
+#       - If 'Q': Log/print "Operation aborted by user", save transactions, and terminate the execution loop (remaining PENDING transactions stay PENDING).
+# - Ensure the main confirmation prompt is skipped if interactive mode is active.
+# - Added `--self-test` and interactive mode documentation to NOTES.md and tasks_checklist.md.
+# - Added `DIM` ANSI escape code.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -311,7 +327,7 @@ def main_cli() -> None:
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
                     "It operates in three phases: Scan, Plan (creating a transaction log), and Execute. "
                     "The process is designed to be resumable and aims for surgical precision in replacements. "
-                    f"Binary file contents are NOT modified; matches within them are logged to '{BINARY_MATCHES_LOG_FILE}'.",
+                    f"Binary file content is NOT modified; matches within them are logged to '{BINARY_MATCHES_LOG_FILE}'.",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("directory", nargs='?', default=".", help="Root directory to process (default: current directory).")
