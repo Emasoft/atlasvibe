@@ -115,3 +115,103 @@ def test_interactive_mode_approval(temp_test_dir: Path, default_map_file: Path, 
     # Verify at least one transaction was skipped due to quit
     skipped_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.SKIPPED.value]
     assert len(skipped_txs) > 0
+
+def test_resume_behavior(temp_test_dir: Path, default_map_file: Path):
+    # First run - do partial execution
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=False, force_execution=True)
+    
+    # Simulate interrupted state by modifying transactions file
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert transactions is not None
+    
+    # Mark first 2 transactions as completed and next 1 as failed
+    for i in range(2):
+        update_transaction_status_in_list(transactions, transactions[i]["id"], TransactionStatus.COMPLETED)
+    update_transaction_status_in_list(transactions, transactions[2]["id"], TransactionStatus.FAILED, "Simulated failure")
+    save_transactions(transactions, txn_file)
+    
+    # Resume operation
+    run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
+    
+    # Verify final state
+    final_transactions = load_transactions(txn_file)
+    completed = [t for t in final_transactions if t["STATUS"] == TransactionStatus.COMPLETED.value]
+    assert len(completed) > 2  # Should have completed more than initial 2
+
+def test_skip_operations(temp_test_dir: Path, default_map_file: Path):
+    # Test skipping file renaming
+    run_main_flow_for_test(temp_test_dir, default_map_file, 
+                         skip_file_renaming=True, dry_run=True)
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    file_renames = [t for t in transactions if t["TYPE"] == TransactionType.FILE_NAME.value]
+    assert len(file_renames) == 0
+    
+    # Test skipping folder renaming
+    run_main_flow_for_test(temp_test_dir, default_map_file,
+                         skip_folder_renaming=True, dry_run=True)
+    transactions = load_transactions(txn_file)
+    folder_renames = [t for t in transactions if t["TYPE"] == TransactionType.FOLDER_NAME.value]
+    assert len(folder_renames) == 0
+    
+    # Test skipping content
+    run_main_flow_for_test(temp_test_dir, default_map_file,
+                         skip_content=True, dry_run=True)
+    transactions = load_transactions(txn_file)
+    content_changes = [t for t in transactions if t["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
+    assert len(content_changes) == 0
+
+def test_binary_file_handling(temp_test_dir: Path, default_map_file: Path):
+    # Create test binary file
+    bin_file = temp_test_dir / "flojoy_root" / "test.bin"
+    bin_content = b"FLOJOY\x00\xff" + b"\x00" * 1000  # Valid UTF-8 match followed by invalid bytes
+    bin_file.write_bytes(bin_content)
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    # Verify binary file wasn't modified
+    assert bin_file.read_bytes() == bin_content
+    
+    # Verify match was logged
+    log_file = temp_test_dir / BINARY_MATCHES_LOG_FILE
+    assert log_file.exists()
+    assert "test.bin" in log_file.read_text()
+
+def test_symlink_handling(temp_test_dir: Path, default_map_file: Path):
+    # Create symlink
+    target_dir = temp_test_dir / "symlink_targets_outside"
+    target_dir.mkdir()
+    symlink = temp_test_dir / "flojoy_root" / "symlink_to_external"
+    symlink.symlink_to(target_dir)
+    
+    # Run with default symlink handling (ignore)
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    symlink_txs = [t for t in transactions if "symlink_to_external" in t["PATH"]]
+    assert len(symlink_txs) == 0
+    
+    # Run with symlink processing enabled
+    run_main_flow_for_test(temp_test_dir, default_map_file, ignore_symlinks_arg=False)
+    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    symlink_txs = [t for t in transactions if "symlink_to_external" in t["PATH"]]
+    assert len(symlink_txs) > 0
+def test_mixed_encoding_preservation(temp_test_dir: Path, default_map_file: Path, assert_file_content):
+    # Create test file with mixed encodings
+    test_file = temp_test_dir / "encoding_test.txt"
+    content = (
+        "Flojoy in UTF-8\n"
+        "Flojoy in latin-1: ".encode('latin-1') + b"\xae\n"  # ® symbol
+        "Flojoy in cp1252: ".encode('cp1252') + b"\x99\n"   # ™ symbol
+    )
+    test_file.write_bytes(b''.join(content))
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    # Verify replacements while preserving encoding
+    expected_content = (
+        "Atlasvibe in UTF-8\n"
+        "Atlasvibe in latin-1: ®\n"
+        "Atlasvibe in cp1252: ™\n"
+    )
+    assert_file_content(test_file, expected_content)
