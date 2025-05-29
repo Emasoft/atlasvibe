@@ -3,6 +3,7 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Fixed import paths for file_system_operations to remove non-existent 'utils' package prefix.
 # - Updated imports in main_flow and main_cli to import directly from 'file_system_operations'.
+# - Added fallback logger for test environments
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -38,14 +39,41 @@ def main_flow(
     import pathspec
     from typing import Any
 
-    from prefect import flow, get_run_logger
-    # Fix imports to match actual module structure
+    try:
+        # Try to get Prefect's context logger
+        from prefect import flow, get_run_logger
+        from prefect.exceptions import MissingContextError
+        try:
+            logger = get_run_logger()
+        except MissingContextError:
+            # Create a standard logger if Prefect is installed but no context
+            logger = logging.getLogger('mass_find_replace')
+            logger.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
+            if not logger.handlers:
+                console_handler = logging.StreamHandler()
+                formatter = logging.Formatter('%(levelname)s - %(message)s')
+                console_handler.setFormatter(formatter)
+                logger.addHandler(console_handler)
+    except ImportError:
+        # Fallback when Prefect isn't installed
+        logger = logging.getLogger('mass_find_replace')
+        logger.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
+        if not logger.handlers:
+            console_handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(levelname)s - %(message)s')
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+    except Exception:
+        # Final fallback
+        logger = logging.getLogger('mass_find_replace')
+        logger.handlers = [logging.StreamHandler()]
+        logger.setLevel(logging.INFO)
+
     from file_system_operations import (
         scan_directory_for_occurrences, save_transactions, load_transactions,
         execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
     )
 
-    logger = get_run_logger()
     if verbose_mode:
         logger.setLevel(logging.DEBUG)
         logger.debug("Verbose mode enabled. Logger set to DEBUG level.")
@@ -152,6 +180,7 @@ def main_flow(
         print(f"Skip Content Modification: {skip_content}")
         print(f"Retry Timeout: {timeout_minutes} minutes (0 for indefinite retries)")
         print(f"{BLUE}-------------------------{RESET}")
+        import sys
         sys.stdout.flush()
         if not replace_logic._RAW_REPLACEMENT_MAPPING and (skip_file_renaming or not extensions) and (skip_folder_renaming or not extensions) and skip_content:
                  print(f"{YELLOW}Warning: No replacement rules and no operations enabled that don't require rules. Likely no operations will be performed.{RESET}")

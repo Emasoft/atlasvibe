@@ -20,9 +20,22 @@ from mass_find_replace import main_flow, main_cli, YELLOW, RESET
 from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE
 import replace_logic
 
+import pytest
+import logging
+
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
 DEFAULT_EXCLUDE_FILES_REL = ["exclude_this_flojoy_file.txt"]
+
+@pytest.fixture(autouse=True)
+def setup_logging():
+    logger = logging.getLogger('mass_find_replace')
+    logger.setLevel(logging.DEBUG)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+        logger.addHandler(handler)
+        logger.propagate = False
 
 def run_main_flow_for_test(
     context_dir: Path, map_file: Path, extensions: list[str] | None = DEFAULT_EXTENSIONS,
