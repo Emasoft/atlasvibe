@@ -31,7 +31,7 @@ DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
 DEFAULT_EXCLUDE_FILES_REL = ["exclude_this_flojoy_file.txt"]
 
 def run_main_flow_for_test(
-    temp_test_dir: Path, map_file: Path, extensions: list[str] | None = DEFAULT_EXTENSIONS,
+    context_dir: Path, map_file: Path, extensions: list[str] | None = DEFAULT_EXTENSIONS,
     exclude_dirs: list[str] | None = None, exclude_files: list[str] | None = None,
     dry_run: bool = False, skip_scan: bool = False, resume: bool = False,
     force_execution: bool = True, ignore_symlinks_arg: bool = False,
@@ -47,7 +47,8 @@ def run_main_flow_for_test(
     additional_excludes = [map_file.name, BINARY_MATCHES_LOG_FILE]
     final_exclude_files = list(set(base_exclude_files + additional_excludes))
     main_flow(
-        directory=str(temp_test_dir), mapping_file=str(map_file), extensions=extensions,
+        directory=str(context_dir),  # Use runtime directory for processing
+        mapping_file=str(map_file), extensions=extensions,
         exclude_dirs=final_exclude_dirs, exclude_files=final_exclude_files, dry_run=dry_run,
         skip_scan=skip_scan, resume=resume, force_execution=force_execution,
         ignore_symlinks_arg=ignore_symlinks_arg,
@@ -60,23 +61,24 @@ def run_main_flow_for_test(
     )
 
 # Example test updated to remove environment setup
-def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_file_content):
+def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_file_content):
+    context_dir = temp_test_dir["runtime"]
     # Get reference to test file before changes
-    orig_deep_file_path = temp_test_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
+    orig_deep_file_path = context_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
     original_content = orig_deep_file_path.read_text(encoding='utf-8')
     
     # Run the dry run operation
-    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
     
     # Verify original file remains unchanged
     assert orig_deep_file_path.exists()
     assert_file_content(orig_deep_file_path, original_content)
     
     # Verify no actual renaming occurred
-    assert not (temp_test_dir / "atlasvibe_root").exists()
+    assert not (context_dir / "atlasvibe_root").exists()
     
     # Load and validate transactions
-    transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
     
     # Count different transaction types
@@ -99,17 +101,18 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_fi
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
 
-def test_multibyte_content_handling(temp_test_dir: Path, default_map_file: Path, assert_file_content):
+def test_multibyte_content_handling(temp_test_dir: dict, default_map_file: Path, assert_file_content):
+    context_dir = temp_test_dir["runtime"]
     # Create GB2312 encoded file with matching content
     gb_content = "FLOJOY测试Flojoy" 
-    gb_file = temp_test_dir / "gb2312_flojoy.txt"
+    gb_file = context_dir / "gb2312_flojoy.txt"
     gb_file.write_text(gb_content, encoding='gb2312')
     
     # Run actual execution (not dry run)
-    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=False, force_execution=True)
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=False, force_execution=True)
     
     # Verify file renamed and content changed
-    new_path = temp_test_dir / "gb2312_atlasvibe.txt"
+    new_path = context_dir / "gb2312_atlasvibe.txt"
     assert new_path.exists()
     
     # Check encoding preserved
