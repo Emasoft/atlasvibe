@@ -65,6 +65,7 @@ import subprocess # Added for self-test
 
 # Import Prefect and file_system_operations inside main_cli or conditionally to avoid import issues during tests
 import replace_logic
+from file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
 SCRIPT_NAME = "MFR - Mass Find Replace - A script to safely rename things in your project"
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
