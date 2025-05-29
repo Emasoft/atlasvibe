@@ -19,7 +19,8 @@ import importlib.util
 from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
 from file_system_operations import (
     load_transactions, TransactionStatus, TransactionType,
-    BINARY_MATCHES_LOG_FILE, save_transactions, get_file_encoding
+    BINARY_MATCHES_LOG_FILE, save_transactions, get_file_encoding,
+    update_transaction_status_in_list
 )
 import replace_logic
 import conftest
