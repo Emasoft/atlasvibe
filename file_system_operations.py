@@ -305,8 +305,7 @@ def scan_directory_for_occurrences(
         all_items_with_depth.append((depth, item_abs_path))
 
     # Sort by depth (shallow first), then by normalized path string for consistent ordering
--    all_items_with_depth.sort(key=lambda x: (x[0], str(x[1]).replace("\\", "/")))
-+    all_items_with_depth.sort(key=lambda x: (x[0], x[1]))  # Proper Path comparison
+    all_items_with_depth.sort(key=lambda x: (x[0], x[1]))  # Proper Path comparison
 
     for depth, item_abs_path in all_items_with_depth:
         try:
@@ -367,10 +366,10 @@ def scan_directory_for_occurrences(
         if not skip_content:
             try:
                 if item_abs_path.is_file(): # This resolves symlinks to files
-+                    # Skip large files early
-+                    if item_abs_path.stat().st_size > 100_000_000:  # 100MB
-+                        continue
-+    
+                    # Skip large files early
+                    if item_abs_path.stat().st_size > 100_000_000:  # 100MB
+                        continue
+    
                     is_rtf = item_abs_path.suffix.lower() == '.rtf'
                     try:
                         is_bin = is_binary_file(str(item_abs_path))

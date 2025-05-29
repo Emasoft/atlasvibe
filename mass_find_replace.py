@@ -357,8 +357,7 @@ def main_cli() -> None:
             print(f"{RED}Failed to install dev dependencies. Aborting self-tests.{RESET}")
             sys.exit(1)
             
--        pytest_cmd = [sys.executable, "-m", "pytest", "test_mass_find_replace.py"]
-+        pytest_cmd = ["pytest", "test_mass_find_replace.py"]  # Use system pytest
+        pytest_cmd = ["pytest", "test_mass_find_replace.py"]  # Use system pytest
         print(f"{BLUE}Running pytest...{RESET}")
         test_passed = _run_subprocess_command(pytest_cmd, "pytest execution")
         sys.exit(0 if test_passed else 1)
