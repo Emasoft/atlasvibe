@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added type safety check for replacement mapping after loading map in main_flow.
-# - Added logic to reset transactions with DRY_RUN error message to PENDING status in execute_all_transactions.
-# - Hardened timeout duration calculation in execute_all_transactions.
-# - Added interactive mode support and other fixes as per previous changelog.
-# - Fixed self-test subprocess call to use system pytest instead of python -m pytest.
+# - Added logic in main_flow to force full rescan of modified files when resuming a dry run.
+# - Minor improvements to logging and flow control.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -178,6 +175,10 @@ def main_flow(
         if resume and txn_json_path.exists(): 
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
             current_txns_for_resume = load_transactions(txn_json_path, logger=logger) 
+            if not skip_scan and dry_run:
+                # Always force rescan when resuming dry run
+                logger.info("Resume+dry_run: Forcing full rescan of modified files")
+                paths_to_force_rescan = set("*")  # Rescan everything
             if current_txns_for_resume is None:
                 logger.warning(f"{YELLOW}Warn: Could not load txns. Fresh scan.{RESET}")
             elif not current_txns_for_resume:

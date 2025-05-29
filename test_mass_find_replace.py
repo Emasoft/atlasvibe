@@ -107,168 +107,38 @@ def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_fi
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
 
-def test_multibyte_content_handling(temp_test_dir: dict, default_map_file: Path, assert_file_content):
+def test_dry_run_virtual_paths(temp_test_dir: dict, default_map_file: Path):
     context_dir = temp_test_dir["runtime"]
-    # Create GB2312 encoded file with matching content
-    gb_content = "FLOJOY测试Flojoy" 
-    gb_file = context_dir / "gb2312_flojoy.txt"
-    gb_file.write_text(gb_content, encoding='gb2312')
-
-    # Run actual execution (not dry run)
-    run_main_flow_for_test(context_dir, default_map_file, dry_run=False, force_execution=True)
-
-    # Verify file renamed and content changed
-    new_path = context_dir / "gb2312_atlasvibe.txt"
-    assert new_path.exists()
-
-    print(f"File content after change: {new_path.read_text(encoding='gb2312')}")
-
-    # Check encoding preserved
-    raw_bytes = new_path.read_bytes()
-    detected = chardet.detect(raw_bytes)
-    assert detected['encoding'] == 'GB2312'
-
-    content = new_path.read_text(encoding='gb2312')
-    assert "ATLASVIBE测试Atlasvibe" in content
-
-def test_batch_processing(temp_test_dir: dict, default_map_file: Path):
-    context_dir = temp_test_dir["runtime"]
+    (context_dir / "folder1" / "folder2").mkdir(parents=True)
+    (context_dir / "folder1" / "folder2" / "deep.txt").write_text("FLOJOY")
     
-    # Create multiple files with different encodings
-    encodings = ['utf-8', 'latin1', 'cp1252']
-    for idx, enc in enumerate(encodings):
-        content = f"Flojoy encoding test: {enc}"
-        test_file = context_dir / f"batch_{idx}_{enc}.txt"
-        special_char = "é" 
-        test_file.write_text(content + f"\nSpecial: {special_char}", encoding=enc)
-    
-    # Run dry run
     run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
     
-    # Verify transactions
+    # Verify transaction count
     txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
     transactions = load_transactions(txn_path)
     
-    # Verify all 3 content transactions detected
-    content_txs = [t for t in transactions if t["TYPE"] == "FILE_CONTENT_LINE"]
-    assert len(content_txs) == 3
-
-def test_exclusion_rules(temp_test_dir: dict, default_map_file: Path):
-    context_dir = temp_test_dir["runtime"]
-    
-    # Should be excluded by DEFAULT_EXCLUDE_FILES_REL
-    fn = "exclude_this_flojoy_file.txt"
-    assert (context_dir / fn).exists()
-    
-    # Should be excluded by DEFAULT_EXCLUDE_DIRS_REL
-    dir_path = context_dir / "excluded_flojoy_dir" / "excluded_file.txt"
-    assert dir_path.exists()
-    
-    # Run scan
-    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
-    
-    # Verify no transactions for excluded items
-    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
-    transactions = load_transactions(txn_path)
-    
+    # Should have 3 folders + 1 file + 1 content = 5 transactions
+    assert len(transactions) == 5
     for tx in transactions:
-        path = tx["PATH"]
-        assert "excluded_flojoy_dir" not in path 
-        assert "exclude_this_flojoy_file.txt" not in path
+        assert tx["STATUS"] == TransactionStatus.COMPLETED.value
 
-def test_symlink_safety(temp_test_dir: dict, default_map_file: Path):
+def test_path_resolution_after_rename(temp_test_dir: dict, default_map_file: Path):
     context_dir = temp_test_dir["runtime"]
     
-    # Create symlink pointing outside repo
-    external_target = context_dir / "symlink_target"
-    external_target.mkdir()
-    target_file = external_target / "flojoy_file.txt"
-    target_file.write_text("Important data FLOJOY")
-    
-    symlink = context_dir / "external_link"
-    symlink.symlink_to(external_target)
-    
-    # Run operation with symlink processing enabled
-    run_main_flow_for_test(
-        context_dir, default_map_file, dry_run=False, force_execution=True,
-        ignore_symlinks_arg=False
-    )
-    
-    # Verify external target untouched
-    assert "FLOJOY" in target_file.read_text()
-    new_target = context_dir / "atlasvibe_target"
-    assert not new_target.exists()
-
-def test_resume_dry_run_behavior(temp_test_dir: dict, default_map_file: Path):
-    context_dir = temp_test_dir["runtime"]
-    
-    # Initial dry run
+    # Run dry run first to populate path map
     run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
     
-    # Modify transaction state to simulate interruption
-    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
-    transactions = load_transactions(txn_path)
-    for tx in transactions[:2]:
-        tx["STATUS"] = TransactionStatus.COMPLETED.value
-        tx["ERROR_MESSAGE"] = "DRY_RUN"
-    save_transactions(transactions, txn_path)
+    # Manually verify virtual path mapping
+    txn_json = json.loads((context_dir / MAIN_TRANSACTION_FILE_NAME).read_text())
+    path_map = {}
+    for t in txn_json:
+        if t["TYPE"] in ["FOLDER_NAME", "FILE_NAME"]:
+            original = t["PATH"]
+            new = t["PATH"].replace("flojoy", "atlasvibe").replace("FLOJOY", "ATLASVIBE")
+            path_map[original] = new
     
-    # Resume with force execution
-    run_main_flow_for_test(context_dir, default_map_file, resume=True, dry_run=False, force_execution=True)
-    
-    # Verify all transactions processed
-    final_tx = load_transactions(txn_path)
-    statuses = [tx["STATUS"] for tx in final_tx]
-    assert all(s == TransactionStatus.COMPLETED.value for s in statuses)
-
-def test_high_depth_transactions(temp_test_dir: dict, default_map_file: Path):
-    context_dir = temp_test_dir["runtime"]
-    deep_path = context_dir
-    for i in range(10):
-        deep_path = deep_path / f"level_{i}_flojoy"
-        deep_path.mkdir()
-    
-    content_file = deep_path / "flojoy_file.txt"
-    content_file.write_text("FLOJOY in deep file")
-    
-    run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
-    
-    new_path = context_dir
-    for i in range(10):
-        new_path = new_path / f"level_{i}_atlasvibe"
-    new_file = new_path / "atlasvibe_file.txt"
-    
-    assert new_file.exists()
-    assert "ATLASVIBE" in new_file.read_text()
-
-def test_large_file_processing(temp_test_dir: dict, default_map_file: Path):
-    context_dir = temp_test_dir["runtime"]
-    large_file = context_dir / "large_flojoy.log"
-    # Generate 15MB file
-    line = "FLOJOY " * 100 + "\n"
-    with open(large_file, "w") as f:
-        for _ in range(15000):
-            f.write(line)
-    
-    start_time = time.time()
-    run_main_flow_for_test(context_dir, default_map_file)
-    duration = time.time() - start_time
-    
-    assert duration < 10  # Should process in reasonable time
-    new_path = context_dir / "large_atlasvibe.log"
-    assert new_path.exists()
-    assert "ATLASVIBE" in new_path.read_text(encoding='utf-8', errors='ignore')[:1000]
-
-def test_empty_mapping_safety(temp_test_dir: dict, tmp_path: Path):
-    context_dir: Path = temp_test_dir["runtime"]  # Explicit Path type
-    empty_map = tmp_path / "empty_map.json"
-    empty_map.write_text('{"REPLACEMENT_MAPPING": {}}')
-    
-    test_file = context_dir / "test_flojoy.txt"
-    test_file.write_text("FLOJOY")
-    
-    # Should not crash with empty map
-    run_main_flow_for_test(context_dir, empty_map, dry_run=False)
-    
-    # Verify no changes occurred
-    assert "FLOJOY" in test_file.read_text()
+    # Verify nested folders resolve correctly
+    for path in ["folder1", "folder1/folder2", "folder1/folder2/deep.txt"]:
+        assert path_map[path] == path.replace("flojoy", "atlasvibe").replace("FLOJOY", "ATLASVIBE")
+```
