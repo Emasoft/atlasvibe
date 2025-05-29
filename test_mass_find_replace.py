@@ -216,3 +216,55 @@ def test_resume_dry_run_behavior(temp_test_dir: dict, default_map_file: Path):
     final_tx = load_transactions(txn_path)
     statuses = [tx["STATUS"] for tx in final_tx]
     assert all(s == TransactionStatus.COMPLETED.value for s in statuses)
+
+def test_high_depth_transactions(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    deep_path = context_dir
+    for i in range(10):
+        deep_path = deep_path / f"level_{i}_flojoy"
+        deep_path.mkdir()
+    
+    content_file = deep_path / "flojoy_file.txt"
+    content_file.write_text("FLOJOY in deep file")
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
+    
+    new_path = context_dir
+    for i in range(10):
+        new_path = new_path / f"level_{i}_atlasvibe"
+    new_file = new_path / "atlasvibe_file.txt"
+    
+    assert new_file.exists()
+    assert "ATLASVIBE" in new_file.read_text()
+
+def test_large_file_processing(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    large_file = context_dir / "large_flojoy.log"
+    # Generate 15MB file
+    line = "FLOJOY " * 100 + "\n"
+    with open(large_file, "w") as f:
+        for _ in range(15000):
+            f.write(line)
+    
+    start_time = time.time()
+    run_main_flow_for_test(context_dir, default_map_file)
+    duration = time.time() - start_time
+    
+    assert duration < 10  # Should process in reasonable time
+    new_path = context_dir / "large_atlasvibe.log"
+    assert new_path.exists()
+    assert "ATLASVIBE" in new_path.read_text(encoding='utf-8', errors='ignore')[:1000]
+
+def test_empty_mapping_safety(temp_test_dir: dict, tmp_path: Path):
+    context_dir = temp_test_dir["runtime"]
+    empty_map = tmp_path / "empty_map.json"
+    empty_map.write_text('{"REPLACEMENT_MAPPING": {}}')
+    
+    test_file = context_dir / "test_flojoy.txt"
+    test_file.write_text("FLOJOY")
+    
+    # Should not crash with empty map
+    run_main_flow_for_test(context_dir, empty_map, dry_run=False)
+    
+    # Verify no changes occurred
+    assert "FLOJOY" in test_file.read_text()

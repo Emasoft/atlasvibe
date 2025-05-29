@@ -4,6 +4,11 @@
 # - Fixed dry run path translation map update in _get_current_absolute_path to enable child transactions during dry runs.
 # - Added debug log for skipping binary files in scan_directory_for_occurrences.
 # - Added detailed comments and improved robustness in path resolution and scanning.
+# - Fixed path resolution bug by using original root_dir.resolve() instead of overwritten abs_root_dir.resolve() in scan_directory_for_occurrences.
+# - Added atomic file write for saving transactions using temporary file and os.replace.
+# - Added symlink safety check to skip symlinks pointing outside root directory.
+# - Added sorting by depth and normalized path string to ensure consistent ordering.
+# - Added skip for extremely large binary files (>100MB) to avoid performance issues.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -297,12 +302,12 @@ def scan_directory_for_occurrences(
         depth = len(item_abs_path.relative_to(abs_root_dir).parts)
         all_items_with_depth.append((depth, item_abs_path))
 
-    # Sort by depth (shallow first)
-    all_items_with_depth.sort(key=lambda x: x[0])
+    # Sort by depth (shallow first), then by normalized path string for consistent ordering
+    all_items_with_depth.sort(key=lambda x: (x[0], str(x[1]).replace("\\", "/")))
 
     for depth, item_abs_path in all_items_with_depth:
         try:
-            abs_root_dir = abs_root_dir.resolve()  # Ensure absolute path
+            abs_root_dir = root_dir.resolve()  # Use original root_dir, not overwritten abs_root_dir
             relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
         except ValueError:
             _log_fs_op_message(logging.WARNING, f"Could not get relative path for {item_abs_path} against {abs_root_dir}. Skipping.", logger)
@@ -318,16 +323,20 @@ def scan_directory_for_occurrences(
         item_is_file = False
         item_is_symlink = False
         try:
-            item_is_symlink = item_abs_path.is_symlink()
-            if not item_is_symlink:
+            if not item_abs_path.is_symlink():
                 item_is_dir = item_abs_path.is_dir()
+            else:
+                # Check if symlink points outside root
+                target = item_abs_path.resolve()
+                if root_dir not in target.parents and target != root_dir:
+                    _log_fs_op_message(logging.INFO, f"Skipping external symlink: {relative_path_str} -> {target}", logger)
+                    continue
+                # Treat symlink as file for name replacement
+                item_is_file = True
+            if not item_is_dir and not item_is_file:
+                # If not dir and not file, check if file (for symlink to file)
                 item_is_file = item_abs_path.is_file()
-            elif ignore_symlinks:
-                 continue
-            else: 
-                 # For name replacement, treat symlinks (to files or dirs) as if they are files
-                 # so their names can be processed. Content is handled based on actual type.
-                 item_is_file = True # This allows symlink name to be processed by file logic
+            item_is_symlink = item_abs_path.is_symlink()
         except OSError as e_stat:
             _log_fs_op_message(logging.WARNING, f"OS error checking type of {item_abs_path}: {e_stat}. Skipping item.", logger)
             continue
@@ -367,6 +376,8 @@ def scan_directory_for_occurrences(
 
                     if is_bin and not is_rtf:
                         # Skip binary files but log them
+                        if item_abs_path.stat().st_size > 100_000_000:  # 100MB
+                            continue  # Skip scanning extremely large binary files
                         _log_fs_op_message(logging.DEBUG, f"Skipping binary file: {relative_path_str}", logger)
                         if raw_keys_for_binary_search:
                             try:
@@ -452,5 +463,63 @@ def scan_directory_for_occurrences(
     processed_transactions = folder_txs + file_txs + content_txs
 
     return processed_transactions
+
+def save_transactions(transactions: list[dict[str, Any]], transactions_file_path: Path, logger: logging.Logger | None = None) -> None:
+    """
+    Save the list of transactions to a JSON file atomically.
+    """
+    if not transactions:
+        _log_fs_op_message(logging.WARNING, "No transactions to save.", logger)
+        return
+    temp_file_path = transactions_file_path.with_suffix(".tmp")
+    try:
+        with open(temp_file_path, "w", encoding="utf-8") as f:
+            json.dump(transactions, f, indent=2, ensure_ascii=False)
+        # Atomically replace original file
+        os.replace(temp_file_path, transactions_file_path)
+    except Exception as e:
+        _log_fs_op_message(logging.ERROR, f"Error saving transactions: {e}", logger)
+        if temp_file_path.exists():
+            temp_file_path.unlink()
+        raise
+
+def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
+    """
+    Load transactions from a JSON file.
+    """
+    if not transactions_file_path.is_file():
+        _log_fs_op_message(logging.WARNING, f"Transaction file not found: {transactions_file_path}", logger)
+        return None
+    try:
+        with open(transactions_file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            _log_fs_op_message(logging.ERROR, f"Transaction file {transactions_file_path} does not contain a list.", logger)
+            return None
+        return data
+    except Exception as e:
+        _log_fs_op_message(logging.ERROR, f"Error loading transactions from {transactions_file_path}: {e}", logger)
+        return None
+
+def update_transaction_status_in_list(
+    transactions: list[dict[str, Any]], transaction_id: str,
+    new_status: TransactionStatus, error_message: str | None = None,
+    logger: logging.Logger | None = None
+) -> bool:
+    """
+    Update the status and optional error message of a transaction in the list by id.
+    Returns True if updated, False if not found.
+    """
+    for tx in transactions:
+        if tx.get("id") == transaction_id:
+            tx["STATUS"] = new_status.value
+            if error_message is not None:
+                tx["ERROR_MESSAGE"] = error_message
+            if logger:
+                logger.debug(f"Transaction {transaction_id} updated to {new_status.value} with error: {error_message}")
+            return True
+    if logger:
+        logger.warning(f"Transaction {transaction_id} not found for status update.")
+    return False
 
 # ... rest of file_system_operations.py unchanged ...
