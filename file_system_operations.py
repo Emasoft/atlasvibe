@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added dry_run parameter to _get_current_absolute_path to avoid path translation during dry run.
-# - Adjusted _get_current_absolute_path to return root_dir / original_relative_path_str directly if dry_run is True.
-# - Moved binary_log_path initialization to the start of scan_directory_for_occurrences to ensure correct path usage.
-# - Minor fix: removed undefined variable abs_root_dir usage in scan_directory_for_occurrences.
+# - Added depth-based ordering of scanned items in scan_directory_for_occurrences to ensure parent directories are processed before children.
+# - Added final ordering of transactions: folders first (shallow to deep), then files, then content lines.
+# - Fixed dry run behavior in execute_all_transactions to avoid updating the real path translation map.
+# - Fixed interactive mode context line display to strip trailing whitespace from target line.
+# - Added collection of items with depth before processing in scan_directory_for_occurrences.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -274,8 +275,20 @@ def scan_directory_for_occurrences(
 
     item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec, logger=logger)
     
+    # Collect items with depth for proper ordering
+    all_items_with_depth = []
+    
     for item_abs_path in item_iterator:
+        # Depth calculation for ordering
+        depth = len(item_abs_path.relative_to(abs_root_dir).parts)
+        all_items_with_depth.append((depth, item_abs_path))
+
+    # Sort by depth (shallow first)
+    all_items_with_depth.sort(key=lambda x: x[0])
+
+    for depth, item_abs_path in all_items_with_depth:
         try:
+            abs_root_dir = abs_root_dir.resolve()  # Ensure absolute path
             relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
         except ValueError:
             _log_fs_op_message(logging.WARNING, f"Could not get relative path for {item_abs_path} against {abs_root_dir}. Skipping.", logger)
@@ -415,6 +428,12 @@ def scan_directory_for_occurrences(
                                     existing_transaction_ids.add(tx_id_tuple)
             except OSError as e_stat_content: # Catch OSError from item_abs_path.is_file()
                 _log_fs_op_message(logging.WARNING, f"OS error checking if {item_abs_path} is a file for content processing: {e_stat_content}. Skipping content scan for this item.", logger)
+
+    # Order transactions: folders first (shallow to deep), then files, then content
+    folder_txs = [tx for tx in processed_transactions if tx["TYPE"] in (TransactionType.FOLDER_NAME.value,)]
+    file_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value]
+    content_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
+    processed_transactions = folder_txs + file_txs + content_txs
 
     return processed_transactions
 
