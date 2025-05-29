@@ -11,7 +11,7 @@ def temp_test_dir(tmp_path: Path):
     config_dir.mkdir()
     
     runtime_dir = tmp_path / "runtime"
-    runtime_dir.mkdir()
+    runtime_dir.mkdir(exist_ok=True)
     
     # Create sample directories and files in runtime directory
     (runtime_dir / "flojoy_root").mkdir()

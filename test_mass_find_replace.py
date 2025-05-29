@@ -60,44 +60,47 @@ def run_main_flow_for_test(
         interactive_mode=interactive_mode
     )
 
-# Example test updated to remove environment setup
+# Use consistent paths in assertions
 def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_file_content):
     context_dir = temp_test_dir["runtime"]
     # Get reference to test file before changes
     orig_deep_file_path = context_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
     original_content = orig_deep_file_path.read_text(encoding='utf-8')
-    
+
     # Run the dry run operation
     run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
-    
+
     # Verify original file remains unchanged
     assert orig_deep_file_path.exists()
     assert_file_content(orig_deep_file_path, original_content)
-    
-    # Verify no actual renaming occurred
+
     assert not (context_dir / "atlasvibe_root").exists()
-    
-    # Load and validate transactions
+
     transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
-    
-    # Count different transaction types
+
     name_txs = [tx for tx in transactions if tx["TYPE"] in (TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value)]
     content_txs = [tx for tx in transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
-    
-    # Should have 4 name transactions: 
-    # - flojoy_root (folder)
-    # - sub_flojoy_folder (folder)
-    # - another_FLOJOY_dir (folder)
-    # - deep_flojoy_file.txt (file)
-    assert len(name_txs) == 4
-    
-    # Only file has 1 content transaction
-    assert len(content_txs) == 1
-    
-    # Verify all five transactions are handled as dry_run
+
+    # 3 folders + 1 file = 4 name transactions
+    assert len(name_txs) == 4, f"Expected 4 name transactions, found {len(name_txs)}"
+    assert len(content_txs) == 1, f"Expected 1 content transaction, found {len(content_txs)}"
+
     completed_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.COMPLETED.value]
-    assert len(completed_txs) == 5
+    assert len(completed_txs) == 5, f"Expected 5 completed transactions, found {len(completed_txs)}"
+    
+    if len(completed_txs) != 5:
+        print("\n" + "="*80)
+        print("TRANSACTION LISTING (POST-DRY-RUN)")
+        for i, tx in enumerate(transactions, 1):
+            status = tx.get("STATUS", "")
+            skip_reason = tx.get("ERROR_MESSAGE", "")
+            print(f"{i}. {tx['TYPE']}@{tx['PATH']}"
+                  f" | Line:{tx.get('LINE_NUMBER','')}"
+                  f" | Status: {status}"
+                  f" | Reason: {skip_reason}")
+        print("="*80)
+    
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
 
@@ -107,18 +110,63 @@ def test_multibyte_content_handling(temp_test_dir: dict, default_map_file: Path,
     gb_content = "FLOJOY测试Flojoy" 
     gb_file = context_dir / "gb2312_flojoy.txt"
     gb_file.write_text(gb_content, encoding='gb2312')
-    
+
     # Run actual execution (not dry run)
     run_main_flow_for_test(context_dir, default_map_file, dry_run=False, force_execution=True)
-    
+
     # Verify file renamed and content changed
     new_path = context_dir / "gb2312_atlasvibe.txt"
     assert new_path.exists()
-    
+
     # Check encoding preserved
     raw_bytes = new_path.read_bytes()
     detected = chardet.detect(raw_bytes)
     assert detected['encoding'] == 'GB2312'
-    
+
     content = new_path.read_text(encoding='gb2312')
     assert "ATLASVIBE测试Atlasvibe" in content
+
+def test_batch_processing(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create multiple files with different encodings
+    encodings = ['utf-8', 'latin1', 'cp1252']
+    for idx, enc in enumerate(encodings):
+        content = f"Flojoy encoding test: {enc}"
+        test_file = context_dir / f"batch_{idx}_{enc}.txt"
+        special_char = "é" 
+        test_file.write_text(content + f"\nSpecial: {special_char}", encoding=enc)
+    
+    # Run dry run
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Verify transactions
+    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_path)
+    
+    # Verify all 3 content transactions detected
+    content_txs = [t for t in transactions if t["TYPE"] == "FILE_CONTENT_LINE"]
+    assert len(content_txs) == 3
+
+def test_exclusion_rules(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    
+    # Should be excluded by DEFAULT_EXCLUDE_FILES_REL
+    fn = "exclude_this_flojoy_file.txt"
+    assert (context_dir / fn).exists()
+    
+    # Should be excluded by DEFAULT_EXCLUDE_DIRS_REL
+    dir_path = context_dir / "excluded_flojoy_dir" / "excluded_file.txt"
+    assert dir_path.exists()
+    
+    # Run scan
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Verify no transactions for excluded items
+    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_path)
+    
+    for tx in transactions:
+        path = tx["PATH"]
+        assert "excluded_flojoy_dir" not in path 
+        assert "exclude_this_flojoy_file.txt" not in path
