@@ -92,20 +92,19 @@ def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_fi
     completed_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.COMPLETED.value]
     assert len(completed_txs) == 5, f"Expected 5 completed transactions, found {len(completed_txs)}"
     
-    if len(completed_txs) != 5:
-        print("\n" + "="*80)
-        print("TRANSACTION LISTING (POST-DRY-RUN)")
-        for i, tx in enumerate(transactions, 1):
-            status = tx.get("STATUS", "")
-            skip_reason = tx.get("ERROR_MESSAGE", "")
-            print(f"{i}. {tx['TYPE']}@{tx['PATH']}"
-                  f" | Line:{tx.get('LINE_NUMBER','')}"
-                  f" | Status: {status}"
-                  f" | Reason: {skip_reason}")
-        print("="*80)
-    
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
+        
+        # Print detailed transaction info for debugging
+        print(f"\nTransaction: id={tx['id']}, type={tx['TYPE']}, path={tx['PATH']}")
+        if tx['TYPE'] in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
+            print(f"  Original: {tx.get('ORIGINAL_NAME')}")
+            print(f"  Proposed: {replace_logic.replace_occurrences(tx.get('ORIGINAL_NAME'))}")
+        elif tx['TYPE'] == TransactionType.FILE_CONTENT_LINE.value:
+            content = tx.get("ORIGINAL_LINE_CONTENT", "")
+            print(f"  Line: {tx.get('LINE_NUMBER')}")
+            print(f"  Original: {content[:50] + '...' if len(content) > 50 else content}")
+            print(f"  Proposed: {replace_logic.replace_occurrences(content)[:50] + '...'}")
 
 def test_dry_run_virtual_paths(temp_test_dir: dict, default_map_file: Path):
     context_dir = temp_test_dir["runtime"]
@@ -141,3 +140,27 @@ def test_path_resolution_after_rename(temp_test_dir: dict, default_map_file: Pat
     # Verify nested folders resolve correctly
     for path in ["folder1", "folder1/folder2", "folder1/folder2/deep.txt"]:
         assert path_map[path] == path.replace("flojoy", "atlasvibe").replace("FLOJOY", "ATLASVIBE")
+
+def test_folder_nesting(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create nested structure: root > a > b > c (file)
+    a_path = context_dir / "flojoy_a"
+    b_path = a_path / "flojoy_b"
+    c_file = b_path / "flojoy_c.txt"
+    
+    # Create paths
+    a_path.mkdir()
+    b_path.mkdir()
+    c_file.write_text("FLOJOY")
+    
+    # Run dry run
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Verify transaction order
+    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_path)
+    
+    # Verify folder processing order
+    folders = [tx["PATH"] for tx in transactions if tx["TYPE"] == TransactionType.FOLDER_NAME.value]
+    assert folders == ["flojoy_a", "flojoy_a/flojoy_b"], "Folders not processed from shallow to deep"

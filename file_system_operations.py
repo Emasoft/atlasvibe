@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Fixed dry run path translation map update in _execute_rename_transaction to always update mapping for child transactions.
-# - Improved transaction processing in execute_all_transactions to track seen transactions and avoid duplicates.
-# - Enhanced rescan logic in scan_directory_for_occurrences to handle resume with empty force rescan set.
-# - Added robustness and clarity in path translation and transaction handling.
+# - Fixed dry run path translation map update in _execute_rename_transaction to only update for folders, not files.
+# - Improved transaction ordering in scan_directory_for_occurrences to sort folders shallow to deep.
+# - Updated resume logic in execute_all_transactions to properly handle DRY_RUN completed transactions.
+# - Added detailed debug printing in test_dry_run_behavior for better test diagnostics.
+# - Fixed resume detection in main_flow to force full rescan correctly.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -464,6 +465,10 @@ def scan_directory_for_occurrences(
     folder_txs = [tx for tx in processed_transactions if tx["TYPE"] in (TransactionType.FOLDER_NAME.value,)]
     file_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value]
     content_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
+    
+    # Sort folders by depth (shallow then deep)
+    folder_txs.sort(key=lambda tx: len(Path(tx["PATH"]).parts))
+    
     processed_transactions = folder_txs + file_txs + content_txs
 
     return processed_transactions
@@ -554,13 +559,17 @@ def _execute_rename_transaction(
 
     try:
         if dry_run:
-            # Always update virtual mapping to enable child transactions
-            if original_relative_path_str not in path_translation_map:
-                # Use original name as fallback initially
-                path_translation_map[original_relative_path_str] = original_name
-            path_translation_map[original_relative_path_str] = new_name
-            path_cache.pop(original_relative_path_str, None)
-            return TransactionStatus.COMPLETED, "DRY_RUN", True
+            # Special handling for folders to simulate cascading renames
+            if tx_type in [TransactionType.FOLDER_NAME.value]:
+                # Create virtual path for simulation
+                if original_relative_path_str not in path_translation_map:
+                    path_translation_map[original_relative_path_str] = original_name
+                path_translation_map[original_relative_path_str] = new_name
+                path_cache.pop(original_relative_path_str, None)
+                return TransactionStatus.COMPLETED, "DRY_RUN", True
+            else:
+                # Only simulate changes, don't update real path mappings
+                return TransactionStatus.COMPLETED, "DRY_RUN", False
 
         # Actual rename
         os.rename(current_abs_path, new_abs_path)
@@ -605,6 +614,9 @@ def execute_all_transactions(
     logging_blocked_during_interactive = False  # Used to suppress logs in interactive when needing to print the transaction detail
 
     # Track which transactions we've seen to prevent duplicate processing
+    if not dry_run and resume:
+        # Only reset DRY_RUN transactions when resuming actual execution
+        transactions = [tx for tx in transactions if not (tx.get("ERROR_MESSAGE") == "DRY_RUN" and tx["STATUS"] == TransactionStatus.COMPLETED.value)]
     seen_transaction_ids = set([tx["id"] for tx in transactions])
 
     # If resuming, reset statuses that need processing
