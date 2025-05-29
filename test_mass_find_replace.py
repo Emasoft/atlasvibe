@@ -141,4 +141,3 @@ def test_path_resolution_after_rename(temp_test_dir: dict, default_map_file: Pat
     # Verify nested folders resolve correctly
     for path in ["folder1", "folder1/folder2", "folder1/folder2/deep.txt"]:
         assert path_map[path] == path.replace("flojoy", "atlasvibe").replace("FLOJOY", "ATLASVIBE")
-```
