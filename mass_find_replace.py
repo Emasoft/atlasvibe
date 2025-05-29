@@ -321,7 +321,6 @@ def main_cli() -> None:
         sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet (import error during check). Please install all required packages." + RESET + "\n")
         sys.exit(1)
 
-    import argparse
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
                     "It operates in three phases: Scan, Plan (creating a transaction log), and Execute. "
