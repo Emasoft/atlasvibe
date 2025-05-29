@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added depth-based ordering of scanned items in scan_directory_for_occurrences to ensure parent directories are processed before children.
-# - Added final ordering of transactions: folders first (shallow to deep), then files, then content lines.
-# - Fixed dry run behavior in execute_all_transactions to avoid updating the real path translation map.
-# - Fixed interactive mode context line display to strip trailing whitespace from target line.
-# - Added collection of items with depth before processing in scan_directory_for_occurrences.
+# - Fixed dry run path translation map update in _get_current_absolute_path to enable child transactions during dry runs.
+# - Added debug log for skipping binary files in scan_directory_for_occurrences.
+# - Added detailed comments and improved robustness in path resolution and scanning.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -217,8 +215,24 @@ def _get_current_absolute_path(
     dry_run: bool = False
 ) -> Path:
     if dry_run:
-        # During dry run, do not apply path translation map; use original path directly
-        return root_dir / original_relative_path_str
+        # During dry run, update virtual mapping to enable child transactions to resolve correctly
+        if original_relative_path_str not in path_translation_map:
+            # Use original name as fallback
+            path_translation_map[original_relative_path_str] = Path(original_relative_path_str).name
+        # Compose current absolute path using virtual mapping
+        if original_relative_path_str in cache:
+            return cache[original_relative_path_str]
+        if original_relative_path_str == ".":
+            cache["."] = root_dir
+            return root_dir
+        original_path_obj = Path(original_relative_path_str)
+        parent_rel_str = "." if original_path_obj.parent == Path('.') else str(original_path_obj.parent)
+        current_parent_abs_path = _get_current_absolute_path(parent_rel_str, root_dir, path_translation_map, cache, dry_run)
+        current_item_name = path_translation_map.get(original_relative_path_str, original_path_obj.name)
+        current_abs_path = current_parent_abs_path / current_item_name
+        cache[original_relative_path_str] = current_abs_path
+        return current_abs_path
+
     if original_relative_path_str in cache:
         return cache[original_relative_path_str]
     if original_relative_path_str == ".":
@@ -352,6 +366,8 @@ def scan_directory_for_occurrences(
                         continue
 
                     if is_bin and not is_rtf:
+                        # Skip binary files but log them
+                        _log_fs_op_message(logging.DEBUG, f"Skipping binary file: {relative_path_str}", logger)
                         if raw_keys_for_binary_search:
                             try:
                                 with open(item_abs_path, 'rb') as bf:

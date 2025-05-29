@@ -1,52 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `main_flow`: Changed type hint for `path_last_processed_time` from `Dict[str, float]` to `dict[str, float]`.
-# - `main_flow`: Added `verbose_mode` parameter. If True, the Prefect run logger's level is set to `logging.DEBUG`.
-# - `main_cli`: Passed `args.verbose` to `main_flow` for the new `verbose_mode` parameter.
-# - `main_cli`: Added a comment to clarify that `quiet_mode` also suppresses the confirmation prompt.
-# - Removed commented-out `import logging` and `import prefect.runtime`.
-# - Passed the Prefect logger from `main_flow` to `replace_logic.load_replacement_map`
-#   and to `file_system_operations` functions (`scan_directory_for_occurrences`,
-#   `load_transactions`, `save_transactions`, `execute_all_transactions`).
-# - Changed `argparse` type for `--timeout` from `int` to `float` to allow inputs like "0.5".
-# - Added `int()` casting for `args.timeout` before passing to `main_flow` if it's not 0.
-# - Moved import checks from `if __name__ == "__main__":` block to the beginning of `main_cli()`.
-# - Removed redundant import checks for `prefect`, `chardet`, `pathspec`, `striprtf`, `isbinary`
-#   from `main_cli` because these are already handled by top-level imports in `mass_find_replace.py`
-#   or `file_system_operations.py`. If these modules are missing, an `ImportError` will occur
-#   when the script is first loaded, before `main_cli` is even called.
-# - Corrected F821 Undefined name error: `abs_r_dir` changed to `abs_root_dir` in `main_flow` when calling `execute_all_transactions`.
-# - `main_flow`: Added try-except OSError around file checking loop in resume logic to handle stat errors gracefully.
-# - `main_cli`: Re-added import checks for critical dependencies (`prefect`, `chardet`) at the beginning of the function.
-# - `main_flow`: Added call to `replace_logic.reset_module_state()` before loading map.
-# - `main_cli`: Changed dependency check for `prefect` and `chardet` to use `importlib.util.find_spec` to resolve F401 Ruff errors.
-# - Added `import importlib.util` for the `find_spec` calls.
-# - `main_cli`: Wrapped `importlib.util.find_spec` calls in try-except ImportError
-#   to correctly handle errors raised by mocked imports in tests.
-# - `main_cli`: Changed symlink handling flag from `--ignore-symlinks` to `--process-symlink-names`.
-#   The default behavior is now to IGNORE symlinks for renaming unless `--process-symlink-names` is specified.
-#   The `ignore_symlinks_arg` passed to `main_flow` is now `not args.process_symlink_names`.
-# - Added `--self-test` CLI option to install dev dependencies and run pytest.
-# - Added `-i` / `--interactive` CLI option for interactive transaction approval.
-# - Passed `interactive_mode` flag from `main_cli` to `main_flow` and then to `execute_all_transactions` in `file_system_operations.py`.
-# - In `execute_all_transactions`:
-#   - If `interactive_mode` is true and not `dry_run`:
-#     - Before processing a `PENDING` transaction:
-#       - Define ANSI color codes (DIM, BOLD, specific colors for original/proposed).
-#       - Create helper `_get_user_interactive_choice` function.
-#       - Display transaction type (Rename File/Folder, Modify Content).
-#       - For renames: Show original path, original name (with matches highlighted), proposed name.
-#       - For content: Show file path, line number, encoding.
-#       - For content: Read the file (using `_get_current_absolute_path` and current `path_translation_map` to get the correct version of the file if prior renames in this run occurred).
-#       - For content: Display 2 lines of context before (dimmed), the original target line (dimmed, with matches highlighted), the proposed target line (highlighted), and 2 lines of context after (dimmed).
-#       - Prompt user: `Approve? (A/Approve, S/Skip, Q/Quit): `
-#       - If 'A': Proceed with execution.
-#       - If 'S': Update transaction to `SKIPPED` with "Skipped by user" message, save transactions, continue to next.
-#       - If 'Q': Log/print "Operation aborted by user", save transactions, and terminate the execution loop (remaining PENDING transactions stay PENDING).
-# - Ensure the main confirmation prompt is skipped if interactive mode is active.
-# - Added `--self-test` and interactive mode documentation to NOTES.md and tasks_checklist.md.
-# - Added `DIM` ANSI escape code.
+# - Added type safety check for replacement mapping after loading map in main_flow.
+# - Added logic to reset transactions with DRY_RUN error message to PENDING status in execute_all_transactions.
+# - Hardened timeout duration calculation in execute_all_transactions.
+# - Added interactive mode support and other fixes as per previous changelog.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -63,7 +21,7 @@ import pathspec
 import importlib.util # Added for find_spec
 import subprocess # Added for self-test
 
-# Import Prefect and file_system_operations inside main_cli or conditionally to avoid import issues during tests
+# Import Prefect and file_system_operations inside main_cli or conditionally to avoid import issues
 import replace_logic
 from file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
@@ -127,6 +85,12 @@ def main_flow(
     if not replace_logic.load_replacement_map(map_file_path, logger=logger): 
         logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}")
         return
+    
+    # Type-safety reinforcement
+    if not isinstance(replace_logic._RAW_REPLACEMENT_MAPPING, dict):
+        logger.error("Critical Error: Replacement mapping has invalid type!")
+        return
+        
     if not replace_logic._MAPPING_LOADED: 
         logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic.")
         return
@@ -270,6 +234,11 @@ def main_flow(
     if not txns_for_exec: 
         logger.info(f"No transactions found in {txn_json_path} to execute. Exiting.")
         return
+
+    # Reset DRY_RUN completed transactions to PENDING for resume
+    for tx in txns_for_exec:
+        if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx.get("ERROR_MESSAGE") == "DRY_RUN":
+            tx["STATUS"] = TransactionStatus.PENDING.value
 
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")

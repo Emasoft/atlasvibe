@@ -39,7 +39,8 @@ def run_main_flow_for_test(
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     timeout_minutes: int = 1, quiet_mode: bool = True,
     verbose_mode: bool = False,
-    interactive_mode: bool = False
+    interactive_mode: bool = False,
+    process_symlink_names: bool = False
 ):
     # No environment setup here; rely on fixture
     final_exclude_dirs = exclude_dirs if exclude_dirs is not None else DEFAULT_EXCLUDE_DIRS_REL
@@ -170,3 +171,48 @@ def test_exclusion_rules(temp_test_dir: dict, default_map_file: Path):
         path = tx["PATH"]
         assert "excluded_flojoy_dir" not in path 
         assert "exclude_this_flojoy_file.txt" not in path
+
+def test_symlink_safety(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create symlink pointing outside repo
+    external_target = context_dir / "symlink_target"
+    external_target.mkdir()
+    target_file = external_target / "flojoy_file.txt"
+    target_file.write_text("Important data FLOJOY")
+    
+    symlink = context_dir / "external_link"
+    symlink.symlink_to(external_target)
+    
+    # Run operation with symlink processing enabled
+    run_main_flow_for_test(
+        context_dir, default_map_file, dry_run=False, force_execution=True,
+        ignore_symlinks_arg=False
+    )
+    
+    # Verify external target untouched
+    assert "FLOJOY" in target_file.read_text()
+    new_target = context_dir / "atlasvibe_target"
+    assert not new_target.exists()
+
+def test_resume_dry_run_behavior(temp_test_dir: dict, default_map_file: Path):
+    context_dir = temp_test_dir["runtime"]
+    
+    # Initial dry run
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Modify transaction state to simulate interruption
+    txn_path = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_path)
+    for tx in transactions[:2]:
+        tx["STATUS"] = TransactionStatus.COMPLETED.value
+        tx["ERROR_MESSAGE"] = "DRY_RUN"
+    save_transactions(transactions, txn_path)
+    
+    # Resume with force execution
+    run_main_flow_for_test(context_dir, default_map_file, resume=True, dry_run=False, force_execution=True)
+    
+    # Verify all transactions processed
+    final_tx = load_transactions(txn_path)
+    statuses = [tx["STATUS"] for tx in final_tx]
+    assert all(s == TransactionStatus.COMPLETED.value for s in statuses)
