@@ -15,6 +15,7 @@ import sys
 import subprocess
 import builtins
 import importlib.util
+import chardet
 
 from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
 from file_system_operations import (
