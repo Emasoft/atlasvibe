@@ -37,6 +37,7 @@ def main_flow(
     import logging
     from pathlib import Path
     import pathspec
+    from typing import Any
 
     from prefect import flow, get_run_logger
     from utils.file_system_operations import (
@@ -163,7 +164,7 @@ def main_flow(
 
     if not skip_scan:
         logger.info(f"Scanning '{abs_root_dir}'...")
-        current_txns_for_resume: list[dict[str,Any]] | None = None
+        current_txns_for_resume: list[dict[str, Any]] | None = None
         paths_to_force_rescan: set[str] = set()
         if resume and txn_json_path.exists(): 
             logger.info(f"Resume: Loading existing txns from {txn_json_path}...")
@@ -278,6 +279,7 @@ def main_cli() -> None:
     import argparse
     from pathlib import Path
     import pathspec
+    from typing import Any
     from utils.file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
     try:
