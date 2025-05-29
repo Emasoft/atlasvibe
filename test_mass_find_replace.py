@@ -15,12 +15,13 @@ import sys
 import subprocess
 import builtins
 import importlib.util
-import replace_logic
 
-from mass_find_replace import main_flow, main_cli, BINARY_MATCHES_LOG_FILE, YELLOW, RESET
-from utils.file_system_operations import (
-    load_transactions, TransactionStatus, TransactionType, save_transactions
+from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
+from file_system_operations import (
+    load_transactions, save_transactions, TransactionStatus, TransactionType
 )
+
+import replace_logic
 
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
@@ -45,7 +46,7 @@ def run_main_flow_for_test(
     additional_excludes = [map_file.name, BINARY_MATCHES_LOG_FILE]
     final_exclude_files = list(set(base_exclude_files + additional_excludes))
     main_flow(
-        directory=str(context_dir),  # Use runtime directory for processing
+        directory=str(context_dir),  # Use context directory (runtime)
         mapping_file=str(map_file), extensions=extensions,
         exclude_dirs=final_exclude_dirs, exclude_files=final_exclude_files, dry_run=dry_run,
         skip_scan=skip_scan, resume=resume, force_execution=force_execution,
@@ -77,6 +78,10 @@ def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_fi
     print(f"Transaction file: {context_dir / MAIN_TRANSACTION_FILE_NAME}")
     transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
+
+    if not transactions:
+        print("ERROR: No transactions generated!")
+        assert False, "No transactions were generated in dry run"
 
     name_txs = [tx for tx in transactions if tx["TYPE"] in (TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value)]
     content_txs = [tx for tx in transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]

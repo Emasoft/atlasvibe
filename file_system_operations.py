@@ -29,7 +29,7 @@ import logging
 import sys # For direct stderr prints
 import re # For highlighting in interactive mode
 
-from replace_logic import replace_occurrences, get_scan_pattern, get_raw_stripped_keys, strip_diacritics, strip_control_characters
+import replace_logic
 
 class SandboxViolationError(Exception):
     pass
@@ -262,8 +262,8 @@ def scan_directory_for_occurrences(
 
     binary_log_path = root_dir / BINARY_MATCHES_LOG_FILE
 
-    scan_pattern = get_scan_pattern()
-    raw_keys_for_binary_search = get_raw_stripped_keys()
+    scan_pattern = replace_logic.get_scan_pattern()
+    raw_keys_for_binary_search = replace_logic.get_raw_stripped_keys()
 
     if resume_from_transactions is not None:
         processed_transactions = list(resume_from_transactions)
@@ -316,7 +316,7 @@ def scan_directory_for_occurrences(
             continue
 
         original_name = item_abs_path.name
-        searchable_name = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(original_name)))
+        searchable_name = unicodedata.normalize('NFC', replace_logic.strip_control_characters(replace_logic.strip_diacritics(original_name)))
         
         item_is_dir = False
         item_is_file = False
@@ -342,7 +342,7 @@ def scan_directory_for_occurrences(
 
 
         if (scan_pattern and scan_pattern.search(searchable_name)) and \
-           (replace_occurrences(original_name) != original_name):
+           (replace_logic.replace_occurrences(original_name) != original_name):
             tx_type_val: str | None = None
             if item_is_dir: # True only if not a symlink and is_dir() was true
                 if not skip_folder_renaming:
@@ -449,9 +449,9 @@ def scan_directory_for_occurrences(
                             lines_for_scan = [file_content_for_scan]
 
                         for line_idx, line_content in enumerate(lines_for_scan):
-                            searchable_line_content = unicodedata.normalize('NFC', strip_control_characters(strip_diacritics(line_content)))
+                            searchable_line_content = unicodedata.normalize('NFC', replace_logic.strip_control_characters(replace_logic.strip_diacritics(line_content)))
                             if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
-                               (replace_occurrences(line_content) != line_content):
+                               (replace_logic.replace_occurrences(line_content) != line_content):
                                 tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
                                 if tx_id_tuple not in existing_transaction_ids:
                                     processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
@@ -543,10 +543,10 @@ def _execute_rename_transaction(
     tx_type = tx["TYPE"]
 
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache, dry_run)
-    if not current_abs_path.exists():
+    if not dry_run and not current_abs_path.exists():
         return TransactionStatus.FAILED, f"Path not found: {current_abs_path}", False
 
-    new_name = replace_occurrences(original_name)
+    new_name = replace_logic.replace_occurrences(original_name)
     if new_name == original_name:
         return TransactionStatus.SKIPPED, "No change needed", False
 
@@ -617,7 +617,6 @@ def execute_all_transactions(
             if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx.get("ERROR_MESSAGE") == "DRY_RUN":
                 tx["STATUS"] = TransactionStatus.PENDING.value
                 tx.pop("ERROR_MESSAGE", None)
-        transactions = [tx for tx in transactions if not (tx.get("ERROR_MESSAGE") == "DRY_RUN" and tx["STATUS"] == TransactionStatus.COMPLETED.value)]
     seen_transaction_ids = set([tx["id"] for tx in transactions])
 
     # If resuming, reset statuses that need processing

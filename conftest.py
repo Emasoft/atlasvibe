@@ -3,6 +3,7 @@ import pytest
 from pathlib import Path
 import json
 import os
+import shutil
 
 @pytest.fixture
 def temp_test_dir(tmp_path: Path):
@@ -28,8 +29,11 @@ def temp_test_dir(tmp_path: Path):
     (runtime_dir / "exclude_this_flojoy_file.txt").write_text("Flojoy exclusion test")
     
     # Verify structure
-    assert (runtime_dir / "flojoy_root").exists()
-    return { 
-        "runtime": runtime_dir, 
+    assert (runtime_dir / "flojoy_root").exists(), "Required dir not created in fixture"
+    context = {
+        "runtime": runtime_dir,
         "config": config_dir
-    }  # End of fixture
+    }
+    yield context
+    # Cleanup
+    shutil.rmtree(tmp_path)
