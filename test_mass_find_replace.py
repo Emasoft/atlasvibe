@@ -21,7 +21,6 @@ from file_system_operations import load_transactions, save_transactions, Transac
 import replace_logic
 
 import pytest
-import logging
 
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
