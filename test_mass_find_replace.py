@@ -75,8 +75,10 @@ def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_fi
     assert orig_deep_file_path.exists()
     assert_file_content(orig_deep_file_path, original_content)
 
+    # Verify no actual renaming occurred
     assert not (context_dir / "atlasvibe_root").exists()
 
+    print(f"Transaction file: {context_dir / MAIN_TRANSACTION_FILE_NAME}")
     transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
     assert transactions is not None
 
@@ -118,6 +120,8 @@ def test_multibyte_content_handling(temp_test_dir: dict, default_map_file: Path,
     # Verify file renamed and content changed
     new_path = context_dir / "gb2312_atlasvibe.txt"
     assert new_path.exists()
+
+    print(f"File content after change: {new_path.read_text(encoding='gb2312')}")
 
     # Check encoding preserved
     raw_bytes = new_path.read_bytes()
@@ -256,7 +260,7 @@ def test_large_file_processing(temp_test_dir: dict, default_map_file: Path):
     assert "ATLASVIBE" in new_path.read_text(encoding='utf-8', errors='ignore')[:1000]
 
 def test_empty_mapping_safety(temp_test_dir: dict, tmp_path: Path):
-    context_dir = temp_test_dir["runtime"]
+    context_dir: Path = temp_test_dir["runtime"]  # Explicit Path type
     empty_map = tmp_path / "empty_map.json"
     empty_map.write_text('{"REPLACEMENT_MAPPING": {}}')
     
