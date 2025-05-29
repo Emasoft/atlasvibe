@@ -97,3 +97,24 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_fi
     assert len(completed_txs) == 5
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
+
+def test_multibyte_content_handling(temp_test_dir: Path, default_map_file: Path, assert_file_content):
+    # Create GB2312 encoded file with matching content
+    gb_content = "FLOJOY测试Flojoy" 
+    gb_file = temp_test_dir / "gb2312_flojoy.txt"
+    gb_file.write_text(gb_content, encoding='gb2312')
+    
+    # Run actual execution (not dry run)
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=False, force_execution=True)
+    
+    # Verify file renamed and content changed
+    new_path = temp_test_dir / "gb2312_atlasvibe.txt"
+    assert new_path.exists()
+    
+    # Check encoding preserved
+    raw_bytes = new_path.read_bytes()
+    detected = chardet.detect(raw_bytes)
+    assert detected['encoding'] == 'GB2312'
+    
+    content = new_path.read_text(encoding='gb2312')
+    assert "ATLASVIBE测试Atlasvibe" in content

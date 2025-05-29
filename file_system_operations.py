@@ -1,82 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - `get_file_encoding`:
-#   - If chardet provides an encoding and it can decode the sample, use it, even if confidence is not very high (e.g., > 0.3).
-#   - This aims to better handle encodings like cp1252 that chardet might detect with lower confidence than UTF-8 but are correct.
-#   - Refined logic:
-#     1. Handle RTF.
-#     2. Read sample. If empty, default.
-#     3. Try UTF-8 first. If decodes sample, use it.
-#     4. Else, use chardet. If chardet's encoding decodes sample, use it (after normalizing common aliases).
-#     5. Else, try cp1252 as a fallback.
-#     6. Else, use DEFAULT_ENCODING_FALLBACK.
-# - `scan_directory_for_occurrences`: Changed `item_abs_path.read_text(..., newline='')`
-#   to use `with open(item_abs_path, 'r', ..., newline='') as f: f.read()`
-#   to resolve the "unexpected keyword argument 'newline'" error seen in test logs.
-#   This ensures consistent file reading for line ending preservation.
-# - `_execute_content_line_transaction`: Changed `open(current_abs_path, 'r', ..., newline=None)`
-#   to `open(current_abs_path, 'r', ..., newline='')` to preserve line endings during file reading.
-#   This ensures that the `ORIGINAL_LINE_CONTENT` stored in transactions and processed by
-#   `replace_occurrences` retains its true line endings, which are then preserved on write.
-# - `execute_all_transactions`: Modified the logic for populating `path_translation_map`
-#   when `resume=True` or (`skip_scan=True` and `not resume`). The condition
-#   `tx.get("ERROR_MESSAGE") != "DRY_RUN"` was removed when checking for COMPLETED rename
-#   transactions. This allows `skip_scan` mode to correctly use the renames planned
-#   during a previous dry run to build its understanding of the current file paths.
-# - Fixed Ruff linting errors (E701).
-# - `get_file_encoding`: Revised logic to prioritize chardet for common single-byte encodings
-#   before trying UTF-8, then other chardet suggestions, then cp1252 fallback.
-# - `_execute_content_line_transaction`: Added strict encoding check. If original line was strictly
-#   encodable but the new line (after replacement) is not, the transaction is marked FAILED.
-#   Otherwise, proceeds with surrogateescape for writing.
-# - `get_file_encoding`: Further refined logic. Prioritize chardet's guess for common single-byte
-#   encodings if it decodes the sample. Then try UTF-8. Then try other chardet guesses.
-#   Then try cp1252 as a general fallback. This aims to improve cp1252 detection.
-# - `get_file_encoding`: Corrected F821 Undefined name error by using the correct variable name `common_single_byte_western_encodings`.
-# - `_execute_content_line_transaction`: Implemented strict byte-for-byte verification after writing to a temporary file.
-#   The modified file's bytes must exactly match the expected bytes (original file with only the target line surgically replaced and re-encoded).
-#   If not, the transaction fails, and the original file is preserved.
-# - Fixed Ruff E701 linting errors in `_execute_content_line_transaction` by moving `unlink` calls to new lines.
-# - `get_file_encoding`: Revised logic again.
-#   1. RTF & Empty file checks.
-#   2. Chardet. If suggestion exists:
-#      a. Normalize aliases (cp1252, latin1).
-#      b. Try decoding with this normalized chardet suggestion. If success, return it.
-#   3. If chardet failed or no suggestion: Try UTF-8. If success, return it.
-#   4. If still no encoding: Try cp1252. If success, return it.
-#   5. If still no encoding: Try latin1. If success, return it.
-#   6. Fallback to DEFAULT_ENCODING_FALLBACK.
-# - Modified functions to accept an optional logger argument.
-# - Replaced `print` statements for warnings/errors with logger calls.
-# - `get_file_encoding`: Refined logic to prioritize `cp1252` over `latin1` if both can decode a sample when `latin1` is suggested by chardet.
-# - `execute_all_transactions`: Corrected logic for `path_translation_map` initialization in `skip_scan` (non-resume) mode. It should start empty.
-# - `get_file_encoding`: Changed internal decode attempts to use `errors='surrogateescape'` to align with how files are actually read for processing.
-# - `scan_directory_for_occurrences`: Added try-except OSError around item property checks (is_dir, is_file, is_symlink) to handle stat errors gracefully.
-# - `execute_all_transactions`: Made "TYPE" key access safe using .get() when populating path_translation_map and in sort_key.
-# - Added direct print to stderr in `execute_all_transactions` before dispatching a transaction.
-# - Added direct print to stderr at the entry of `_execute_content_line_transaction`.
-# - Added diagnostic print at the start of the main loop in `execute_all_transactions` to show each transaction being iterated.
-# - `execute_all_transactions`: Changed `path_translation_map` pre-population to only occur if `resume=True`.
-#   For `skip_scan` without `resume`, the map starts empty.
-# - `_execute_rename_transaction`: Added more diagnostic prints and a hard check after `Path.rename()` to verify on-disk state.
-# - `_execute_rename_transaction`: Changed on-disk verification after rename to use `os.path.exists(str(path))` to align with test assertions.
-# - `_execute_content_line_transaction`: Modified to use original path for `current_abs_path` when `dry_run` is True.
-# - Converted direct `print(..., file=sys.stderr)` calls in `execute_all_transactions`, `_execute_rename_transaction`,
-#   and `_execute_content_line_transaction` to use `_log_fs_op_message(logging.DEBUG, ...)` for better log level control.
-# - Added `interactive_mode` parameter to `execute_all_transactions`.
-# - Implemented interactive prompting before each transaction if `interactive_mode` is True.
-# - Added ANSI color codes for interactive mode display.
-# - Helper function `_get_user_interactive_choice` to handle user input.
-# - Context display for content transactions in interactive mode.
-# - Enhanced `_get_user_interactive_choice` to highlight all occurrences of matched key strings in the original name/line.
-# - Added `_highlight_string` helper function for coloring matched keys.
-# - Removed unused `current_overall_retry_attempt` from `execute_all_transactions` as the complex retry loop was simplified for interactive mode.
-# - Reinstated and enhanced the main retry loop in `execute_all_transactions` for robust automated retries,
-#   respecting timeouts and max passes, with exponential backoff for `RETRY_LATER` items.
-#   This works alongside interactive mode.
-# - `execute_all_transactions`: If `resume` is true, reset `IN_PROGRESS` transactions to `PENDING`.
-# - `execute_all_transactions`: Simplified `max_overall_retry_passes` logic; removed special case for interactive mode.
+# - Fixed Windows POSIX path handling in ignore patterns to normalize backslashes to forward slashes.
+# - Fixed binary file logging path initialization inside content scan loop.
+# - Added logging of number of transactions reset at start of execution when resuming or skipping scan.
+# - Fixed dry_run return status for content line transactions to not include "DRY_RUN" error message.
+# - Fixed retry pass counting logic in execute_all_transactions to increment correctly.
+# - Added detailed logging for transaction reset count.
+# - Minor cleanup and added missing variable initialization.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -265,8 +196,9 @@ def _walk_for_scan(
             if ignore_spec:
                 try:
                     path_rel_to_root_for_spec = item_path_from_rglob.relative_to(root_dir)
-                    if ignore_spec.match_file(str(path_rel_to_root_for_spec)) or \
-                       (item_path_from_rglob.is_dir() and ignore_spec.match_file(str(path_rel_to_root_for_spec) + '/')):
+                    rel_posix = str(path_rel_to_root_for_spec).replace('\\', '/')
+                    if ignore_spec.match_file(rel_posix) or \
+                       (item_path_from_rglob.is_dir() and ignore_spec.match_file(rel_posix + '/')):
                         continue
                 except ValueError: # Not relative, should not happen with rglob from root
                     pass 
@@ -672,7 +604,7 @@ def _execute_content_line_transaction(
         return TransactionStatus.SKIPPED, f"'{current_abs_path}' not found or not a file.", False
     
     if dry_run: # If it passed the checks above and is a dry_run, it's COMPLETED (for planning)
-        return TransactionStatus.COMPLETED, "DRY_RUN", False
+        return TransactionStatus.COMPLETED, None, False  # Changed to no error message for dry_run success
 
     if is_rtf: # This check is after dry_run, so it only applies to actual execution
         return TransactionStatus.SKIPPED, "RTF content modification is skipped to preserve formatting. Match was based on extracted text.", False
@@ -885,7 +817,7 @@ def execute_all_transactions(
     stats = {"completed":0,"failed":0,"skipped":0,"pending":0,"in_progress":0,"retry_later":0}
     path_translation_map: dict[str,str] = {}
     path_cache: dict[str,Path] = {}
-    abs_r_dir = root_dir
+    abs_root_dir = root_dir
 
     if resume: 
         for tx in transactions:
@@ -899,7 +831,9 @@ def execute_all_transactions(
     
     # Reset relevant statuses at the beginning of execution if resuming or skipping scan
     if resume or skip_scan: 
+        transaction_reset_count = 0
         for tx_item_for_reset in transactions:
+            transaction_reset_count += 1
             current_tx_status_str = tx_item_for_reset.get("STATUS")
             if current_tx_status_str == TransactionStatus.COMPLETED.value and \
                tx_item_for_reset.get("ERROR_MESSAGE") == "DRY_RUN":
@@ -925,6 +859,7 @@ def execute_all_transactions(
                 tx_item_for_reset.pop('timestamp_last_attempt', None)
                 tx_item_for_reset.pop('ERROR_MESSAGE', None)
 
+        _log_fs_op_message(logging.INFO, f"Reset {transaction_reset_count} transactions for this run", logger)
 
     def sort_key(tx):
         type_o={TransactionType.FOLDER_NAME.value:0,TransactionType.FILE_NAME.value:1,TransactionType.FILE_CONTENT_LINE.value:2}
@@ -933,7 +868,7 @@ def execute_all_transactions(
 
     execution_start_time = time.time()
     max_overall_retry_passes = 500 if global_timeout_minutes == 0 else 20
-    current_overall_retry_attempt = 0
+    current_overall_retry_pass = 0
     
     user_quit_interactive = False
     while True: # Main retry loop
@@ -965,7 +900,7 @@ def execute_all_transactions(
 
             # If an item was IN_PROGRESS from a previous crashed run, and it's the first pass of a non-resume run, reset it.
             # This is less likely now with the IN_PROGRESS reset for resume=True at the start.
-            if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_attempt == 0: 
+            if current_status == TransactionStatus.IN_PROGRESS and not resume and current_overall_retry_pass == 0: 
                 current_status = TransactionStatus.PENDING
             
             if current_status == TransactionStatus.RETRY_LATER:
@@ -979,7 +914,7 @@ def execute_all_transactions(
 
             if current_status == TransactionStatus.PENDING:
                 if interactive_mode and not dry_run:
-                    user_choice = _get_user_interactive_choice(tx_item, abs_r_dir, path_translation_map, path_cache, logger)
+                    user_choice = _get_user_interactive_choice(tx_item, abs_root_dir, path_translation_map, path_cache, logger)
                     if user_choice == 'skip':
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by user in interactive mode.")
                         save_transactions(transactions, transactions_file_path, logger=logger)
@@ -1004,9 +939,9 @@ def execute_all_transactions(
 
                 try:
                     if tx_type in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
-                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_rename_transaction(tx_item, abs_root_dir, path_translation_map, path_cache, dry_run, logger=logger)
                     elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
-                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_r_dir, path_translation_map, path_cache, dry_run, logger=logger)
+                        new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = _execute_content_line_transaction(tx_item, abs_root_dir, path_translation_map, path_cache, dry_run, logger=logger)
                         final_prop_content_for_log = tx_item.get("PROPOSED_LINE_CONTENT")
                     else:
                         new_stat_from_exec, err_msg_from_exec, is_retryable_error_from_exec = TransactionStatus.FAILED, f"Unknown type: {tx_type}", False
@@ -1028,8 +963,6 @@ def execute_all_transactions(
                 save_transactions(transactions, transactions_file_path, logger=logger)
                 processed_in_this_pass += 1
         
-        current_overall_retry_attempt += 1
-
         if user_quit_interactive: 
             break
 
@@ -1043,7 +976,7 @@ def execute_all_transactions(
             timed_out = True
         
         max_retries_hit = False
-        if current_overall_retry_attempt >= max_overall_retry_passes:
+        if current_overall_retry_pass >= max_overall_retry_passes:
             _log_fs_op_message(logging.WARNING, f"Max retry passes ({max_overall_retry_passes}) reached.", logger)
             max_retries_hit = True
         
@@ -1073,13 +1006,15 @@ def execute_all_transactions(
                 sleep_duration = min(sleep_duration, 60.0) 
 
             if sleep_duration > 0.05 :
-                 _log_fs_op_message(logging.INFO, f"Retry Pass {current_overall_retry_attempt} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.", logger)
+                 _log_fs_op_message(logging.INFO, f"Retry Pass {current_overall_retry_pass} complete. {len(items_still_requiring_retry)} items pending retry. Next check in ~{sleep_duration:.1f}s.", logger)
                  time.sleep(sleep_duration)
             else: 
                 time.sleep(0.05) 
         elif not processed_in_this_pass: 
             _log_fs_op_message(logging.DEBUG, "No items processed and no items require retry. Exiting retry loop.", logger)
             break
+
+        current_overall_retry_pass += 1
 
 
     # Final pass to update stats for any items skipped due to user quitting interactively

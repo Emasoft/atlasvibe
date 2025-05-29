@@ -67,3 +67,20 @@ def prefect_server_cleanup():
         get_client()._cache.clear()
     except Exception:
         pass
+    try:
+        # Clean file locks from Prefect
+        from prefect.utilities.filesystem import remove_fs_lock
+        import atexit
+        atexit.register(remove_fs_lock)
+    except ImportError:
+        pass
+    try:
+        # Clean any temporary files
+        base_path = Path(__file__).parent
+        for path in base_path.glob('**/planned_transactions.json'):
+            if path.parent.name != 'test_run':
+                continue
+            for backup in path.glob('*.bak'):
+                backup.unlink(missing_ok=True)
+    except Exception:
+        pass
