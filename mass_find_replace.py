@@ -63,12 +63,7 @@ import pathspec
 import importlib.util # Added for find_spec
 import subprocess # Added for self-test
 
-from prefect import flow, get_run_logger
-
-from file_system_operations import (
-    scan_directory_for_occurrences, save_transactions, load_transactions,
-    execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
-)
+# Import Prefect and file_system_operations inside main_cli or conditionally to avoid import issues during tests
 import replace_logic
 
 SCRIPT_NAME = "MFR - Mass Find Replace - A script to safely rename things in your project"
@@ -82,7 +77,6 @@ YELLOW = "\033[93m"
 BLUE = "\033[94m"
 DIM = "\033[2m"
 
-@flow(name="Mass Find and Replace Orchestration Flow", log_prints=True)
 def main_flow(
     directory: str, mapping_file: str, extensions: list[str] | None,
     exclude_dirs: list[str], exclude_files: list[str],
@@ -94,6 +88,12 @@ def main_flow(
     verbose_mode: bool, # Added for controlling logger verbosity
     interactive_mode: bool # Added for interactive transaction approval
 ):
+    from prefect import flow, get_run_logger
+    from file_system_operations import (
+        scan_directory_for_occurrences, save_transactions, load_transactions,
+        execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
+    )
+
     logger = get_run_logger()
     if verbose_mode:
         logger.setLevel(logging.DEBUG)
@@ -193,7 +193,7 @@ def main_flow(
         print(f"Skip File Renaming: {skip_file_renaming}")
         print(f"Skip Folder Renaming: {skip_folder_renaming}")
         print(f"Skip Content Modification: {skip_content}")
-        print(f"Retry Timeout: {timeout_minutes} minutes (0 for indefinite)")
+        print(f"Retry Timeout: {timeout_minutes} minutes (0 for indefinite retries)")
         print(f"{BLUE}-------------------------{RESET}")
         sys.stdout.flush()
         if not replace_logic._RAW_REPLACEMENT_MAPPING and (skip_file_renaming or not extensions) and (skip_folder_renaming or not extensions) and skip_content:
@@ -305,24 +305,23 @@ def _run_subprocess_command(command: list[str], description: str) -> bool:
         return False
 
 def main_cli() -> None:
-    missing_deps = []
     try:
         if importlib.util.find_spec("prefect") is None:
-            missing_deps.append("prefect")
-    except ImportError: 
-        missing_deps.append("prefect (import error during check)")
+            sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: prefect. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+            sys.exit(1)
+    except ImportError:
+        sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: prefect (import error during check). Please install all required packages." + RESET + "\n")
+        sys.exit(1)
 
     try:
         if importlib.util.find_spec("chardet") is None:
-            missing_deps.append("chardet")
+            sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+            sys.exit(1)
     except ImportError:
-        missing_deps.append("chardet (import error during check)")
-    
-    if missing_deps:
-        missing_deps_str = ", ".join(missing_deps)
-        sys.stderr.write(RED + f"CRITICAL ERROR: Missing core dependencies: {missing_deps_str}. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+        sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet (import error during check). Please install all required packages." + RESET + "\n")
         sys.exit(1)
 
+    import argparse
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
                     "It operates in three phases: Scan, Plan (creating a transaction log), and Execute. "
