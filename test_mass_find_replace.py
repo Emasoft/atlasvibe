@@ -197,6 +197,7 @@ def test_symlink_handling(temp_test_dir: Path, default_map_file: Path):
     transactions = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
     symlink_txs = [t for t in transactions if "symlink_to_external" in t["PATH"]]
     assert len(symlink_txs) > 0
+
 def test_mixed_encoding_preservation(temp_test_dir: Path, default_map_file: Path, assert_file_content):
     # Create test file with mixed encodings
     test_file = temp_test_dir / "encoding_test.txt"
@@ -216,3 +217,164 @@ def test_mixed_encoding_preservation(temp_test_dir: Path, default_map_file: Path
         "Atlasvibe in cp1252: ™\n"
     )
     assert_file_content(test_file, expected_content)
+
+# Additional tests for deeper validation
+
+def test_complex_surgical_replacement(temp_test_dir, default_map_file, assert_file_content):
+    # File with mixed encodings, formatting and special cases
+    content = (
+        "Line1: FLOJOY normal\n"
+        "Line2: •FloJoy• bullet point\n"
+        "Line3: Fl\u00f6joy unicode char\n"  # "ö" is normalized to "o"
+        "Line4: <<CONTROL>>Flojoy\x08<<CONTROL>>\n"
+    )
+    test_file = temp_test_dir / "complex.txt"
+    test_file.write_text(content, encoding='utf-8')
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    # Verify changes preserved structure exactly
+    expected = (
+        "Line1: ATLASVIBE normal\n"
+        "Line2: •atlasVibe• bullet point\n"
+        "Line3: Flojoy unicode char\n"  # Not replaced due to ö->o normalization
+        "Line4: <<CONTROL>>Atlasvibe<<CONTROL>>\n"
+    )
+    assert_file_content(test_file, expected)
+
+def test_encoding_layer_preservation(temp_test_dir, default_map_file):
+    # Test all supported encodings
+    for enc in ['utf-8', 'latin1', 'cp1252']:
+        content = f"Flojoy content in {enc} encoding"
+        test_file = temp_test_dir / f"test_{enc}.txt"
+        # Write with encoding including special chars
+        special_char = "é" if enc != 'cp1252' else "™"
+        content += f"\nSpecial: {special_char}"
+        test_file.write_bytes(content.encode(enc))
+        
+        run_main_flow_for_test(temp_test_dir, default_map_file)
+        
+        # Verify byte preservation except replacements
+        new_content = test_file.read_bytes()
+        decoded_orig = content.replace("Flojoy", "Atlasvibe").encode(enc)
+        assert new_content == decoded_orig
+
+def test_transaction_validation_system(temp_test_dir, default_map_file):
+    # Create file that changes between scan and execution
+    test_file = temp_test_dir / "volatile.txt"
+    test_file.write_text("Original Flojoy line\n")
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file, dry_run=True)
+    
+    # Alter file before execution
+    test_file.write_text("Modified unrelated line\n", encoding='utf-8')
+    
+    # Execute with resume
+    run_main_flow_for_test(temp_test_dir, default_map_file, resume=True)
+    
+    # Verify transaction failed validation
+    txn_file = temp_test_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    content_tx = [t for t in transactions if t["TYPE"] == "FILE_CONTENT_LINE"]
+    assert len(content_tx) == 1
+    assert content_tx[0]["STATUS"] == "FAILED"
+    assert "content changed" in content_tx[0]["ERROR_MESSAGE"]
+
+def test_rename_verification(temp_test_dir, default_map_file, mocker):
+    # Simulate filesystem inconsistency
+    mocker.patch('os.path.exists', side_effect=lambda x: "error_file" not in x)
+    error_file = temp_test_dir / "error_file_flojoy.txt"
+    error_file.write_text("Test")
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    txns = load_transactions(temp_test_dir / MAIN_TRANSACTION_FILE_NAME)
+    error_tx = next(t for t in txns if "error_file" in t["PATH"])
+    assert error_tx["STATUS"] == "FAILED"
+    assert "on-disk state invalid" in error_tx["ERROR_MESSAGE"]
+
+def test_symlink_target_integrity(temp_test_dir, default_map_file):
+    # Setup external symlink target
+    external_dir = temp_test_dir.parent / "external_target"
+    external_dir.mkdir(exist_ok=True)
+    target_file = external_dir / "Flojoy_file.txt"
+    target_file.write_text("Should not change")
+    
+    # Create symlink pointing outside repo
+    symlink = temp_test_dir / "ext_link"
+    symlink.symlink_to(external_dir)
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    # Verify external file untouched
+    assert "Flojoy" in target_file.read_text()
+
+def test_binary_protection(temp_test_dir, default_map_file):
+    # PNG file with "FLOJOY" in header
+    png_header = b'\x89PNG\r\n\x1a\nFLOJOY chunk'
+    bin_file = temp_test_dir / "logo_flojoy.png"
+    bin_file.write_bytes(png_header + b'\x00'*100)
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file)
+    
+    # Verify no changes and logged
+    assert bin_file.read_bytes() == png_header + b'\x00'*100
+    log_content = (temp_test_dir / BINARY_MATCHES_LOG_FILE).read_text()
+    assert "logo_flojoy.png" in log_content
+    assert "FLOJOY" in log_content
+
+def test_edge_case_handling(temp_test_dir, default_map_file):
+    # Cases that previously caused issues
+    cases = [
+        ("empty_file", "", None, None),
+        ("rtf_file", r"{\rtf1\ansi FLOJOY}", "rtf", "RTF skipped"),
+        ("case_sensitive", "FLOJOY Flojoy flojoy", None, "ATLASVIBE Atlasvibe flojoy"),
+    ]
+    
+    for name, content, ext, expected in cases:
+        path = temp_test_dir / f"{name}.{ext if ext else 'txt'}"
+        path.write_text(content)
+        
+        run_main_flow_for_test(temp_test_dir, default_map_file)
+        
+        if expected is not None:
+            file_content = path.read_text()
+            if expected == "RTF skipped":
+                # RTF content modification is skipped, so original content remains
+                assert content in file_content
+            else:
+                assert expected in file_content
+
+def test_interactive_debugging(temp_test_dir, default_map_file, monkeypatch):
+    # Mock user input for complex debugging
+    inputs = iter([
+        "a",  # Approve first change
+        "n",  # Show context (invalid input, will reprompt)
+        "s",  # Skip second
+        "q"   # Quit
+    ])
+    def mock_input(prompt):
+        val = next(inputs)
+        # Accept 'n' as invalid, so it will reprompt until valid input
+        if val == "n":
+            return "invalid"
+        return val
+    monkeypatch.setattr('builtins.input', mock_input)
+    
+    # Create multi-change file
+    content = "FLOJOY\nFlojoy\nflojoy"
+    test_file = temp_test_dir / "variations.txt"
+    test_file.write_text(content)
+    
+    run_main_flow_for_test(temp_test_dir, default_map_file, interactive_mode=True)
+    
+    # Verify partial processing
+    txns = load_transactions(test_file.parent / MAIN_TRANSACTION_FILE_NAME)
+    statuses = [t['STATUS'] for t in txns if t["PATH"] == "variations.txt" and t["TYPE"] == "FILE_CONTENT_LINE"]
+    # The last line "flojoy" is not replaced (no mapping), so no transaction for it
+    # So expect 2 transactions: first approved, second skipped, then quit
+    assert "COMPLETED" in statuses
+    assert "SKIPPED" in statuses
+    assert "SKIPPED" in statuses or len(statuses) == 2  # The quit causes remaining to skip
+    file_content = test_file.read_text()
+    assert "ATLASVIBE" in file_content or "Atlasvibe" in file_content
