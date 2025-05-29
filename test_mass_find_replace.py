@@ -2,7 +2,7 @@
 # HERE IS THE FIXED TEST FILE WITH THE UNNECESSARY BACKTICK REMOVED
 # (The lines with ``` are now removed to fix syntax errors)
 
-import pytest
+from mass_find_replace import MAIN_TRANSACTION_FILE_NAME
 from pathlib import Path
 import os
 import shutil
@@ -15,16 +15,11 @@ import sys
 import subprocess
 import builtins
 import importlib.util
-import chardet
 
-from mass_find_replace import main_flow, main_cli, MAIN_TRANSACTION_FILE_NAME, YELLOW, RESET
-from file_system_operations import (
-    load_transactions, TransactionStatus, TransactionType,
-    BINARY_MATCHES_LOG_FILE, save_transactions, get_file_encoding,
-    update_transaction_status_in_list
+from mass_find_replace import main_flow, main_cli, BINARY_MATCHES_LOG_FILE, YELLOW, RESET
+from utils.file_system_operations import (
+    load_transactions, TransactionStatus, TransactionType, save_transactions
 )
-import replace_logic
-import conftest
 
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
@@ -42,7 +37,8 @@ def run_main_flow_for_test(
     interactive_mode: bool = False,
     process_symlink_names: bool = False
 ):
-    # No environment setup here; rely on fixture
+    from tests.conftest import temp_test_dir, default_map_file, assert_file_content
+
     final_exclude_dirs = exclude_dirs if exclude_dirs is not None else DEFAULT_EXCLUDE_DIRS_REL
     base_exclude_files = exclude_files if exclude_files is not None else DEFAULT_EXCLUDE_FILES_REL
     additional_excludes = [map_file.name, BINARY_MATCHES_LOG_FILE]
@@ -59,15 +55,14 @@ def run_main_flow_for_test(
         quiet_mode=quiet_mode,
         verbose_mode=verbose_mode,
         interactive_mode=interactive_mode
-    )
+    )  # Fixed indentation
 
-# Use consistent paths in assertions
 def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_file_content):
     context_dir = temp_test_dir["runtime"]
-    # Get reference to test file before changes
     orig_deep_file_path = context_dir / "flojoy_root" / "sub_flojoy_folder" / "another_FLOJOY_dir" / "deep_flojoy_file.txt"
     original_content = orig_deep_file_path.read_text(encoding='utf-8')
 
+    assert original_content == "This file contains FLOJOY multiple times: Flojoy floJoy"
     # Run the dry run operation
     run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
 

@@ -1,27 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added logic in main_flow to force full rescan of modified files when resuming a dry run.
-# - Minor improvements to logging and flow control.
+# - Refactored imports to avoid circular dependencies by importing file_system_operations and Prefect modules inside functions.
+# - Removed top-level imports of file_system_operations and Prefect to prevent import errors.
+# - Kept replace_logic import at top-level as it is safe.
 #
 # Copyright (c) 2024 Emasoft
 #
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-import argparse
-from pathlib import Path
-import sys
-import logging # Added for setting logger level
-from typing import Any # Keep Any if specifically needed
-import traceback
-import pathspec 
-import importlib.util # Added for find_spec
-import subprocess # Added for self-test
-
-# Import Prefect and file_system_operations inside main_cli or conditionally to avoid import issues
 import replace_logic
-from file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
 
 SCRIPT_NAME = "MFR - Mass Find Replace - A script to safely rename things in your project"
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
@@ -42,11 +31,11 @@ def main_flow(
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
     timeout_minutes: int, 
     quiet_mode: bool,
-    verbose_mode: bool, # Added for controlling logger verbosity
-    interactive_mode: bool # Added for interactive transaction approval
+    verbose_mode: bool,
+    interactive_mode: bool
 ):
     from prefect import flow, get_run_logger
-    from file_system_operations import (
+    from utils.file_system_operations import (
         scan_directory_for_occurrences, save_transactions, load_transactions,
         execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
     )
@@ -241,6 +230,7 @@ def main_flow(
     for tx in txns_for_exec:
         if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx.get("ERROR_MESSAGE") == "DRY_RUN":
             tx["STATUS"] = TransactionStatus.PENDING.value
+            tx.pop("ERROR_MESSAGE", None)
 
     op_type = "Dry run" if dry_run else "Execution"
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
@@ -277,6 +267,10 @@ def _run_subprocess_command(command: list[str], description: str) -> bool:
         return False
 
 def main_cli() -> None:
+    import sys
+    import traceback
+    import importlib.util
+
     try:
         if importlib.util.find_spec("prefect") is None:
             sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: prefect. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
@@ -292,6 +286,8 @@ def main_cli() -> None:
     except ImportError:
         sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet (import error during check). Please install all required packages." + RESET + "\n")
         sys.exit(1)
+
+    import argparse
 
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
@@ -399,10 +395,12 @@ def main_cli() -> None:
               timeout_val_for_flow, 
               args.quiet,
               args.verbose,
-              args.interactive # Pass interactive mode flag
+              args.interactive
              )
 
 if __name__ == "__main__":
+    import sys
+    import traceback
     try:
         main_cli()
     except Exception as e: 

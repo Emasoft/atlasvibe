@@ -1,5 +1,6 @@
 # conftest.py
 import pytest
+from pathlib import Path
 import json
 from pathlib import Path
 import os
@@ -7,6 +8,7 @@ import os
 @pytest.fixture
 def temp_test_dir(tmp_path: Path):
     """Fixture that creates separate config and runtime directories for testing.
+    Verify that the directory structure is correct. 
     Ensures virtual directory tree for consistent transaction counts"""
     config_dir = tmp_path / "config"
     config_dir.mkdir()
@@ -26,6 +28,8 @@ def temp_test_dir(tmp_path: Path):
     (runtime_dir / "excluded_flojoy_dir" / "excluded_file.txt").write_text("FLOJOY content")
     (runtime_dir / "exclude_this_flojoy_file.txt").write_text("Flojoy exclusion test")
     
+    # Verify structure
+    assert (runtime_dir / "flojoy_root").exists()
     return { 
         "runtime": runtime_dir, 
         "config": config_dir

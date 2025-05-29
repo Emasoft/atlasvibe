@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Fixed dry run path translation map update in _execute_rename_transaction to only update for folders, not files.
-# - Improved transaction ordering in scan_directory_for_occurrences to sort folders shallow to deep.
-# - Updated resume logic in execute_all_transactions to properly handle DRY_RUN completed transactions.
-# - Added detailed debug printing in test_dry_run_behavior for better test diagnostics.
-# - Fixed resume detection in main_flow to force full rescan correctly.
+# - Fixed dry run transaction counting in execute_all_transactions to include dry_run transactions in completed count.
+# - Fixed transaction reset logic for DRY_RUN completed transactions to properly reset status and remove error message.
+# - Adjusted imports and module path to utils/ to avoid circular import issues.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -615,7 +613,10 @@ def execute_all_transactions(
 
     # Track which transactions we've seen to prevent duplicate processing
     if not dry_run and resume:
-        # Only reset DRY_RUN transactions when resuming actual execution
+        for tx in transactions:
+            if tx["STATUS"] == TransactionStatus.COMPLETED.value and tx.get("ERROR_MESSAGE") == "DRY_RUN":
+                tx["STATUS"] = TransactionStatus.PENDING.value
+                tx.pop("ERROR_MESSAGE", None)
         transactions = [tx for tx in transactions if not (tx.get("ERROR_MESSAGE") == "DRY_RUN" and tx["STATUS"] == TransactionStatus.COMPLETED.value)]
     seen_transaction_ids = set([tx["id"] for tx in transactions])
 
@@ -660,7 +661,7 @@ def execute_all_transactions(
                 # else proceed with execution
 
             try:
-                if tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
+                if tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value] or dry_run:
                     if (tx_type == TransactionType.FILE_NAME.value and skip_file_renaming) or \
                        (tx_type == TransactionType.FOLDER_NAME.value and skip_folder_renaming):
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by flags", logger=logger)
