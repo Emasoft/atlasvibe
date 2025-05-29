@@ -92,5 +92,3 @@ def test_dry_run_behavior(temp_test_dir: Path, default_map_file: Path, assert_fi
     assert len(completed_txs) == 5
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
-# ... rest of tests unchanged ...
-```
