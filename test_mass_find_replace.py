@@ -200,11 +200,11 @@ def test_mixed_encoding_preservation(temp_test_dir: Path, default_map_file: Path
     # Create test file with mixed encodings
     test_file = temp_test_dir / "encoding_test.txt"
     content = (
-        "Flojoy in UTF-8\n"
-        "Flojoy in latin-1: ".encode('latin-1') + b"\xae\n"  # ® symbol
-        "Flojoy in cp1252: ".encode('cp1252') + b"\x99\n"   # ™ symbol
+        b"Flojoy in UTF-8\n"
+        b"Flojoy in latin-1: \xae\n"  # ® symbol
+        b"Flojoy in cp1252: \x99\n"   # ™ symbol
     )
-    test_file.write_bytes(b''.join(content))
+    test_file.write_bytes(content)
     
     run_main_flow_for_test(temp_test_dir, default_map_file)
     
