@@ -19,6 +19,7 @@ import importlib.util
 from mass_find_replace import main_flow, main_cli, YELLOW, RESET
 from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE, execute_all_transactions
 import replace_logic
+import file_system_operations
 
 import pytest
 
