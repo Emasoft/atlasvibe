@@ -17,7 +17,7 @@ import builtins
 import importlib.util
 
 from mass_find_replace import main_flow, main_cli, YELLOW, RESET
-from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE
+from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE, execute_all_transactions
 import replace_logic
 
 import pytest
@@ -500,7 +500,7 @@ def test_multi_pass_execution(temp_test_dir, default_map_file):
     file_path.write_text("FLOJOY content")
     
     # Mock execute_all_transactions to simulate locked file on first pass
-    original_execute = file_system_operations.execute_all_transactions
+    original_execute = execute_all_transactions
     def mock_execute(*args, **kwargs):
         # On first call, simulate locked file
         if not hasattr(mock_execute, 'called'):
