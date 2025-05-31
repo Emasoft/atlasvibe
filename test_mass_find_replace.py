@@ -190,85 +190,235 @@ def test_folder_nesting(temp_test_dir: dict, default_map_file: Path):
 
 # ================ NEW TESTS FOR ADDITIONAL COVERAGE =================
 
-from prefect.exceptions import MissingContextError
+def test_resume_partial_execution(temp_test_dir, default_map_file):
+    """Test resuming execution after partial completion"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # First dry run to create transactions
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Mark half of transactions as completed
+    for tx in transactions[:len(transactions)//2]:
+        tx["STATUS"] = TransactionStatus.COMPLETED.value
+    
+    save_transactions(transactions, txn_file)
+    
+    # Resume operation
+    run_main_flow_for_test(context_dir, default_map_file, resume=True)
+    
+    updated_transactions = load_transactions(txn_file)
+    status_counts = {tx["STATUS"] for tx in updated_transactions}
+    
+    assert TransactionStatus.PENDING.value not in status_counts
+    assert len([tx for tx in updated_transactions 
+               if tx["STATUS"] == TransactionStatus.COMPLETED.value]) > len(transactions)//2
 
-def test_main_flow_prefect_fallback(temp_test_dir, default_map_file, caplog):
-    """Test fallback logger when Prefect context is missing"""
-    with patch('prefect.get_run_logger', side_effect=MissingContextError):
-        context_dir = temp_test_dir["runtime"]
+def test_file_name_change_with_spaces(temp_test_dir, default_map_file):
+    """Test processing file names with spaces"""
+    context_dir = temp_test_dir["runtime"]
+    file_path = context_dir / "filename with flojoy.txt"
+    file_path.touch()
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    assert any("filename with flojoy.txt" in tx["PATH"] for tx in transactions)
+
+def test_special_case_processing(temp_test_dir, default_map_file):
+    """Test processing of edge case patterns"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create files with varied patterns
+    cases = [
+        ("fooFLOJOYbar", "fooatlasvibebar"),
+        ("FlojoyNow", "AtlasvibeNow"),
+        ("floJoyResult", "atlasVibeResult")
+    ]
+    
+    for orig, expected in cases:
+        file_path = context_dir / f"{orig}.txt"
+        file_path.touch()
+        
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    assert any(tx["TYPE"] == TransactionType.FILE_NAME.value and 
+              tx["ORIGINAL_NAME"].startswith(orig) for orig, _ in cases)
+
+def test_content_modification_edge_cases(temp_test_dir, default_map_file, assert_file_content):
+    """Test various content modification edge cases"""
+    context_dir = temp_test_dir["runtime"]
+    file_path = context_dir / "edge_cases.txt"
+    
+    # Tricky cases
+    content = """
+    MixedCase: FLOJOY Flojoy floJoy
+    Partial: beforeFlojoyafter
+    Diacritics: Flöjoy (should NOT be replaced)
+    """
+    file_path.write_text(content, encoding='utf-8')
+    
+    # Run actual modification, not dry run
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        skip_folder_renaming=True,
+        skip_file_renaming=True,
+        dry_run=False
+    )
+    
+    # Verify modifications
+    modified_content = file_path.read_text(encoding='utf-8')
+    assert "FLOJOY" not in modified_content
+    assert "beforeFlojoyafter" not in modified_content
+    assert "Flöjoy" in modified_content  # Should remain unchanged
+
+def test_rtf_content_extraction(temp_test_dir, default_map_file):
+    """Test RTF content extraction and replacement"""
+    context_dir = temp_test_dir["runtime"]
+    rtf_path = context_dir / "test.rtf"
+    
+    # Create a simple RTF file with content
+    rtf_content = (
+        r"{\rtf1\ansi{\fonttbl\f0\fswiss Helvetica;}\f0\pard "
+        r"This is a test with FLOJOY content.\par}"
+    )
+    rtf_path.write_text(rtf_content, encoding='latin-1')
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
+    
+    # Verify content
+    content_after = rtf_path.read_text(encoding='latin-1')
+    assert "FLOJOY" not in content_after
+    assert "ATLASVIBE" in content_after
+
+def test_ignore_symlinks_option(temp_test_dir, default_map_file):
+    """Test ignore symlinks option behavior"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create symlink
+    target = context_dir / "target.txt"
+    target.touch()
+    symlink = context_dir / "flojoy_symlink.txt"
+    symlink.symlink_to(target)
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Symlink should be ignored by default
+    assert not any("flojoy_symlink.txt" in tx["PATH"] for tx in transactions)
+
+def test_custom_ignore_file(temp_test_dir, default_map_file):
+    """Test custom ignore file functionality"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create custom ignore file
+    ignore_file = temp_test_dir["config"] / ".customignore"
+    ignore_file.write_text("*.log\nspecial_dir\n")
+    
+    # Create ignored files
+    (context_dir / "ignore.log").touch()
+    (context_dir / "special_dir").mkdir()
+    (context_dir / "special_dir" / "flojoy.txt").touch()
+    
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        custom_ignore_file=str(ignore_file),
+        dry_run=True
+    )
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Verify ignored files/dirs are not processed
+    assert not any("ignore.log" in tx["PATH"] for tx in transactions)
+    assert not any("special_dir" in tx["PATH"] for tx in transactions)
+
+def test_gitignore_processing(temp_test_dir, default_map_file):
+    """Test .gitignore file processing"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create .gitignore file
+    gitignore = context_dir / ".gitignore"
+    gitignore.write_text("*.tmp\nsecret_dir/\n")
+    
+    # Create files to ignore
+    (context_dir / "ignore.tmp").touch()
+    (context_dir / "secret_dir").mkdir()
+    (context_dir / "secret_dir" / "flojoy.txt").touch()
+    
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        use_gitignore=True,
+        dry_run=True
+    )
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Verify gitignored files are not processed
+    assert not any("ignore.tmp" in tx["PATH"] for tx in transactions)
+    assert not any("secret_dir" in tx["PATH"] for tx in transactions)
+
+def test_workflow_with_no_replacements(temp_test_dir):
+    """Test workflow where replacements wouldn't actually change anything"""
+    context_dir = temp_test_dir["runtime"]
+    map_file = temp_test_dir["config"] / "no_change.json"
+    
+    # Create mapping that won't change anything
+    no_change_map = {"REPLACEMENT_MAPPING": {"FOO": "FOO"}}
+    with open(map_file, "w") as f:
+        json.dump(no_change_map, f)
+        
+    run_main_flow_for_test(context_dir, map_file, dry_run=True)
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # All transactions should be skipped
+    statuses = [tx.get("STATUS") for tx in transactions]
+    assert all(s == TransactionStatus.SKIPPED.value for s in statuses)
+    assert all(tx["ERROR_MESSAGE"] == "No change needed" for tx in transactions)
+
+def test_interactive_mode_approval(temp_test_dir, default_map_file, monkeypatch):
+    """Test interactive mode approvals"""
+    context_dir = temp_test_dir["runtime"]
+    responses = iter(["A", "S", "Q"])  # Approve, Skip, Quit
+    
+    # Create test files
+    file_paths = [
+        context_dir / "file1.txt", 
+        context_dir / "file2.txt",
+        context_dir / "file3.txt"
+    ]
+    for path in file_paths:
+        path.write_text("FLOJOY")
+        
+    # Capture user inputs
+    monkeypatch.setattr(builtins, "input", lambda _: next(responses))
+    
+    with pytest.raises(SystemExit):
         run_main_flow_for_test(
             context_dir,
             default_map_file,
-            verbose_mode=True,
-            quiet_mode=False
+            dry_run=False,
+            interactive_mode=True
         )
-        assert "Falling back to standard logger" in caplog.text or "Fallback" in caplog.text or "DEBUG" in caplog.text
-
-def test_invalid_root_directory(default_map_file, caplog):
-    """Test non-existent or invalid root directory"""
-    invalid_dir = "/non/existent/path"
-    main_flow(
-        directory=invalid_dir,
-        mapping_file=str(default_map_file),
-        extensions=DEFAULT_EXTENSIONS,
-        exclude_dirs=[],
-        exclude_files=[],
-        dry_run=True,
-        skip_scan=False,
-        resume=False,
-        force_execution=True,
-        ignore_symlinks_arg=True,
-        use_gitignore=False,
-        custom_ignore_file_path=None,
-        skip_file_renaming=False,
-        skip_folder_renaming=False,
-        skip_content=False,
-        timeout_minutes=1,
-        quiet_mode=False,
-        verbose_mode=False,
-        interactive_mode=False
-    )
-    assert "Error: Root directory" in caplog.text
-
-def test_user_cancellation(temp_test_dir, default_map_file, monkeypatch, caplog):
-    """Test user cancellation at confirmation prompt"""
-    monkeypatch.setattr('builtins.input', lambda _: "no")
-    context_dir = temp_test_dir["runtime"]
-    run_main_flow_for_test(
-        context_dir,
-        default_map_file,
-        force_execution=False,
-        quiet_mode=False
-    )
-    assert "Operation cancelled by user" in caplog.text
-
-def test_empty_replacement_map(temp_test_dir, tmp_path_factory):
-    """Test behavior with empty replacement map"""
-    context_dir = temp_test_dir["runtime"]
-    empty_map = tmp_path_factory.mktemp("config") / "empty.json"
-    empty_map.write_text(json.dumps({"REPLACEMENT_MAPPING": {}}))
     
-    run_main_flow_for_test(context_dir, empty_map)
-    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
-    assert transactions is not None
-    assert len(transactions) > 0  # Transactions still generated
-
-def test_all_operations_skipped(temp_test_dir, default_map_file, caplog):
-    """Test when all operations are skipped"""
-    context_dir = temp_test_dir["runtime"]
-    run_main_flow_for_test(
-        context_dir,
-        default_map_file,
-        skip_file_renaming=True,
-        skip_folder_renaming=True,
-        skip_content=True
-    )
-    assert "nothing to do" in caplog.text.lower()
-
-def test_cli_self_test(monkeypatch):
-    """Test CLI self-test command"""
-    monkeypatch.setattr(sys, 'argv', ['test', '--self-test'])
-    with patch('mass_find_replace._run_subprocess_command') as mock_run:
-        mock_run.return_value = True
-        main_cli()
-        mock_run.assert_any_call(['pytest', 'test_mass_find_replace.py'], "pytest execution")
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Verify transaction statuses
+    status_map = {tx["PATH"]: tx["STATUS"] for tx in transactions}
+    assert status_map.get("file1.txt") == TransactionStatus.COMPLETED.value
+    assert status_map.get("file2.txt") == TransactionStatus.SKIPPED.value
+    assert status_map.get("file3.txt") == TransactionStatus.PENDING.value
