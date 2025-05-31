@@ -225,7 +225,8 @@ def test_file_name_change_with_spaces(temp_test_dir, default_map_file):
     
     txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
     transactions = load_transactions(txn_file)
-    assert any("filename with flojoy.txt" in tx["PATH"] for tx in transactions)
+    assert any(tx["TYPE"] == TransactionType.FILE_NAME.value and 
+               tx["ORIGINAL_NAME"].startswith(orig) for tx in transactions for orig, _ in [("filename with flojoy.txt", "")])
 
 def test_special_case_processing(temp_test_dir, default_map_file):
     """Test processing of edge case patterns"""
@@ -248,7 +249,7 @@ def test_special_case_processing(temp_test_dir, default_map_file):
     transactions = load_transactions(txn_file)
     
     assert any(tx["TYPE"] == TransactionType.FILE_NAME.value and 
-              tx["ORIGINAL_NAME"].startswith(orig) for orig, _ in cases)
+               tx["ORIGINAL_NAME"].startswith(orig) for tx in transactions for orig, _ in cases)
 
 def test_content_modification_edge_cases(temp_test_dir, default_map_file, assert_file_content):
     """Test various content modification edge cases"""
