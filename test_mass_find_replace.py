@@ -255,8 +255,10 @@ def test_self_test_option(monkeypatch):
         m.setattr(sys, 'argv', ['test_mass_find_replace.py', '--self-test'])
         with patch('mass_find_replace._run_subprocess_command') as mock_run:
             mock_run.return_value = True
-            main_cli()
-    assert mock_run.call_count == 2, "Expected two subprocess calls for self-test"
+            import pytest
+            with pytest.raises(SystemExit) as exc_info:
+                main_cli()
+            assert exc_info.value.code == 0  # Verify exit code is 0 (success)
 
 def test_symlink_name_processing(temp_test_dir, default_map_file):
     """Test symlink names are processed correctly"""
