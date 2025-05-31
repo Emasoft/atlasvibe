@@ -251,7 +251,6 @@ def test_permission_error_handling(temp_test_dir, default_map_file, monkeypatch)
 
 def test_self_test_option(monkeypatch):
     """Test the --self-test CLI option integration"""
-    from mass_find_replace import main_cli
     with monkeypatch.context() as m:
         m.setattr(sys, 'argv', ['test_mass_find_replace.py', '--self-test'])
         with patch('mass_find_replace._run_subprocess_command') as mock_run:
