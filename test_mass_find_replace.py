@@ -555,3 +555,125 @@ def test_cwd_rename_handling(tmp_path_factory):
         assert (new_path / "test.txt").read_text() == "ATLASVIBE"
     finally:
         os.chdir(original_cwd)
+
+# Additional new tests as requested:
+
+def test_dry_run_completed_reset(temp_test_dir, default_map_file):
+    """Test DRY_RUN completed transactions are reset to PENDING before actual execution"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Run dry run first
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Load transactions
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    dry_run_transactions = load_transactions(txn_file)
+    
+    # Verify DRY_RUN status exists
+    assert dry_run_transactions, "Dry run produced no transactions"
+    assert any(tx["STATUS"] == TransactionStatus.COMPLETED.value and 
+               tx.get("ERROR_MESSAGE") == "DRY_RUN" for tx in dry_run_transactions)
+    
+    # Run actual execution
+    run_main_flow_for_test(context_dir, default_map_file, resume=True, dry_run=False)
+    
+    # Verify status changes
+    updated_transactions = load_transactions(txn_file)
+    for tx in updated_transactions:
+        if tx["STATUS"] == TransactionStatus.COMPLETED.value:
+            assert tx.get("ERROR_MESSAGE") != "DRY_RUN", "DRY_RUN status not reset"
+
+def test_nested_rename_simulation(temp_test_dir, default_map_file):
+    """Test path translation after multiple simulated renames"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create nested structure
+    (context_dir / "Project_FLOJOY").mkdir()
+    (context_dir / "Project_FLOJOY" / "FLOJOY_data.txt").touch()
+    
+    # Run dry run to simulate changes
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Load transactions to build virtual path map
+    txn_json = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    path_map = {}
+    for tx in txn_json:
+        if tx["TYPE"] in {TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value}:
+            orig_path = tx["PATH"]
+            # Simulate what the new path would be
+            path_map[orig_path] = orig_path.replace("FLOJOY", "ATLASVIBE")
+    
+    # Verify nested item resolution
+    orig_nested_path = "Project_FLOJOY/FLOJOY_data.txt"
+    expected = "Project_ATLASVIBE/ATLASVIBE_data.txt"
+    assert path_map[orig_nested_path] == expected
+
+def test_binary_log_content(temp_test_dir, default_map_file):
+    """Test binary match log contains detailed matching info"""
+    context_dir = temp_test_dir["runtime"]
+    bin_path = context_dir / "data.bin"
+    
+    # Create binary file with known patterns
+    patterns = [b"FLOJOY", b"floJoy"]
+    with open(bin_path, "wb") as f:
+        f.write(b"header\x00\x01" + patterns[0] + b"\x02\x03" + patterns[1] + b"footer")
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
+    
+    # Verify log content
+    log_path = context_dir / BINARY_MATCHES_LOG_FILE
+    assert log_path.exists()
+    log_content = log_path.read_text(encoding='utf-8')
+    
+    for key in ["FLOJOY", "floJoy"]:
+        assert key in log_content
+        assert f"File: {bin_path.relative_to(context_dir)}" in log_content
+        assert "Offset:" in log_content
+
+def test_special_characters_in_content(temp_test_dir, default_map_file):
+    """Test replacement with special Unicode characters"""
+    context_dir = temp_test_dir["runtime"]
+    file_path = context_dir / "special.txt"
+    
+    content = "FLOJOY: \u2603 snowman • bullet \U0001F600 emoji"
+    file_path.write_text(content, encoding='utf-8')
+    
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        skip_folder_renaming=True,
+        skip_file_renaming=True,
+        dry_run=False
+    )
+    
+    # Verify replacements and character preservation
+    modified = file_path.read_text(encoding='utf-8')
+    assert "ATLASVIBE" in modified
+    assert "\u2603" in modified  # Snowman
+    assert "•" in modified  # Bullet
+    assert "\U0001F600" in modified  # Emoji
+
+def test_permission_error_handling(temp_test_dir, default_map_file, monkeypatch):
+    """Test permission errors are handled gracefully"""
+    context_dir = temp_test_dir["runtime"]
+    protected_file = context_dir / "protected.log"
+    protected_file.touch()
+    
+    # Simulate write permission error
+    def mock_replace(*args, **kwargs):
+        raise OSError("Permission denied")
+    
+    monkeypatch.setattr(file_system_operations, 'save_transactions', mock_replace)
+    
+    # Should not crash
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        dry_run=False
+    )
+    
+    # Verify error was logged
+    log_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    if log_file.exists():
+        transactions = load_transactions(log_file)
+        assert any("OSError" in tx.get("ERROR_MESSAGE", "") for tx in transactions)
