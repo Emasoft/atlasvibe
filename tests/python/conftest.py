@@ -7,7 +7,7 @@
 import pytest
 from pathlib import Path
 import os
-from . import constants # Import shared constants
+from tests.python import constants # Absolute import for test constants
 
 @pytest.fixture
 def temp_project_base_dir(tmp_path: Path) -> Path:

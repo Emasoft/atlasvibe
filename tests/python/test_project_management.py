@@ -13,8 +13,8 @@ import shutil
 from unittest.mock import patch, MagicMock, call
 from pathlib import Path
 
-from . import constants
-from .mocks import MockProjectService, MockBlockService
+from tests.python import constants  # Updated to absolute import
+from tests.python.mocks import MockProjectService, MockBlockService  # Updated to absolute import
 
 
 # --- Test Fixtures ---
