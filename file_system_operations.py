@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Fixed dry run transaction counting in execute_all_transactions to include dry_run transactions in completed count.
-# - Fixed transaction reset logic for DRY_RUN completed transactions to properly reset status and remove error message.
-# - Adjusted imports and module path to utils/ to avoid circular import issues.
+# - Added NEW_NAME field to rename transactions in planned_transactions.json for better clarity and consistency.
+# - Backfilled NEW_NAME for existing rename transactions during resume.
+# - Used precomputed NEW_NAME during execution to ensure consistency and efficiency.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -269,6 +269,10 @@ def scan_directory_for_occurrences(
 
     if resume_from_transactions is not None:
         processed_transactions = list(resume_from_transactions)
+        # Backfill NEW_NAME for existing rename transactions if missing
+        for tx in resume_from_transactions:
+            if tx["TYPE"] in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value] and "NEW_NAME" not in tx:
+                tx["NEW_NAME"] = replace_logic.replace_occurrences(tx["ORIGINAL_NAME"])
         for tx in resume_from_transactions:
             tx_rel_path = tx.get("PATH")
             if tx_rel_path in paths_to_force_rescan_internal and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value:
@@ -356,7 +360,20 @@ def scan_directory_for_occurrences(
             if tx_type_val:
                 tx_id_tuple = (relative_path_str, tx_type_val, 0)
                 if tx_id_tuple not in existing_transaction_ids:
-                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":tx_type_val, "PATH":relative_path_str, "ORIGINAL_NAME":original_name, "LINE_NUMBER":0, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
+                    # Calculate new name and store in transaction
+                    new_name = replace_logic.replace_occurrences(original_name)
+                    transaction_entry = {
+                        "id":str(uuid.uuid4()), 
+                        "TYPE":tx_type_val, 
+                        "PATH":relative_path_str, 
+                        "ORIGINAL_NAME":original_name,
+                        "NEW_NAME": new_name,
+                        "LINE_NUMBER":0, 
+                        "STATUS":TransactionStatus.PENDING.value, 
+                        "timestamp_created":time.time(), 
+                        "retry_count":0
+                    }
+                    processed_transactions.append(transaction_entry)
                     existing_transaction_ids.add(tx_id_tuple)
 
         # Content processing should only happen for actual files, not symlinks to directories
@@ -544,11 +561,13 @@ def _execute_rename_transaction(
     original_name = tx.get("ORIGINAL_NAME", "")
     tx_type = tx["TYPE"]
 
+    # Use precomputed NEW_NAME if available
+    new_name = tx.get("NEW_NAME", replace_logic.replace_occurrences(original_name))
+    
     current_abs_path = _get_current_absolute_path(original_relative_path_str, root_dir, path_translation_map, path_cache, dry_run)
     if not dry_run and not current_abs_path.exists():
         return TransactionStatus.FAILED, f"Path not found: {current_abs_path}", False
 
-    new_name = replace_logic.replace_occurrences(original_name)
     if new_name == original_name:
         return TransactionStatus.SKIPPED, "No change needed", False
 
