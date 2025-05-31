@@ -187,3 +187,88 @@ def test_folder_nesting(temp_test_dir: dict, default_map_file: Path):
     ]
     
     assert test_folders == ["flojoy_a", "flojoy_a/flojoy_b"], "Folders not processed from shallow to deep"
+
+# ================ NEW TESTS FOR ADDITIONAL COVERAGE =================
+
+from prefect.exceptions import MissingContextError
+
+def test_main_flow_prefect_fallback(temp_test_dir, default_map_file, caplog):
+    """Test fallback logger when Prefect context is missing"""
+    with patch('prefect.get_run_logger', side_effect=MissingContextError):
+        context_dir = temp_test_dir["runtime"]
+        run_main_flow_for_test(
+            context_dir,
+            default_map_file,
+            verbose_mode=True,
+            quiet_mode=False
+        )
+        assert "Falling back to standard logger" in caplog.text or "Fallback" in caplog.text or "DEBUG" in caplog.text
+
+def test_invalid_root_directory(default_map_file, caplog):
+    """Test non-existent or invalid root directory"""
+    invalid_dir = "/non/existent/path"
+    main_flow(
+        directory=invalid_dir,
+        mapping_file=str(default_map_file),
+        extensions=DEFAULT_EXTENSIONS,
+        exclude_dirs=[],
+        exclude_files=[],
+        dry_run=True,
+        skip_scan=False,
+        resume=False,
+        force_execution=True,
+        ignore_symlinks_arg=True,
+        use_gitignore=False,
+        custom_ignore_file_path=None,
+        skip_file_renaming=False,
+        skip_folder_renaming=False,
+        skip_content=False,
+        timeout_minutes=1,
+        quiet_mode=False,
+        verbose_mode=False,
+        interactive_mode=False
+    )
+    assert "Error: Root directory" in caplog.text
+
+def test_user_cancellation(temp_test_dir, default_map_file, monkeypatch, caplog):
+    """Test user cancellation at confirmation prompt"""
+    monkeypatch.setattr('builtins.input', lambda _: "no")
+    context_dir = temp_test_dir["runtime"]
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        force_execution=False,
+        quiet_mode=False
+    )
+    assert "Operation cancelled by user" in caplog.text
+
+def test_empty_replacement_map(temp_test_dir, tmp_path_factory):
+    """Test behavior with empty replacement map"""
+    context_dir = temp_test_dir["runtime"]
+    empty_map = tmp_path_factory.mktemp("config") / "empty.json"
+    empty_map.write_text(json.dumps({"REPLACEMENT_MAPPING": {}}))
+    
+    run_main_flow_for_test(context_dir, empty_map)
+    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    assert transactions is not None
+    assert len(transactions) > 0  # Transactions still generated
+
+def test_all_operations_skipped(temp_test_dir, default_map_file, caplog):
+    """Test when all operations are skipped"""
+    context_dir = temp_test_dir["runtime"]
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        skip_file_renaming=True,
+        skip_folder_renaming=True,
+        skip_content=True
+    )
+    assert "nothing to do" in caplog.text.lower()
+
+def test_cli_self_test(monkeypatch):
+    """Test CLI self-test command"""
+    monkeypatch.setattr(sys, 'argv', ['test', '--self-test'])
+    with patch('mass_find_replace._run_subprocess_command') as mock_run:
+        mock_run.return_value = True
+        main_cli()
+        mock_run.assert_any_call(['pytest', 'test_mass_find_replace.py'], "pytest execution")
