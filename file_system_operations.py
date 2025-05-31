@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added NEW_NAME field to rename transactions in planned_transactions.json for better clarity and consistency.
-# - Backfilled NEW_NAME for existing rename transactions during resume.
-# - Used precomputed NEW_NAME during execution to ensure consistency and efficiency.
+# - Added NEW_LINE_CONTENT field to content transactions during scan phase.
+# - Fixed transaction routing logic in execute_all_transactions to properly handle content transactions.
+# - Added safeguard to skip content transactions if new content equals original content.
+# - Mark content transactions as completed during dry-run without modifying files.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -469,11 +470,14 @@ def scan_directory_for_occurrences(
 
                         for line_idx, line_content in enumerate(lines_for_scan):
                             searchable_line_content = unicodedata.normalize('NFC', replace_logic.strip_control_characters(replace_logic.strip_diacritics(line_content)))
+                            # Calculate new content once for consistency
+                            new_line_content = replace_logic.replace_occurrences(line_content)
                             if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
-                               (replace_logic.replace_occurrences(line_content) != line_content):
+                               (new_line_content != line_content):
                                 tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
                                 if tx_id_tuple not in existing_transaction_ids:
-                                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
+                                    # ADD NEW_LINE_CONTENT FIELD
+                                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "NEW_LINE_CONTENT":new_line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                                     existing_transaction_ids.add(tx_id_tuple)
             except OSError as e_stat_content: # Catch OSError from item_abs_path.is_file()
                 _log_fs_op_message(logging.WARNING, f"OS error checking if {item_abs_path} is a file for content processing: {e_stat_content}. Skipping content scan for this item.", logger)
@@ -681,10 +685,11 @@ def execute_all_transactions(
                 # else proceed with execution
 
             try:
-                if tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value] or dry_run:
+                if tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
                     if (tx_type == TransactionType.FILE_NAME.value and skip_file_renaming) or \
                        (tx_type == TransactionType.FOLDER_NAME.value and skip_folder_renaming):
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by flags", logger=logger)
+                        stats["skipped"] += 1
                         continue
                     status_result, error_msg, changed = _execute_rename_transaction(tx_item, root_dir, {}, {}, dry_run, logger)
                     if status_result == TransactionStatus.COMPLETED:
@@ -700,11 +705,27 @@ def execute_all_transactions(
                 elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
                     if skip_content:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by flag", logger=logger)
+                        stats["skipped"] += 1
                         continue
-                    # Content modification logic here (omitted for brevity)
-                    # For this example, mark as completed for dry_run
-                    update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, "DRY_RUN" if dry_run else None, logger=logger)
-                    stats["completed"] += 1
+
+                    # Get new content from transaction
+                    new_line_content = tx_item.get("NEW_LINE_CONTENT", "")
+                    original_line_content = tx_item.get("ORIGINAL_LINE_CONTENT", "")
+
+                    # Skip if no actual change (shouldn't happen but added as safeguard)
+                    if new_line_content == original_line_content:
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "No change needed", logger=logger)
+                        stats["skipped"] += 1
+                        continue
+
+                    if dry_run:
+                        # For dry-run, mark as completed without modifying file
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, "DRY_RUN", logger=logger)
+                        stats["completed"] += 1
+                    else:
+                        # REAL EXECUTION GOES HERE (will be implemented later)
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.FAILED, "Not implemented", logger=logger)
+                        stats["failed"] += 1
                 else:
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Unknown transaction type", logger=logger)
                     stats["skipped"] += 1
