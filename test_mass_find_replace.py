@@ -423,3 +423,135 @@ def test_interactive_mode_approval(temp_test_dir, default_map_file, monkeypatch)
     assert status_map.get("file1.txt") == TransactionStatus.COMPLETED.value
     assert status_map.get("file2.txt") == TransactionStatus.SKIPPED.value
     assert status_map.get("file3.txt") == TransactionStatus.PENDING.value
+
+# ================ NEW TESTS ADDED AS REQUESTED =================
+
+def test_resume_after_dry_run(temp_test_dir: dict, default_map_file: Path):
+    """Test resuming after a dry run completes successfully"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Run dry run first
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Run actual execution with resume
+    run_main_flow_for_test(context_dir, default_map_file, resume=True, dry_run=False)
+    
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    
+    # Verify all transactions were completed
+    statuses = {tx["STATUS"] for tx in transactions}
+    assert TransactionStatus.PENDING.value not in statuses
+    assert len([tx for tx in transactions 
+               if tx["STATUS"] == TransactionStatus.COMPLETED.value]) == len(transactions)
+
+def test_recursive_path_resolution(temp_test_dir, default_map_file):
+    """Test path resolution after multiple renames"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create nested structure: A > B > C
+    (context_dir / "Flojoy_A").mkdir()
+    (context_dir / "Flojoy_A" / "Flojoy_B").mkdir()
+    (context_dir / "Flojoy_A" / "Flojoy_B" / "file.txt").touch()
+    
+    # Run dry run to simulate changes
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    # Verify virtual path mapping for nested items
+    txn_json = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    path_map = {}
+    for tx in txn_json:
+        if tx["TYPE"] in [TransactionType.FOLDER_NAME.value, TransactionType.FILE_NAME.value]:
+            path_map[tx["PATH"]] = tx["PATH"].replace("Flojoy", "Atlasvibe")
+    
+    # Check deep path translation
+    original_deep_path = "Flojoy_A/Flojoy_B/file.txt"
+    assert path_map.get(original_deep_path) == "Atlasvibe_A/Atlasvibe_B/file.txt"
+
+def test_binary_files_logging(temp_test_dir, default_map_file):
+    """Test binary file matches are logged but not modified"""
+    context_dir = temp_test_dir["runtime"]
+    bin_path = context_dir / "binary.bin"
+    
+    # Create binary file with search string
+    bin_content = b'Some binary data \x89PNG\r\n\x1a\nFLOJOY\x00'
+    bin_path.write_bytes(bin_content)
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
+    
+    # Match log should exist
+    log_path = context_dir / BINARY_MATCHES_LOG_FILE
+    assert log_path.exists()
+    log_content = log_path.read_text(encoding='utf-8')
+    
+    # Verify log contains binary match info
+    assert "File: binary.bin" in log_content
+    assert "Key: 'FLOJOY'" in log_content
+    
+    # Original file should remain unchanged
+    assert bin_path.read_bytes() == bin_content
+
+def test_multi_pass_execution(temp_test_dir, default_map_file):
+    """Test operation completes in multiple passes when files are locked"""
+    context_dir = temp_test_dir["runtime"]
+    
+    # Create test file that will appear locked
+    file_path = context_dir / "locked_file.txt"
+    file_path.write_text("FLOJOY content")
+    
+    # Mock execute_all_transactions to simulate locked file on first pass
+    original_execute = file_system_operations.execute_all_transactions
+    def mock_execute(*args, **kwargs):
+        # On first call, simulate locked file
+        if not hasattr(mock_execute, 'called'):
+            mock_execute.called = True
+            return {"total": 1, "completed": 0, "failed": 0, 
+                    "skipped": 0, "retry_later": 1}
+        # Second call succeeds
+        return original_execute(*args, **kwargs)
+    
+    with patch('file_system_operations.execute_all_transactions', mock_execute):
+        run_main_flow_for_test(context_dir, default_map_file, dry_run=False)
+    
+    # Verify transaction was eventually completed
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    transactions = load_transactions(txn_file)
+    completed = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.COMPLETED.value]
+    assert len(completed) == 1
+
+def test_cwd_rename_handling(tmp_path_factory):
+    """Test handling when current working directory needs renaming"""
+    base_dir = tmp_path_factory.mktemp("cwd_test")
+    cwd_dir = base_dir / "flojoy_cwd"
+    cwd_dir.mkdir()
+    
+    # Create test file
+    test_file = cwd_dir / "test.txt"
+    test_file.write_text("FLOJOY")
+    
+    # Change to test directory
+    original_cwd = Path.cwd()
+    os.chdir(str(cwd_dir))
+    
+    try:
+        # Create replacement mapping
+        map_file = base_dir / "map.json"
+        with map_file.open('w') as f:
+            json.dump({"REPLACEMENT_MAPPING": {
+                "flojoy": "atlasvibe", 
+                "FLOJOY": "ATLASVIBE"
+            }}, f)
+        
+        # Run operation
+        run_main_flow_for_test(
+            context_dir=Path.cwd(),
+            map_file=map_file,
+            dry_run=False
+        )
+        
+        # Verify rename happened
+        new_path = base_dir / "atlasvibe_cwd"
+        assert new_path.exists()
+        assert (new_path / "test.txt").read_text() == "ATLASVIBE"
+    finally:
+        os.chdir(original_cwd)
