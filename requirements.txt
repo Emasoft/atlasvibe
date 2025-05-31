@@ -1,1 +1,4 @@
--e .
+pytest==7.4.4
+filelock==3.14.0
+chardet==5.2.0
+sequoias-atlasvibe_sdk==0.1.0
