@@ -248,6 +248,75 @@ def test_permission_error_handling(temp_test_dir, default_map_file, monkeypatch)
         transactions = load_transactions(txn_file)
         assert transactions is not None
 
+
+def test_self_test_option(monkeypatch):
+    """Test the --self-test CLI option integration"""
+    from mass_find_replace import main_cli
+    with monkeypatch.context() as m:
+        m.setattr(sys, 'argv', ['test_mass_find_replace.py', '--self-test'])
+        with patch('mass_find_replace._run_subprocess_command') as mock_run:
+            mock_run.return_value = True
+            main_cli()
+    assert mock_run.call_count == 2, "Expected two subprocess calls for self-test"
+
+def test_symlink_name_processing(temp_test_dir, default_map_file):
+    """Test symlink names are processed correctly"""
+    context_dir = temp_test_dir["runtime"]
+    symlink_path = context_dir / "flojoy_symlink"
+    target_path = context_dir / "target"
+    target_path.mkdir()
+    symlink_path.symlink_to(target_path, target_is_directory=True)
+    
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        process_symlink_names=True,
+        dry_run=True
+    )
+    
+    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    symlink_renamed = any(
+        tx["TYPE"] == TransactionType.FILE_NAME.value and 
+        "flojoy_symlink" in tx["PATH"]
+        for tx in transactions
+    )
+    assert symlink_renamed, "Expected symlink name to be processed"
+
+def test_extension_filtering(temp_test_dir, default_map_file):
+    """Test file extension filtering"""
+    context_dir = temp_test_dir["runtime"]
+    (context_dir / "include.txt").write_text("FLOJOY")
+    (context_dir / "exclude.log").write_text("FLOJOY")
+    
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        extensions=[".txt"],
+        dry_run=True
+    )
+    
+    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    include_found = any("include.txt" in tx["PATH"] for tx in transactions)
+    exclude_found = any("exclude.log" in tx["PATH"] for tx in transactions)
+    assert include_found, "Included extension should be processed"
+    assert not exclude_found, "Excluded extension should be skipped"
+
+def test_rtf_processing(temp_test_dir, default_map_file):
+    """Test RTF files are processed correctly"""
+    context_dir = temp_test_dir["runtime"]
+    rtf_path = context_dir / "test.rtf"
+    rtf_path.write_bytes(b"{\\rtf1 FLOJOY}")
+    
+    run_main_flow_for_test(context_dir, default_map_file, dry_run=True)
+    
+    transactions = load_transactions(context_dir / MAIN_TRANSACTION_FILE_NAME)
+    rtf_processed = any(
+        tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and 
+        "test.rtf" in tx["PATH"]
+        for tx in transactions
+    )
+    assert rtf_processed, "RTF file should be processed"
+
 def test_binary_files_logging(temp_test_dir, default_map_file):
     """Test binary file matches are logged but not modified"""
     context_dir = temp_test_dir["runtime"]
