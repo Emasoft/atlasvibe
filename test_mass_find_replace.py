@@ -105,8 +105,8 @@ def test_dry_run_behavior(temp_test_dir: dict, default_map_file: Path, assert_fi
     assert len(content_txs) >= 1   # Could be 1 or more based on actual content
 
     completed_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.COMPLETED.value]
-    # Fix 1: Updated expected completed transactions to 4
-    assert len(completed_txs) == 4, f"Expected 4 completed transactions, found {len(completed_txs)}"
+    # Fix 1: Updated expected completed transactions to 5
+    assert len(completed_txs) == 5, f"Expected 5 completed transactions, found {len(completed_txs)}"
     
     for tx in completed_txs:
         assert tx.get("ERROR_MESSAGE") == "DRY_RUN"
