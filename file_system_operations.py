@@ -82,6 +82,8 @@ def _log_fs_op_message(level: int, message: str, logger: logging.Logger | None =
             prefix = "WARNING (fs_op): "
         elif level == logging.INFO:
             prefix = "INFO (fs_op): "
+        elif level == logging.DEBUG:
+            prefix = "DEBUG (fs_op): "
         print(f"{prefix}{message}")
 
 

@@ -234,11 +234,9 @@ def replace_occurrences(input_string: str) -> str:
     if not isinstance(input_string, str):
         return input_string 
     
-    nfc_input_string = unicodedata.normalize('NFC', input_string)
-    
-    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(nfc_input_string)  # F821: handle when pattern is None
-    _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (orig): {input_string!r}, Input (NFC for sub/search): {nfc_input_string!r}, Search on NFC found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(input_string) 
+    _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (original): {input_string!r}, Search found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
     if search_result:
-        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object (on NFC): {search_result}", _MODULE_LOGGER)
+        _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object: {search_result}", _MODULE_LOGGER)
 
-    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, nfc_input_string)
+    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, input_string)
