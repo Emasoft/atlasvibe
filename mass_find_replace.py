@@ -4,6 +4,7 @@
 # - Fixed import paths for file_system_operations to remove non-existent 'utils' package prefix.
 # - Updated imports in main_flow and main_cli to import directly from 'file_system_operations'.
 # - Added fallback logger for test environments
+# - Fixed typos and encoding issues in variable names and strings as reported.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -245,7 +246,7 @@ def main_flow(
             logger.info("No actionable occurrences found by scan." if replace_logic._RAW_REPLACEMENT_MAPPING else "Map empty and no scannable items found, or all items ignored.")
             return
     elif not txn_json_path.exists(): 
-        logger.error(f"Error: --skip-scan was used, but '{txn_json_path}' not found.")
+        logger.error(f"Error: --skip-scan used, but '{txn_json_path}' not found.")
         return
     else: 
         logger.info(f"Using existing transaction file: '{txn_json_path}'. Ensure it was generated with compatible settings.")
