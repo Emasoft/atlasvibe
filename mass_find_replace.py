@@ -4,6 +4,7 @@
 # - Consolidated redundant empty map checks into a single check in main_flow.
 # - Removed unused skip_scan parameter from execute_all_transactions call.
 # - Added explicit flushing of Prefect's log handler after subprocess output printing to avoid Prefect shutdown logging errors.
+# - Replaced bare except with except Exception to comply with linting rules.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -298,7 +299,7 @@ def _run_subprocess_command(command: list[str], description: str) -> bool:
             try:
                 from prefect import get_run_logger
                 get_run_logger().handlers[0].flush()
-            except:
+            except Exception:
                 pass
         if process.stderr:
             print(f"{YELLOW}Errors/Warnings from {description}:{RESET}\n{process.stderr}")
