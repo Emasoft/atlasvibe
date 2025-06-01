@@ -507,7 +507,10 @@ def save_transactions(transactions: list[dict[str, Any]], transactions_file_path
     except Exception as e:
         _log_fs_op_message(logging.ERROR, f"Error saving transactions: {e}", logger)
         if temp_file_path.exists():
-            temp_file_path.unlink()
+            try:
+                os.remove(temp_file_path)
+            except OSError:
+                pass
         raise
 
 def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
@@ -806,7 +809,7 @@ def process_large_file_content(
         if temp_file_path.exists():
             try:
                 os.remove(temp_file_path)
-            except:
+            except OSError:
                 pass
 
         # Mark all transactions as failed
