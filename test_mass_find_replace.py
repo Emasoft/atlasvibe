@@ -430,9 +430,8 @@ def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
             # Verify transaction contains expected fields
             assert "NEW_LINE_CONTENT" in tx, "Missing NEW_LINE_CONTENT field"
             assert "Atlasvibe" in tx["NEW_LINE_CONTENT"], "Replacement not in new content"
-            # Accept either gb18030 or gb2312 as valid encodings for this test environment
-            encoding_in_tx = tx.get("ORIGINAL_ENCODING", "").lower()
-            assert encoding_in_tx in ("gb18030", "gb2312"), \
+            encoding_in_tx = tx.get("ORIGINAL_ENCODING", "").lower().replace("-", "")
+            assert encoding_in_tx == "gb18030", \
                 f"Wrong encoding: {tx.get('ORIGINAL_ENCODING')}"
             break
     assert large_file_processed, "Large file not processed"

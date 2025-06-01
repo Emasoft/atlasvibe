@@ -130,6 +130,10 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
         encoding = detected.get('encoding') or DEFAULT_ENCODING_FALLBACK
         confidence = detected.get('confidence', 0)
 
+        # Normalize GB2312 to GB18030
+        if encoding.lower().startswith('gb2312'):
+            encoding = 'gb18030'
+
         # Only consider chardet results with reasonable confidence
         if confidence > 0.5:
             encoding = encoding.lower()
