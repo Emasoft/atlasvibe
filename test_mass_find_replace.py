@@ -375,3 +375,63 @@ def test_recursive_path_resolution(temp_test_dir, default_map_file):
     # Check the deep path translation in the folder mapping
     assert "Atlasvibe_A" in path_map.get("Flojoy_A").rsplit("/", 1)[-1]
     assert "Atlasvibe_B" in path_map.get("Flojoy_A/Flojoy_B").rsplit("/", 1)[-1]
+
+# =============== NEW TEST: GB18030 ENCODING SUPPORT =================
+def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
+    """Test content replacement in GB18030 encoded files"""
+    import random
+    context_dir = temp_test_dir["runtime"]
+    
+    # Test config
+    test_string = "Flojoy"
+    replacement_string = "Atlasvibe"
+    encoding = "gb18030"
+    small_file = context_dir / "small_gb18030.txt"
+    large_file = context_dir / "large_gb18030.txt"
+    
+    # Create small file with GB18030 encoding
+    small_content = f"GB18030文本文件测试\n第一行: {test_string}\n第二行: 某些字符{test_string}结尾\n第三行: {test_string}开头和其他文本"
+    with open(small_file, "w", encoding=encoding) as f:
+        f.write(small_content)
+    
+    # Create 300KB large file with GB18030 encoding
+    large_content = []
+    base_line = f"{test_string} GB18030编码测试 " + "中文"*10 + "\n"
+    target_size = 300 * 1024  # 300KB
+    current_size = 0
+    while current_size < target_size:
+        large_content.append(base_line)
+        current_size += len(base_line.encode(encoding))
+    large_content_str = "".join(large_content)
+    with open(large_file, "w", encoding=encoding) as f:
+        f.write(large_content_str)
+    
+    # Verify file sizes
+    assert small_file.stat().st_size > 0, "Small file not created"
+    assert large_file.stat().st_size >= target_size, f"Large file too small: {large_file.stat().st_size} < {target_size}"
+    
+    # Run the replacement process
+    run_main_flow_for_test(
+        context_dir,
+        default_map_file,
+        dry_run=False,
+        extensions=[".txt"]
+    )
+    
+    # Verify small file replacements
+    with open(small_file, "r", encoding=encoding) as f:
+        updated_small = f.read()
+        expected_small = small_content.replace(test_string, replacement_string)
+        assert updated_small == expected_small, f"Small file replacement failed:\nExpected: {expected_small}\nActual: {updated_small}"
+        # Verify occurrence count
+        assert updated_small.count(replacement_string) == 3, "Unexpected replacement count in small file"
+        
+    # Verify large file replacements
+    with open(large_file, "r", encoding=encoding) as f:
+        updated_large = f.read()
+        # Verify every occurrence was replaced
+        assert test_string not in updated_large, "Original string found in large file"
+        # Verify occurrence count matches expected
+        original_count = large_content_str.count(test_string)
+        replaced_count = updated_large.count(replacement_string)
+        assert replaced_count == original_count, f"Replacement count mismatch in large file: {replaced_count} vs {original_count}"
