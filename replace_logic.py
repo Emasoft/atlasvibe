@@ -3,6 +3,7 @@
 #
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Fixed regex pattern compilation in load_replacement_map to properly escape keys containing regex special characters.
+# - Fixed replace_occurrences to normalize input string to NFC before searching and replacing to ensure consistency.
 # - No other changes to logic; preserved all existing comments and debug logging.
 #
 # Copyright (c) 2024 Emasoft
@@ -220,23 +221,31 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
 
 def replace_occurrences(input_string: str) -> str:
     entry_debug_msg = (f"REPLACE_OCC_ENTRY: input='{input_string[:30].encode('unicode_escape').decode() if isinstance(input_string, str) else input_string!r}', "
-                       f"_MAPPING_LOADED={_MAPPING_LOADED}, "
-                       f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
-                       f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}")
+                   f"_MAPPING_LOADED={_MAPPING_LOADED}, "
+                   f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
+                   f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}")
     _log_message(logging.DEBUG, entry_debug_msg, _MODULE_LOGGER)
 
-
-    if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING:
+    # Ensure input is normalized to NFC for consistent matching
+    if isinstance(input_string, str):
+        normalized_input = unicodedata.normalize('NFC', input_string)
+    else:
+        normalized_input = input_string
+    
+    if not _MAPPING_LOADED or not _COMPILED_PATTERN_FOR_ACTUAL_REPLACE or not _RAW_REPLACEMENT_MAPPING or \
+       not isinstance(normalized_input, str):
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Early exit. _MAPPING_LOADED={_MAPPING_LOADED}, "
                                    f"_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is {'None' if _COMPILED_PATTERN_FOR_ACTUAL_REPLACE is None else 'Set'}, "
                                    f"_RAW_REPLACEMENT_MAPPING is {'Empty' if not _RAW_REPLACEMENT_MAPPING else 'Populated'}", _MODULE_LOGGER)
-        return input_string
-    if not isinstance(input_string, str):
         return input_string 
-    
-    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(input_string) 
+   
+    # Use the normalized version for matching
+    search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input) 
     _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Input (original): {input_string!r}, Search found: {'YES' if search_result else 'NO'}", _MODULE_LOGGER)
     if search_result:
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Search match object: {search_result}", _MODULE_LOGGER)
 
-    return _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, input_string)
+    # Perform actual replacement using the normalized version
+    result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.sub(_actual_replace_callback, normalized_input)
+    _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Result after replacement: {result!r}", _MODULE_LOGGER)
+    return result
