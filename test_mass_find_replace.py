@@ -419,6 +419,22 @@ def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
     )
     
     # Verify small file replacements
+    # Check that transactions were created for the large file
+    txn_file = context_dir / MAIN_TRANSACTION_FILE_NAME
+    assert txn_file.exists(), "Transaction file missing"
+    transactions = load_transactions(txn_file)
+    large_file_processed = False
+    for tx in transactions:
+        if tx["PATH"] == "large_gb18030.txt":
+            large_file_processed = True
+            # Verify transaction contains expected fields
+            assert "NEW_LINE_CONTENT" in tx, "Missing NEW_LINE_CONTENT field"
+            assert "Atlasvibe" in tx["NEW_LINE_CONTENT"], "Replacement not in new content"
+            assert tx.get("ORIGINAL_ENCODING", "").lower() == "gb18030", \
+                f"Wrong encoding: {tx.get('ORIGINAL_ENCODING')}"
+            break
+    assert large_file_processed, "Large file not processed"
+
     with open(small_file, "r", encoding=encoding) as f:
         updated_small = f.read()
         expected_small = small_content.replace(test_string, replacement_string)
