@@ -5,6 +5,9 @@
 # - Updated imports in main_flow and main_cli to import directly from 'file_system_operations'.
 # - Added fallback logger for test environments
 # - Fixed typos and encoding issues in variable names and strings as reported.
+# - Changed default behavior to enable .gitignore by default.
+# - Replaced --use-gitignore with --no-gitignore to disable ignore processing.
+# - Added validation for --ignore-file option to ensure file exists if provided.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -135,7 +138,7 @@ def main_flow(
                 logger.warning(f"{YELLOW}Warning: Could not read .gitignore file {gitignore_path}: {e}{RESET}")
         elif not quiet_mode:
             logger.info(".gitignore not found in root, skipping.") 
-    if custom_ignore_file_path:
+    if custom_ignore_file_path and use_gitignore:
         custom_ignore_abs_path = Path(custom_ignore_file_path).resolve()
         if custom_ignore_abs_path.is_file():
             logger.info(f"Using custom ignore file: {custom_ignore_abs_path}")
@@ -343,7 +346,8 @@ def main_cli() -> None:
     parser.add_argument("--exclude-files", nargs="+", default=[], help="Specific files or relative paths to exclude (space-separated).")
     
     ignore_group = parser.add_argument_group('Ignore File Options')
-    ignore_group.add_argument("--use-gitignore", action="store_true", help="Use .gitignore file in the root directory for exclusions.")
+    ignore_group.add_argument("--no-gitignore", action="store_false", dest="use_gitignore", default=True,
+                             help="Disable using .gitignore file for exclusions. Custom ignore files will also be skipped.")
     ignore_group.add_argument("--ignore-file", dest="custom_ignore_file", metavar="PATH", help="Path to a custom .gitignore-style file for additional exclusions.")
     
     symlink_group = parser.add_argument_group('Symlink Handling')
@@ -414,6 +418,13 @@ def main_cli() -> None:
     else:
         timeout_val_for_flow = int(args.timeout)
 
+    # Validate ignore file if gitignore is enabled
+    if args.custom_ignore_file and args.use_gitignore:
+        from pathlib import Path
+        ignore_path = Path(args.custom_ignore_file)
+        if not ignore_path.exists() or not ignore_path.is_file():
+            sys.stderr.write(RED + f"Error: Ignore file not found: {args.custom_ignore_file}" + RESET + "\n")
+            sys.exit(1)
 
     auto_exclude_basenames = [
         MAIN_TRANSACTION_FILE_NAME,
