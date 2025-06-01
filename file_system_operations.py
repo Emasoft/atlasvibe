@@ -5,6 +5,7 @@
 # - Fixed transaction routing logic in execute_all_transactions to properly handle content transactions.
 # - Added safeguard to skip content transactions if new content equals original content.
 # - Mark content transactions as completed during dry-run without modifying files.
+# - Implemented _execute_content_line_transaction to handle content line modifications with proper encoding and line preservation.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -602,6 +603,53 @@ def _execute_rename_transaction(
     except Exception as e:
         return TransactionStatus.FAILED, f"Rename error: {e}", False
 
+def _execute_content_line_transaction(
+    tx: dict[str, Any], root_dir: Path,
+    path_translation_map: dict[str, str], path_cache: dict[str, Path],
+    logger: logging.Logger | None = None
+) -> tuple[TransactionStatus, str, bool]:
+    """
+    Execute a content line transaction.
+    Returns (status, error_message, changed_bool).
+    """
+    relative_path_str = tx["PATH"]
+    line_no = tx["LINE_NUMBER"]  # 1-indexed
+    file_encoding = tx.get("ORIGINAL_ENCODING", DEFAULT_ENCODING_FALLBACK)
+    is_rtf = tx.get("IS_RTF", False)
+
+    # Skip RTF as they're converted text files with unique formatting
+    if is_rtf:
+        return (TransactionStatus.SKIPPED, "RTF content modification not supported", False)
+
+    try:
+        # Get current file location (accounts for renames)
+        current_abs_path = _get_current_absolute_path(relative_path_str, root_dir, path_translation_map, path_cache, dry_run=False)
+        
+        # Read file with original encoding
+        with open(current_abs_path, "r", encoding=file_encoding, errors='surrogateescape') as f:
+            lines = f.readlines()  # Preserve line endings
+
+        if line_no - 1 < 0 or line_no - 1 >= len(lines):
+            return (TransactionStatus.FAILED, f"Line number {line_no} out of range. File has {len(lines)} lines.", False)
+            
+        # Get new content from transaction
+        new_line_content = tx.get("NEW_LINE_CONTENT", "")
+        
+        # Skip if line didn't change (shouldn't happen but safeguard)
+        if lines[line_no-1] == new_line_content:
+            return (TransactionStatus.SKIPPED, "Line already matches target", False)
+            
+        # Update the line
+        lines[line_no-1] = new_line_content
+        
+        # Write back with same encoding
+        with open(current_abs_path, "w", encoding=file_encoding, errors='surrogateescape') as f:
+            f.writelines(lines)
+            
+        return (TransactionStatus.COMPLETED, "", True)
+    except Exception as e:
+        return (TransactionStatus.FAILED, f"Content update failed: {e}", False)
+
 def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path,
     dry_run: bool, resume: bool, timeout_minutes: int,
@@ -632,6 +680,10 @@ def execute_all_transactions(
         "skipped": 0,
         "retry_later": 0,
     }
+
+    # Shared path translation for rename operations
+    path_translation_map: dict[str, str] = {}
+    path_cache: dict[str, Path] = {}
 
     processed_in_this_pass = 0
     logging_blocked_during_interactive = False  # Used to suppress logs in interactive when needing to print the transaction detail
@@ -691,7 +743,7 @@ def execute_all_transactions(
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by flags", logger=logger)
                         stats["skipped"] += 1
                         continue
-                    status_result, error_msg, changed = _execute_rename_transaction(tx_item, root_dir, {}, {}, dry_run, logger)
+                    status_result, error_msg, changed = _execute_rename_transaction(tx_item, root_dir, path_translation_map, path_cache, dry_run, logger)
                     if status_result == TransactionStatus.COMPLETED:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, "DRY_RUN" if dry_run else None, logger=logger)
                         stats["completed"] += 1
@@ -723,9 +775,16 @@ def execute_all_transactions(
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, "DRY_RUN", logger=logger)
                         stats["completed"] += 1
                     else:
-                        # REAL EXECUTION GOES HERE (will be implemented later)
-                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.FAILED, "Not implemented", logger=logger)
-                        stats["failed"] += 1
+                        status_result, error_msg, changed = _execute_content_line_transaction(tx_item, root_dir, path_translation_map, path_cache, logger=logger)
+                        if status_result == TransactionStatus.COMPLETED:
+                            update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, error_msg, logger=logger)
+                            stats["completed"] += 1
+                        elif status_result == TransactionStatus.SKIPPED:
+                            update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, error_msg, logger=logger)
+                            stats["skipped"] += 1
+                        else:
+                            update_transaction_status_in_list(transactions, tx_id, TransactionStatus.FAILED, error_msg, logger=logger)
+                            stats["failed"] += 1
                 else:
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Unknown transaction type", logger=logger)
                     stats["skipped"] += 1

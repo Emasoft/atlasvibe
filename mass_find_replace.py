@@ -8,6 +8,7 @@
 # - Changed default behavior to enable .gitignore by default.
 # - Replaced --use-gitignore with --no-gitignore to disable ignore processing.
 # - Added validation for --ignore-file option to ensure file exists if provided.
+# - Removed unused _check_ignore_file function and moved ignore file validation inside main_flow.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -148,7 +149,8 @@ def main_flow(
             except Exception as e:
                 logger.warning(f"{YELLOW}Warning: Could not read custom ignore file {custom_ignore_abs_path}: {e}{RESET}")
         else:
-            logger.warning(f"{YELLOW}Warning: Custom ignore file '{custom_ignore_abs_path}' not found.{RESET}")
+            logger.error(f"Ignore file not found: {custom_ignore_abs_path}. Aborting")
+            return
     if raw_patterns_list:
         try: 
             final_ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', raw_patterns_list)
