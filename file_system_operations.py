@@ -853,8 +853,10 @@ def process_large_file_content(
                 tx["STATUS"] = TransactionStatus.FAILED.value
                 tx["ERROR_MESSAGE"] = f"File processing error: {e}"
         if temp_file.exists():
-            try: os.remove(temp_file)
-            except: pass
+            try:
+                os.remove(temp_file)
+            except OSError:
+                pass
 
 # Temporary optimized function for handling chunks
 def process_large_file_content_legacy(
@@ -905,7 +907,7 @@ def process_large_file_content_legacy(
         if temp_file_path.exists():
             try:
                 os.remove(temp_file_path)
-            except:
+            except OSError:
                 pass
 
 def group_and_process_file_transactions(
