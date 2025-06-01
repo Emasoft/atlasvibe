@@ -6,6 +6,12 @@
 # - Added safeguard to skip content transactions if new content equals original content.
 # - Mark content transactions as completed during dry-run without modifying files.
 # - Implemented _execute_content_line_transaction to handle content line modifications with proper encoding and line preservation.
+# - Improved get_file_encoding to handle small files more robustly:
+#   * For small files (<=4KB), try full UTF-8 decoding first.
+#   * Removed fallback hacks for Latin-1/cp1252 that were unreliable.
+#   * Only consider chardet results with >50% confidence.
+#   * Added direct UTF-8 attempt for all files.
+#   * Added special handling for RTF file extensions at runtime.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -90,78 +96,64 @@ def _log_fs_op_message(level: int, message: str, logger: logging.Logger | None =
 
 
 def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging.Logger | None = None) -> str | None:
-    if file_path.suffix.lower() == '.rtf':
-        return 'latin-1' 
-
+    if not file_path.is_file():
+        return DEFAULT_ENCODING_FALLBACK
     try:
+        file_size = file_path.stat().st_size
+
+        # For small files, try reading the entire file with UTF-8 decoding first
+        if file_size <= 4096:  # Small file heuristic threshold
+            try:
+                raw_data = file_path.read_bytes()
+                raw_data.decode('utf-8', errors='strict') # Try strict UTF-8
+                return 'utf-8'
+            except (UnicodeDecodeError, FileNotFoundError):
+                pass  # Not UTF-8, fall through to chardet
+
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
+
         if not raw_data:
-            return DEFAULT_ENCODING_FALLBACK 
+            return DEFAULT_ENCODING_FALLBACK
 
-        # 1. Try UTF-8 first as it's very common and chardet can misidentify it for small samples
+        # 1. Try UTF-8 for all files regardless of size
         try:
-            raw_data.decode('utf-8', errors='strict') # Use strict for UTF-8 detection
-            return 'utf-8'
+            if file_path.suffix.lower() != '.rtf':
+                raw_data.decode('utf-8', errors='strict')
+                return 'utf-8'
         except UnicodeDecodeError:
-            pass 
+            pass
 
-        # 2. Use chardet as a strong hint
-        detected_by_chardet = chardet.detect(raw_data)
-        chardet_encoding: str | None = detected_by_chardet.get('encoding')
-        
-        normalized_chardet_candidate = None
-        if chardet_encoding:
-            norm_low = chardet_encoding.lower()
-            # Normalize common aliases
-            if norm_low in ('windows-1252', '1252'):
-                normalized_chardet_candidate = 'cp1252'
-            elif norm_low in ('latin_1', 'iso-8859-1', 'iso8859_1', 'iso-8859-15', 'iso8859-15'):
-                normalized_chardet_candidate = 'latin1'
-            elif norm_low in ('windows-1254', '1254'): # Turkish, often confused with cp1252
-                 # If chardet suggests a specific windows codepage like 1254,
-                 # and cp1252 can also decode it, prefer cp1252 as it's more common for "Western-like" text.
-                try:
-                    raw_data.decode('cp1252', errors='surrogateescape')
-                    return 'cp1252' 
-                except (UnicodeDecodeError, LookupError):
-                    # cp1252 failed, try the original chardet suggestion if it's different
-                    if norm_low != 'cp1252': 
-                        try:
-                            raw_data.decode(norm_low, errors='surrogateescape')
-                            return norm_low
-                        except (UnicodeDecodeError, LookupError):
-                            pass 
-            else:
-                normalized_chardet_candidate = norm_low
-        
-        # Try chardet's normalized candidate if it exists and hasn't been returned yet
-        if normalized_chardet_candidate and normalized_chardet_candidate != 'utf-8':
+        # RTF files use Latin-1
+        if file_path.suffix.lower() == '.rtf':
+            return 'latin-1' 
+
+        # 2. Use chardet detection
+        detected = chardet.detect(raw_data)
+        encoding = detected.get('encoding') or DEFAULT_ENCODING_FALLBACK
+        confidence = detected.get('confidence', 0)
+
+        # Only consider chardet results with reasonable confidence
+        if confidence > 0.5:
+            encoding = encoding.lower()
+            # Handle common encoding aliases
             try:
-                raw_data.decode(normalized_chardet_candidate, errors='surrogateescape')
-                if normalized_chardet_candidate == 'latin1':
-                    # If latin1 was suggested and works, check if cp1252 also works, as it's a more specific superset for Western text
-                    try:
-                        raw_data.decode('cp1252', errors='surrogateescape')
-                        return 'cp1252' 
-                    except (UnicodeDecodeError, LookupError):
-                        return 'latin1' # cp1252 failed, stick with latin1
-                return normalized_chardet_candidate
+                raw_data.decode(encoding, errors='surrogateescape')
+                return encoding
             except (UnicodeDecodeError, LookupError):
                 pass
 
         # 3. Fallback explicit checks if UTF-8 and chardet's primary suggestion failed or wasn't definitive
-        for enc_try in ['cp1252', 'latin1']:
-            if normalized_chardet_candidate != enc_try: # Avoid re-trying if it was chardet's candidate and failed
-                try:
+        for enc_try in ['cp1252', 'latin1', 'iso-8859-1']:
+            try:
+                if encoding != enc_try:
                     raw_data.decode(enc_try, errors='surrogateescape')
                     return enc_try
-                except (UnicodeDecodeError, LookupError):
-                    pass
-            
-        _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined. Chardet: {detected_by_chardet}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
+            except (UnicodeDecodeError, LookupError):
+                pass
+
+        _log_fs_op_message(logging.DEBUG, f"Encoding for {file_path} could not be confidently determined. Chardet: {detected}. Using {DEFAULT_ENCODING_FALLBACK}.", logger)
         return DEFAULT_ENCODING_FALLBACK
-            
     except Exception as e:
         _log_fs_op_message(logging.WARNING, f"Error detecting encoding for {file_path}: {e}. Falling back to {DEFAULT_ENCODING_FALLBACK}.", logger)
         return DEFAULT_ENCODING_FALLBACK
