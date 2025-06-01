@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Fixed import paths for file_system_operations to remove non-existent 'utils' package prefix.
-# - Updated imports in main_flow and main_cli to import directly from 'file_system_operations'.
-# - Added fallback logger for test environments
-# - Fixed typos and encoding issues in variable names and strings as reported.
-# - Changed default behavior to enable .gitignore by default.
-# - Replaced --use-gitignore with --no-gitignore to disable ignore processing.
-# - Added validation for --ignore-file option to ensure file exists if provided.
-# - Removed unused _check_ignore_file function and moved ignore file validation inside main_flow.
+# - Consolidated redundant empty map checks into a single check in main_flow.
+# - Removed unused skip_scan parameter from execute_all_transactions call.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -119,8 +113,14 @@ def main_flow(
     if not replace_logic._MAPPING_LOADED: 
         logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic.")
         return
-    if not replace_logic._RAW_REPLACEMENT_MAPPING: 
-        logger.warning(f"{YELLOW}Warning: Map {map_file_path} is empty. No string replacements will occur based on map keys.{RESET}")
+
+    # Consolidated empty map check
+    if not replace_logic._RAW_REPLACEMENT_MAPPING and not (skip_file_renaming or skip_folder_renaming or skip_content):
+        logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
+        return
+    elif not replace_logic._RAW_REPLACEMENT_MAPPING:
+        logger.info("Map is empty. No string-based replacements will occur.")
+
     elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING :
          logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns.")
          return
@@ -276,7 +276,7 @@ def main_flow(
     logger.info(f"{op_type}: Simulating execution of transactions..." if dry_run else "Starting execution phase...")
     stats = execute_all_transactions(txn_json_path, abs_root_dir, dry_run, resume, timeout_minutes,
                                      skip_file_renaming, skip_folder_renaming, skip_content,
-                                     skip_scan, interactive_mode, logger=logger) 
+                                     interactive_mode, logger=logger) 
     logger.info(f"{op_type} phase complete. Stats: {stats}")
     logger.info(f"Review '{txn_json_path}' for a detailed log of changes and their statuses.")
     

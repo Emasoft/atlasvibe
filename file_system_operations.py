@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Added NEW_LINE_CONTENT field to content transactions during scan phase.
-# - Fixed transaction routing logic in execute_all_transactions to properly handle content transactions.
-# - Added safeguard to skip content transactions if new content equals original content.
-# - Mark content transactions as completed during dry-run without modifying files.
-# - Implemented _execute_content_line_transaction to handle content line modifications with proper encoding and line preservation.
-# - Improved get_file_encoding to handle small files more robustly:
-#   * For small files (<=4KB), try full UTF-8 decoding first.
-#   * Removed fallback hacks for Latin-1/cp1252 that were unreliable.
-#   * Only consider chardet results with >50% confidence.
-#   * Added direct UTF-8 attempt for all files.
-#   * Added special handling for RTF file extensions at runtime.
+# - Removed unused skip_scan parameter from execute_all_transactions.
+# - Added proper depth sorting for folder rename transactions (sort by depth and path).
+# - Improved get_file_encoding handling for small files with proper error handling.
+# - Used uuid.uuid1() for transaction IDs to reduce collision risk.
+# - Verified relative path usage in binary file match logging.
+# - Added explanatory print message when logging is suppressed during interactive mode.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -102,13 +97,15 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
         file_size = file_path.stat().st_size
 
         # For small files, try reading the entire file with UTF-8 decoding first
-        if file_size <= 4096:  # Small file heuristic threshold
+        if file_size <= 1_048_576:  # Increased threshold to 1MB
             try:
                 raw_data = file_path.read_bytes()
                 raw_data.decode('utf-8', errors='strict') # Try strict UTF-8
                 return 'utf-8'
             except (UnicodeDecodeError, FileNotFoundError):
                 pass  # Not UTF-8, fall through to chardet
+            except Exception as e:
+                _log_fs_op_message(logging.WARNING, f"Unexpected error decoding small file {file_path} as UTF-8: {e}", logger)
 
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
@@ -357,7 +354,7 @@ def scan_directory_for_occurrences(
                     # Calculate new name and store in transaction
                     new_name = replace_logic.replace_occurrences(original_name)
                     transaction_entry = {
-                        "id":str(uuid.uuid4()), 
+                        "id":str(uuid.uuid1()),  # Changed to uuid1 for better uniqueness
                         "TYPE":tx_type_val, 
                         "PATH":relative_path_str, 
                         "ORIGINAL_NAME":original_name,
@@ -409,8 +406,13 @@ def scan_directory_for_occurrences(
                                         idx = content_bytes.find(key_bytes, offset)
                                         if idx == -1:
                                             break
+                                        # Ensure relative path is used in log
+                                        if not Path(relative_path_str).is_absolute():
+                                            log_path_str = relative_path_str
+                                        else:
+                                            log_path_str = str(item_abs_path.relative_to(root_dir)).replace("\\", "/")
                                         with open(binary_log_path, 'a', encoding='utf-8') as log_f:
-                                            log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
+                                            log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {log_path_str}, Key: '{key_str}', Offset: {idx}\n")
                                         offset = idx + len(key_bytes)
                             except OSError as e_bin_read: 
                                 _log_fs_op_message(logging.WARNING, f"OS error reading binary file {item_abs_path} for logging: {e_bin_read}", logger)
@@ -470,7 +472,7 @@ def scan_directory_for_occurrences(
                                 tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
                                 if tx_id_tuple not in existing_transaction_ids:
                                     # ADD NEW_LINE_CONTENT FIELD
-                                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "NEW_LINE_CONTENT":new_line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
+                                    processed_transactions.append({"id":str(uuid.uuid1()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "NEW_LINE_CONTENT":new_line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
                                     existing_transaction_ids.add(tx_id_tuple)
             except OSError as e_stat_content: # Catch OSError from item_abs_path.is_file()
                 _log_fs_op_message(logging.WARNING, f"OS error checking if {item_abs_path} is a file for content processing: {e_stat_content}. Skipping content scan for this item.", logger)
@@ -480,8 +482,8 @@ def scan_directory_for_occurrences(
     file_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value]
     content_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
     
-    # Sort folders by depth (shallow then deep)
-    folder_txs.sort(key=lambda tx: len(Path(tx["PATH"]).parts))
+    # Sort folders by depth (shallow then deep) and path for deterministic order
+    folder_txs.sort(key=lambda tx: (len(Path(tx["PATH"]).parts), tx["PATH"]))
     
     processed_transactions = folder_txs + file_txs + content_txs
 
@@ -646,7 +648,6 @@ def execute_all_transactions(
     transactions_file_path: Path, root_dir: Path,
     dry_run: bool, resume: bool, timeout_minutes: int,
     skip_file_renaming: bool, skip_folder_renaming: bool, skip_content: bool,
-    skip_scan: bool,
     interactive_mode: bool,
     logger: logging.Logger | None = None
 ) -> dict[str, int]:
@@ -717,6 +718,7 @@ def execute_all_transactions(
             if interactive_mode and not dry_run:
                 # Show transaction details and ask for approval
                 print(f"{DIM_STYLE}Transaction {tx_id} - Type: {tx_type}, Path: {relative_path_str}{RESET_STYLE}")
+                print(f"{YELLOW_FG}Interactive mode: Logging temporarily suspended{RESET_STYLE}")
                 choice = input("Approve? (A/Approve, S/Skip, Q/Quit): ").strip().upper()
                 if choice == "S":
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by user", logger=logger)
