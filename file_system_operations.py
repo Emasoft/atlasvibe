@@ -715,35 +715,6 @@ def _execute_file_content_batch(
             tx["ERROR_MESSAGE"] = f"Unhandled error: {e}"
         return (0, 0, len(transactions))
 
-# New function to calculate all characters that appear in replacement keys
-def _get_safe_characters() -> set[str]:
-    """Return set of all characters appearing in replacement mapping keys"""
-    safe_chars = set()
-    global replace_logic
-    if not replace_logic._RAW_REPLACEMENT_MAPPING:
-        return set()
-    
-    for key in replace_logic._RAW_REPLACEMENT_MAPPING:
-        for char in key:
-            if char not in safe_chars:
-                 safe_chars.add(char)
-    return safe_chars
-
-# New function to find a safe split position
-def _find_safe_split_position(chunk: str, chunk_size: int, unsafe_chars: set[str]) -> int:
-    """Find a position in text chunk where we can safely split"""    
-    # Default safe position is full chunk size
-    safe_pos = chunk_size
-
-    # Start from end charcter of the chunk and move backward until safe position found
-    pos = min(len(chunk), chunk_size) - 1
-    while pos >= 0:
-        if chunk[pos] not in unsafe_chars:
-            safe_pos = pos + 1  # Include this character
-            break
-        pos -= 1
-    return safe_pos
-
 # New function for streaming large file content
 def process_large_file_content(
     txns_for_file: list[dict], 
@@ -821,6 +792,11 @@ def process_large_file_content(
                             # Find safe split position - scan backward to find a character not in keys
                             split_pos = end_idx
                             search_pos = min(end_idx - 1, len(current_line_content) - 1)
+
+                            # Initialize key_characters here to prevent UnboundLocalError
+                            nonlocal key_characters
+                            key_characters = replace_logic.get_key_characters()
+                            
                             while search_pos >= buffer_idx:
                                 if current_line_content[search_pos] not in key_characters:
                                     split_pos = search_pos + 1
@@ -869,58 +845,6 @@ def process_large_file_content(
         except Exception:
             pass
 
-# Temporary optimized function for handling chunks
-def process_large_file_content_legacy(
-    txns_for_file: list[dict], 
-    abs_filepath: Path,
-    file_encoding: str,
-    is_rtf: bool,
-    logger: logging.Logger | None = None
-) -> None:
-    """Original large file processing function (retained as fallback)"""
-    if is_rtf:
-        for tx in txns_for_file:
-            tx["STATUS"] = TransactionStatus.SKIPPED.value
-            tx["ERROR_MESSAGE"] = "RTF content modification not supported"
-        return
-
-    # Sort transactions by line number
-    txns_sorted = sorted(txns_for_file, key=lambda tx: tx["LINE_NUMBER"])
-    max_line = txns_sorted[-1]["LINE_NUMBER"]
-    txn_map = {tx["LINE_NUMBER"]: tx for tx in txns_sorted}
-    
-    try:
-        # Temporary file for safe writing
-        temp_file_path = abs_filepath.with_suffix(".tmp")
-        
-        with open(abs_filepath, 'r', encoding=file_encoding, errors='surrogateescape') as src_file:
-            with open(temp_file_path, 'w', encoding=file_encoding, errors='surrogateescape') as dst_file:
-                current_line = 1
-                while current_line <= max_line:
-                    line = src_file.readline()
-                    if not line:
-                        break
-                    if current_line in txn_map:
-                        dst_file.write(txn_map[current_line].get("NEW_LINE_CONTENT", line))
-                        txn_map[current_line]["STATUS"] = TransactionStatus.COMPLETED.value
-                    else:
-                        dst_file.write(line)
-                    current_line += 1
-                # Write remaining lines
-                for line in src_file:
-                    dst_file.write(line)
-        os.replace(temp_file_path, abs_filepath)
-    except Exception as e:
-        for tx in txns_sorted:
-            if tx.get("STATUS") != TransactionStatus.COMPLETED.value:
-                tx["STATUS"] = TransactionStatus.FAILED.value
-                tx["ERROR_MESSAGE"] = f"File processing error: {e}"
-        try:
-            if temp_file_path.exists():
-                os.remove(temp_file_path)
-        except Exception:
-            pass
-
 def group_and_process_file_transactions(
     transactions: list[dict],
     root_dir: Path,
@@ -931,12 +855,6 @@ def group_and_process_file_transactions(
     logger: logging.Logger | None = None
 ) -> None:
     """Group transactions by file and process them efficiently"""
-    # Determine maximum key length for safe splitting
-    global replace_logic
-    max_key_len = 0
-    for key in replace_logic._RAW_REPLACEMENT_MAPPING:
-        max_key_len = max(max_key_len, len(key))
-    
     # Group transactions by file path
     file_groups = {}
     for tx in transactions:
@@ -985,28 +903,13 @@ def group_and_process_file_transactions(
                 )
             else:
                 # Large file - new streaming method
-                # Choose based on max key length
-                if max_key_len <= 100:
-                    # Use optimized safe splitting version
-                    process_large_file_content(
-                        file_data["txns"],
-                        abs_path,
-                        file_data["encoding"],
-                        file_data["is_rtf"],
-                        logger
-                    )
-                else:
-                    # Long keys require legacy algorithm
-                    if logger:
-                        logger.warning(
-                            f"Fallback processing for file with long keys: max_key_len={max_key_len}")
-                    process_large_file_content_legacy(
-                        file_data["txns"],
-                        abs_path,
-                        file_data["encoding"],
-                        file_data["is_rtf"],
-                        logger
-                    )
+                process_large_file_content(
+                    file_data["txns"],
+                    abs_path,
+                    file_data["encoding"],
+                    file_data["is_rtf"],
+                    logger
+                )
                     
         except Exception as e:
             # Mark all transactions as failed

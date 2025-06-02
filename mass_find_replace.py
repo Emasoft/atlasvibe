@@ -295,13 +295,7 @@ def _run_subprocess_command(command: list[str], description: str) -> bool:
         process = subprocess.run(command, check=False, capture_output=True, text=True)
         if process.stdout:
             print(f"{GREEN}Output from {description}:{RESET}\n{process.stdout}")
-            # If using Prefect, flush its logger explicitly
-            try:
-                from prefect import get_run_logger
-                get_run_logger().handlers[0].flush()
-            except Exception:
-                pass
-        if process.stderr:
+        if process.stderr: 
             print(f"{YELLOW}Errors/Warnings from {description}:{RESET}\n{process.stderr}")
         if process.returncode != 0:
             print(f"{RED}Error: {description} failed with return code {process.returncode}.{RESET}")
