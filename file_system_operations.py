@@ -743,21 +743,18 @@ def process_large_file_content(
     file_encoding: str,
     is_rtf: bool,
     logger: logging.Logger | None = None
-) -> None:
-    """Process large files (>1MB) with safe chunk splitting for long lines"""
+) -> None:  
+    SAFE_LINE_LENGTH_THRESHOLD = 1000  # Only split lines longer than this
+    CHUNK_SIZE = 1000
+    
     if is_rtf:
         for tx in txns_for_file:
             tx["STATUS"] = TransactionStatus.SKIPPED.value
             tx["ERROR_MESSAGE"] = "RTF content modification not supported"
         return
 
-    # Get characters that must NOT be split (all characters in replacement keys)
-    safe_chars = _get_safe_characters()
-    unsafe_chars = set()  # We actually want to find SAFE characters
-    # Precompute the max key length
-    max_key_len = 0
-    for key in replace_logic._RAW_REPLACEMENT_MAPPING:
-        max_key_len = max(max_key_len, len(key))
+    # Get all characters that might be in replacement keys
+    key_characters = replace_logic.get_key_characters()
     
     # Sort transactions by line number
     txns_sorted = sorted(txns_for_file, key=lambda tx: tx["LINE_NUMBER"])
@@ -765,10 +762,6 @@ def process_large_file_content(
     
     # Map from line number to transaction with precomputed new content
     txn_map = {tx["LINE_NUMBER"]: tx for tx in txns_sorted}
-
-    # Optimizing parameters
-    CHUNK_SIZE = 1000  # Process 1000 characters at a time
-    OVERLAP_SIZE = max_key_len  # Should be at least the longest key    
 
     try:
         # Temporary file for safe writing
@@ -778,7 +771,6 @@ def process_large_file_content(
             with open(temp_file, 'w', encoding=file_encoding, errors="surrogateescape") as dst_file:
                 # Track state between lines
                 current_line = 1
-                remaining_content = ""
 
                 # Process file line by line, receiving from src_file
                 while current_line <= max_line:
@@ -805,32 +797,43 @@ def process_large_file_content(
                     
                     # Skip empty lines
                     if not current_line_content:
+                        current_line += 1
                         continue
                     
-                    if upgrade_content is not None:
-                        # We need to apply modified content for this transaction
-                        dst_file.write(upgrade_content)
-                    else:
-                        # For content longer than CHUNK_SIZE, safely chunk it
-                        if len(current_line_content) > CHUNK_SIZE:
-                            # Process in safe chunks
-                            chunkified_content = []
-                            buffer_idx = 0
-                            while buffer_idx < len(current_line_content):
-                                chunk = current_line_content[buffer_idx:buffer_idx + CHUNK_SIZE + OVERLAP_SIZE]
-                                safe_pos = _find_safe_split_position(
-                                    chunk,
-                                    CHUNK_SIZE,
-                                    unsafe_chars
-                                )
-                                # Write the safe chunk
-                                dst_file.write(current_line_content[buffer_idx:buffer_idx + safe_pos])
-                                buffer_idx += safe_pos
-                            # Write any remaining part as self-contained chunk
-                            if buffer_idx < len(current_line_content):
+                    # Only process long lines with chunked approach
+                    if len(current_line_content) > SAFE_LINE_LENGTH_THRESHOLD and not upgrade_content:
+                        # Process in safe chunks for unmmodified long lines
+                        buffer_idx = 0
+                        while buffer_idx < len(current_line_content):
+                            end_idx = buffer_idx + CHUNK_SIZE
+                            if end_idx >= len(current_line_content):
                                 dst_file.write(current_line_content[buffer_idx:])
+                                break
+                                
+                            # Find safe split position - scan backward to find a character not in keys
+                            split_pos = end_idx
+                            search_pos = min(end_idx - 1, len(current_line_content) - 1)
+                            while search_pos >= buffer_idx:
+                                if current_line_content[search_pos] not in key_characters:
+                                    split_pos = search_pos + 1
+                                    break
+                                search_pos -= 1
+                                
+                            # Special case: if we didn't find any non-key character
+                            if split_pos == end_idx and search_pos < buffer_idx:
+                                # Backtrack further if necessary (shouldn't happen often)
+                                split_pos = min(buffer_idx + 1000, len(current_line_content))
+                            
+                            # Process and write the chunk
+                            dst_file.write(current_line_content[buffer_idx:split_pos])
+                            buffer_idx = split_pos
+                    else:
+                        # Regular line processing (short line or modified line)
+                        if upgrade_content is not None:
+                            # Write precomputed content if available
+                            dst_file.write(upgrade_content)
                         else:
-                            # Shorter content - write directly
+                            # Write line as is
                             dst_file.write(current_line_content)
                     
                     # Update transaction status

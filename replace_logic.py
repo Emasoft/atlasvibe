@@ -4,7 +4,8 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Fixed regex pattern compilation in load_replacement_map to properly escape keys containing regex special characters.
 # - Fixed replace_occurrences to normalize input string to NFC before searching and replacing to ensure consistency.
-# - No other changes to logic; preserved all existing comments and debug logging.
+# - Added tracking of all characters used in replacement keys for optimization purposes.
+# - Added accessor function get_key_characters() to retrieve the set of characters used in keys.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -25,6 +26,7 @@ _MAPPING_LOADED: bool = False
 _SORTED_RAW_KEYS_FOR_REPLACE: list[str] = [] # Normalized stripped keys, sorted by length desc.
 _COMPILED_PATTERN_FOR_ACTUAL_REPLACE: re.Pattern | None = None # For actual replacement. Now case-sensitive.
 _MODULE_LOGGER: logging.Logger | None = None # Module-level logger instance
+_KEY_CHARACTER_SET: set[str] = set()
 
 # --- START DEBUG CONFIG ---
 # Set to True to enable verbose debug prints in this module
@@ -39,7 +41,7 @@ def reset_module_state():
     or sequential script runs.
     """
     global _RAW_REPLACEMENT_MAPPING, _COMPILED_PATTERN_FOR_SCAN, _MAPPING_LOADED, \
-           _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER
+           _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER, _KEY_CHARACTER_SET
     
     _RAW_REPLACEMENT_MAPPING = {}
     _COMPILED_PATTERN_FOR_SCAN = None
@@ -47,6 +49,7 @@ def reset_module_state():
     _SORTED_RAW_KEYS_FOR_REPLACE = []
     _COMPILED_PATTERN_FOR_ACTUAL_REPLACE = None
     _MODULE_LOGGER = None # Reset logger; it will be (re)set by load_replacement_map
+    _KEY_CHARACTER_SET.clear()
 
 def _log_message(level: int, message: str, logger: logging.Logger | None = None):
     """Helper to log messages using provided logger or print as fallback."""
@@ -97,9 +100,10 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
     if a clean state is required.
     """
     global _RAW_REPLACEMENT_MAPPING, _COMPILED_PATTERN_FOR_SCAN, _MAPPING_LOADED, \
-           _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER
+           _SORTED_RAW_KEYS_FOR_REPLACE, _COMPILED_PATTERN_FOR_ACTUAL_REPLACE, _MODULE_LOGGER, _KEY_CHARACTER_SET
 
     _MODULE_LOGGER = logger
+    _KEY_CHARACTER_SET.clear()
 
     try:
         with open(mapping_file_path, 'r', encoding='utf-8') as f:
@@ -140,6 +144,10 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         _log_message(logging.DEBUG, f"    -> NoDiacritics='{temp_stripped_key_no_diacritics}' (len {len(temp_stripped_key_no_diacritics)}, ords={[ord(c) for c in temp_stripped_key_no_diacritics]})", logger)
         _log_message(logging.DEBUG, f"    -> CanonicalKey (NFC)='{canonical_key}' (len {len(canonical_key)}, ords={[ord(c) for c in canonical_key]})", logger)
         _log_message(logging.DEBUG, f"    -> Maps to Value: '{v_original}'", logger)
+
+        # Track all characters in keys
+        for char in canonical_key:
+            _KEY_CHARACTER_SET.add(char)
 
         temp_raw_mapping[canonical_key] = v_original
 
@@ -193,6 +201,12 @@ def get_scan_pattern() -> re.Pattern | None:
 
 def get_raw_stripped_keys() -> list[str]:
     return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
+
+def get_key_characters() -> set[str]:
+    """
+    Returns the set of all characters appearing in replacement keys.
+    """
+    return _KEY_CHARACTER_SET
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
     matched_text_from_input = match.group(0)
