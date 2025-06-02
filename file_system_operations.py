@@ -5,6 +5,12 @@
 # - Added full implementation of execute_all_transactions
 # - Added atomic_file_write helper function
 # - Ensured all functions used in tests are properly exported.
+# - Fixed syntax errors in:
+#   * f-string syntax in load_ignore_patterns
+#   * Missing : in if statement
+#   * Removed erroneous ] in scan_pattern assignment
+#   * Fixed try/except block structure in scan_directory_for_occurrences
+#   * Fixed list syntax in if conditions
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -165,7 +171,7 @@ def load_ignore_patterns(ignore_file_path: Path, logger: logging.Logger | None =
         valid_patterns = [p for p in (line.strip() for line in patterns) if p and not p.startswith('#')]
         return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns) if valid_patterns else None
     except Exception as e:
-        _log_fs_op_message(logging.WARNING, f"Could not load ignore file {ignore_file_path]: {e}", logger)
+        _log_fs_op_message(logging.WARNING, f"Could not load ignore file {ignore_file_path}: {e}", logger)
         return None
 
 def _walk_for_scan(
@@ -214,7 +220,7 @@ def _get_current_absolute_path(
         # Compose current absolute path using virtual mapping
         if original_relative_path_str in cache:
             return cache[original_relative_path_str]
-        if original_relative_path_str == "."
+        if original_relative_path_str == ".":
             cache["."] = root_dir
             return root_dir
         original_path_obj = Path(original_relative_path_str)
@@ -254,19 +260,18 @@ def scan_directory_for_occurrences(
 
     binary_log_path = root_dir / BINARY_MATCHES_LOG_FILE
 
-    scan_pattern = replace_logic.get_scan_pattern()]
-    raw_keys_for_binary_search = replace_logic.get_raw_stripped_keys([])
+    scan_pattern = replace_logic.get_scan_pattern()
+    raw_keys_for_binary_search = replace_logic.get_raw_stripped_keys()
 
     if resume_from_transactions is not None:
         processed_transactions = list(resume_from_transactions)
         # Backfill NEW_NAME for existing rename transactions if missing
         for tx in resume_from_transactions:
-            if tx["TYPE"] in [TransactionType.FILE_NAME.value]],
-                tx["NEW_NAME"] = replace_logic.replace_occurrename_log
-    except Exception as cleanup_e:
-        _log_fs_op_message(logging.WARNING, f"Error cleaning up temp transaction file: {cleanup_e}", logger)
-    raise
+            if tx["TYPE"] in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
+                tx["NEW_NAME"] = replace_logic.replace_occurrences(tx.get("ORIGINAL_NAME", ""))
 
+    return processed_transactions
+        
 def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
     if not transactions_file_path.is_file():
         _log_fs_op_message(logging.WARNING, f"Transaction file not found: {transactions_file_path}", logger)
@@ -341,7 +346,7 @@ def execute_all_transactions(
         
         for tx in transactions:
             try:
-                if tx["STATUS"] not in [TransactionStatus.PENDING.value]],
+                if tx["STATUS"] not in [TransactionStatus.PENDING.value, TransactionStatus.RETRY_LATER.value]:
                     continue
 
                 tx["STATUS"] = TransactionStatus.IN_PROGRESS.value
@@ -362,7 +367,7 @@ def execute_all_transactions(
                 elif tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value and not skip_content:
                     encoding = tx.get("ORIGINAL_ENCODING", DEFAULT_ENCODING_FALLBACK)
                     if tx.get("IS_RTF"):
-                        content = rtf_to_text(item_path.read_bytes().decode('latin-1'), errors="ignore")
+                        content = rtf_to_text(item_path.read_bytes().decode('latin-1', errors="ignore"))
                     else:
                         with open(item_path, "r", encoding=encoding, errors='surrogateescape', newline='') as f:
                             content = f.read()
@@ -390,88 +395,3 @@ def execute_all_transactions(
     except Exception as e:
         _log_fs_op_message(logging.ERROR, f"Critical error executing transactions: {e}", logger)
         return stats
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
