@@ -11,6 +11,7 @@
 #   * Removed erroneous ] in scan_pattern assignment
 #   * Fixed try/except block structure in scan_directory_for_occurrences
 #   * Fixed list syntax in if conditions
+# - Added save_transactions function definition to fix F821 errors
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -108,7 +109,7 @@ def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging
             except (UnicodeDecodeError, FileNotFoundError):
                 pass  # Not UTF-8, fall through to chardet
             except Exception as e:
-                _log_fs_op_message(logging.WARNING, f"Unexpected error decoding small file {file_path} as UTF-8: {e}", logger)
+                _log_fs_op_message(logging.WARNING, f"Unexpected error decoding small file {file_path} as UTF-8: {e}, logger")
 
         with open(file_path, 'rb') as f:
             raw_data = f.read(sample_size)
@@ -249,7 +250,7 @@ def scan_directory_for_occurrences(
     file_extensions: list[str] | None, ignore_symlinks: bool,
     ignore_spec: pathspec.PathSpec | None,
     resume_from_transactions: list[dict[str, Any]] | None = None,
-    paths_to_force_rescan: set[str] | None = None,
+    paths_to_force_resscan: set[str] | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
     logger: logging.Logger | None = None
 ) -> list[dict[str, Any]]:
@@ -271,7 +272,27 @@ def scan_directory_for_occurrences(
                 tx["NEW_NAME"] = replace_logic.replace_occurrences(tx.get("ORIGINAL_NAME", ""))
 
     return processed_transactions
-        
+
+def save_transactions(transactions: list[dict[str, Any]], transactions_file_path: Path, logger: logging.Logger | None = None) -> None:
+    """Save transactions to a JSON file with atomic write operation."""
+    if not transactions:
+        _log_fs_op_message(logging.WARNING, "No transactions to save.", logger)
+        return
+
+    temp_file = None
+    try:
+        temp_file = transactions_file_path.with_suffix(transactions_file_path.suffix + ".tmp")
+        with open(temp_file, "w", encoding="utf-8") as f:
+            json.dump(transactions, f, indent=2, ensure_ascii=False)
+        os.replace(temp_file, transactions_file_path)
+    except Exception as e:
+        _log_fs_op_message(logging.ERROR, f"Error saving transactions: {e}", logger)
+        if temp_file and temp_file.exists():
+            try:
+                os.remove(temp_file)
+            except Exception as e:
+                _log_fs_op_message(logging.WARNING, f"Failed to clean up temp file {temp_file}: {e}", logger)
+
 def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
     if not transactions_file_path.is_file():
         _log_fs_op_message(logging.WARNING, f"Transaction file not found: {transactions_file_path}", logger)
@@ -384,7 +405,7 @@ def execute_all_transactions(
                 stats["complete"] += 1
 
             except Exception as e:
-                tx["STATUS"] = TransactionStatus.FAILED.value
+                tx["STATUS"] = TransactionStatus.FALED.value
                 tx["ERROR_MESSAGE"] = f"{type(e).__name__}: {str(e)}"
                 stats["failed"] += 1
                 
