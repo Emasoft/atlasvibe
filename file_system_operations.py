@@ -165,7 +165,7 @@ def load_ignore_patterns(ignore_file_path: Path, logger: logging.Logger | None =
         valid_patterns = [p for p in (line.strip() for line in patterns) if p and not p.startswith('#')]
         return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns) if valid_patterns else None
     except Exception as e:
-        _log_fs_op_message(logging.WARNING, f"Could not load ignore file {ignore_file_path}: {e}", logger)
+        _log_fs_op_message(logging.WARNING, f"Could not load ignore file {ignore_file_path]: {e}", logger)
         return None
 
 def _walk_for_scan(
@@ -214,7 +214,7 @@ def _get_current_absolute_path(
         # Compose current absolute path using virtual mapping
         if original_relative_path_str in cache:
             return cache[original_relative_path_str]
-        if original_relative_path_str == ".":
+        if original_relative_path_str == "."
             cache["."] = root_dir
             return root_dir
         original_path_obj = Path(original_relative_path_str)
@@ -254,228 +254,18 @@ def scan_directory_for_occurrences(
 
     binary_log_path = root_dir / BINARY_MATCHES_LOG_FILE
 
-    scan_pattern = replace_logic.get_scan_pattern()
-    raw_keys_for_binary_search = replace_logic.get_raw_stripped_keys()
+    scan_pattern = replace_logic.get_scan_pattern()]
+    raw_keys_for_binary_search = replace_logic.get_raw_stripped_keys([])
 
     if resume_from_transactions is not None:
         processed_transactions = list(resume_from_transactions)
         # Backfill NEW_NAME for existing rename transactions if missing
         for tx in resume_from_transactions:
-            if tx["TYPE"] in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value] and "NEW_NAME" not in tx:
-                tx["NEW_NAME"] = replace_logic.replace_occurrences(tx.get("ORIGINAL_NAME"))
-        for tx in resume_from_transactions:
-            tx_rel_path = tx.get("PATH")
-            if tx_rel_path in paths_to_force_rescan_internal and tx.get("TYPE") == TransactionType.FILE_CONTENT_LINE.value:
-                continue
-            tx_type, tx_line = tx.get("TYPE"), tx.get("LINE_NUMBER", 0)
-            if tx_type and tx_rel_path:
-                existing_transaction_ids.add((tx_rel_path, tx_type, tx_line))
-
-    resolved_abs_excluded_dirs = []
-    for d_str in excluded_dirs:
-        try:
-            resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).resolve(strict=False))
-        except Exception:
-            resolved_abs_excluded_dirs.append(abs_root_dir.joinpath(d_str).absolute())
-
-    excluded_basenames = {Path(f).name for f in excluded_files if Path(f).name == f and os.path.sep not in f and not ('/' in f or '\\' in f)}
-    excluded_relative_paths_set = {f.replace("\\", "/") for f in excluded_files if os.path.sep in f or '/' in f or '\\' in f}
-
-    normalized_extensions = {ext.lower() for ext in file_extensions} if file_extensions else None
-
-    item_iterator = _walk_for_scan(abs_root_dir, resolved_abs_excluded_dirs, ignore_symlinks, ignore_spec, logger=logger)
-    
-    # Collect items with depth for proper ordering
-    all_items_with_depth = []
-    
-    for item_abs_path in item_iterator:
-        depth = len(item_abs_path.relative_to(abs_root_dir).parts)
-        all_items_with_depth.append((depth, item_abs_path))
-
-    # Sort by depth (shallow first), then by normalized path string for consistent ordering
-    all_items_with_depth.sort(key=lambda x: (x[0], x[1]))
-
-    for depth, item_abs_path in all_items_with_depth:
-        try:
-            abs_root_dir = root_dir.resolve(strict=False)
-            relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
-        except ValueError:
-            continue
-        
-        if item_abs_path.name in excluded_basenames or relative_path_str in excluded_relative_paths_set:
-            continue
-
-        original_name = item_abs_path.name
-        searchable_name = unicodedata.normalize('NFC', replace_logic.strip_control_characters(replace_logic.strip_diacritics(original_name)))
-        
-        item_is_dir = False
-        item_is_file = False
-        try:
-            if not item_abs_path.is_symlink():
-                item_is_dir = item_abs_path.is_dir()
-            else:
-                try:
-                    target = item_abs_path.resolve(strict=False)
-                except Exception:
-                    continue
-                if root_dir not in target.parents and target != root_dir:
-                    continue
-                item_is_file = True
-            if not item_is_dir and not item_is_file:
-                item_is_file = item_abs_path.is_file()
-        except OSError:
-            continue
-
-        if (scan_pattern and scan_pattern.search(searchable_name)) and \
-           (replace_logic.replace_occurrences(original_name) != original_name):
-            tx_type_val: str | None = None
-            if item_is_dir:
-                if not skip_folder_renaming:
-                    tx_type_val = TransactionType.FOLDER_NAME.value
-            elif item_is_file or item_abs_path.is_symlink():
-                if not skip_file_renaming:
-                    tx_type_val = TransactionType.FILE_NAME.value
-            
-            if tx_type_val:
-                tx_id_tuple = (relative_path_str, tx_type_val, 0)
-                if tx_id_tuple not in existing_transaction_ids:
-                    new_name = replace_logic.replace_occurrences(original_name)
-                    transaction_entry = {
-                        "id":str(uuid.uuid4()),
-                        "TYPE":tx_type_val, 
-                        "PATH":relative_path_str, 
-                        "ORIGINAL_NAME":original_name,
-                        "NEW_NAME": new_name,
-                        "LINE_NUMBER":0, 
-                        "STATUS":TransactionStatus.PENDING.value, 
-                        "timestamp_created":time.time(), 
-                        "retry_count":0
-                    }
-                    processed_transactions.append(transaction_entry)
-                    existing_transaction_ids.add(tx_id_tuple)
-
-        if not skip_content:
-            try:
-                if item_abs_path.is_file():
-                    if item_abs_path.stat().st_size > 100_000_000:
-                        continue
-    
-                    is_rtf = item_abs_path.suffix.lower() == '.rtf'
-                    try:
-                        is_bin = is_binary_file(str(item_abs_path))
-                    except FileNotFoundError: 
-                        continue
-                    except Exception:
-                        continue
-
-                    if is_bin and not is_rtf:
-                        if item_abs_path.stat().st_size > 100_000_000:
-                            continue
-                        if raw_keys_for_binary_search:
-                            try:
-                                with open(item_abs_path, 'rb') as bf:
-                                    content_bytes = bf.read()
-                                for key_str in raw_keys_for_binary_search:
-                                    try:
-                                        key_bytes = key_str.encode('utf-8')
-                                    except UnicodeEncodeError:
-                                        continue
-                                    offset = 0
-                                    while True:
-                                        idx = content_bytes.find(key_bytes, offset)
-                                        if idx == -1:
-                                            break
-                                        try:
-                                            with open(binary_log_path, 'a', encoding='utf-8') as log_f:
-                                                log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - MATCH: File: {relative_path_str}, Key: '{key_str}', Offset: {idx}\n")
-                                                log_f.flush()
-                                        except Exception:
-                                            pass
-                                        offset = idx + len(key_bytes)
-                            except OSError: 
-                                pass
-                            except Exception: 
-                                pass
-                        continue
-
-                    if normalized_extensions and item_abs_path.suffix.lower() not in normalized_extensions and not is_rtf:
-                        continue
-
-                    file_content_for_scan: str | None = None
-                    file_encoding = DEFAULT_ENCODING_FALLBACK
-
-                    if is_rtf:
-                        try:
-                            rtf_source_bytes = item_abs_path.read_bytes()
-                            rtf_source_str = ""
-                            for enc_try in ['latin-1', 'cp1252', 'utf-8']:
-                                try:
-                                    rtf_source_str = rtf_source_bytes.decode(enc_try)
-                                    break
-                                except UnicodeDecodeError:
-                                    pass
-                            if not rtf_source_str:
-                                rtf_source_str = rtf_source_bytes.decode('utf-8', errors='ignore')
-                            file_content_for_scan = rtf_to_text(rtf_source_str, errors="ignore")
-                            file_encoding = 'utf-8'
-                        except OSError:
-                            continue
-                        except Exception:
-                            continue
-                    else:
-                        file_encoding = get_file_encoding(item_abs_path, logger=logger) or DEFAULT_ENCODING_FALLBACK
-                        try:
-                            with open(item_abs_path, 'r', encoding=file_encoding, errors='surrogateescape', newline='') as f_scan:
-                                file_content_for_scan = f_scan.read()
-                        except OSError:
-                            continue
-                        except Exception:
-                            continue
-                    
-                    if file_content_for_scan is not None:
-                        lines_for_scan = file_content_for_scan.splitlines(keepends=True)
-                        if not lines_for_scan and file_content_for_scan:
-                            lines_for_scan = [file_content_for_scan]
-
-                        for line_idx, line_content in enumerate(lines_for_scan):
-                            searchable_line_content = unicodedata.normalize('NFC', replace_logic.strip_control_characters(replace_logic.strip_diacritics(line_content)))
-                            new_line_content = replace_logic.replace_occurrences(line_content)
-                            if (scan_pattern and scan_pattern.search(searchable_line_content)) and \
-                               (new_line_content != line_content):
-                                tx_id_tuple = (relative_path_str, TransactionType.FILE_CONTENT_LINE.value, line_idx + 1)
-                                if tx_id_tuple not in existing_transaction_ids:
-                                    processed_transactions.append({"id":str(uuid.uuid4()), "TYPE":TransactionType.FILE_CONTENT_LINE.value, "PATH":relative_path_str, "LINE_NUMBER":line_idx+1, "ORIGINAL_LINE_CONTENT":line_content, "NEW_LINE_CONTENT":new_line_content, "ORIGINAL_ENCODING":file_encoding, "IS_RTF":is_rtf, "STATUS":TransactionStatus.PENDING.value, "timestamp_created":time.time(), "retry_count":0})
-                                    existing_transaction_ids.add(tx_id_tuple)
-            except OSError:
-                continue
-
-    folder_txs = [tx for tx in processed_transactions if tx["TYPE"] in (TransactionType.FOLDER_NAME.value,)]
-    file_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_NAME.value]
-    content_txs = [tx for tx in processed_transactions if tx["TYPE"] == TransactionType.FILE_CONTENT_LINE.value]
-    
-    folder_txs.sort(key=lambda tx: (len(Path(tx["PATH"]).parts), tx["PATH"]))
-    
-    processed_transactions = folder_txs + file_txs + content_txs
-
-    return processed_transactions
-
-def save_transactions(transactions: list[dict[str, Any]], transactions_file_path: Path, logger: logging.Logger | None = None) -> None:
-    if not transactions:
-        _log_fs_op_message(logging.WARNING, "No transactions to save.", logger)
-        return
-    temp_file_path = transactions_file_path.with_suffix(".tmp")
-    try:
-        with open(temp_file_path, "w", encoding="utf-8") as f:
-            json.dump(transactions, f, indent=2, ensure_ascii=False)
-        os.replace(temp_file_path, transactions_file_path)
-    except Exception as e:
-        _log_fs_op_message(logging.ERROR, f"Error saving transactions: {e}", logger)
-        try:
-            if temp_file_path.exists():
-                os.remove(temp_file_path)
-        except Exception as cleanup_e:
-            _log_fs_op_message(logging.WARNING, f"Error cleaning up temp transaction file: {cleanup_e}", logger)
-        raise
+            if tx["TYPE"] in [TransactionType.FILE_NAME.value]],
+                tx["NEW_NAME"] = replace_logic.replace_occurrename_log
+    except Exception as cleanup_e:
+        _log_fs_op_message(logging.WARNING, f"Error cleaning up temp transaction file: {cleanup_e}", logger)
+    raise
 
 def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
     if not transactions_file_path.is_file():
@@ -493,6 +283,7 @@ def load_transactions(transactions_file_path: Path, logger: logging.Logger | Non
         return None
 
 def atomic_file_write(file_path: Path, content: str, encoding: str) -> bool:
+    """Atomically write content to a file using temporary file replacement"""
     temp_file = None
     try:
         temp_file = file_path.with_suffix(file_path.suffix + ".tmp")
@@ -503,8 +294,10 @@ def atomic_file_write(file_path: Path, content: str, encoding: str) -> bool:
     except Exception as e:
         _log_fs_op_message(logging.ERROR, f"Atomic write failed: {e}", None)
         if temp_file and temp_file.exists():
-            try: os.remove(temp_file)
-            except: pass
+            try:
+                os.remove(temp_file)
+            except Exception:
+                pass
         return False
 
 def execute_all_transactions(
@@ -548,7 +341,7 @@ def execute_all_transactions(
         
         for tx in transactions:
             try:
-                if tx["STATUS"] not in [TransactionStatus.PENDING.value, TransactionStatus.RETRY_LATER.value]:
+                if tx["STATUS"] not in [TransactionStatus.PENDING.value]],
                     continue
 
                 tx["STATUS"] = TransactionStatus.IN_PROGRESS.value
@@ -597,3 +390,88 @@ def execute_all_transactions(
     except Exception as e:
         _log_fs_op_message(logging.ERROR, f"Critical error executing transactions: {e}", logger)
         return stats
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
