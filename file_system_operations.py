@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# - Fixed binary file match logging: ensured the binary matches log file is created and flushed properly.
-# - Added explicit flush and close after writing to binary matches log file to guarantee file creation before test assertion.
-# - Added error handling around binary log file writing to avoid silent failures.
-# - Minor logging improvements for binary file processing.
+# - Added missing definitions of load_transactions and save_transactions functions.
+# - Ensured all functions used in tests are properly exported.
+# - Minor cleanup and consistency fixes.
 #
 # Copyright (c) 2024 Emasoft
 #
@@ -498,5 +497,45 @@ def scan_directory_for_occurrences(
     processed_transactions = folder_txs + file_txs + content_txs
 
     return processed_transactions
+
+def save_transactions(transactions: list[dict[str, Any]], transactions_file_path: Path, logger: logging.Logger | None = None) -> None:
+    """
+    Save the list of transactions to a JSON file atomically.
+    """
+    if not transactions:
+        _log_fs_op_message(logging.WARNING, "No transactions to save.", logger)
+        return
+    temp_file_path = transactions_file_path.with_suffix(".tmp")
+    try:
+        with open(temp_file_path, "w", encoding="utf-8") as f:
+            json.dump(transactions, f, indent=2, ensure_ascii=False)
+        # Atomically replace original file
+        os.replace(temp_file_path, transactions_file_path)
+    except Exception as e:
+        _log_fs_op_message(logging.ERROR, f"Error saving transactions: {e}", logger)
+        try:
+            if temp_file_path.exists():
+                os.remove(temp_file_path)
+        except Exception as cleanup_e:
+            _log_fs_op_message(logging.WARNING, f"Error cleaning up temp transaction file: {cleanup_e}", logger)
+        raise
+
+def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
+    """
+    Load transactions from a JSON file.
+    """
+    if not transactions_file_path.is_file():
+        _log_fs_op_message(logging.WARNING, f"Transaction file not found: {transactions_file_path}", logger)
+        return None
+    try:
+        with open(transactions_file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            _log_fs_op_message(logging.ERROR, f"Transaction file {transactions_file_path} does not contain a list.", logger)
+            return None
+        return data
+    except Exception as e:
+        _log_fs_op_message(logging.ERROR, f"Error loading transactions from {transactions_file_path}: {e}", logger)
+        return None
 
 # ... rest of the file unchanged ...
