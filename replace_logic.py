@@ -130,14 +130,14 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         if not isinstance(k_orig_json, str) or not isinstance(v_original, str):
             _log_message(logging.WARNING, f"Skipping invalid key-value pair (must be strings): {k_orig_json}:{v_original}", logger)
             continue
-        
+            
         temp_stripped_key_no_controls = strip_control_characters(k_orig_json)
         temp_stripped_key_no_diacritics = strip_diacritics(temp_stripped_key_no_controls)
         canonical_key = unicodedata.normalize('NFC', temp_stripped_key_no_diacritics)
-        
+            
         if not canonical_key: 
             continue
-        
+            
         _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: JSON Key='{k_orig_json}' (len {len(k_orig_json)}, ords={[ord(c) for c in k_orig_json]})", logger)
         _log_message(logging.DEBUG, f"    -> NoControls='{temp_stripped_key_no_controls}' (len {len(temp_stripped_key_no_controls)}, ords={[ord(c) for c in temp_stripped_key_no_controls]})", logger)
         _log_message(logging.DEBUG, f"    -> NoDiacritics='{temp_stripped_key_no_diacritics}' (len {len(temp_stripped_key_no_diacritics)}, ords={[ord(c) for c in temp_stripped_key_no_diacritics]})", logger)
@@ -174,12 +174,16 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
             _RAW_REPLACEMENT_MAPPING = {} 
             return False
 
+    # STORE SORTED KEYS (by longest first) for binary scanning and in what order?
+    global _SORTED_RAW_KEYS_FOR_REPLACE
+    _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True)
+        
     # Fix: Properly escape keys for regex pattern compilation to handle special regex characters
-    pattern_keys_for_scan_and_replace: list[str] = [re.escape(k) for k in _RAW_REPLACEMENT_MAPPING.keys()]
-    pattern_keys_for_scan_and_replace.sort(key=len, reverse=True)
+    pattern_keys_for_scan_and_replace: list[str] = [re.escape(k) for k in _SORTED_RAW_KEYS_FOR_REPLACE]
+    # pattern_keys_for_scan_and_replace.sort(key=len, reverse=True)  -> No need to sort again
 
     combined_pattern_str = r'(' + r'|'.join(pattern_keys_for_scan_and_replace) + r')'
-    
+        
     _log_message(logging.DEBUG, f"Pattern keys after escaping: {pattern_keys_for_scan_and_replace}", logger)
 
     try:
@@ -189,7 +193,7 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         _log_message(logging.ERROR, f"Could not compile regex pattern: {e}. Regex tried: '{combined_pattern_str}'", logger)
         _RAW_REPLACEMENT_MAPPING = {} 
         return False
-        
+            
     _MAPPING_LOADED = True
     return True
 
