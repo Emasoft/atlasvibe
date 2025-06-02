@@ -793,10 +793,9 @@ def process_large_file_content(
                             split_pos = end_idx
                             search_pos = min(end_idx - 1, len(current_line_content) - 1)
 
-                            # Initialize key_characters here to prevent UnboundLocalError
-                            nonlocal key_characters
-                            key_characters = replace_logic.get_key_characters()
-                            
+                            # Removed invalid 'nonlocal' statement here
+                            # key_characters is already defined in this scope
+
                             while search_pos >= buffer_idx:
                                 if current_line_content[search_pos] not in key_characters:
                                     split_pos = search_pos + 1
