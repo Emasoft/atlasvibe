@@ -21,6 +21,7 @@ from typing import Dict, Optional
 from captain.utils.logger import logger
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.project_structure import get_project_blocks_dir, validate_project_structure
+from captain.utils.block_utils import add_to_sys_path
 
 
 class ProjectBlocksLoader:
@@ -56,60 +57,76 @@ class ProjectBlocksLoader:
         
     def _load_blueprint_blocks(self) -> None:
         """Load blueprint blocks from the global blocks directory."""
-        blocks_dir = get_blocks_path()
-        parent_dir = Path(blocks_dir).parent
-        
-        # Add to sys.path if not already there
-        parent_dir_str = str(parent_dir)
-        if parent_dir_str not in sys.path:
-            sys.path.append(parent_dir_str)
+        try:
+            blocks_dir = get_blocks_path()
+            parent_dir = Path(blocks_dir).parent
             
-        # Walk through blueprint blocks
-        for root, _, files in os.walk(blocks_dir):
-            if root == blocks_dir:
-                continue
+            # Add to sys.path if not already there
+            add_to_sys_path(parent_dir)
                 
-            for file in files:
-                if file.endswith(".py") and not file.startswith("_"):
-                    # Create module path
-                    rel_path = Path(root).relative_to(parent_dir)
-                    module_parts = list(rel_path.parts) + [file[:-3]]
-                    module_path = ".".join(module_parts)
+            # Walk through blueprint blocks
+            for root, _, files in os.walk(blocks_dir):
+                if root == blocks_dir:
+                    continue
                     
-                    # Map function name to module path
-                    func_name = file[:-3]
-                    self.blueprint_mapping[func_name] = module_path
-                    
-        logger.info(f"Loaded {len(self.blueprint_mapping)} blueprint blocks")
+                for file in files:
+                    if file.endswith(".py") and not file.startswith("_"):
+                        try:
+                            # Create module path
+                            rel_path = Path(root).relative_to(parent_dir)
+                            module_parts = list(rel_path.parts) + [file[:-3]]
+                            module_path = ".".join(module_parts)
+                            
+                            # Map function name to module path
+                            func_name = file[:-3]
+                            self.blueprint_mapping[func_name] = module_path
+                        except Exception as e:
+                            logger.error(f"Failed to process blueprint block {file}: {e}")
+                        
+            logger.info(f"Loaded {len(self.blueprint_mapping)} blueprint blocks")
+        except Exception as e:
+            logger.error(f"Failed to load blueprint blocks: {e}")
+            # Continue without blueprint blocks rather than failing completely
         
     def _load_project_blocks(self) -> None:
         """Load project-specific blocks."""
         if not self.project_path:
             return
             
-        project_blocks_dir = get_project_blocks_dir(self.project_path)
-        if not project_blocks_dir.exists():
-            return
-            
-        # Add project directory to sys.path
-        project_dir = project_blocks_dir.parent
-        project_dir_str = str(project_dir)
-        if project_dir_str not in sys.path:
-            sys.path.insert(0, project_dir_str)  # Insert at beginning for priority
-            
-        # Walk through project blocks
-        for block_dir in project_blocks_dir.iterdir():
-            if not block_dir.is_dir() or block_dir.name.startswith("_"):
-                continue
+        try:
+            project_blocks_dir = get_project_blocks_dir(self.project_path)
+            if not project_blocks_dir.exists():
+                return
                 
-            # Look for Python file with same name as directory
-            py_file = block_dir / f"{block_dir.name}.py"
-            if py_file.exists():
-                # Create module path relative to project directory
-                module_path = f"atlasvibe_blocks.{block_dir.name}.{block_dir.name}"
-                self.project_mapping[block_dir.name] = module_path
+            # Add project directory to sys.path with priority
+            project_dir = project_blocks_dir.parent
+            add_to_sys_path(project_dir, prepend=True)
                 
-        logger.info(f"Loaded {len(self.project_mapping)} project-specific blocks")
+            # Walk through project blocks
+            for block_dir in project_blocks_dir.iterdir():
+                if not block_dir.is_dir() or block_dir.name.startswith("_"):
+                    continue
+                    
+                try:
+                    # Look for Python file with same name as directory
+                    py_file = block_dir / f"{block_dir.name}.py"
+                    if py_file.exists():
+                        # Check for __init__.py
+                        init_file = block_dir / "__init__.py"
+                        if not init_file.exists():
+                            logger.warning(f"Block {block_dir.name} missing __init__.py, creating one")
+                            init_file.write_text("")
+                            
+                        # Create module path relative to project directory
+                        module_path = f"atlasvibe_blocks.{block_dir.name}.{block_dir.name}"
+                        self.project_mapping[block_dir.name] = module_path
+                except Exception as e:
+                    logger.error(f"Failed to process project block {block_dir.name}: {e}")
+                    
+            logger.info(f"Loaded {len(self.project_mapping)} project-specific blocks")
+        except Exception as e:
+            logger.error(f"Failed to load project blocks: {e}")
+            # Continue without project blocks rather than failing completely
         
     def get_module(self, func_name: str):
         """Get a module for a given function name.

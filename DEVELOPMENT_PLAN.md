@@ -86,11 +86,17 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   Function renaming and metadata updates implemented in `project_structure.py`
     *   **Still needed:** Update the block discovery/loading to include project-specific blocks
 
-**Task 2.4: Project-Scoped Block Loading and Management**
+**Task 2.4: Project-Scoped Block Loading and Management** ✅ COMPLETED
 *   **Action:** Modify the application to discover and load blocks primarily from the active project's `atlasvibe_blocks/` directory.
 *   **Details:**
     *   The application should also be able to access the "blueprint" blocks for creation purposes but not execute them directly in a flow.
     *   The UI for selecting blocks should clearly distinguish between adding a new custom block (from a blueprint) and potentially reusing an existing custom block within the same project.
+*   **Implementation:**
+    *   Created `ProjectBlocksLoader` class to manage both blueprint and project blocks
+    *   Modified import system to prioritize project blocks over blueprints
+    *   Updated manifest generation to include "Project Blocks" section
+    *   Backend now receives project_path for block loading during execution
+    *   Project blocks are dynamically loaded from `atlasvibe_blocks/` directory
 
 **Task 2.5: In-IDE Block Code Editing and Synchronization**
 *   **Action:** Enable users to edit the Python code of their custom blocks directly within the atlasvibe IDE.

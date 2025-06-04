@@ -88,12 +88,20 @@ def validate_project_structure(project_path: str) -> bool:
     """
     try:
         project_file = Path(project_path)
-        if not project_file.exists() or project_file.suffix != '.atlasvibe':
+        if not project_file.exists():
+            logger.debug(f"Project file does not exist: {project_path}")
+            return False
+        if project_file.suffix != '.atlasvibe':
+            logger.debug(f"Invalid project file extension: {project_path}")
             return False
             
         blocks_dir = get_project_blocks_dir(project_path)
-        return blocks_dir.exists() and blocks_dir.is_dir()
-    except (ProjectStructureError, OSError, ValueError):
+        is_valid = blocks_dir.exists() and blocks_dir.is_dir()
+        if not is_valid:
+            logger.debug(f"Project blocks directory missing or invalid: {blocks_dir}")
+        return is_valid
+    except (ProjectStructureError, OSError, ValueError) as e:
+        logger.debug(f"Error validating project structure: {e}")
         return False
 
 
@@ -132,6 +140,10 @@ def validate_block_name(name: str) -> None:
     """
     if not name or not name.strip():
         raise ProjectStructureError("Block name cannot be empty")
+    
+    # Check for path traversal attempts
+    if '..' in name or '/' in name or '\\' in name:
+        raise ProjectStructureError("Block name cannot contain path separators or '..'")
     
     # Check for valid Python identifier
     if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', name):
@@ -190,6 +202,11 @@ def copy_blueprint_to_project(
         # Copy the blueprint directory
         shutil.copytree(blueprint_path, new_block_dir)
         created_dir = True
+        
+        # Ensure __init__.py exists in the new block directory
+        block_init = new_block_dir / "__init__.py"
+        if not block_init.exists():
+            block_init.write_text("")
         
         # Rename the main Python file
         blueprint_name = Path(blueprint_path).name
