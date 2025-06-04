@@ -63,6 +63,266 @@ pnpm run start-project:debug      # Debug mode
 uv run python3 main.py            # or: python main.py on Windows
 uv run python3 main.py --log-level debug  # Debug mode
 
+----------------------------------------
+
+TITLE: Creating Virtual Environment with Specific Python Version using uv (Console)
+DESCRIPTION: Creates a virtual environment using a specific Python version (e.g., 3.11) with the `uv` tool. Requires the requested Python version to be available or downloadable by uv.
+SOURCE: https://github.com/astral-sh/uv/blob/main/docs/pip/environments.md#_snippet_2
+
+LANGUAGE: console
+CODE:
+```
+$ uv venv --python 3.11
+```
+
+----------------------------------------
+
+TITLE: Creating a Virtual Environment with uv
+DESCRIPTION: This command creates a new virtual environment in the current directory using `uv venv`. It automatically detects the appropriate Python version and provides instructions for activating the environment.
+SOURCE: https://github.com/astral-sh/uv/blob/main/README.md#_snippet_14
+
+LANGUAGE: console
+CODE:
+```
+$ uv venv
+Using Python 3.12.3
+Creating virtual environment at: .venv
+Activate with: source .venv/bin/activate
+
+------------------------------------------
+
+## Managed and system Python installations
+Since it is common for a system to have an existing Python installation, uv supports discovering Python versions. However, uv also supports installing Python versions itself. To distinguish between these two types of Python installations, uv refers to Python versions it installs as managed Python installations and all other Python installations as system Python installations.
+
+Note
+uv does not distinguish between Python versions installed by the operating system vs those installed and managed by other tools. For example, if a Python installation is managed with pyenv, it would still be considered a system Python version in uv.
+
+
+## Requesting a version
+A specific Python version can be requested with the --python flag in most uv commands. For example, when creating a virtual environment:
+
+
+$ uv venv --python 3.11.6
+
+uv will ensure that Python 3.11.6 is available — downloading and installing it if necessary — then create the virtual environment with it.
+The following Python version request formats are supported:
+
+	•	<version> (e.g., 3, 3.12, 3.12.3)
+	•	<version-specifier> (e.g., >=3.12,<3.13)
+	•	<implementation> (e.g., cpython or cp)
+	•	<implementation>@<version> (e.g., cpython@3.12)
+	•	<implementation><version> (e.g., cpython3.12 or cp312)
+	•	<implementation><version-specifier> (e.g., cpython>=3.12,<3.13)
+	•	<implementation>-<version>-<os>-<arch>-<libc> (e.g., cpython-3.12.3-macos-aarch64-none)
+	
+Additionally, a specific system Python interpreter can be requested with:
+
+	•	<executable-path> (e.g., /opt/homebrew/bin/python3)
+	•	<executable-name> (e.g., mypython3)
+	•	<install-dir> (e.g., /some/environment/)
+	
+By default, uv will automatically download Python versions if they cannot be found on the system. This behavior can be disabled with the python-downloads option.
+
+
+## Python version files
+The .python-version file can be used to create a default Python version request. uv searches for a .python-version file in the working directory and each of its parents. If none is found, uv will check the user-level configuration directory. Any of the request formats described above can be used, though use of a version number is recommended for interoperability with other tools.
+A .python-version file can be created in the current directory with the uv python pin command:
+
+## Change to use a specific Python version in the current directory
+
+```
+$ uv python pin 3.11
+
+Pinned `.python-version` to `3.11`
+```
+
+A global .python-version file can be created in the user configuration directory with the uv python pin --global command. (not reccomended)
+
+## Discovery of .python-version files can be disabled with --no-config.
+uv will not search for .python-version files beyond project or workspace boundaries (with the exception of the user configuration directory).
+
+## Installing a Python version
+uv bundles a list of downloadable CPython and PyPy distributions for macOS, Linux, and Windows.
+
+Tip
+By default, Python versions are automatically downloaded as needed without using uv python install.
+
+To install a Python version at a specific version:
+
+
+$ uv python install 3.12.3
+
+To install the latest patch version:
+
+
+$ uv python install 3.12
+
+To install a version that satisfies constraints:
+
+
+$ uv python install '>=3.8,<3.10'
+
+To install multiple versions:
+
+
+$ uv python install 3.9 3.10 3.11
+
+To install a specific implementation:
+
+
+$ uv python install pypy
+
+All of the Python version request formats are supported except those that are used for requesting local interpreters such as a file path.
+By default uv python install will verify that a managed Python version is installed or install the latest version. If a .python-version file is present, uv will install the Python version listed in the file. A project that requires multiple Python versions may define a .python-versions file. If present, uv will install all of the Python versions listed in the file.
+
+Important
+The available Python versions are frozen for each uv release. To install new Python versions, you may need upgrade uv.
+
+## Installing Python executables
+
+To install Python executables into your PATH, provide the --preview option:
+
+
+$ uv python install 3.12 --preview
+This will install a Python executable for the requested version into ~/.local/bin, e.g., as python3.12.
+
+Tip
+If ~/.local/bin is not in your PATH, you can add it with uv tool update-shell.
+
+To install python and python3 executables, include the --default option:
+
+
+$ uv python install 3.12 --default --preview
+
+When installing Python executables, uv will only overwrite an existing executable if it is managed by uv — e.g., if ~/.local/bin/python3.12 exists already uv will not overwrite it without the --force flag.
+uv will update executables that it manages. However, it will prefer the latest patch version of each Python minor version by default. For example:
+
+
+$ uv python install 3.12.7 --preview  # Adds `python3.12` to `~/.local/bin`
+
+$ uv python install 3.12.6 --preview  # Does not update `python3.12`
+
+$ uv python install 3.12.8 --preview  # Updates `python3.12` to point to 3.12.8
+
+## Project Python versions
+uv will respect Python requirements defined in requires-python in the pyproject.toml file during project command invocations. The first Python version that is compatible with the requirement will be used, unless a version is otherwise requested, e.g., via a .python-version file or the --python flag.
+
+## Viewing available Python versions
+To list installed and available Python versions:
+
+
+$ uv python list
+
+To filter the Python versions, provide a request, e.g., to show all Python 3.13 interpreters:
+
+
+$ uv python list 3.13
+
+Or, to show all PyPy interpreters:
+
+
+$ uv python list pypy
+
+By default, downloads for other platforms and old patch versions are hidden.
+To view all versions:
+
+
+$ uv python list --all-versions
+
+To view Python versions for other platforms:
+
+
+$ uv python list --all-platforms
+
+To exclude downloads and only show installed Python versions:
+
+
+$ uv python list --only-installed
+
+See the uv python list reference for more details.
+
+## Finding a Python executable
+To find a Python executable, use the uv python find command:
+
+$ uv python find
+
+By default, this will display the path to the first available Python executable. See the discovery rules for details about how executables are discovered.
+
+This interface also supports many request formats, e.g., to find a Python executable that has a version of 3.11 or newer:
+
+$ uv python find '>=3.11'
+
+By default, uv python find will include Python versions from virtual environments. If a .venv directory is found in the working directory or any of the parent directories or the VIRTUAL_ENV environment variable is set, it will take precedence over any Python executables on the PATH.
+To ignore virtual environments, use the --system flag:
+
+$ uv python find --system
+
+But it is not reccomended.
+
+## Discovery of Python versions
+When searching for a Python version, the following locations are checked:
+	•	Managed Python installations in the UV_PYTHON_INSTALL_DIR.
+	•	A Python interpreter on the PATH as python, python3, or python3.x on macOS and Linux, or python.exe on Windows.
+	•	On Windows, the Python interpreters in the Windows registry and Microsoft Store Python interpreters (see py --list-paths) that match the requested version.
+
+In some cases, uv allows using a Python version from a virtual environment. In this case, the virtual environment's interpreter will be checked for compatibility with the request before searching for an installation as described above. See the pip-compatible virtual environment discovery documentation for details.
+When performing discovery, non-executable files will be ignored. Each discovered executable is queried for metadata to ensure it meets the requested Python version. If the query fails, the executable will be skipped. If the executable satisfies the request, it is used without inspecting additional executables.
+When searching for a managed Python version, uv will prefer newer versions first. When searching for a system Python version, uv will use the first compatible version — not the newest version.
+If a Python version cannot be found on the system, uv will check for a compatible managed Python version download.
+
+## EXAMPLE OF INSTALLING A VERSION OF PYTHON AND CHANGING IT LATER WITH PIN:
+
+## Install multiple Python versions:
+
+```
+$ uv python install 3.10 3.11 3.12
+
+Searching for Python versions matching: Python 3.10
+
+Searching for Python versions matching: Python 3.11
+
+Searching for Python versions matching: Python 3.12
+
+Installed 3 versions in 3.42s
+
+ + cpython-3.10.14-macos-aarch64-none
+
+ + cpython-3.11.9-macos-aarch64-none
+
+ + cpython-3.12.4-macos-aarch64-none
+ ```
+ 
+## Download Python versions as needed:
+
+```
+$ uv venv --python 3.12.0
+
+Using CPython 3.12.0
+
+Creating virtual environment at: .venv
+
+Activate with: source .venv/bin/activate
+
+
+$ uv run --python pypy@3.8 -- python
+
+Python 3.8.16 (a9dbdca6fc3286b0addd2240f11d97d8e8de187a, Dec 29 2022, 11:45:30)
+
+[PyPy 7.3.11 with GCC Apple LLVM 13.1.6 (clang-1316.0.21.2.5)] on darwin
+
+Type "help", "copyright", "credits" or "license" for more information.
+```
+
+## Change to use a specific Python version in the current directory:
+
+```
+$ uv python pin 3.11
+
+Pinned `.python-version` to `3.11`
+```
+
+------------------------------------------
+
 # Frontend only
 pnpm run dev
 ```
@@ -97,6 +357,8 @@ pnpm run lint            # ESLint
 pnpm run format          # Prettier
 pnpm run check           # Check formatting without fixing
 ```
+
+
 
 ### Building and Packaging
 ```bash
