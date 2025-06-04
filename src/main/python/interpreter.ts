@@ -1,4 +1,4 @@
-import { readdir, stat } from "fs";
+import { readdir, stat, existsSync } from "fs";
 import { join } from "path";
 import os from "os";
 import { execCommand } from "@/main/executor";
@@ -90,6 +90,12 @@ export class PythonManager {
       );
     };
 
+    // Add virtual environment path if it exists
+    if (process.env.VIRTUAL_ENV) {
+      const venvBinPath = join(process.env.VIRTUAL_ENV, "bin");
+      checkDirectory(venvBinPath);
+    }
+
     // Check each directory in pythonDirPaths
     this.defaultBinPaths[process.platform].forEach(checkDirectory);
 
@@ -142,6 +148,19 @@ export class PythonManager {
   }
 
   async getGlobalPython() {
+    // First check if we're in a virtual environment
+    if (process.env.VIRTUAL_ENV) {
+      const venvPython = join(process.env.VIRTUAL_ENV, "bin", "python");
+      try {
+        const cmd = `"${venvPython}" -c "import sys; print(sys.executable)"`;
+        const pythonPath = await execCommand(new Command(cmd), { quiet: true });
+        console.log(`Found Python in VIRTUAL_ENV: ${pythonPath.trim()}`);
+        return pythonPath.trim();
+      } catch (err) {
+        console.log(`Failed to use VIRTUAL_ENV Python at ${venvPython}`);
+      }
+    }
+    
     // Try python3.11 first
     try {
       const cmd311 = `python3.11 -c "import sys; print(sys.executable)"`;

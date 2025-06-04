@@ -20,6 +20,37 @@ export async function checkPythonInstallation(
   force?: boolean,
 ): Promise<InterpretersList> {
   if (!global.pythonInterpreters || force) {
+    // Check for virtual environment first
+    if (process.env.VIRTUAL_ENV) {
+      const venvPython = join(process.env.VIRTUAL_ENV, "bin", "python");
+      if (existsSync(venvPython)) {
+        try {
+          const version = await PythonManager.getVersion(venvPython);
+          if (version && (version.minor === 11 || version.minor === 12) && version.major === 3) {
+            log.info(`Using Python from VIRTUAL_ENV: ${venvPython}`);
+            global.pythonInterpreters = [{
+              path: venvPython,
+              version,
+              default: true,
+            }];
+            // Also add other discovered interpreters but not as default
+            const py311 = await new PythonManager().getInterpreterByVersion({
+              major: 3,
+              minor: 11,
+            });
+            const py312 = await new PythonManager().getInterpreterByVersion({
+              major: 3,
+              minor: 12,
+            });
+            global.pythonInterpreters.push(...py311.filter(i => i.path !== venvPython), ...py312.filter(i => i.path !== venvPython));
+            return global.pythonInterpreters;
+          }
+        } catch (err) {
+          log.warn(`Failed to use VIRTUAL_ENV Python: ${err}`);
+        }
+      }
+    }
+    
     const py311 = await new PythonManager().getInterpreterByVersion({
       major: 3,
       minor: 11,
@@ -133,21 +164,29 @@ export async function installDependencies(): Promise<string> {
 
 export async function spawnCaptain(): Promise<void> {
   return new Promise((_, reject) => {
-    // Use uv run to execute in the virtual environment
-    const command = new Command(`uv run python main.py`);
+    // If we're in a virtual environment, use python directly
+    let pythonCommand = "python";
+    if (process.env.VIRTUAL_ENV) {
+      pythonCommand = join(process.env.VIRTUAL_ENV, "bin", "python");
+    } else if (process.env.PY_INTERPRETER) {
+      pythonCommand = process.env.PY_INTERPRETER;
+    }
+    
+    const command = new Command(`"${pythonCommand}" main.py`);
 
     log.info("execCommand: " + command.getCommand());
+    log.info("Working directory: " + (app.isPackaged ? process.resourcesPath : process.cwd()));
 
     global.captainProcess = spawn(
       command.getCommand().split(" ")[0],
       command.getCommand().split(" ").slice(1),
       {
         cwd: app.isPackaged ? process.resourcesPath : undefined,
+        shell: true,
         env: {
           ...process.env,
           LOCAL_DB_PATH: store.path,
-          UV_PYTHON: process.env.UV_PYTHON,
-          VIRTUAL_ENV: process.env.VIRTUAL_ENV,
+          PYTHONPATH: process.env.PYTHONPATH || "",
         },
       },
     );
