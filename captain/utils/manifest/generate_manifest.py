@@ -3,6 +3,8 @@ from typing import Any, Optional, Union
 
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
+from captain.utils.project_structure import get_project_blocks_dir, validate_project_structure
+from captain.utils.logger import logger
 
 __all__ = ["generate_manifest"]
 
@@ -143,8 +145,48 @@ def sort_order(element: dict[str, Any]):
         return len(ORDERING)
 
 
-def generate_manifest(blocks_path: str | None):
+def generate_manifest(blocks_path: str | None, project_path: str | None = None):
+    """Generate manifest including both blueprint and project blocks.
+    
+    Args:
+        blocks_path: Optional custom blocks path (legacy parameter)
+        project_path: Optional path to .atlasvibe project file
+        
+    Returns:
+        Manifest dictionary with all available blocks
+    """
     blocks_path = blocks_path if blocks_path else get_blocks_path()
     blocks_map = browse_directories(blocks_path)
     blocks_map["children"].sort(key=sort_order)  # type: ignore
+    
+    # Add project-specific blocks if project path is provided
+    if project_path and validate_project_structure(project_path):
+        project_blocks_dir = get_project_blocks_dir(project_path)
+        
+        # Create a project blocks section
+        project_blocks = {
+            "name": "Project Blocks",
+            "key": "PROJECT_BLOCKS",
+            "type": "PROJECT",
+            "children": []
+        }
+        
+        # Add each project block
+        for block_dir in sorted(project_blocks_dir.iterdir()):
+            if block_dir.is_dir() and not block_dir.name.startswith('_'):
+                py_file = block_dir / f"{block_dir.name}.py"
+                if py_file.exists():
+                    try:
+                        block_manifest = create_manifest(str(py_file))
+                        if block_manifest:
+                            block_manifest["type"] = "PROJECT"
+                            block_manifest["isCustom"] = True
+                            project_blocks["children"].append(block_manifest)
+                    except Exception as e:
+                        logger.error(f"Failed to create manifest for project block {block_dir.name}: {e}")
+        
+        # Add project blocks at the beginning if there are any
+        if project_blocks["children"]:
+            blocks_map["children"].insert(0, project_blocks)
+    
     return blocks_map

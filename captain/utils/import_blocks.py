@@ -1,24 +1,22 @@
-import importlib
-import os
-import sys
-from pathlib import Path
 from typing import Any, cast
 
 from atlasvibe import NoInitFunctionError, get_node_init_function
 
 from captain.models.topology import Topology
-from captain.utils.logger import logger
-from captain.utils.blocks_path import get_blocks_path
+from captain.utils.project_blocks_loader import get_module_for_block, get_project_loader
 
 
-def pre_import_functions(topology: Topology):
+def pre_import_functions(topology: Topology, project_path: str | None = None):
     functions: dict[str, str] = {}
     errors: dict[str, str] = {}
     for block_id in cast(list[str], topology.original_graph.nodes):
         # get the block function
         block = cast(dict[str, Any], topology.original_graph.nodes[block_id])
         cmd: str = block["cmd"]
-        module = get_module_func(cmd)
+        module = get_module_func(cmd, project_path)
+        if module is None:
+            errors[block_id] = f"Failed to load module for block '{cmd}'"
+            continue
         func = getattr(module, cmd)
 
         preflight = next(
@@ -54,65 +52,37 @@ def pre_import_functions(topology: Topology):
 mapping: dict[str, str] = {}
 
 
-def get_module_func(file_name: str):
-    blocks_path = get_blocks_path()
-
-    if not mapping:
-        logger.info("creating blocks mapping for first time......")
-        create_map(custom_blocks_dir=None)
-
-    file_path = mapping.get(file_name)
-
-    if file_path is not None:
-        module = importlib.import_module(file_path)
-        # this will pick latest changes from module always
-        module = importlib.reload(module)
-        return module
-
-    else:
-        logger.error(f"File {file_name} not found in subdirectories of {blocks_path}..")
+def get_module_func(file_name: str, project_path: str | None = None):
+    """Get module for a block function, supporting project-specific blocks.
+    
+    Args:
+        file_name: Name of the block/function
+        project_path: Optional path to .atlasvibe project file
+        
+    Returns:
+        Module object or None if not found
+    """
+    # Use the new project-aware loader
+    return get_module_for_block(file_name, project_path)
 
 
-def create_map(custom_blocks_dir: str | None):
-    blocks_dir = custom_blocks_dir if custom_blocks_dir else get_blocks_path()
-
+def create_map(custom_blocks_dir: str | None, project_path: str | None = None):
+    """Create mapping of blocks.
+    
+    This function is kept for backward compatibility but now delegates
+    to the new project-aware loader.
+    
+    Args:
+        custom_blocks_dir: Custom blocks directory (legacy parameter)
+        project_path: Optional path to .atlasvibe project file
+    """
+    loader = get_project_loader(project_path)
+    loader.initialize()
+    
+    # Update the global mapping for backward compatibility
+    global mapping
+    mapping.clear()
+    mapping.update(loader.combined_mapping)
+    
     if custom_blocks_dir:
-        if "root" in mapping and mapping["root"] != blocks_dir:
-            logger.info(
-                f"Path to custom blocks dir is changed creating blocks mapping again, previous path: {mapping.get('root')} and present path: {blocks_dir}"
-            )
-
-            old_parent_path = Path(os.path.abspath(mapping["root"])).parent.__str__()
-            mapping["root"] = blocks_dir
-
-            if old_parent_path in sys.path:
-                sys.path.remove(old_parent_path)
-
-            modules_to_delete = [
-                module_path
-                for module_path in sys.modules
-                if module_path.startswith("blocks")
-            ]
-
-            for module_path in modules_to_delete:
-                del sys.modules[module_path]
-
-    parent_dir = Path(os.path.abspath(blocks_dir)).parent.__str__()
-    if custom_blocks_dir:
-        mapping["root"] = blocks_dir
-
-    sys.path.append(parent_dir)
-
-    for root, _, files in os.walk(blocks_dir):
-        if root == blocks_dir:
-            continue
-
-        for file in files:
-            # map file name to file path
-            if file.endswith(".py"):
-                block_path = (
-                    os.path.join(root, file[:-3]).replace("\\", "/").replace("/", ".")
-                )
-                parent_dir_with_dot = parent_dir.replace("\\", "/").replace("/", ".")
-
-                mapping[file[:-3]] = block_path.replace(parent_dir_with_dot + ".", "")
+        mapping["root"] = custom_blocks_dir

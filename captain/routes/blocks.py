@@ -29,11 +29,11 @@ class CreateCustomBlockRequest(BaseModel):
 
 
 @router.get("/blocks/manifest/")
-async def get_manifest(blocks_path: str | None = None):
+async def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
     # Pre-generate the blocks map to synchronize it with the manifest
-    create_map(custom_blocks_dir=blocks_path)
+    create_map(custom_blocks_dir=blocks_path, project_path=project_path)
     try:
-        manifest = generate_manifest(blocks_path=blocks_path)
+        manifest = generate_manifest(blocks_path=blocks_path, project_path=project_path)
         return manifest
     except Exception as e:
         logger.error(
