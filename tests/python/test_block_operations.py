@@ -6,9 +6,7 @@
 
 import pytest
 import os
-import shutil
 import json
-from unittest.mock import patch, MagicMock, call
 from pathlib import Path 
 
 from . import constants

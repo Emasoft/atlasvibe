@@ -9,8 +9,7 @@
 
 import pytest
 import os
-import shutil
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock
 from pathlib import Path
 
 from tests.python import constants  # Updated to absolute import
@@ -97,7 +96,7 @@ def test_project_template_creates_custom_blocks(
         expected_custom_name = f"{bp_key}_1" 
         assert expected_custom_name in created_block_names
         
-        block_detail = next(b for b in created_blocks_details if b['name'] == expected_custom_name)
+        next(b for b in created_blocks_details if b['name'] == expected_custom_name)
         custom_block_folder = os.path.join(expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME, expected_custom_name)
         assert os.path.isdir(custom_block_folder) 
         

@@ -11,7 +11,7 @@
 import pytest
 from pathlib import Path
 import tempfile
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from fastapi import HTTPException
 
 

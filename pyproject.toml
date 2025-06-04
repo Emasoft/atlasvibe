@@ -13,7 +13,7 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "uvicorn[standard]>=0.31.0,<0.32.0",
     "fastapi>=0.104.1,<0.112.0",

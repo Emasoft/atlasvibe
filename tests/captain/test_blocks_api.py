@@ -11,8 +11,7 @@
 import pytest
 from pathlib import Path
 import tempfile
-import json
-from unittest.mock import patch, MagicMock, ANY
+from unittest.mock import patch, MagicMock
 
 from fastapi.testclient import TestClient
 from fastapi import FastAPI

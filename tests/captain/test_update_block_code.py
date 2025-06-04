@@ -158,7 +158,7 @@ class TestUpdateBlockCode:
         # This test expects the function to exist and be callable
         # Currently it will fail because the function doesn't exist yet
         with pytest.raises(AttributeError):
-            result = update_block_code(request)
+            update_block_code(request)
     
     @patch('captain.routes.blocks.Path')
     def test_update_block_code_backs_up_original_content(
@@ -174,7 +174,7 @@ class TestUpdateBlockCode:
         
         from captain.routes.blocks import UpdateBlockCodeRequest
         
-        request = UpdateBlockCodeRequest(
+        UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
             project_path="/project/test.atlasvibe"
@@ -209,7 +209,7 @@ class TestUpdateBlockCode:
         
         from captain.routes.blocks import UpdateBlockCodeRequest
         
-        request = UpdateBlockCodeRequest(
+        UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
             project_path="/project/test.atlasvibe"
@@ -239,7 +239,7 @@ class TestUpdateBlockCode:
         
         from captain.routes.blocks import UpdateBlockCodeRequest
         
-        request = UpdateBlockCodeRequest(
+        UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
             project_path="/project/test.atlasvibe"

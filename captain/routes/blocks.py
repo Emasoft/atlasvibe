@@ -225,7 +225,7 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             
             return block_manifest
             
-        except Exception as e:
+        except Exception:
             # Restore original content on any error
             block_file.write_text(original_content)
             raise

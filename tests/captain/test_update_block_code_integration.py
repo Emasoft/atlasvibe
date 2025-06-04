@@ -10,7 +10,6 @@
 
 import pytest
 import tempfile
-import shutil
 from pathlib import Path
 import json
 import sys
@@ -223,11 +222,11 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         # The update might succeed (file is written) but manifest generation might fail
         # This depends on how process_block_directory handles syntax errors
         try:
-            result = update_block_code(request)
+            update_block_code(request)
             # If it succeeds, the file should still be updated
             with open(block_file_path, 'r') as f:
                 assert f.read() == bad_code
-        except HTTPException as e:
+        except HTTPException:
             # If it fails, check that the original content is restored
             with open(block_file_path, 'r') as f:
                 assert f.read() == original_content
@@ -266,21 +265,20 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
         )
         
         # Update the block
-        result = update_block_code(request)
+        update_block_code(request)
         
         # Manually regenerate manifest to verify it would work
         manifest = process_block_directory(block_dir, "MY_CUSTOM_BLOCK")
         
         # The manifest should reflect the new parameter
         if manifest and "parameters" in manifest:
-            param_names = [p["name"] for p in manifest["parameters"]]
+            [p["name"] for p in manifest["parameters"]]
             # Note: process_block_directory might need the actual module to be importable
             # In a real test environment, this would require proper Python path setup
     
     def test_concurrent_updates_safety(self, real_project_setup):
         """Test that concurrent updates don't corrupt files."""
         import threading
-        import time
         
         block_file_path = real_project_setup["block_file"]
         project_path = real_project_setup["project_file"]

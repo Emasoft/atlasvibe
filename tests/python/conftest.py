@@ -6,7 +6,6 @@
 
 import pytest
 from pathlib import Path
-import os
 from tests.python import constants # Absolute import for test constants
 
 @pytest.fixture

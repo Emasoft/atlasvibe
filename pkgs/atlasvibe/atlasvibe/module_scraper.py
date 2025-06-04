@@ -65,7 +65,7 @@ class AtlasvibeWrapper:
         self.manifest += "\t\ttype: " + mtype + "\n"
         parameter_header = "\t\tparameters: \n\t\t"
         parameter_string = ""
-        if self.parameters.keys() is not []:
+        if self.parameters.keys() != []:
             for param in self.parameters.keys():
                 if param not in self.FORBIDDEN_OPTIONAL_ARGS:
                     try:
