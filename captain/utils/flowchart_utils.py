@@ -305,7 +305,10 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
     await manager.ws.broadcast(socket_msg)
 
     # get the amount of workers needed
-    funcs, errs = pre_import_functions(topology=manager.running_topology)
+    funcs, errs = pre_import_functions(
+        topology=manager.running_topology,
+        project_path=request.projectPath
+    )
 
     if errs:
         socket_msg["SYSTEM_STATUS"] = STATUS_CODES["IMPORTING_BLOCK_FUNCTIONS_FAILED"]

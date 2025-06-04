@@ -13,6 +13,7 @@ class PostWFC(BaseModel):
     nodeDelay: float
     maximumRuntime: float
     maximumConcurrentWorkers: int
+    projectPath: str | None = None
 
 
 class WorkerSuccessResponse(BaseModel):

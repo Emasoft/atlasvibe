@@ -7,6 +7,7 @@ import { HTTPError } from "ky";
 import { ZodError } from "zod";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useProjectStore } from "./project";
 
 type State = {
   standardBlocksManifest: BlockManifest | undefined;
@@ -36,9 +37,12 @@ export const useManifestStore = create<State & Actions>()(
 
     fetchManifest: () => {
       return safeTry(async function* () {
+        // Get current project path
+        const projectPath = useProjectStore.getState().path;
+        
         set({
-          standardBlocksManifest: yield* (await getManifest()).safeUnwrap(),
-          standardBlocksMetadata: yield* (await getMetadata()).safeUnwrap(),
+          standardBlocksManifest: yield* (await getManifest(undefined, projectPath)).safeUnwrap(),
+          standardBlocksMetadata: yield* (await getMetadata(undefined, false, projectPath)).safeUnwrap(),
         });
         return ok(undefined);
       });

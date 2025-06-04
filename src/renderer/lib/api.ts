@@ -18,6 +18,7 @@ import {
   TestDiscoverContainer,
   TestSequenceContainer,
 } from "@/renderer/types/test-sequencer";
+import { useProjectStore } from "@/renderer/stores/project";
 
 const get = <Z extends z.ZodTypeAny>(
   url: string,
@@ -30,26 +31,25 @@ const get = <Z extends z.ZodTypeAny>(
   ).andThen(tryParse(schema));
 };
 
-export const getManifest = (blocksPath?: string) => {
-  const searchParams = blocksPath
-    ? {
-        blocks_path: blocksPath,
-      }
-    : undefined;
+export const getManifest = (blocksPath?: string, projectPath?: string) => {
+  const searchParams: any = {};
+  if (blocksPath) searchParams.blocks_path = blocksPath;
+  if (projectPath) searchParams.project_path = projectPath;
 
-  return get("blocks/manifest", blockManifestSchema, { searchParams });
+  return get("blocks/manifest", blockManifestSchema, { 
+    searchParams: Object.keys(searchParams).length > 0 ? searchParams : undefined 
+  });
 };
 
 export const getMetadata = (
   blocksPath?: string,
   customDirChanged: boolean = false,
+  projectPath?: string,
 ) => {
-  const searchParams = blocksPath
-    ? {
-        blocks_path: blocksPath,
-        custom_dir_changed: customDirChanged,
-      }
-    : undefined;
+  const searchParams: any = {};
+  if (blocksPath) searchParams.blocks_path = blocksPath;
+  if (projectPath) searchParams.project_path = projectPath;
+  searchParams.custom_dir_changed = customDirChanged;
 
   return get("blocks/metadata", blockMetadataSchema, { searchParams });
 };
@@ -85,6 +85,9 @@ export const runFlowchart = async ({
   settings,
   jobId,
 }: RunFlowchartArgs) => {
+  // Get current project path from project store
+  const projectPath = useProjectStore.getState().path;
+  
   return fromPromise(
     captain.post("wfc", {
       json: {
@@ -92,6 +95,7 @@ export const runFlowchart = async ({
         jobsetId: jobId,
         cancelExistingJobs: true,
         observeBlocks: observeBlocks,
+        projectPath: projectPath,
         //IMPORTANT: if you want to add more backend settings, modify PostWFC pydantic model in backend, otherwise you will get 422 error
         ..._.mapValues(settings, (s) => s.value),
       },
