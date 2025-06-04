@@ -83,12 +83,28 @@ def _log_message(level: int, message: str, logger: logging.Logger | None = None)
 
 
 def strip_diacritics(text: str) -> str:
+    """Remove diacritical marks from text.
+    
+    Args:
+        text: Input string
+        
+    Returns:
+        String with diacritical marks removed
+    """
     if not isinstance(text, str):
         return text
     nfd_form = unicodedata.normalize('NFD', text)
     return "".join([c for c in nfd_form if not unicodedata.combining(c)])
 
 def strip_control_characters(text: str) -> str:
+    """Remove control characters from text.
+    
+    Args:
+        text: Input string
+        
+    Returns:
+        String with control characters removed
+    """
     if not isinstance(text, str):
         return text
     return "".join(ch for ch in text if unicodedata.category(ch)[0] != 'C')
@@ -135,7 +151,12 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
         temp_stripped_key_no_diacritics = strip_diacritics(temp_stripped_key_no_controls)
         canonical_key = unicodedata.normalize('NFC', temp_stripped_key_no_diacritics)
             
-        if not canonical_key: 
+        if not canonical_key:
+            _log_message(logging.WARNING, f"Skipping empty key after normalization from original: {k_orig_json!r}", logger)
+            continue
+        
+        if not v_original:
+            _log_message(logging.WARNING, f"Skipping empty value for key: {k_orig_json!r}", logger)
             continue
             
         _log_message(logging.DEBUG, f"  DEBUG MAP LOAD: JSON Key='{k_orig_json}' (len {len(k_orig_json)}, ords={[ord(c) for c in k_orig_json]})", logger)
@@ -175,7 +196,6 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
             return False
 
     # STORE SORTED KEYS (by longest first) for binary scanning and in what order?
-    global _SORTED_RAW_KEYS_FOR_REPLACE
     _SORTED_RAW_KEYS_FOR_REPLACE = sorted(_RAW_REPLACEMENT_MAPPING.keys(), key=len, reverse=True)
         
     # Fix: Properly escape keys for regex pattern compilation to handle special regex characters
@@ -198,18 +218,39 @@ def load_replacement_map(mapping_file_path: Path, logger: logging.Logger | None 
     return True
 
 def get_scan_pattern() -> re.Pattern | None:
+    """Get the compiled regex pattern for scanning.
+    
+    Returns:
+        Compiled regex pattern or None if not loaded
+    """
     return _COMPILED_PATTERN_FOR_SCAN if _MAPPING_LOADED else None
 
 def get_raw_stripped_keys() -> list[str]:
-    return _SORTED_RAW_KEYS_FOR_REPLACE if _MAPPING_LOADED else []
+    """Get the sorted list of normalized keys.
+    
+    Returns:
+        List of keys sorted by length (longest first)
+    """
+    return _SORTED_RAW_KEYS_FOR_REPLACE.copy() if _MAPPING_LOADED else []
 
 def get_key_characters() -> set[str]:
     """
     Returns the set of all characters appearing in replacement keys.
+    
+    Returns:
+        A copy of the set to prevent external modification
     """
-    return _KEY_CHARACTER_SET
+    return _KEY_CHARACTER_SET.copy()
 
 def _actual_replace_callback(match: re.Match[str]) -> str:
+    """Callback function for regex replacement.
+    
+    Args:
+        match: Regex match object
+        
+    Returns:
+        Replacement string or original if not found
+    """
     matched_text_from_input = match.group(0)
     
     temp_stripped_no_controls = strip_control_characters(matched_text_from_input)
@@ -235,11 +276,12 @@ def _actual_replace_callback(match: re.Match[str]) -> str:
         return matched_text_from_input
 
 def replace_occurrences(input_string: str) -> str:
-    entry_debug_msg = (f"REPLACE_OCC_ENTRY: input='{input_string[:30].encode('unicode_escape').decode() if isinstance(input_string, str) else input_string!r}', "
-                   f"_MAPPING_LOADED={_MAPPING_LOADED}, "
-                   f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
-                   f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}")
-    _log_message(logging.DEBUG, entry_debug_msg, _MODULE_LOGGER)
+    if _DEBUG_REPLACE_LOGIC:
+        entry_debug_msg = (f"REPLACE_OCC_ENTRY: input='{input_string[:30] if isinstance(input_string, str) else str(input_string)[:30]}...', "
+                       f"_MAPPING_LOADED={_MAPPING_LOADED}, "
+                       f"pattern_is_set={_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is not None}, "
+                       f"map_is_populated={bool(_RAW_REPLACEMENT_MAPPING)}")
+        _log_message(logging.DEBUG, entry_debug_msg, _MODULE_LOGGER)
 
     # Ensure input is normalized to NFC for consistent matching
     if isinstance(input_string, str):
@@ -252,7 +294,7 @@ def replace_occurrences(input_string: str) -> str:
         _log_message(logging.DEBUG, f"DEBUG_REPLACE_OCCURRENCES: Early exit. _MAPPING_LOADED={_MAPPING_LOADED}, "
                                    f"_COMPILED_PATTERN_FOR_ACTUAL_REPLACE is {'None' if _COMPILED_PATTERN_FOR_ACTUAL_REPLACE is None else 'Set'}, "
                                    f"_RAW_REPLACEMENT_MAPPING is {'Empty' if not _RAW_REPLACEMENT_MAPPING else 'Populated'}", _MODULE_LOGGER)
-        return input_string 
+        return normalized_input if isinstance(normalized_input, str) else input_string 
    
     # Use the normalized version for matching
     search_result = _COMPILED_PATTERN_FOR_ACTUAL_REPLACE.search(normalized_input) 

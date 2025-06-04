@@ -11,7 +11,17 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
+import logging
+import sys
+import time
+from pathlib import Path
+from typing import Any, Optional
+
 import replace_logic
+from file_system_operations import (
+    load_transactions, save_transactions, TransactionStatus,
+    TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE, COLLISIONS_ERRORS_LOG_FILE
+)
 
 SCRIPT_NAME = "MFR - Mass Find Replace - A script to safely rename things in your project"
 MAIN_TRANSACTION_FILE_NAME = "planned_transactions.json"
@@ -23,6 +33,112 @@ RESET = "\033[0m"
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 DIM = "\033[2m"
+
+def _get_logger(verbose_mode: bool = False) -> logging.Logger:
+    """Get logger with appropriate configuration."""
+    import logging
+    try:
+        # Try to get Prefect's context logger
+        from prefect import get_run_logger
+        from prefect.exceptions import MissingContextError
+        try:
+            logger = get_run_logger()
+            if verbose_mode:
+                logger.setLevel(logging.DEBUG)
+            return logger
+        except MissingContextError:
+            pass
+    except ImportError:
+        pass
+    
+    # Create standard logger
+    logger = logging.getLogger('mass_find_replace')
+    logger.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
+    if not logger.handlers:
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+    return logger
+
+
+def _print_mapping_table(mapping: dict[str, str], logger: logging.Logger) -> None:
+    """Print the replacement mapping as a formatted table."""
+    if not mapping:
+        logger.info("Replacement mapping is empty.")
+        return
+        
+    # Calculate column widths
+    max_key_len = max(len(k) for k in mapping.keys())
+    max_val_len = max(len(v) for v in mapping.values())
+    col1_width = max(max_key_len, 15)
+    col2_width = max(max_val_len, 15)
+    
+    # Unicode box drawing characters
+    top_left = "┏"
+    top_right = "┓"
+    bottom_left = "┗"
+    bottom_right = "┛"
+    horizontal = "━"
+    vertical = "┃"
+    cross = "╋"
+    t_down = "┳"
+    t_up = "┻"
+    
+    # Print table
+    print(f"\n{top_left}{horizontal * (col1_width + 2)}{t_down}{horizontal * (col2_width + 2)}{top_right}")
+    print(f"{vertical} {'Search'.center(col1_width)} {vertical} {'Replace'.center(col2_width)} {vertical}")
+    print(f"{vertical}{horizontal * (col1_width + 2)}{cross}{horizontal * (col2_width + 2)}{vertical}")
+    
+    for key, value in mapping.items():
+        print(f"{vertical} {key.ljust(col1_width)} {vertical} {value.ljust(col2_width)} {vertical}")
+    
+    print(f"{bottom_left}{horizontal * (col1_width + 2)}{t_up}{horizontal * (col2_width + 2)}{bottom_right}")
+
+
+def _get_operation_description(skip_file: bool, skip_folder: bool, skip_content: bool) -> str:
+    """Get human-readable description of operations to be performed."""
+    operations = []
+    if not skip_folder:
+        operations.append("folder names")
+    if not skip_file:
+        operations.append("file names")
+    if not skip_content:
+        operations.append("file contents")
+    
+    if not operations:
+        return "nothing (all operations skipped)"
+    elif len(operations) == 1:
+        return operations[0]
+    elif len(operations) == 2:
+        return f"{operations[0]} and {operations[1]}"
+    else:
+        return f"{', '.join(operations[:-1])}, and {operations[-1]}"
+
+
+def _check_existing_transactions(directory: Path, logger: logging.Logger) -> tuple[bool, int]:
+    """Check for existing transaction file and calculate progress."""
+    txn_file = directory / MAIN_TRANSACTION_FILE_NAME
+    if not txn_file.exists():
+        return False, 0
+    
+    try:
+        transactions = load_transactions(txn_file, logger=logger)
+        if not transactions:
+            return False, 0
+            
+        total = len(transactions)
+        completed = sum(1 for tx in transactions if tx.get("STATUS") == TransactionStatus.COMPLETED.value)
+        progress = int((completed / total) * 100) if total > 0 else 0
+        
+        # Check if all are completed
+        if completed == total:
+            return False, 100
+            
+        return True, progress
+    except Exception:
+        return False, 0
+
 
 def main_flow(
     directory: str, mapping_file: str, extensions: list[str] | None,
@@ -40,52 +156,51 @@ def main_flow(
     import pathspec
     from typing import Any
 
-    try:
-        # Try to get Prefect's context logger
-        from prefect import flow, get_run_logger
-        from prefect.exceptions import MissingContextError
-        try:
-            logger = get_run_logger()
-        except MissingContextError:
-            # Create a standard logger if Prefect is installed but no context
-            logger = logging.getLogger('mass_find_replace')
-            logger.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
-            if not logger.handlers:
-                console_handler = logging.StreamHandler()
-                formatter = logging.Formatter('%(levelname)s - %(message)s')
-                console_handler.setFormatter(formatter)
-                logger.addHandler(console_handler)
-    except ImportError:
-        # Fallback when Prefect isn't installed
-        logger = logging.getLogger('mass_find_replace')
-        logger.setLevel(logging.DEBUG if verbose_mode else logging.INFO)
-        if not logger.handlers:
-            console_handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(levelname)s - %(message)s')
-            console_handler.setFormatter(formatter)
-            logger.addHandler(console_handler)
-    except Exception:
-        # Final fallback
-        logger = logging.getLogger('mass_find_replace')
-        logger.handlers = [logging.StreamHandler()]
-        logger.setLevel(logging.INFO)
+    logger = _get_logger(verbose_mode)
 
     from file_system_operations import (
-        scan_directory_for_occurrences, save_transactions, load_transactions,
-        execute_all_transactions, TransactionStatus, TRANSACTION_FILE_BACKUP_EXT, BINARY_MATCHES_LOG_FILE 
+        scan_directory_for_occurrences, execute_all_transactions
     )
 
     if verbose_mode:
-        logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose mode enabled. Logger set to DEBUG level.")
+        logger.debug("Verbose mode enabled.")
     
     # Explicitly reset replace_logic module state before any operations for this flow run
     replace_logic.reset_module_state()
 
-    abs_root_dir = Path(directory).resolve(strict=False) 
-    if not abs_root_dir.is_dir(): 
-        logger.error(f"Error: Root directory '{abs_root_dir}' not found or not a directory.")
+    # Validate and normalize the directory path
+    try:
+        abs_root_dir = Path(directory).resolve(strict=False)
+    except Exception as e:
+        logger.error(f"Error: Invalid directory path '{directory}': {e}")
         return
+        
+    if not abs_root_dir.exists():
+        logger.error(f"Error: Root directory '{abs_root_dir}' not found.")
+        return
+    if not abs_root_dir.is_dir(): 
+        logger.error(f"Error: Path '{abs_root_dir}' is not a directory.")
+        return
+
+    # Check for existing incomplete transactions
+    if not quiet_mode and not resume and not skip_scan:
+        has_existing, progress = _check_existing_transactions(abs_root_dir, logger)
+        if has_existing:
+            print(f"\n{YELLOW}An incomplete previous run was detected ({progress}% completed).{RESET}")
+            choice = input("Do you want to resume it? (y/n): ").strip().lower()
+            if choice == 'y':
+                resume = True
+                logger.info("Resuming previous run...")
+            else:
+                # Clear the existing transaction file
+                txn_file = abs_root_dir / MAIN_TRANSACTION_FILE_NAME
+                try:
+                    if txn_file.exists():
+                        txn_file.unlink()
+                        logger.info("Previous transaction file cleared.")
+                except Exception as e:
+                    logger.error(f"Error clearing transaction file: {e}")
+                    return
 
     if skip_file_renaming and skip_folder_renaming and skip_content:
         logger.info("All processing types (file rename, folder rename, content) are skipped. Nothing to do.")
@@ -102,7 +217,17 @@ def main_flow(
         logger.error(f"Error accessing directory '{abs_root_dir}' for empty check: {e}")
         return
 
-    map_file_path = Path(mapping_file).resolve()
+    # Validate mapping file path
+    try:
+        map_file_path = Path(mapping_file).resolve(strict=False)
+    except Exception as e:
+        logger.error(f"Error: Invalid mapping file path '{mapping_file}': {e}")
+        return
+        
+    if not map_file_path.is_file():
+        logger.error(f"Error: Mapping file '{map_file_path}' not found or is not a file.")
+        return
+        
     if not replace_logic.load_replacement_map(map_file_path, logger=logger): 
         logger.error(f"Aborting due to issues with replacement mapping file: {map_file_path}")
         return
@@ -116,12 +241,29 @@ def main_flow(
         logger.error(f"Critical Error: Map {map_file_path} not loaded by replace_logic.")
         return
 
+    # Display mapping table and get confirmation (unless in quiet mode or force mode)
+    if not quiet_mode and not force_execution and replace_logic._RAW_REPLACEMENT_MAPPING:
+        _print_mapping_table(replace_logic._RAW_REPLACEMENT_MAPPING, logger)
+        
+        operations_desc = _get_operation_description(skip_file_renaming, skip_folder_renaming, skip_content)
+        print(f"\n{BLUE}This will replace the strings in the 'Search' column with those in the 'Replace' column.{RESET}")
+        print(f"{BLUE}Operations will be performed on: {operations_desc}{RESET}")
+        
+        if dry_run:
+            print(f"{DIM}(DRY RUN - no actual changes will be made){RESET}")
+        
+        confirm = input("\nDo you want to proceed? (y/n): ").strip().lower()
+        if confirm != 'y':
+            logger.info("Operation cancelled by user.")
+            return
+
     # Consolidated empty map check
-    if not replace_logic._RAW_REPLACEMENT_MAPPING and not (skip_file_renaming or skip_folder_renaming or skip_content):
-        logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
-        return
-    elif not replace_logic._RAW_REPLACEMENT_MAPPING:
-        logger.info("Map is empty. No string-based replacements will occur.")
+    if not replace_logic._RAW_REPLACEMENT_MAPPING:
+        if not (skip_file_renaming or skip_folder_renaming or skip_content):
+            logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
+            return
+        else:
+            logger.info("Map is empty. No string-based replacements will occur.")
 
     elif not replace_logic.get_scan_pattern() and replace_logic._RAW_REPLACEMENT_MAPPING :
          logger.error("Critical Error: Map loaded but scan regex pattern compilation failed or resulted in no patterns.")
@@ -133,6 +275,8 @@ def main_flow(
     if use_gitignore:
         gitignore_path = abs_root_dir / ".gitignore"
         if gitignore_path.is_file():
+            if not quiet_mode:
+                print(f"{GREEN}✓ Found .gitignore file - exclusion patterns will be applied{RESET}")
             logger.info(f"Using .gitignore file: {gitignore_path}")
             try:
                 with open(gitignore_path, 'r', encoding='utf-8', errors='ignore') as f_git:
@@ -258,15 +402,19 @@ def main_flow(
     else: 
         logger.info(f"Using existing transaction file: '{txn_json_path}'. Ensure it was generated with compatible settings.")
 
-    if not replace_logic._RAW_REPLACEMENT_MAPPING and not skip_file_renaming and not skip_folder_renaming and not skip_content:
-        logger.info("Map is empty and no operations are configured that would proceed without map rules. Nothing to execute.")
-        if not (skip_file_renaming and skip_folder_renaming and skip_content):
-             logger.info("Map is empty. No string-based replacements will occur.")
 
     txns_for_exec = load_transactions(txn_json_path, logger=logger) 
     if not txns_for_exec: 
         logger.info(f"No transactions found in {txn_json_path} to execute. Exiting.")
         return
+    
+    # Validate transaction structure
+    required_fields = ["id", "TYPE", "PATH", "STATUS"]
+    for tx in txns_for_exec:
+        missing_fields = [f for f in required_fields if f not in tx]
+        if missing_fields:
+            logger.error(f"Invalid transaction missing fields {missing_fields}: {tx}")
+            return
 
     # Reset DRY_RUN completed transactions to PENDING for resume
     for tx in txns_for_exec:
@@ -285,6 +433,10 @@ def main_flow(
     binary_log = abs_root_dir / BINARY_MATCHES_LOG_FILE
     if binary_log.exists() and binary_log.stat().st_size > 0:
         logger.info(f"{YELLOW}Note: Matches were found in binary files. See '{binary_log}' for details. Binary file content was NOT modified.{RESET}")
+    
+    collisions_log = abs_root_dir / COLLISIONS_ERRORS_LOG_FILE
+    if collisions_log.exists() and collisions_log.stat().st_size > 0:
+        logger.info(f"{RED}Warning: File/folder rename collisions were detected. See '{collisions_log}' for details. These renames were skipped.{RESET}")
 
 
 def _run_subprocess_command(command: list[str], description: str) -> bool:
@@ -315,26 +467,20 @@ def main_cli() -> None:
     import traceback
     import importlib.util
     import argparse
-    from pathlib import Path
-    import pathspec
-    from typing import Any
-    from file_system_operations import BINARY_MATCHES_LOG_FILE, TRANSACTION_FILE_BACKUP_EXT
+    # Imports moved to top of file
 
-    try:
-        if importlib.util.find_spec("prefect") is None:
-            sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: prefect. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
+    # Check required dependencies
+    required_deps = [("prefect", "prefect"), ("chardet", "chardet")]
+    for module_name, display_name in required_deps:
+        try:
+            if importlib.util.find_spec(module_name) is None:
+                sys.stderr.write(f"{RED}CRITICAL ERROR: Missing core dependency: {display_name}. "
+                               f"Please install all required packages (e.g., via 'uv sync').{RESET}\n")
+                sys.exit(1)
+        except ImportError:
+            sys.stderr.write(f"{RED}CRITICAL ERROR: Missing core dependency: {display_name} "
+                           f"(import error during check). Please install all required packages.{RESET}\n")
             sys.exit(1)
-    except ImportError:
-        sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: prefect (import error during check). Please install all required packages." + RESET + "\n")
-        sys.exit(1)
-
-    try:
-        if importlib.util.find_spec("chardet") is None:
-            sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet. Please install all required packages (e.g., via 'uv sync')." + RESET + "\n")
-            sys.exit(1)
-    except ImportError:
-        sys.stderr.write(RED + "CRITICAL ERROR: Missing core dependency: chardet (import error during check). Please install all required packages." + RESET + "\n")
-        sys.exit(1)
 
     parser = argparse.ArgumentParser(
         description=f"{SCRIPT_NAME}\nFind and replace strings in files and filenames/foldernames within a project directory. "
@@ -424,19 +570,25 @@ def main_cli() -> None:
 
     # Validate ignore file if gitignore is enabled
     if args.custom_ignore_file and args.use_gitignore:
-        from pathlib import Path
         ignore_path = Path(args.custom_ignore_file)
         if not ignore_path.exists() or not ignore_path.is_file():
-            sys.stderr.write(RED + f"Error: Ignore file not found: {args.custom_ignore_file}" + RESET + "\n")
+            sys.stderr.write(f"{RED}Error: Ignore file not found: {args.custom_ignore_file}{RESET}\n")
             sys.exit(1)
 
     auto_exclude_basenames = [
         MAIN_TRANSACTION_FILE_NAME,
         Path(args.mapping_file).name, 
         BINARY_MATCHES_LOG_FILE,
+        COLLISIONS_ERRORS_LOG_FILE,
         MAIN_TRANSACTION_FILE_NAME + TRANSACTION_FILE_BACKUP_EXT
     ]
-    final_exclude_files = list(set(args.exclude_files + auto_exclude_basenames))
+    # Remove duplicates while preserving order
+    seen = set()
+    final_exclude_files = []
+    for item in args.exclude_files + auto_exclude_basenames:
+        if item not in seen:
+            seen.add(item)
+            final_exclude_files.append(item)
     
     if args.verbose and not args.quiet:
         print("Verbose mode requested. Prefect log level will be set to DEBUG if flow runs.")

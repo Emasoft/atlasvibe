@@ -21,7 +21,7 @@ import shutil
 import json
 import uuid
 from pathlib import Path
-from typing import Any, cast # Keep Any if specifically needed for dynamic parts
+from typing import Any, cast, Optional, Iterator # Keep Any if specifically needed for dynamic parts
 import collections.abc # For Iterator, Callable
 from enum import Enum
 import chardet
@@ -46,6 +46,7 @@ DEFAULT_ENCODING_FALLBACK = 'utf-8'
 TRANSACTION_FILE_BACKUP_EXT = ".bak"
 SELF_TEST_ERROR_FILE_BASENAME = "error_file_flojoy.txt"
 BINARY_MATCHES_LOG_FILE = "binary_files_matches.log"
+COLLISIONS_ERRORS_LOG_FILE = "collisions_errors.log"
 
 RETRYABLE_OS_ERRORNOS = {
     errno.EACCES, errno.EBUSY, errno.ETXTBSY,
@@ -93,7 +94,40 @@ def _log_fs_op_message(level: int, message: str, logger: logging.Logger | None =
         print(f"{prefix}{message}")
 
 
-def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging.Logger | None = None) -> str | None:
+def _log_collision_error(
+    root_dir: Path, 
+    tx: dict[str, Any], 
+    source_path: Path, 
+    collision_path: Path, 
+    collision_type: str,
+    logger: logging.Logger | None = None
+):
+    """Log collision errors to a dedicated file."""
+    collision_log_path = root_dir / COLLISIONS_ERRORS_LOG_FILE
+    
+    try:
+        # Get relative paths for cleaner logging
+        source_rel = source_path.relative_to(root_dir) if root_dir in source_path.parents or source_path == root_dir else source_path
+        collision_rel = collision_path.relative_to(root_dir) if root_dir in collision_path.parents or collision_path == root_dir else collision_path
+        
+        with open(collision_log_path, 'a', encoding='utf-8') as log_f:
+            log_f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - COLLISION ({collision_type}):\n")
+            log_f.write(f"  Transaction ID: {tx.get('id', 'N/A')}\n")
+            log_f.write(f"  Type: {tx.get('TYPE', 'N/A')}\n")
+            log_f.write(f"  Original Path: {tx.get('PATH', 'N/A')}\n")
+            log_f.write(f"  Original Name: {tx.get('ORIGINAL_NAME', 'N/A')}\n")
+            log_f.write(f"  Proposed New Name: {tx.get('NEW_NAME', 'N/A')}\n")
+            log_f.write(f"  Source: {source_rel}\n")
+            log_f.write(f"  Collision With: {collision_rel}\n")
+            log_f.write(f"  Collision Type: {collision_type}\n")
+            log_f.write("-" * 80 + "\n")
+            
+        _log_fs_op_message(logging.DEBUG, f"Logged collision error to {collision_log_path}", logger)
+    except Exception as e:
+        _log_fs_op_message(logging.WARNING, f"Could not write to collision log: {e}", logger)
+
+
+def get_file_encoding(file_path: Path, sample_size: int = 10240, logger: logging.Logger | None = None) -> str:
     if not file_path.is_file():
         return DEFAULT_ENCODING_FALLBACK
     try:
@@ -177,9 +211,9 @@ def load_ignore_patterns(ignore_file_path: Path, logger: logging.Logger | None =
 
 def _walk_for_scan(
     root_dir: Path, excluded_dirs_abs: list[Path],
-    ignore_symlinks: bool, ignore_spec: pathspec.PathSpec | None,
+    ignore_symlinks: bool, ignore_spec: Optional[pathspec.PathSpec],
     logger: logging.Logger | None = None
-) -> collections.abc.Iterator[Path]:
+) -> Iterator[Path]:
     for item_path_from_rglob in root_dir.rglob("*"):
         try:
             if ignore_symlinks and item_path_from_rglob.is_symlink():
@@ -249,7 +283,7 @@ def _get_current_absolute_path(
 def scan_directory_for_occurrences(
     root_dir: Path, excluded_dirs: list[str], excluded_files: list[str],
     file_extensions: list[str] | None, ignore_symlinks: bool,
-    ignore_spec: pathspec.PathSpec | None,
+    ignore_spec: Optional[pathspec.PathSpec],
     resume_from_transactions: list[dict[str, Any]] | None = None,
     paths_to_force_rescan: set[str] | None = None,
     skip_file_renaming: bool = False, skip_folder_renaming: bool = False, skip_content: bool = False,
@@ -310,7 +344,6 @@ def scan_directory_for_occurrences(
 
     for depth, item_abs_path in all_items_with_depth:
         try:
-            abs_root_dir = root_dir.resolve(strict=False)  # Use original root_dir, not overwritten abs_root_dir
             relative_path_str = str(item_abs_path.relative_to(abs_root_dir)).replace("\\", "/")
         except ValueError:
             _log_fs_op_message(logging.WARNING, f"Could not get relative path for {item_abs_path} against {abs_root_dir}. Skipping.", logger)
@@ -400,8 +433,6 @@ def scan_directory_for_occurrences(
 
                     if is_bin and not is_rtf:
                         # Skip binary files but log them
-                        if item_abs_path.stat().st_size > 100_000_000:  # 100MB
-                            continue  # Skip scanning extremely large binary files
                         _log_fs_op_message(logging.DEBUG, f"Skipping binary file: {relative_path_str}", logger)
                         if raw_keys_for_binary_search:
                             try:
@@ -503,11 +534,17 @@ def scan_directory_for_occurrences(
 def save_transactions(transactions: list[dict[str, Any]], transactions_file_path: Path, logger: logging.Logger | None = None) -> None:
     """
     Save the list of transactions to a JSON file atomically.
+    
+    Args:
+        transactions: List of transaction dictionaries
+        transactions_file_path: Path to save the transactions file
+        logger: Optional logger instance
     """
     if not transactions:
         _log_fs_op_message(logging.WARNING, "No transactions to save.", logger)
         return
-    temp_file_path = transactions_file_path.with_suffix(".tmp")
+    # Use unique temp file name to avoid conflicts
+    temp_file_path = transactions_file_path.with_suffix(f".tmp.{uuid.uuid4().hex[:8]}")
     try:
         with open(temp_file_path, "w", encoding="utf-8") as f:
             json.dump(transactions, f, indent=2, ensure_ascii=False)
@@ -525,6 +562,13 @@ def save_transactions(transactions: list[dict[str, Any]], transactions_file_path
 def load_transactions(transactions_file_path: Path, logger: logging.Logger | None = None) -> list[dict[str, Any]] | None:
     """
     Load transactions from a JSON file.
+    
+    Args:
+        transactions_file_path: Path to the transactions file
+        logger: Optional logger instance
+        
+    Returns:
+        List of transaction dictionaries or None if file not found/invalid
     """
     if not transactions_file_path.is_file():
         _log_fs_op_message(logging.WARNING, f"Transaction file not found: {transactions_file_path}", logger)
@@ -586,8 +630,26 @@ def _execute_rename_transaction(
 
     new_abs_path = current_abs_path.parent / new_name
 
+    # Check for exact match first
     if new_abs_path.exists():
+        _log_collision_error(root_dir, tx, current_abs_path, new_abs_path, "exact match", logger)
         return TransactionStatus.FAILED, f"Target path already exists: {new_abs_path}", False
+    
+    # Case-insensitive collision check
+    parent_dir = current_abs_path.parent
+    new_name_lower = new_name.lower()
+    
+    try:
+        for existing_item in parent_dir.iterdir():
+            # Skip self
+            if existing_item == current_abs_path:
+                continue
+            # Check for case-insensitive match
+            if existing_item.name.lower() == new_name_lower:
+                _log_collision_error(root_dir, tx, current_abs_path, existing_item, "case-insensitive match", logger)
+                return TransactionStatus.FAILED, f"Case-insensitive collision with existing path: {existing_item}", False
+    except OSError as e:
+        _log_fs_op_message(logging.WARNING, f"Could not check for collisions in {parent_dir}: {e}", logger)
 
     try:
         if dry_run:
@@ -722,7 +784,16 @@ def process_large_file_content(
     file_encoding: str,
     is_rtf: bool,
     logger: logging.Logger | None = None
-) -> None:  
+) -> None:
+    """Process content replacements for large files using streaming approach.
+    
+    Args:
+        txns_for_file: List of transactions for this file
+        abs_filepath: Absolute path to the file
+        file_encoding: File encoding to use
+        is_rtf: Whether file is RTF format
+        logger: Optional logger instance
+    """
     SAFE_LINE_LENGTH_THRESHOLD = 1000  # Only split lines longer than this
     CHUNK_SIZE = 1000
     
@@ -742,9 +813,10 @@ def process_large_file_content(
     # Map from line number to transaction with precomputed new content
     txn_map = {tx["LINE_NUMBER"]: tx for tx in txns_sorted}
 
+    # Use unique temp file name
+    temp_file = abs_filepath.with_suffix(f".tmp.{uuid.uuid4().hex[:8]}")
+    
     try:
-        # Temporary file for safe writing
-        temp_file = abs_filepath.with_suffix(".tmp")
         
         with open(abs_filepath, 'r', encoding=file_encoding, errors="surrogateescape") as src_file:
             with open(temp_file, 'w', encoding=file_encoding, errors="surrogateescape") as dst_file:
@@ -793,8 +865,8 @@ def process_large_file_content(
                             split_pos = end_idx
                             search_pos = min(end_idx - 1, len(current_line_content) - 1)
 
-                            # Removed invalid 'nonlocal' statement here
-                            # key_characters is already defined in this scope
+                            # Get key characters from replace_logic module
+                            key_characters = replace_logic.get_key_characters()
 
                             while search_pos >= buffer_idx:
                                 if current_line_content[search_pos] not in key_characters:
@@ -838,6 +910,13 @@ def process_large_file_content(
             if tx.get("STATUS") != TransactionStatus.COMPLETED.value:
                 tx["STATUS"] = TransactionStatus.FAILED.value
                 tx["ERROR_MESSAGE"] = f"File processing error: {e}"
+        try:
+            if temp_file.exists():
+                os.remove(temp_file)
+        except Exception as cleanup_e:
+            _log_fs_op_message(logging.WARNING, f"Could not remove temp file {temp_file}: {cleanup_e}", logger)
+    finally:
+        # Ensure temp file is cleaned up
         try:
             if temp_file.exists():
                 os.remove(temp_file)
@@ -958,7 +1037,6 @@ def execute_all_transactions(
     path_translation_map: dict[str, str] = {}
     path_cache: dict[str, Path] = {}
 
-    processed_in_this_pass = 0
 
     # Track which transactions we've seen to prevent duplicate processing
     if not dry_run and resume:
@@ -1000,14 +1078,67 @@ def execute_all_transactions(
                 finished = True
                 break
 
-            # Interactive mode prompt
+            # Pre-check for collisions in interactive mode to avoid prompting for doomed transactions
+            if interactive_mode and not dry_run and tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
+                # Pre-flight collision check
+                original_name = tx_item.get("ORIGINAL_NAME", "")
+                new_name = tx_item.get("NEW_NAME", replace_logic.replace_occurrences(original_name))
+                current_abs_path = _get_current_absolute_path(relative_path_str, root_dir, path_translation_map, path_cache, dry_run)
+                if current_abs_path.exists():
+                    new_abs_path = current_abs_path.parent / new_name
+                    parent_dir = current_abs_path.parent
+                    new_name_lower = new_name.lower()
+                    
+                    # Check for collision
+                    has_collision = False
+                    collision_path = None
+                    collision_type = None
+                    
+                    if new_abs_path.exists():
+                        has_collision = True
+                        collision_path = new_abs_path
+                        collision_type = "exact match"
+                    else:
+                        # Check case-insensitive
+                        try:
+                            for existing_item in parent_dir.iterdir():
+                                if existing_item != current_abs_path and existing_item.name.lower() == new_name_lower:
+                                    has_collision = True
+                                    collision_path = existing_item
+                                    collision_type = "case-insensitive match"
+                                    break
+                        except OSError:
+                            pass
+                    
+                    if has_collision:
+                        # Log the collision
+                        _log_collision_error(root_dir, tx_item, current_abs_path, collision_path, collision_type, logger)
+                        # Update status
+                        error_msg = f"Collision detected with {collision_path}"
+                        update_transaction_status_in_list(transactions, tx_id, TransactionStatus.FAILED, error_msg, logger=logger)
+                        stats["failed"] += 1
+                        # Print result for user
+                        print(f"{RED_FG}✗ FAILED{RESET_STYLE} - {tx_type}: {relative_path_str}")
+                        print(f"  {DIM_STYLE}Collision with existing file/folder{RESET_STYLE}")
+                        continue
+
+            # Interactive mode prompt (only for non-collision cases)
             if interactive_mode and not dry_run:
                 # Show transaction details and ask for approval
                 print(f"{DIM_STYLE}Transaction {tx_id} - Type: {tx_type}, Path: {relative_path_str}{RESET_STYLE}")
-                print(f"{YELLOW_FG}Interactive mode: Logging temporarily suspended{RESET_STYLE}")
+                if tx_type in [TransactionType.FILE_NAME.value, TransactionType.FOLDER_NAME.value]:
+                    original_name = tx_item.get("ORIGINAL_NAME", "")
+                    new_name = tx_item.get("NEW_NAME", replace_logic.replace_occurrences(original_name))
+                    print(f"  {original_name} → {new_name}")
+                elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
+                    line_num = tx_item.get("LINE_NUMBER", 0)
+                    print(f"  Line {line_num}: content replacement")
+                
                 choice = input("Approve? (A/Approve, S/Skip, Q/Quit): ").strip().upper()
                 if choice == "S":
                     update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by user", logger=logger)
+                    stats["skipped"] += 1
+                    print(f"{YELLOW_FG}⊘ SKIPPED{RESET_STYLE}")
                     continue
                 elif choice == "Q":
                     if logger:
@@ -1027,13 +1158,19 @@ def execute_all_transactions(
                     if status_result == TransactionStatus.COMPLETED:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.COMPLETED, "DRY_RUN" if dry_run else None, logger=logger)
                         stats["completed"] += 1
+                        if interactive_mode and not dry_run:
+                            print(f"{GREEN_FG}✓ SUCCESS{RESET_STYLE}")
                     elif status_result == TransactionStatus.SKIPPED:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, error_msg, logger=logger)
                         stats["skipped"] += 1
+                        if interactive_mode and not dry_run:
+                            print(f"{YELLOW_FG}⊘ SKIPPED{RESET_STYLE} - {error_msg}")
                     else:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.FAILED, error_msg, logger=logger)
                         stats["failed"] += 1
                         items_still_requiring_retry.append(tx_item)
+                        if interactive_mode and not dry_run:
+                            print(f"{RED_FG}✗ FAILED{RESET_STYLE} - {error_msg}")
                 elif tx_type == TransactionType.FILE_CONTENT_LINE.value:
                     if skip_content:
                         update_transaction_status_in_list(transactions, tx_id, TransactionStatus.SKIPPED, "Skipped by flag", logger=logger)
@@ -1096,4 +1233,26 @@ def execute_all_transactions(
     save_transactions(transactions, transactions_file_path, logger=logger)
     if logger:
         logger.info(f"Execution phase complete. Stats: {stats}")
+    
+    # Print summary for interactive mode
+    if interactive_mode and not dry_run:
+        print(f"\n{BOLD_STYLE}=== Execution Summary ==={RESET_STYLE}")
+        print(f"Total transactions: {stats['total']}")
+        print(f"{GREEN_FG}Completed: {stats['completed']}{RESET_STYLE}")
+        print(f"{YELLOW_FG}Skipped: {stats['skipped']}{RESET_STYLE}")
+        print(f"{RED_FG}Failed: {stats['failed']}{RESET_STYLE}")
+        
+        # Check for collision and binary logs
+        collision_log_path = root_dir / COLLISIONS_ERRORS_LOG_FILE
+        binary_log_path = root_dir / BINARY_MATCHES_LOG_FILE
+        
+        if collision_log_path.exists() and collision_log_path.stat().st_size > 0:
+            print(f"\n{RED_FG}⚠ File/folder rename collisions were detected.{RESET_STYLE}")
+            print(f"  See '{collision_log_path.name}' for details.")
+        
+        if binary_log_path.exists() and binary_log_path.stat().st_size > 0:
+            print(f"\n{YELLOW_FG}ℹ Matches were found in binary files.{RESET_STYLE}")
+            print(f"  See '{binary_log_path.name}' for details.")
+            print(f"  {DIM_STYLE}(Binary files were not modified){RESET_STYLE}")
+    
     return stats

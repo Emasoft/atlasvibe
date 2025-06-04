@@ -1,13 +1,24 @@
-# tests/test_mass_find_replace.py
-# HERE IS THE FIXED TEST FILE WITH THE UNNECESSARY BACKTICK REMOVED
-# (The lines with ``` are now removed to fix syntax errors)
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Comprehensive test suite for Mass Find Replace tool.
+
+Tests cover:
+- Dry run behavior
+- Path resolution and virtual paths
+- Unicode handling
+- Error handling and permissions
+- File encoding support
+- Collision detection
+- Interactive mode
+"""
 
 from mass_find_replace import MAIN_TRANSACTION_FILE_NAME
 from pathlib import Path
 import os
 import shutil
 import time
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import logging
 import json
 from unittest.mock import patch
@@ -17,12 +28,13 @@ import builtins
 import importlib.util
 
 from mass_find_replace import main_flow, main_cli, YELLOW, RESET, _run_subprocess_command
-from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE
+from file_system_operations import load_transactions, save_transactions, TransactionStatus, TransactionType, BINARY_MATCHES_LOG_FILE, COLLISIONS_ERRORS_LOG_FILE
 import replace_logic
 import file_system_operations
 
 import pytest
 
+# Constants for test configuration
 DEFAULT_EXTENSIONS = [".txt", ".py", ".md", ".bin", ".log", ".data", ".rtf", ".xml"]
 DEFAULT_EXCLUDE_DIRS_REL = ["excluded_flojoy_dir", "symlink_targets_outside"]
 DEFAULT_EXCLUDE_FILES_REL = ["exclude_this_flojoy_file.txt"]
@@ -166,6 +178,7 @@ def test_path_resolution_after_rename(temp_test_dir: dict, default_map_file: Pat
 
 # ================ MODIFIED TEST: test_folder_nesting =================
 def test_folder_nesting(temp_test_dir: dict, default_map_file: Path):
+    """Test that nested folders are processed in correct order (shallow to deep)."""
     context_dir = temp_test_dir["runtime"]
     
     # Create nested structure: root > a > b > c (file)
@@ -255,7 +268,6 @@ def test_self_test_option(monkeypatch):
         m.setattr(sys, 'argv', ['test_mass_find_replace.py', '--self-test'])
         with patch('mass_find_replace._run_subprocess_command') as mock_run:
             mock_run.return_value = True
-            import pytest
             with pytest.raises(SystemExit) as exc_info:
                 main_cli()
             assert exc_info.value.code == 0  # Verify exit code is 0 (success)
@@ -319,12 +331,17 @@ def test_rtf_processing(temp_test_dir, default_map_file):
     assert rtf_processed, "RTF file should be processed"
 
 def test_binary_files_logging(temp_test_dir, default_map_file):
-    """Test binary file matches are logged but not modified"""
+    """Test binary file matches are logged but not modified.
+    
+    Binary files should:
+    - Not be modified (content preserved)
+    - Have matches logged to a separate log file
+    - Include offset information for each match
+    """
     context_dir = temp_test_dir["runtime"]
     bin_path = context_dir / "binary.bin"
     
-    # Create binary file with multiple search strings
-    patterns = [b"FLOJOY", b"floJoy", b"Flojoy"]
+    # Create binary file with multiple search strings embedded
     bin_content = b'Header' + b'FLOJOY' + b'\x00\x01' + b'floJoy' + b'\x02' + b'Flojoy' + b'Footer'
     bin_path.write_bytes(bin_content)
     
@@ -342,7 +359,11 @@ def test_binary_files_logging(temp_test_dir, default_map_file):
         assert "Offset:" in log_content
 
 def test_recursive_path_resolution(temp_test_dir, default_map_file):
-    """Test path resolution after multiple renames"""
+    """Test path resolution after multiple cascading renames.
+    
+    Verifies that when parent folders are renamed, child paths
+    are correctly resolved through the virtual path mapping.
+    """
     context_dir = temp_test_dir["runtime"]
     
     # Create nested structure: A > B > C
@@ -378,8 +399,11 @@ def test_recursive_path_resolution(temp_test_dir, default_map_file):
 
 # =============== NEW TEST: GB18030 ENCODING SUPPORT =================
 def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
-    """Test content replacement in GB18030 encoded files"""
-    import random
+    """Test content replacement in GB18030 encoded files.
+    
+    This test creates files with GB18030 encoding (common for Chinese text)
+    and verifies that replacements work correctly for both small and large files.
+    """
     context_dir = temp_test_dir["runtime"]
     
     # Test config
@@ -395,7 +419,7 @@ def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
         f.write(small_content)
     
     # Create 300KB large file with GB18030 encoding
-    large_content = []
+    large_content: List[str] = []
     base_line = f"{test_string} GB18030编码测试 " + "中文"*10 + "\n"
     target_size = 300 * 1024  # 300KB
     current_size = 0
@@ -452,3 +476,168 @@ def test_gb18030_encoding(temp_test_dir: dict, default_map_file: Path):
         original_count = large_content_str.count(test_string)
         replaced_count = updated_large.count(replacement_string)
         assert replaced_count == original_count, f"Replacement count mismatch in large file: {replaced_count} vs {original_count}"
+
+
+def test_collision_error_logging(temp_test_dir: dict, default_map_file: Path):
+    """Test that collision errors are properly logged"""
+    # Use a fresh directory to avoid conflicts with fixture files
+    test_dir = temp_test_dir["runtime"] / "collision_test"
+    test_dir.mkdir()
+    
+    # Test 1: Exact match collision
+    source_file = test_dir / "FlojoyTheme.ts"
+    source_file.write_text("export const flojoy = 'test';")
+    
+    exact_collision = test_dir / "AtlasvibeTheme.ts"
+    exact_collision.write_text("export const atlasvibe = 'existing';")
+    
+    # Test 2: Case-insensitive collision
+    # Create a file that would be renamed to "atlasvibe_config.py"
+    case_test_file = test_dir / "flojoy_config.py"
+    case_test_file.write_text("# Config file")
+    
+    # Create existing file with different case
+    case_collision = test_dir / "ATLASVIBE_CONFIG.py"
+    case_collision.write_text("# Existing config")
+    
+    # Debug: List all files before running
+    print("\n=== Files before running ===")
+    for f in test_dir.iterdir():
+        print(f"  {f.name}")
+    print("=== End files list ===")
+    
+    # Run the replacement on the test subdirectory
+    run_main_flow_for_test(
+        test_dir,
+        default_map_file,
+        dry_run=False,
+        extensions=[".ts", ".py"]
+    )
+    
+    # Check that collision log was created
+    collision_log = test_dir / COLLISIONS_ERRORS_LOG_FILE
+    assert collision_log.exists(), "Collision error log file was not created"
+    
+    # Read and verify log content
+    log_content = collision_log.read_text(encoding='utf-8')
+    
+    # Print log for debugging
+    print(f"\n=== Collision Log Content ===\n{log_content}\n=== End Log ===\n")
+    
+    # Verify exact match collision is logged
+    assert "FlojoyTheme.ts" in log_content, "FlojoyTheme.ts collision not logged"
+    assert "AtlasvibeTheme.ts" in log_content, "Target collision file not mentioned"
+    assert "exact match" in log_content, "Exact match collision type not specified"
+    
+    # Verify collision is logged (on case-insensitive filesystems like macOS, 
+    # ATLASVIBE_CONFIG.py and atlasvibe_config.py are the same, so it's an exact match)
+    assert "flojoy_config.py" in log_content, "Case-insensitive source not logged"
+    # The collision should be logged with the attempted target name
+    assert "atlasvibe_config.py" in log_content, "Collision target not mentioned"
+    
+    # Verify transaction details are included
+    assert "Transaction ID:" in log_content
+    assert "Original Name:" in log_content
+    assert "Proposed New Name:" in log_content
+    assert "Collision Type:" in log_content
+    
+    # Check that the original files still exist (not renamed due to collision)
+    assert source_file.exists(), "Source file was renamed despite collision"
+    assert case_test_file.exists(), "Case test file was renamed despite collision"
+    
+    # Verify transaction status
+    txn_file = test_dir / "planned_transactions.json"
+    transactions = load_transactions(txn_file)
+    
+    # Find the failed transactions
+    failed_txs = [tx for tx in transactions if tx["STATUS"] == TransactionStatus.FAILED.value]
+    collision_txs = [tx for tx in failed_txs if "collision" in tx.get("ERROR_MESSAGE", "").lower()]
+    
+    assert len(collision_txs) >= 2, f"Expected at least 2 collision transactions, found {len(collision_txs)}"
+
+
+def test_interactive_mode_collision_skip(temp_test_dir: dict, default_map_file: Path, monkeypatch, capsys):
+    """Test that collisions are skipped in interactive mode without prompting user"""
+    test_dir = temp_test_dir["runtime"] / "interactive_test"
+    test_dir.mkdir()
+    
+    # Create collision scenario
+    source_file = test_dir / "flojoy_config.py"
+    source_file.write_text("# Config")
+    
+    collision_file = test_dir / "atlasvibe_config.py"
+    collision_file.write_text("# Existing")
+    
+    # Create non-collision file for comparison
+    normal_file = test_dir / "flojoy_utils.py"
+    normal_file.write_text("# Utils")
+    
+    # Mock input to approve the non-collision transaction
+    input_count = 0
+    def mock_input(prompt):
+        nonlocal input_count
+        input_count += 1
+        return "A"
+    
+    monkeypatch.setattr('builtins.input', mock_input)
+    
+    # Run in interactive mode
+    run_main_flow_for_test(
+        test_dir,
+        default_map_file,
+        dry_run=False,
+        interactive_mode=True,
+        quiet_mode=True,
+        extensions=[".py"]
+    )
+    
+    # Get captured output
+    captured = capsys.readouterr()
+    output_text = captured.out
+    
+    # Verify collision was auto-skipped
+    assert "✗ FAILED" in output_text, "Failed marker not found in output"
+    assert "Collision with existing file/folder" in output_text
+    
+    # Verify that only non-collision transaction prompted for input
+    assert input_count == 1, f"Expected 1 input prompt for non-collision, got {input_count}"
+    
+    # Verify both files were processed
+    assert "flojoy_config.py" in output_text
+    assert "flojoy_utils.py" in output_text
+    assert "✓ SUCCESS" in output_text  # For the non-collision file
+    
+    # Verify summary shows collisions
+    assert "File/folder rename collisions were detected" in output_text
+    assert "collisions_errors.log" in output_text
+    
+    # Verify collision log exists
+    collision_log = test_dir / COLLISIONS_ERRORS_LOG_FILE
+    assert collision_log.exists()
+    
+    # Verify files state
+    assert source_file.exists(), "Collision file should not be renamed"
+    assert collision_file.exists(), "Existing collision file should remain"
+    assert normal_file.exists() or (test_dir / "atlasvibe_utils.py").exists(), "Non-collision file should be processed"
+
+
+def test_malformed_json_handling(temp_test_dir: dict):
+    """Test handling of malformed JSON in mapping file"""
+    test_dir = temp_test_dir["runtime"] / "malformed_test"
+    test_dir.mkdir()
+    
+    # Create malformed mapping file
+    bad_map_file = test_dir / "bad_mapping.json"
+    bad_map_file.write_text('{"REPLACEMENT_MAPPING": {"key": "value"')  # Missing closing braces
+    
+    # Should not crash
+    run_main_flow_for_test(
+        test_dir,
+        bad_map_file,
+        dry_run=True,
+        quiet_mode=True
+    )
+    
+    # Verify no transactions were created
+    txn_file = test_dir / "planned_transactions.json"
+    assert not txn_file.exists(), "Transaction file should not be created with malformed mapping file"
