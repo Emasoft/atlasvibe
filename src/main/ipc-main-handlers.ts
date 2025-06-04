@@ -203,7 +203,7 @@ export const registerIpcMainHandlers = () => {
       
       if (!response.ok) {
         const error = await response.json();
-        const errorMessage = error.detail || `Failed to create custom block (${response.status})`;
+        const errorMessage = (error as any).detail || `Failed to create custom block (${response.status})`;
         console.error("Custom block creation failed:", errorMessage);
         throw new Error(errorMessage);
       }

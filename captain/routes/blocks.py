@@ -28,6 +28,13 @@ class CreateCustomBlockRequest(BaseModel):
     project_path: str
 
 
+class UpdateBlockCodeRequest(BaseModel):
+    """Request model for updating a custom block's code."""
+    block_path: str
+    content: str
+    project_path: str
+
+
 @router.get("/blocks/manifest/")
 async def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
     # Pre-generate the blocks map to synchronize it with the manifest
@@ -151,4 +158,80 @@ async def create_custom_block(request: CreateCustomBlockRequest):
         raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         logger.error(f"Error creating custom block: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/blocks/update-code/")
+async def update_block_code(request: UpdateBlockCodeRequest):
+    """Update the code of a custom block and regenerate its metadata.
+    
+    Args:
+        request: Request containing block path, new content, and project path
+        
+    Returns:
+        Updated block manifest
+    """
+    # Validate that this is a project block
+    if "atlasvibe_blocks" not in request.block_path:
+        raise HTTPException(
+            status_code=403,
+            detail="Can only edit custom project blocks, not blueprints"
+        )
+    
+    # Validate project path
+    if not request.project_path or not request.project_path.endswith('.atlasvibe'):
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid project path. Must be a .atlasvibe file"
+        )
+    
+    try:
+        # Write the new content to the file
+        block_file = Path(request.block_path)
+        if not block_file.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Block file not found: {request.block_path}"
+            )
+        
+        # Backup the original content
+        original_content = block_file.read_text()
+        
+        try:
+            # Write new content
+            block_file.write_text(request.content)
+            
+            # Extract block name from path
+            block_name = block_file.parent.name
+            
+            # Regenerate manifest for the updated block
+            block_manifest = process_block_directory(
+                block_file.parent,
+                block_name
+            )
+            
+            if not block_manifest:
+                # Restore original content if manifest generation fails
+                block_file.write_text(original_content)
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to regenerate manifest after code update"
+                )
+            
+            # Add the path to the manifest
+            block_manifest["path"] = str(block_file.parent)
+            
+            logger.info(f"Updated code for block '{block_name}' at {request.block_path}")
+            
+            return block_manifest
+            
+        except Exception as e:
+            # Restore original content on any error
+            block_file.write_text(original_content)
+            raise
+            
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
+    except Exception as e:
+        logger.error(f"Error updating block code: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

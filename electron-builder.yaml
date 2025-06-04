@@ -1,7 +1,7 @@
 directories:
   output: dist
-appId: ai.atlasvibe.studio
-productName: Atlasvibe Studio
+appId: com.emasoft.atlasvibe
+productName: atlasvibe
 icon: ./public/favicon.ico
 asar: true
 asarUnpack:

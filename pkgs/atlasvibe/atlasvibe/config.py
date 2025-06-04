@@ -9,13 +9,13 @@ import logging
 LOGGER_NAME = "atlasvibe"
 
 
-class AtlasVibeConfig:
+class AtlasvibeConfig:
     _instance = None
 
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            cls._instance = AtlasVibeConfig()
+            cls._instance = AtlasvibeConfig()
         return cls._instance
 
     def __init__(self):

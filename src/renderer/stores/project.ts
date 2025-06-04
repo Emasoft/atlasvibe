@@ -61,12 +61,9 @@ import { EdgeVariant } from "@/renderer/types/edge";
 // Global window.api type is now handled by src/window.d.ts
 
 
-// Extend BlockData locally for this store if the global type isn't updated yet
-// This is a common pattern if you can't modify the global type immediately
-// or if the property is specific to the store's representation.
+// Extend BlockData locally for this store
 export interface BlockData extends OriginalBlockData {
   isCustom?: boolean;
-  path?: string; 
 }
 
 

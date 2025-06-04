@@ -235,3 +235,62 @@ The project is transitioning from hardware test sequencer to general-purpose vis
 
 See DEVELOPMENT_PLAN.md for detailed roadmap.
 
+## Testing Best Practices
+
+### Avoid Unnecessary Mocks
+- **CRITICAL**: Mocks should be used ONLY when it is impossible to test otherwise (e.g., external services, hardware dependencies)
+- Mocks can mask real functionality and hide bugs - prefer real integration tests
+- When testing file operations, use real temporary directories and files instead of mocking the filesystem
+- When testing API endpoints, use TestClient with the actual FastAPI app instead of mocking HTTP calls
+- For database operations, use a test database or in-memory database instead of mocking
+
+### Building and Running Tests
+- **Before running Playwright tests**: The application MUST be built first
+  ```bash
+  pnpm run build
+  pnpm run electron-package:mac  # or :windows/:linux
+  ```
+- Install all dependencies before testing:
+  ```bash
+  pnpm install  # For Node.js dependencies
+  uv sync --all-extras  # For Python dependencies
+  ```
+- For Python packages in development, install them:
+  ```bash
+  cd pkgs/atlasvibe && uv pip install -e .
+  ```
+
+### Test Organization
+- Unit tests: Test individual functions with minimal dependencies
+- Integration tests: Test complete workflows with real components
+- E2E tests: Test the full application behavior from user perspective
+- Always prefer integration tests over unit tests with heavy mocking
+
+### Example of Good Testing Practice
+```python
+# GOOD: Real file operations
+def test_update_file():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        file_path = Path(tmpdir) / "test.txt"
+        file_path.write_text("original")
+        
+        # Test actual file update
+        update_file(file_path, "new content")
+        assert file_path.read_text() == "new content"
+
+# BAD: Mocking file operations
+def test_update_file_with_mock():
+    mock_path = Mock()
+    mock_path.read_text.return_value = "original"
+    
+    # This doesn't test real file behavior
+    update_file(mock_path, "new content")
+    mock_path.write_text.assert_called_with("new content")
+```
+
+### Running Tests in CI/CD
+- Set up environment variables properly
+- Ensure all dependencies are installed
+- Build the application before E2E tests
+- Use headless mode for Playwright tests in CI
+

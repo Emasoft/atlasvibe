@@ -98,13 +98,27 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   Backend now receives project_path for block loading during execution
     *   Project blocks are dynamically loaded from `atlasvibe_blocks/` directory
 
-**Task 2.5: In-IDE Block Code Editing and Synchronization**
+**Task 2.5: In-IDE Block Code Editing and Synchronization** ✅ COMPLETED
 *   **Action:** Enable users to edit the Python code of their custom blocks directly within the atlasvibe IDE.
 *   **Details:**
     *   Each node representing a custom block should have an "Edit Code" option.
     *   When code is saved:
         1.  The corresponding Python file in the project's `atlasvibe_blocks/` directory is updated.
         2.  A process to regenerate metadata (`app.json`, `block_data.json`) for that specific custom block is triggered. This might involve re-parsing the Python file for the `@atlasvibe` decorator and its parameters.
+*   **Implementation (using TDD methodology):**
+    *   Created comprehensive tests for both backend and frontend functionality
+    *   Backend API endpoint `/blocks/update-code/` implemented with:
+        - Validation to ensure only custom blocks can be edited
+        - Automatic backup of original content
+        - Manifest/metadata regeneration after code update
+        - Rollback mechanism on failure
+    *   Frontend EditorView component enhanced with:
+        - Detection of custom blocks (shows "Custom Block" indicator)
+        - Integration with backend API for metadata regeneration
+        - Success/error notifications
+        - Automatic manifest refresh after save
+    *   Context menu "Edit Python Code" option already opens the editor window
+    *   Full synchronization between code editor and block metadata
 
 **Task 2.6: Data Persistence and Project Files**
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.

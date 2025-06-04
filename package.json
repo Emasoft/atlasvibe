@@ -115,6 +115,7 @@
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.43.0",
     "@tailwindcss/typography": "^0.5.12",
+    "@testing-library/react": "^16.3.0",
     "@total-typescript/ts-reset": "^0.5.1",
     "@types/adm-zip": "^0.5.5",
     "@types/bcryptjs": "^2.4.6",
@@ -153,7 +154,8 @@
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-istanbul": "^5.0.0",
     "vite-plugin-node-polyfills": "^0.21.0",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "vitest": "^3.2.1"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",

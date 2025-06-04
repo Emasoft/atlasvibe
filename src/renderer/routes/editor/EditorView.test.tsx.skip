@@ -1,0 +1,303 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import EditorView from "./EditorView";
+import { toast } from "sonner";
+import * as api from "@/renderer/lib/api";
+import { useProjectStore } from "@/renderer/stores/project";
+import { useManifestStore } from "@/renderer/stores/manifest";
+
+// Mock dependencies
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@/renderer/lib/api", () => ({
+  updateBlockCode: vi.fn(),
+}));
+
+vi.mock("@/renderer/stores/project", () => ({
+  useProjectStore: {
+    getState: vi.fn(),
+  },
+}));
+
+vi.mock("@/renderer/stores/manifest", () => ({
+  useManifestStore: {
+    getState: vi.fn(),
+  },
+}));
+
+// Mock window.api
+const mockApi = {
+  loadFileFromFullPath: vi.fn(),
+  saveFileToFullPath: vi.fn(),
+};
+
+Object.defineProperty(window, "api", {
+  value: mockApi,
+  writable: true,
+});
+
+// Mock CodeMirror to avoid rendering issues in tests
+vi.mock("@uiw/react-codemirror", () => ({
+  default: ({ value, onChange }: any) => (
+    <textarea
+      data-testid="code-editor"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
+}));
+
+describe("EditorView", () => {
+  const customBlockPath = "/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py";
+  const regularFilePath = "/project/some_file.py";
+  const projectPath = "/project/test.atlasvibe";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Setup default mocks
+    mockApi.loadFileFromFullPath.mockResolvedValue("# Initial content");
+    mockApi.saveFileToFullPath.mockResolvedValue({ isOk: () => true });
+    
+    useProjectStore.getState.mockReturnValue({ path: projectPath });
+    useManifestStore.getState.mockReturnValue({
+      fetchManifest: vi.fn().mockResolvedValue(undefined),
+    });
+  });
+
+  const renderEditor = (filePath: string) => {
+    const encodedPath = btoa(filePath);
+    return render(
+      <MemoryRouter initialEntries={[`/editor/${encodedPath}`]}>
+        <Routes>
+          <Route path="/editor/:id" element={<EditorView />} />
+        </Routes>
+      </MemoryRouter>
+    );
+  };
+
+  describe("Custom Block Detection", () => {
+    it("should detect and display 'Custom Block' indicator for custom blocks", async () => {
+      renderEditor(customBlockPath);
+      
+      await waitFor(() => {
+        expect(screen.getByText("Custom Block")).toBeInTheDocument();
+      });
+    });
+
+    it("should not display 'Custom Block' indicator for regular files", async () => {
+      renderEditor(regularFilePath);
+      
+      await waitFor(() => {
+        expect(screen.queryByText("Custom Block")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("File Loading", () => {
+    it("should load file content on mount", async () => {
+      renderEditor(customBlockPath);
+      
+      await waitFor(() => {
+        expect(mockApi.loadFileFromFullPath).toHaveBeenCalledWith(customBlockPath);
+      });
+      
+      const editor = screen.getByTestId("code-editor");
+      expect(editor).toHaveValue("# Initial content");
+    });
+  });
+
+  describe("Saving Custom Blocks", () => {
+    it("should update block metadata after saving a custom block", async () => {
+      const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
+      mockUpdateBlockCode.mockResolvedValue({
+        isOk: () => true,
+        isErr: () => false,
+      } as any);
+      
+      renderEditor(customBlockPath);
+      
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
+      });
+      
+      // Change content
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Updated content" } });
+      
+      // Save
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(mockApi.saveFileToFullPath).toHaveBeenCalledWith(
+          customBlockPath,
+          "# Updated content"
+        );
+        expect(mockUpdateBlockCode).toHaveBeenCalledWith(
+          customBlockPath,
+          "# Updated content",
+          projectPath
+        );
+        expect(toast.success).toHaveBeenCalledWith(
+          "Block updated successfully",
+          { description: "Metadata has been regenerated" }
+        );
+      });
+    });
+
+    it("should show error when block metadata update fails", async () => {
+      const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
+      mockUpdateBlockCode.mockResolvedValue({
+        isOk: () => false,
+        isErr: () => true,
+        error: { message: "Metadata generation failed" },
+      } as any);
+      
+      renderEditor(customBlockPath);
+      
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
+      });
+      
+      // Change content
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Updated content" } });
+      
+      // Save
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "Failed to update block metadata",
+          { description: "Metadata generation failed" }
+        );
+      });
+    });
+
+    it("should not update metadata for regular files", async () => {
+      const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
+      
+      renderEditor(regularFilePath);
+      
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
+      });
+      
+      // Change content
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Updated content" } });
+      
+      // Save
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(mockApi.saveFileToFullPath).toHaveBeenCalled();
+        expect(mockUpdateBlockCode).not.toHaveBeenCalled();
+      });
+    });
+
+    it("should not update metadata if project path is not available", async () => {
+      useProjectStore.getState.mockReturnValue({ path: null });
+      const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
+      
+      renderEditor(customBlockPath);
+      
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
+      });
+      
+      // Change content and save
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Updated content" } });
+      
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(mockApi.saveFileToFullPath).toHaveBeenCalled();
+        expect(mockUpdateBlockCode).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Change Detection", () => {
+    it("should show 'Changed' indicator when content is modified", async () => {
+      renderEditor(customBlockPath);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toBeInTheDocument();
+      });
+      
+      // Initially no changes
+      expect(screen.queryByText("Changed")).not.toBeInTheDocument();
+      
+      // Change content
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Modified content" } });
+      
+      // Should show changed indicator
+      expect(screen.getByText("Changed")).toBeInTheDocument();
+    });
+
+    it("should hide 'Changed' indicator after successful save", async () => {
+      renderEditor(customBlockPath);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toBeInTheDocument();
+      });
+      
+      // Change content
+      const editor = screen.getByTestId("code-editor");
+      fireEvent.change(editor, { target: { value: "# Modified content" } });
+      
+      expect(screen.getByText("Changed")).toBeInTheDocument();
+      
+      // Save
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(screen.queryByText("Changed")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should show error toast when save fails", async () => {
+      mockApi.saveFileToFullPath.mockResolvedValue({
+        isOk: () => false,
+        error: { message: "Permission denied" },
+      });
+      
+      renderEditor(customBlockPath);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId("code-editor")).toBeInTheDocument();
+      });
+      
+      // Save
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "Error when trying to save file",
+          { description: "Permission denied" }
+        );
+      });
+    });
+  });
+});

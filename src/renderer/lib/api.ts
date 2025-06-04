@@ -168,6 +168,23 @@ export const createCustomBlock = async (
   );
 };
 
+export const updateBlockCode = async (
+  blockPath: string,
+  content: string,
+  projectPath: string,
+) => {
+  return fromPromise(
+    captain.post("blocks/update-code", {
+      json: {
+        block_path: blockPath,
+        content: content,
+        project_path: projectPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
 export const discoverRobot = async (path: string, oneFile: boolean) => {
   return get("discover/robot", TestDiscoverContainer, {
     searchParams: {

@@ -1,4 +1,4 @@
-import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasVibeTheme"; 
+import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasvibeTheme"; 
 import { Dialog, DialogContent } from "@/renderer/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { Test } from "@/renderer/types/test-sequencer";

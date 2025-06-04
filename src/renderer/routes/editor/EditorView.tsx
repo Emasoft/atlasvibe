@@ -7,6 +7,9 @@ import { Button } from "@/renderer/components/ui/button";
 import useKeyboardShortcut from "@/renderer/hooks/useKeyboardShortcut";
 import invariant from "tiny-invariant";
 import { toast } from "sonner";
+import { updateBlockCode } from "@/renderer/lib/api";
+import { useProjectStore } from "@/renderer/stores/project";
+import { useManifestStore } from "@/renderer/stores/manifest";
 
 const EditorView = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,21 +20,49 @@ const EditorView = () => {
   const fullPath = atob(id);
 
   const [value, setValue] = useState("");
-
   const [hasChanged, setHasChanged] = useState<boolean>(false);
+  const [isCustomBlock, setIsCustomBlock] = useState<boolean>(false);
 
   const loadFile = async () => {
     const res = await window.api.loadFileFromFullPath(fullPath);
     setValue(res);
+    
+    // Check if this is a custom block
+    setIsCustomBlock(fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py"));
   };
 
   const saveFile = async () => {
     const res = await window.api.saveFileToFullPath(fullPath, value);
     if (res.isOk()) {
       setHasChanged(false);
+      
+      // Check if this is a custom block file (contains "atlasvibe_blocks" in path)
+      if (fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py")) {
+        // Get the current project path
+        const projectPath = useProjectStore.getState().path;
+        
+        if (projectPath) {
+          // Update block code on backend to regenerate metadata
+          const updateRes = await updateBlockCode(fullPath, value, projectPath);
+          
+          if (updateRes.isOk()) {
+            toast.success("Block updated successfully", {
+              description: "Metadata has been regenerated"
+            });
+            
+            // Refresh manifests to reflect the changes
+            const { fetchManifest } = useManifestStore.getState();
+            await fetchManifest();
+          } else {
+            toast.error("Failed to update block metadata", {
+              description: updateRes.error.message
+            });
+          }
+        }
+      }
     } else {
       toast.error("Error when trying to save file", {
-        description: res.error.message,
+        description: res.error?.message || "Unknown error",
       });
     }
   };
@@ -51,6 +82,9 @@ const EditorView = () => {
   return (
     <div>
       <div className="absolute right-5 z-50 flex items-center gap-2 p-4">
+        {isCustomBlock && (
+          <div className="text-sm text-muted-foreground">Custom Block</div>
+        )}
         {hasChanged && <div className="">Changed</div>}
         <Button onClick={saveFile}>Save</Button>
         <Button asChild>
