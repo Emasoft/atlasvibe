@@ -29,6 +29,10 @@ cp -r ../atlasvibe_engine ../cli . 2>/dev/null || true
 echo "Installing Python dependencies..."
 uv pip install -r requirements.txt
 
+# 5a. Install atlasvibe package separately
+echo "Installing atlasvibe package..."
+cd pkgs/atlasvibe && uv pip install -e . && cd ../..
+
 # 6. Set up Python discovery for the app
 echo "Setting up Python discovery..."
 PYTHON_PATH="$(pwd)/.venv/bin/python"
@@ -41,30 +45,61 @@ echo "$PYTHON_PATH" > "$CACHE_DIR/atlasvibe_py_interpreter"
 
 # 7. Create a wrapper script for the app
 cat > run-app.sh << 'EOF'
-#!/bin/bash
-export UV_PYTHON="$(pwd)/.venv/bin/python"
-export VIRTUAL_ENV="$(pwd)/.venv"
-export PATH="$(pwd)/.venv/bin:$PATH"
-export PYTHONPATH="$(pwd):$(pwd)/pkgs/atlasvibe:$(pwd)/pkgs/atlasvibe_sdk:$PYTHONPATH"
+#!/usr/bin/env bash
+# Script to run AtlasVibe app with uv-managed Python environment
+# Usage: ./run-app.sh <PROJECT_ROOT_DIR> [additional args]
+
+# Check if PROJECT_ROOT_DIR is provided
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <PROJECT_ROOT_DIR> [additional args]"
+    echo "Example: $0 /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe"
+    exit 1
+fi
+
+PROJECT_ROOT_DIR="$1"
+shift  # Remove first argument so "$@" contains only additional args
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Set up environment variables using PROJECT_ROOT_DIR
+export UV_PYTHON="$PROJECT_ROOT_DIR/temp_test/.venv/bin/python"
+export VIRTUAL_ENV="$PROJECT_ROOT_DIR/temp_test/.venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+export PYTHONPATH="$PROJECT_ROOT_DIR/temp_test:$PROJECT_ROOT_DIR/temp_test/pkgs/atlasvibe:$PROJECT_ROOT_DIR/temp_test/pkgs/atlasvibe_sdk:$PYTHONPATH"
 
 # Run the app
-./atlasvibe.app/Contents/MacOS/atlasvibe "$@"
+"$SCRIPT_DIR/atlasvibe.app/Contents/MacOS/atlasvibe" "$@"
 EOF
 chmod +x run-app.sh
 
 # 8. Create test runner script
 cat > run-tests.sh << 'EOF'
-#!/bin/bash
-cd ..
-export UV_PYTHON="$(pwd)/temp_test/.venv/bin/python"
-export VIRTUAL_ENV="$(pwd)/temp_test/.venv"
-export PATH="$(pwd)/temp_test/.venv/bin:$PATH"
-export PYTHONPATH="$(pwd)/temp_test:$(pwd)/temp_test/pkgs/atlasvibe:$(pwd)/temp_test/pkgs/atlasvibe_sdk:$PYTHONPATH"
+#!/usr/bin/env bash
+# Script to run Playwright tests with uv-managed Python environment
+# Usage: ./run-tests.sh <PROJECT_ROOT_DIR> [test file] [additional args]
+
+# Check if PROJECT_ROOT_DIR is provided
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <PROJECT_ROOT_DIR> [test file] [additional args]"
+    echo "Example: $0 /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe 16_edit_custom_block_code.spec.ts --headed"
+    exit 1
+fi
+
+PROJECT_ROOT_DIR="$1"
+shift  # Remove first argument so "$@" contains only test args
+
+# Set up environment variables using PROJECT_ROOT_DIR
+export UV_PYTHON="$PROJECT_ROOT_DIR/temp_test/.venv/bin/python"
+export VIRTUAL_ENV="$PROJECT_ROOT_DIR/temp_test/.venv"
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+export PYTHONPATH="$PROJECT_ROOT_DIR/temp_test:$PROJECT_ROOT_DIR/temp_test/pkgs/atlasvibe:$PROJECT_ROOT_DIR/temp_test/pkgs/atlasvibe_sdk:$PYTHONPATH"
 
 # Ensure app uses our Python
 echo "$UV_PYTHON" > "$HOME/Library/Application Support/atlasvibe_py_interpreter"
 
-# Create symlink for mac-universal
+# Create symlink for mac-universal in the PROJECT_ROOT_DIR
+cd "$PROJECT_ROOT_DIR"
 rm -rf dist/mac-universal
 ln -sf mac-universal-arm64-temp dist/mac-universal
 
@@ -77,7 +112,7 @@ echo ""
 echo "Deployment complete!"
 echo ""
 echo "To run the app:"
-echo "  cd temp_test && ./run-app.sh"
+echo "  cd temp_test && ./run-app.sh $(pwd)"
 echo ""
 echo "To run tests:"
-echo "  cd temp_test && ./run-tests.sh 16_edit_custom_block_code.spec.ts --headed"
+echo "  cd temp_test && ./run-tests.sh $(pwd) 16_edit_custom_block_code.spec.ts --headed"

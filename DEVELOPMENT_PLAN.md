@@ -119,6 +119,11 @@ This phase redefines how blocks are created, managed, and used within a project.
         - Automatic manifest refresh after save
     *   Context menu "Edit Python Code" option already opens the editor window
     *   Full synchronization between code editor and block metadata
+*   **Python Environment Management:**
+    *   Migrated from Poetry to uv for faster, more reliable dependency management
+    *   Created deployment scripts that properly configure Python 3.11 environment
+    *   Fixed module import issues with proper package installation
+    *   Updated all Python-related commands in TypeScript to use uv instead of Poetry
 
 **Task 2.6: Data Persistence and Project Files**
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.
