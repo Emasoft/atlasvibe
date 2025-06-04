@@ -27,11 +27,11 @@ import { checkForUpdates } from "./update";
 import {
   checkPythonInstallation,
   installDependencies,
-  installPipx,
-  installPoetry,
+  installUv,
+  ensureUvEnvironment,
   killCaptain,
   listPythonPackages,
-  pipxEnsurepath,
+  uvEnsurepath,
   pyvisaInfo,
   restartCaptain,
   spawnCaptain,
@@ -41,15 +41,15 @@ import {
   handlePythonInterpreter,
 } from "./python/interpreter";
 import {
-  poetryGetGroupInfo,
-  poetryInstallDepGroup,
-  poetryInstallDepUserGroup,
-  poetryInstallRequirementsUserGroup,
-  poetryShowTopLevel,
-  poetryShowUserGroup,
-  poetryUninstallDepGroup,
-  poetryUninstallDepUserGroup,
-} from "./python/poetry";
+  uvGetGroupInfo,
+  uvInstallDepGroup,
+  uvInstallDepUserGroup,
+  uvInstallRequirementsUserGroup,
+  uvShowTopLevel,
+  uvShowUserGroup,
+  uvUninstallDepGroup,
+  uvUninstallDepUserGroup,
+} from "./python/uv";
 import { createEditorWindow } from "./window";
 import {
   createUserProfile,
@@ -110,9 +110,9 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.setPythonInterpreter, handlePythonInterpreter);
   ipcMain.handle(API.showSaveDialog, handleShowSaveAsDialog);
   ipcMain.handle(API.checkPythonInstallation, checkPythonInstallation);
-  ipcMain.handle(API.installPipx, installPipx);
-  ipcMain.handle(API.pipxEnsurepath, pipxEnsurepath);
-  ipcMain.handle(API.installPoetry, installPoetry);
+  ipcMain.handle(API.installPipx, installUv); // Keep API name for compatibility
+  ipcMain.handle(API.pipxEnsurepath, uvEnsurepath); // Keep API name for compatibility
+  ipcMain.handle(API.installPoetry, ensureUvEnvironment); // Keep API name for compatibility
   ipcMain.handle(API.installDependencies, installDependencies);
   ipcMain.handle(API.writeFileSync, writeFileSync);
   ipcMain.handle(API.spawnCaptain, spawnCaptain);
@@ -130,23 +130,24 @@ export const registerIpcMainHandlers = () => {
     app.exit();
   });
 
-  ipcMain.handle(API.poetryShowTopLevel, poetryShowTopLevel);
-  ipcMain.handle(API.poetryShowUserGroup, poetryShowUserGroup);
-  ipcMain.handle(API.poetryGetGroupInfo, poetryGetGroupInfo);
+  // Keep Poetry API names for compatibility but use uv functions
+  ipcMain.handle(API.poetryShowTopLevel, uvShowTopLevel);
+  ipcMain.handle(API.poetryShowUserGroup, uvShowUserGroup);
+  ipcMain.handle(API.poetryGetGroupInfo, uvGetGroupInfo);
   ipcMain.handle(API.poetryInstallDepGroup, (_, group) => {
-    return poetryInstallDepGroup(group);
+    return uvInstallDepGroup(group);
   });
   ipcMain.handle(API.poetryUninstallDepGroup, (_, group) => {
-    return poetryUninstallDepGroup(group);
+    return uvUninstallDepGroup(group);
   });
   ipcMain.handle(API.poetryUninstallDepUserGroup, (_, dep) => {
-    return poetryUninstallDepUserGroup(dep);
+    return uvUninstallDepUserGroup(dep);
   });
   ipcMain.handle(API.poetryInstallDepUserGroup, (_, dep) => {
-    return poetryInstallDepUserGroup(dep);
+    return uvInstallDepUserGroup(dep);
   });
   ipcMain.handle(API.poetryInstallRequirementsUserGroup, (_, filePath) => {
-    return poetryInstallRequirementsUserGroup(filePath);
+    return uvInstallRequirementsUserGroup(filePath);
   });
   ipcMain.handle(API.openFilePicker, openFilePicker);
   ipcMain.handle(API.openFilesPicker, openFilesPicker);

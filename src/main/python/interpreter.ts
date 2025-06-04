@@ -33,6 +33,11 @@ export class PythonManager {
       "/opt/homebrew/bin",
       os.homedir() + "/.pyenv/shims",
       os.homedir() + "/miniconda3/bin",
+      // Add uv Python paths
+      os.homedir() + "/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/bin",
+      os.homedir() + "/.local/share/uv/python/cpython-3.11.12-macos-x86_64-none/bin",
+      os.homedir() + "/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/bin",
+      os.homedir() + "/.local/share/uv/python/cpython-3.12.9-macos-x86_64-none/bin",
     ],
     win32: [
       os.homedir() + "/miniconda3",
@@ -137,12 +142,27 @@ export class PythonManager {
   }
 
   async getGlobalPython() {
+    // Try python3.11 first
     try {
-      const cmd = `python -c "import sys; print(sys.executable)"`;
-      const defaultPythonPath = await execCommand(new Command(cmd));
-      return defaultPythonPath.trim();
+      const cmd311 = `python3.11 -c "import sys; print(sys.executable)"`;
+      const python311Path = await execCommand(new Command(cmd311), { quiet: true });
+      return python311Path.trim();
     } catch (err) {
-      return null;
+      // Fallback to python3
+      try {
+        const cmd3 = `python3 -c "import sys; print(sys.executable)"`;
+        const python3Path = await execCommand(new Command(cmd3), { quiet: true });
+        return python3Path.trim();
+      } catch (err2) {
+        // Final fallback to python
+        try {
+          const cmd = `python -c "import sys; print(sys.executable)"`;
+          const defaultPythonPath = await execCommand(new Command(cmd), { quiet: true });
+          return defaultPythonPath.trim();
+        } catch (err3) {
+          return null;
+        }
+      }
     }
   }
 

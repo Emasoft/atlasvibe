@@ -11,7 +11,7 @@ import {
 } from "./interpreter";
 import * as os from "os";
 import { existsSync, mkdirSync, readFileSync } from "fs";
-import { poetryGroupEnsureValid } from "./poetry";
+import { uvGroupEnsureValid } from "./uv";
 import { store } from "../store";
 import { join } from "path";
 
@@ -65,85 +65,76 @@ export async function checkPythonInstallation(
   return global.pythonInterpreters;
 }
 
-export async function installPipx(): Promise<string> {
-  const py = process.env.PY_INTERPRETER ?? "python";
-  return await execCommand(
-    new Command({
-      darwin: `"${py}" -m pip install --user pipx==1.5.0 --break-system-packages`,
-      win32: `"${py}" -m pip install --user pipx==1.5.0`,
-      linux: `"${py}" -m pip install --user pipx==1.5.0 --break-system-packages`,
-    }),
-  );
+export async function installUv(): Promise<string> {
+  // UV is typically installed globally, not via pip
+  // Check if uv is already available
+  try {
+    await execCommand(new Command("uv --version"), { quiet: true });
+    return "uv is already installed";
+  } catch {
+    // Install uv using the official installer
+    return await execCommand(
+      new Command({
+        darwin: "curl -LsSf https://astral.sh/uv/install.sh | sh",
+        win32: "powershell -c \"irm https://astral.sh/uv/install.ps1 | iex\"",
+        linux: "curl -LsSf https://astral.sh/uv/install.sh | sh",
+      }),
+    );
+  }
 }
 
-export async function pipxEnsurepath(): Promise<void> {
-  const py = process.env.PY_INTERPRETER ?? "python";
-  const pipxBinScript =
-    "import pipx.commands.ensure_path;import pipx.paths;script=pipx.commands.ensure_path.get_pipx_user_bin_path();bin=pipx.paths.DEFAULT_PIPX_BIN_DIR;print(bin,';',script)";
-  const pipxBinPath = await execCommand(
-    new Command(`"${py}" -c "${pipxBinScript}"`),
-    { quiet: true },
-  );
-  const trimmedPath = pipxBinPath.trim().split(" ").join("");
+export async function uvEnsurepath(): Promise<void> {
+  // UV typically adds itself to PATH during installation
+  // But we can ensure ~/.local/bin is in PATH
+  const uvBinPath = join(os.homedir(), ".local", "bin");
   const existingPaths = process.env.PATH;
 
-  log.info("pipxEnsurepath: " + trimmedPath);
+  log.info("uvEnsurepath: " + uvBinPath);
   log.info("existingPaths: " + existingPaths);
 
-  if (!existingPaths?.includes(trimmedPath)) {
-    process.env.PATH = `${trimmedPath}:${existingPaths}`;
+  if (!existingPaths?.includes(uvBinPath)) {
+    process.env.PATH = `${uvBinPath}:${existingPaths}`;
   }
 }
 
-export async function installPoetry(): Promise<void> {
-  log.info("PIPX_HOME: " + process.env.PIPX_HOME);
-  log.info("PIPX_BIN_DIR: " + process.env.PIPX_BIN_DIR);
-
-  const py = process.env.PY_INTERPRETER ?? "python";
-  const localDir = join(os.homedir(), ".local");
-  if (!existsSync(localDir)) {
-    mkdirSync(localDir);
+export async function ensureUvEnvironment(): Promise<void> {
+  // Ensure UV is available and environment is set up
+  try {
+    await execCommand(new Command("uv --version"), { quiet: true });
+  } catch {
+    await installUv();
   }
-  const defaultPipxDir = join(localDir, "pipx");
-  if (!existsSync(defaultPipxDir)) {
-    mkdirSync(defaultPipxDir);
+  
+  // Ensure virtual environment exists
+  const venvPath = join(app.isPackaged ? process.resourcesPath! : process.cwd(), ".venv");
+  if (!existsSync(venvPath)) {
+    log.info("Creating virtual environment with uv...");
+    await execCommand(new Command("uv venv --python 3.11"));
   }
-  process.env.PIPX_HOME = defaultPipxDir;
-
-  const unset = "unset PIPX_HOME PIPX_BIN_DIR";
-  // NOTE: Joey: this unset here is nessassary for the macOS runner on GitHub
-  // Actions to work. These 2 env vars are typically not set, at least on my
-  // machine, but they are somehow set on the runner, which screws things up.
-  // Giving: Permission denied: '/usr/local/opt/pipx_bin'
-  await execCommand(
-    new Command({
-      darwin: `${unset} && "${py}" -m pipx install poetry --force`,
-      win32: `"${py}" -m pipx install poetry --force`,
-      linux: `"${py}" -m pipx install poetry --force`,
-    }),
-  );
-  const poetryPath = await getPoetryPath();
-  process.env.POETRY_PATH = poetryPath;
+  
+  // Set UV_PYTHON to use the venv
+  process.env.UV_PYTHON = join(venvPath, "bin", "python");
+  process.env.VIRTUAL_ENV = venvPath;
 }
 
 export async function installDependencies(): Promise<string> {
-  const poetry = process.env.POETRY_PATH ?? "poetry";
-
-  const validGroups = await poetryGroupEnsureValid();
+  // Ensure we're in a virtual environment
+  await ensureUvEnvironment();
+  
+  const validGroups = await uvGroupEnsureValid();
   if (validGroups.length > 0) {
+    const extras = validGroups.map(g => `[${g}]`).join("");
     return await execCommand(
-      new Command(
-        `${poetry} install --sync --with ${validGroups.join(",")} --no-root`,
-      ),
+      new Command(`uv pip install -e .${extras}`),
     );
   }
-  return await execCommand(new Command(`${poetry} install --no-root`));
+  return await execCommand(new Command(`uv pip install -e .`));
 }
 
 export async function spawnCaptain(): Promise<void> {
   return new Promise((_, reject) => {
-    const poetry = process.env.POETRY_PATH ?? "poetry";
-    const command = new Command(`${poetry} run python main.py`);
+    // Use uv run to execute in the virtual environment
+    const command = new Command(`uv run python main.py`);
 
     log.info("execCommand: " + command.getCommand());
 
@@ -155,6 +146,8 @@ export async function spawnCaptain(): Promise<void> {
         env: {
           ...process.env,
           LOCAL_DB_PATH: store.path,
+          UV_PYTHON: process.env.UV_PYTHON,
+          VIRTUAL_ENV: process.env.VIRTUAL_ENV,
         },
       },
     );
@@ -198,26 +191,24 @@ export function killCaptain(): boolean {
 }
 
 export async function listPythonPackages() {
-  const poetry = process.env.POETRY_PATH ?? "poetry";
-  return await execCommand(new Command(`"${poetry}" run pip freeze`), {
+  return await execCommand(new Command(`uv pip freeze`), {
     quiet: true,
   });
 }
 
 export async function pyvisaInfo() {
-  const poetry = process.env.POETRY_PATH ?? "poetry";
-  return await execCommand(new Command(`"${poetry}" run pyvisa-info`), {
+  return await execCommand(new Command(`uv run pyvisa-info`), {
     quiet: true,
   });
 }
 
-const getPoetryPath = async () => {
-  const localBinPath = `${os.homedir}/.local/bin/poetry`;
+const getUvPath = async () => {
+  const localBinPath = join(os.homedir(), ".local", "bin", "uv");
   try {
-    await execCommand(new Command(localBinPath), { quiet: true });
+    await execCommand(new Command(`${localBinPath} --version`), { quiet: true });
     return localBinPath;
   } catch (error) {
-    return "poetry";
+    return "uv";
   }
 };
 
