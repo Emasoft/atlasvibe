@@ -48,6 +48,13 @@ test-results/
 docs/pnpm-lock.yml
 .aider*
 
+# Mass Find Replace (MFR) tool temporary files
+planned_transactions.json
+planned_transactions.json.bak
+binary_files_matches.log
+collisions_errors.log
+test_temp/
+
 
 # Project specific
 PYTHON/WATCH/fc.json
