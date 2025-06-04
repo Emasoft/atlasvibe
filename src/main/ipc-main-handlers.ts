@@ -181,4 +181,33 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.deleteUserProfile, deleteUserProfile);
   ipcMain.handle(API.getFileContent, readFileSync);
   ipcMain.handle(API.isFileOnDisk, isFileOnDisk);
+  
+  // Custom block creation handler
+  ipcMain.handle("create-custom-block", async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
+    try {
+      // Call the backend API to create the custom block
+      const response = await fetch("http://localhost:5392/blocks/create-custom/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          blueprint_key: blueprintKey,
+          new_block_name: newCustomBlockName,
+          project_path: projectPath,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to create custom block");
+      }
+      
+      const blockDefinition = await response.json();
+      return blockDefinition;
+    } catch (error) {
+      console.error("Error creating custom block:", error);
+      return undefined;
+    }
+  });
 };

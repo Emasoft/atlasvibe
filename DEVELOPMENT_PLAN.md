@@ -4,7 +4,7 @@
 
 Transform the forked project from a lab-focused visual programming IDE ("Flojoy Studio") into "atlasvibe," a general-purpose visual programming IDE for Python. A key feature will be an Agent node flow approach, where each node (block/agent) can eventually generate its own Python code.
 
-## Phase 1: Rebranding and Initial Cleanup
+## Phase 1: Rebranding and Initial Cleanup ✅ COMPLETED
 
 This phase focuses on changing the project's identity from "Atlasvibe Studio" to "atlasvibe" and updating all relevant information.
 
@@ -42,9 +42,16 @@ This phase focuses on changing the project's identity from "Atlasvibe Studio" to
 *   **Scope:** Buttons, labels, tooltips, menu items, "About" dialogs, "Help" sections, links.
 *   **Details:** Ensure all references to "Atlasvibe", its specific features (e.g., "test sequencer for hardware validation" unless retained), or personnel are updated or removed. Remove the old logo from the UI.
 
-## Phase 2: Core Block System Transformation
+## Phase 2: Core Block System Transformation (IN PROGRESS)
 
 This phase redefines how blocks are created, managed, and used within a project.
+
+**Current State Analysis (December 2024):**
+- Projects are saved as `.atlasvibe` JSON files containing nodes, edges, and text nodes
+- Blocks are globally loaded from `/blocks/` directory at startup
+- The frontend already has placeholder code for custom blocks (see `useAddBlock` in `project.ts`)
+- The IPC handler for `create-custom-block` is declared but not implemented
+- Block manifests are generated from Python docstrings and decorators
 
 **Task 2.1: Project-Centric Structure**
 *   **Action:** Define and implement a new project structure where each atlasvibe project is self-contained in its own directory.

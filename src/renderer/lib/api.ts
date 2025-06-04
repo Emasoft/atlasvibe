@@ -147,6 +147,23 @@ export const discoverPytest = async (path: string, oneFile: boolean) => {
   });
 };
 
+export const createCustomBlock = async (
+  blueprintKey: string,
+  newBlockName: string,
+  projectPath: string,
+) => {
+  return fromPromise(
+    captain.post("blocks/create-custom", {
+      json: {
+        blueprint_key: blueprintKey,
+        new_block_name: newBlockName,
+        project_path: projectPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
 export const discoverRobot = async (path: string, oneFile: boolean) => {
   return get("discover/robot", TestDiscoverContainer, {
     searchParams: {
