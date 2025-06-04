@@ -36,7 +36,7 @@ export const Index = (): JSX.Element => {
     {
       status: "running",
       stage: "check-python-installation",
-      message: "Check for python ~3.11 installation.",
+      message: "Check for Python 3.11 or 3.12 installation.",
     },
     {
       status: "pending",

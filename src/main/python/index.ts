@@ -20,18 +20,27 @@ export async function checkPythonInstallation(
   force?: boolean,
 ): Promise<InterpretersList> {
   if (!global.pythonInterpreters || force) {
-    global.pythonInterpreters =
-      await new PythonManager().getInterpreterByVersion({
-        major: 3,
-        minor: 11,
-      });
-  }
-  if (existsSync(interpreterCachePath)) {
-    const interpreter = readFileSync(interpreterCachePath).toString("utf-8");
-    const matchedVersion = await PythonManager.checkVersion(interpreter, {
+    const py311 = await new PythonManager().getInterpreterByVersion({
       major: 3,
       minor: 11,
     });
+    const py312 = await new PythonManager().getInterpreterByVersion({
+      major: 3,
+      minor: 12,
+    });
+    global.pythonInterpreters = [...py311, ...py312];
+  }
+  if (existsSync(interpreterCachePath)) {
+    const interpreter = readFileSync(interpreterCachePath).toString("utf-8");
+    const matchedVersion11 = await PythonManager.checkVersion(interpreter, {
+      major: 3,
+      minor: 11,
+    });
+    const matchedVersion12 = await PythonManager.checkVersion(interpreter, {
+      major: 3,
+      minor: 12,
+    });
+    const matchedVersion = matchedVersion11 || matchedVersion12;
     if (matchedVersion) {
       const foundInterpreterInList = global.pythonInterpreters.find(
         (i) => i.path === interpreter,
@@ -42,14 +51,14 @@ export async function checkPythonInstallation(
           default: i.path === interpreter ? true : false,
         }));
       } else {
-        global.pythonInterpreters.push({
-          path: interpreter,
-          version: {
-            major: 3,
-            minor: 11,
-          },
-          default: true,
-        });
+        const version = await PythonManager.getVersion(interpreter);
+        if (version) {
+          global.pythonInterpreters.push({
+            path: interpreter,
+            version,
+            default: true,
+          });
+        }
       }
     }
   }

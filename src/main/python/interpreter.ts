@@ -297,16 +297,20 @@ export const browsePythonInterpreter = async () => {
       splitPath[splitPath.length - 1],
     );
     if (isPythonExec) {
-      const matchVersion = await PythonManager.checkVersion(path, {
+      const matchVersion11 = await PythonManager.checkVersion(path, {
         major: 3,
         minor: 11,
       });
-      if (matchVersion) {
+      const matchVersion12 = await PythonManager.checkVersion(path, {
+        major: 3,
+        minor: 12,
+      });
+      if (matchVersion11 || matchVersion12) {
         return path;
       }
       dialog.showErrorBox(
         "Version does not match!",
-        "Selected interpreter does not fulfill version requirement of ~3.11 !",
+        "Selected interpreter does not fulfill version requirement of Python 3.11 or 3.12!",
       );
       return null;
     }
