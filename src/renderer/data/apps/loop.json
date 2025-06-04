@@ -225,7 +225,7 @@
               "overload": null,
               "functionName": "TEXT",
               "param": "value",
-              "value": "Welcome to FLOJOY!"
+              "value": "Welcome to ATLASVIBE!"
             }
           },
           "initCtrls": {},
@@ -384,7 +384,7 @@
       },
       "type": "TextNode",
       "data": {
-        "text": "Once the LOOP finishes, the branch at the bottom will be executed. \n\nThis is why \"**Welcome to Flojoy!**\" got displayed at the very end!"
+        "text": "Once the LOOP finishes, the branch at the bottom will be executed. \n\nThis is why \"**Welcome to Atlasvibe!**\" got displayed at the very end!"
       },
       "width": 375,
       "height": 182,

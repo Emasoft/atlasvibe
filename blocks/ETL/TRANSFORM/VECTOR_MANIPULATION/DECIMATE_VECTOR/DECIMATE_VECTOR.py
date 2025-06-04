@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def DECIMATE_VECTOR(
     default: Vector,
     factor: int = 1,

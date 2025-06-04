@@ -1,9 +1,9 @@
 from numpy import arange, full
-from flojoy import flojoy, Vector, OrderedPair, Scalar
+from atlasvibe import atlasvibe, Vector, OrderedPair, Scalar
 from typing import Optional, Literal
 
 
-@flojoy
+@atlasvibe
 def CONSTANT(
     default: Optional[Vector | OrderedPair] = None,
     dc_type: Literal["Scalar", "Vector", "OrderedPair"] = "OrderedPair",

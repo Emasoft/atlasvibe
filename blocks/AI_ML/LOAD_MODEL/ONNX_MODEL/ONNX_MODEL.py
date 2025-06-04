@@ -1,8 +1,8 @@
-from flojoy import flojoy, Vector
-from flojoy.utils import FLOJOY_CACHE_DIR
+from atlasvibe import atlasvibe, Vector
+from atlasvibe.utils import ATLASVIBE_CACHE_DIR
 
 
-@flojoy(
+@atlasvibe(
     deps={
         "onnxruntime": None,
         "onnx": None,
@@ -64,9 +64,9 @@ def ONNX_MODEL(
     model_name = os.path.basename(file_path)
 
     if file_path.startswith("http://") or file_path.startswith("https://"):
-        # Downloading the ONNX model from a URL to FLOJOY_CACHE_DIR.
+        # Downloading the ONNX model from a URL to ATLASVIBE_CACHE_DIR.
         onnx_model_zoo_cache = os.path.join(
-            FLOJOY_CACHE_DIR, "cache", "onnx", "model_zoo"
+            ATLASVIBE_CACHE_DIR, "cache", "onnx", "model_zoo"
         )
 
         os.makedirs(onnx_model_zoo_cache, exist_ok=True)
@@ -92,7 +92,7 @@ def ONNX_MODEL(
     input_name = sess.get_inputs()[0].name
     label_name = sess.get_outputs()[0].name
 
-    # TODO(jjerphan): For now NumPy is assumed to be the main backend for Flojoy.
+    # TODO(jjerphan): For now NumPy is assumed to be the main backend for Atlasvibe.
     # We might adapt it in the future so that we can use other backends
     # for tensor libraries for application using Deep Learning libraries.
     input_tensor = np.asarray(default.v, dtype=np.float32)

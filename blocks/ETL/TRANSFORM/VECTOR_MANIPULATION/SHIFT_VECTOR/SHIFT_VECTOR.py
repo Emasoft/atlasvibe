@@ -1,8 +1,8 @@
 from numpy import roll
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def SHIFT_VECTOR(default: Vector, shift: int = 1) -> Vector:
     """The SHIFT_VECTOR node shifts the elements in the vector by the amount specified
 

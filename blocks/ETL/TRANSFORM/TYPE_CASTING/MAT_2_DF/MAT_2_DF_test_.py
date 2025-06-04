@@ -1,8 +1,8 @@
-from flojoy import Matrix
+from atlasvibe import Matrix
 import numpy as np
 
 
-def test_MAT_2_DF(mock_flojoy_decorator):
+def test_MAT_2_DF(mock_atlasvibe_decorator):
     import MAT_2_DF
 
     mat = [[0, 1], [2, 3], [4, 5], [6, 7]]

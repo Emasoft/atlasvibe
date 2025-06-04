@@ -1,4 +1,4 @@
-from flojoy import flojoy, OrderedPair, DataFrame, Matrix, Plotly, Vector
+from atlasvibe import atlasvibe, OrderedPair, DataFrame, Matrix, Plotly, Vector
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
@@ -6,7 +6,7 @@ from blocks.DATA.VISUALIZATION.template import plot_layout
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def COMPOSITE(
     primary_trace: OrderedPair | DataFrame | Matrix | Vector,
     secondary_trace: OrderedPair | DataFrame | Matrix | Vector,

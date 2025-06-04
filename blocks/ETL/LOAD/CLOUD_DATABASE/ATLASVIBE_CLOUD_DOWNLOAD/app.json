@@ -1,0 +1,107 @@
+{
+    "rfInstance": {
+        "nodes": [
+            {
+                "width": 225,
+                "height": 225,
+                "id": "HISTOGRAM-149d70e3-3b62-411e-b5af-cd6793361245",
+                "type": "VISUALIZATION",
+                "data": {
+                    "id": "HISTOGRAM-149d70e3-3b62-411e-b5af-cd6793361245",
+                    "label": "HISTOGRAM",
+                    "func": "HISTOGRAM",
+                    "type": "VISUALIZATION",
+                    "ctrls": {},
+                    "initCtrls": {},
+                    "inputs": [
+                        {
+                            "name": "default",
+                            "id": "default",
+                            "type": "OrderedPair|DataFrame|Matrix|Vector",
+                            "desc": "the DataContainer to be visualized",
+                            "multiple": false
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "name": "default",
+                            "id": "default",
+                            "type": "Plotly",
+                            "desc": "the DataContainer containing the Plotly Histogram visualization"
+                        }
+                    ],
+                    "path": "DATA/VISUALIZATION/PLOTLY/HISTOGRAM/HISTOGRAM.py"
+                },
+                "position": {
+                    "x": 493.9455799326338,
+                    "y": -127.35602758013528
+                },
+                "selected": false,
+                "positionAbsolute": {
+                    "x": 493.9455799326338,
+                    "y": -127.35602758013528
+                },
+                "dragging": false
+            },
+            {
+                "id": "ATLASVIBE_CLOUD_DOWNLOAD-3aeb1405-625f-4701-88e5-779dcbc7315b",
+                "type": "LOAD",
+                "data": {
+                    "id": "ATLASVIBE_CLOUD_DOWNLOAD-3aeb1405-625f-4701-88e5-779dcbc7315b",
+                    "label": "ATLASVIBE CLOUD DOWNLOAD",
+                    "func": "ATLASVIBE_CLOUD_DOWNLOAD",
+                    "type": "LOAD",
+                    "ctrls": {
+                        "measurement_id": {
+                            "type": "str",
+                            "default": null,
+                            "desc": "The data measurement id of the data to be downloaded from Atlasvibe Cloud.",
+                            "overload": null,
+                            "functionName": "ATLASVIBE_CLOUD_DOWNLOAD",
+                            "param": "measurement_id",
+                            "value": ""
+                        }
+                    },
+                    "initCtrls": {},
+                    "outputs": [
+                        {
+                            "name": "default",
+                            "id": "default",
+                            "type": "Any",
+                            "desc": "The downloaded DataContainer will be returned as it is."
+                        }
+                    ],
+                    "path": "ETL/LOAD/CLOUD_DATABASE/ATLASVIBE_CLOUD_DOWNLOAD/ATLASVIBE_CLOUD_DOWNLOAD.py"
+                },
+                "position": {
+                    "x": 3.659838193089996,
+                    "y": -86.24428711111216
+                },
+                "width": 216,
+                "height": 260,
+                "selected": false,
+                "positionAbsolute": {
+                    "x": 3.659838193089996,
+                    "y": -86.24428711111216
+                },
+                "dragging": false
+            }
+        ],
+        "edges": [
+            {
+                "id": "ATLASVIBE_CLOUD_DOWNLOAD-3aeb1405-625f-4701-88e5-779dcbc7315b->HISTOGRAM-149d70e3-3b62-411e-b5af-cd6793361245_35e3016e-b107-40b5-8654-91a680598886",
+                "source": "ATLASVIBE_CLOUD_DOWNLOAD-3aeb1405-625f-4701-88e5-779dcbc7315b",
+                "target": "HISTOGRAM-149d70e3-3b62-411e-b5af-cd6793361245",
+                "sourceHandle": "default",
+                "targetHandle": "default",
+                "data": {
+                    "outputType": "Any"
+                }
+            }
+        ]
+    },
+    "textNodes": [],
+    "controlNodes": [],
+    "controlVisualizationNodes": [],
+    "controlTextNodes": []
+}

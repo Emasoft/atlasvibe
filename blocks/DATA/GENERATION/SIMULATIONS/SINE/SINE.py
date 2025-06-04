@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import flojoy, OrderedPair, Vector
+from atlasvibe import atlasvibe, OrderedPair, Vector
 from scipy import signal
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def SINE(
     default: OrderedPair | Vector,
     amplitude: float = 1,

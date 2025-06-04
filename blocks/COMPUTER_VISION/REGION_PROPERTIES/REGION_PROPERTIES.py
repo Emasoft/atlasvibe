@@ -1,4 +1,4 @@
-from flojoy import flojoy, Plotly, Image, Grayscale, Matrix
+from atlasvibe import atlasvibe, Plotly, Image, Grayscale, Matrix
 import plotly.express as px
 import plotly.graph_objects as go
 from skimage.draw import ellipse
@@ -12,7 +12,7 @@ from blocks.DATA.VISUALIZATION.template import plot_layout
 from PIL import Image as PILImage
 
 
-@flojoy(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
+@atlasvibe(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
 def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> Plotly:
     """A stand-alone visualizer for analyzing an input array of image data.
 

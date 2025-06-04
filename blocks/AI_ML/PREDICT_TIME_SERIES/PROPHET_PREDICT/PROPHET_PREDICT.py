@@ -1,7 +1,7 @@
-from flojoy import DataFrame, flojoy
+from atlasvibe import DataFrame, atlasvibe
 
 
-@flojoy(deps={"prophet": "1.1.5"})
+@atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_PREDICT(
     default: DataFrame, run_forecast: bool = True, periods: int = 365
 ) -> DataFrame:

@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
 from PIL import ImageFilter, Image as PILImage
-from flojoy import Image
+from atlasvibe import Image
 
 
-def test_EDGE_DETECTION(mock_flojoy_decorator):
+def test_EDGE_DETECTION(mock_atlasvibe_decorator):
     import EDGE_DETECTION
 
     x = np.eye(5).astype("uint8") * 255

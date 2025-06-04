@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Vector, Scalar
+from atlasvibe import OrderedPair, Vector, Scalar
 
 
-def test_LOG_Vector_Vector(mock_flojoy_decorator):
+def test_LOG_Vector_Vector(mock_atlasvibe_decorator):
     import LOG
 
     x = Vector(v=np.arange(10, 20, 1))
@@ -14,7 +14,7 @@ def test_LOG_Vector_Vector(mock_flojoy_decorator):
     np.testing.assert_allclose(res.v, test)
 
 
-def test_LOG_Vector_Scalar(mock_flojoy_decorator):
+def test_LOG_Vector_Scalar(mock_atlasvibe_decorator):
     import LOG
 
     x = Vector(v=np.arange(1, 11, 1))
@@ -25,7 +25,7 @@ def test_LOG_Vector_Scalar(mock_flojoy_decorator):
     np.testing.assert_allclose(res.v, test)
 
 
-def test_LOG_OrderedPair_Vector(mock_flojoy_decorator):
+def test_LOG_OrderedPair_Vector(mock_atlasvibe_decorator):
     import LOG
 
     x = np.arange(10, 20, 1)

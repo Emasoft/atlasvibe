@@ -1,9 +1,9 @@
 from numpy import arange, array_equal, put
-from flojoy import Vector, Array
+from atlasvibe import Vector, Array
 from pytest import raises
 
 
-def test_REPLACE_SUBSET(mock_flojoy_decorator):
+def test_REPLACE_SUBSET(mock_atlasvibe_decorator):
     import REPLACE_SUBSET
 
     v = arange(1, 11)

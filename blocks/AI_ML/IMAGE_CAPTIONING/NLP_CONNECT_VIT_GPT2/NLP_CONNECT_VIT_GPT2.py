@@ -3,10 +3,10 @@ import pandas as pd
 import torch
 import torchvision.transforms.functional as TF
 import transformers
-from flojoy import DataFrame, Image, flojoy, snapshot_download
+from atlasvibe import DataFrame, Image, atlasvibe, snapshot_download
 
 
-@flojoy(deps={"torch": "2.0.1", "torchvision": "0.15.2", "transformers": "4.30.2"})
+@atlasvibe(deps={"torch": "2.0.1", "torchvision": "0.15.2", "transformers": "4.30.2"})
 def NLP_CONNECT_VIT_GPT2(default: Image) -> DataFrame:
     """The NLP_CONNECT_VIT_GPT2 node captions an input image and produces an output string wrapped in a dataframe.
 
@@ -27,7 +27,7 @@ def NLP_CONNECT_VIT_GPT2(default: Image) -> DataFrame:
     )
     image = TF.to_pil_image(nparray).convert("RGB")
 
-    # Download repo to local flojoy cache
+    # Download repo to local atlasvibe cache
     local_repo_path = snapshot_download(
         repo_id="nlpconnect/vit-gpt2-image-captioning",
         revision="dc68f91c06a1ba6f15268e5b9c13ae7a7c514084",

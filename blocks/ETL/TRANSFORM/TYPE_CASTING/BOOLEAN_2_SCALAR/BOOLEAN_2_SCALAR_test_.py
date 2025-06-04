@@ -1,7 +1,7 @@
-from flojoy import Boolean
+from atlasvibe import Boolean
 
 
-def test_BOOLEAN_2_SCALAR(mock_flojoy_decorator):
+def test_BOOLEAN_2_SCALAR(mock_atlasvibe_decorator):
     import BOOLEAN_2_SCALAR
 
     x = Boolean(b=True)

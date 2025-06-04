@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Matrix
+from atlasvibe import Matrix
 
 
-def test_INVERT(mock_flojoy_decorator):
+def test_INVERT(mock_atlasvibe_decorator):
     import INVERT
 
     x = np.eye(3)

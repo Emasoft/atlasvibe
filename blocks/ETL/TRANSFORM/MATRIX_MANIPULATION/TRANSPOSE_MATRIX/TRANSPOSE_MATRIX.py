@@ -1,8 +1,8 @@
 from numpy import transpose
-from flojoy import flojoy, Matrix
+from atlasvibe import atlasvibe, Matrix
 
 
-@flojoy
+@atlasvibe
 def TRANSPOSE_MATRIX(default: Matrix) -> Matrix:
     """Take an input 2D matrix and transpose it.
 

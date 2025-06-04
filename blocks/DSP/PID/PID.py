@@ -1,10 +1,10 @@
 from numpy import zeros, append, ndarray
-from flojoy import flojoy, Scalar, DefaultParams, SmallMemory
+from atlasvibe import atlasvibe, Scalar, DefaultParams, SmallMemory
 
 memory_key = "pid-info"
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def PID(
     single_input: Scalar,
     default_params: DefaultParams,

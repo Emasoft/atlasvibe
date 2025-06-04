@@ -129,7 +129,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         },
       }),
       {
-        name: "flojoy-settings",
+        name: "atlasvibe-settings",
         version: 1,
       },
     ),

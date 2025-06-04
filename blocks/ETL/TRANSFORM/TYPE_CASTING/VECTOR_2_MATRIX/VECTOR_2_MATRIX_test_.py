@@ -1,8 +1,8 @@
 from numpy import array, array_equal
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_2_MATRIX(mock_flojoy_decorator):
+def test_VECTOR_2_MATRIX(mock_atlasvibe_decorator):
     import VECTOR_2_MATRIX
 
     x = array([1, 2, 3, 4, 5, 6])

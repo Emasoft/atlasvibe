@@ -136,7 +136,7 @@ const DepManagerModal = () => {
         <DialogHeader>
           <DialogTitle className="text-3xl">Dependency Manager</DialogTitle>
           <DialogDescription>
-            Here you can manage all the Python dependencies for Flojoy.
+            Here you can manage all the Python dependencies for Atlasvibe.
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +144,7 @@ const DepManagerModal = () => {
           <div className="flex h-full flex-col justify-between">
             <ScrollArea className="h-full p-4">
               <div className="flex items-center gap-2">
-                <div className="text-2xl font-bold">Flojoy Extensions</div>
+                <div className="text-2xl font-bold">Atlasvibe Extensions</div>
               </div>
               <div className="py-2" />
               <div>

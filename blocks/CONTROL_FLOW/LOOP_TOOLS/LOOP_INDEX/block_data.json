@@ -1,6 +1,6 @@
 {
   "docstring": {
-    "long_description": "A loop index in Flojoy starts at 1 and increases by 1 for each loop.",
+    "long_description": "A loop index in Atlasvibe starts at 1 and increases by 1 for each loop.",
     "short_description": "Load the loop index from the LOOP node.",
     "parameters": [
       {

@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_LENGTH(mock_flojoy_decorator):
+def test_VECTOR_LENGTH(mock_atlasvibe_decorator):
     import VECTOR_LENGTH
 
     x = np.ones(5)

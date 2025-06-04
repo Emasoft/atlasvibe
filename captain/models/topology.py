@@ -7,8 +7,8 @@ from queue import Queue
 from typing import Any, cast
 
 import networkx as nx
-from flojoy import JobFailure, JobSuccess, get_next_directions
-from flojoy.utils import clear_flojoy_memory  # for some reason, can't import from
+from atlasvibe import JobFailure, JobSuccess, get_next_directions
+from atlasvibe.utils import clear_atlasvibe_memory  # for some reason, can't import from
 
 from captain.types.worker import JobInfo
 from captain.utils.logger import logger
@@ -132,7 +132,7 @@ class Topology:
     def handle_finished_job(self, job: JobSuccess, return_new_jobs: bool = False):
         """
         get the data from the worker response
-        (flojoy package is responsible for sending to /worker_response endpoint)
+        (atlasvibe package is responsible for sending to /worker_response endpoint)
         """
         if self.cancelled:
             logger.debug("Received job, but skipping since topology is cancelled")
@@ -426,4 +426,4 @@ class Topology:
         return bool(node and node["cmd"] == "LOOP")
 
     def cleanup(self):
-        clear_flojoy_memory()
+        clear_atlasvibe_memory()

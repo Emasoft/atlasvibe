@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Vector, flojoy
+from atlasvibe import OrderedPair, Vector, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def VOLT_TO_DB(
     data: OrderedPair | Vector,
     ref_value: float,

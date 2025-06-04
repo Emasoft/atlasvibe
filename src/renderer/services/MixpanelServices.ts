@@ -2,7 +2,7 @@
 // import { Node } from "reactflow";
 //
 // const PROJECT_TOKEN = "e89f03371825eaccda13079d584bff8e";
-// const enable = 1; // +(process?.env?.FLOJOY_ENABLE_TELEMETRY ?? "1");
+// const enable = 1; // +(process?.env?.ATLASVIBE_ENABLE_TELEMETRY ?? "1");
 //
 // export const initMixPanel = async () => {
 //   if (await isCI()) return;
@@ -12,7 +12,7 @@
 // export enum MixPanelEvents {
 //   setupStarted = "Setup started",
 //   setupComplete = "Setup Complete",
-//   flojoyLoaded = "Flojoy Loaded",
+//   atlasvibeLoaded = "Atlasvibe Loaded",
 //   setupError = "Setup Error",
 //   programRun = "Program Run",
 //   nodeDeleted = "Node Deleted",

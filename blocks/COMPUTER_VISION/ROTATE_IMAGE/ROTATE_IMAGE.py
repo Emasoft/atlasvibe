@@ -1,11 +1,11 @@
 from typing import Literal
 
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 from skimage.transform import rotate
 
 
-@flojoy(deps={"scikit-image": "0.21.0"})
+@atlasvibe(deps={"scikit-image": "0.21.0"})
 def ROTATE_IMAGE(
     default: Image,
     degrees: float = 0,

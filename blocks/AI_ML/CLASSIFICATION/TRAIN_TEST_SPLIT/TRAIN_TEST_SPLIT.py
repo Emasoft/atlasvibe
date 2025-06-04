@@ -1,5 +1,5 @@
 from typing import TypedDict
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 from sklearn.model_selection import train_test_split
 
 
@@ -8,7 +8,7 @@ class TrainTestSplitOutput(TypedDict):
     test: DataFrame
 
 
-@flojoy(deps={"scikit-learn": "1.2.2"})
+@atlasvibe(deps={"scikit-learn": "1.2.2"})
 def TRAIN_TEST_SPLIT(
     default: DataFrame, test_size: float = 0.2
 ) -> TrainTestSplitOutput:

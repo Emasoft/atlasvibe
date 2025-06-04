@@ -1,9 +1,9 @@
 import numpy as np
 
 
-def test_WAVEPACKET(mock_flojoy_decorator):
+def test_WAVEPACKET(mock_atlasvibe_decorator):
     import WAVEPACKET
-    from flojoy import DefaultParams
+    from atlasvibe import DefaultParams
 
     default = DefaultParams(
         node_id="WAVEPACKET", job_id="0", jobset_id="0", node_type="default"

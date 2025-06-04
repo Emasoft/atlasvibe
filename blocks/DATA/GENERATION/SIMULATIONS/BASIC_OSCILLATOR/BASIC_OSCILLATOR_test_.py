@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def test_BASIC_OSCILLATOR(mock_flojoy_decorator):
+def test_BASIC_OSCILLATOR(mock_atlasvibe_decorator):
     import BASIC_OSCILLATOR
 
     x = np.linspace(0, 10, 1000)

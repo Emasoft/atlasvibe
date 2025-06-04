@@ -1,11 +1,11 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 from typing import Literal
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def TTEST_1SAMP(
     default: OrderedPair | Matrix,
     popmean: float = 0.1,

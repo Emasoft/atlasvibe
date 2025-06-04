@@ -1,8 +1,8 @@
 from numpy.random import permutation
-from flojoy import flojoy, Matrix
+from atlasvibe import atlasvibe, Matrix
 
 
-@flojoy
+@atlasvibe
 def SHUFFLE_MATRIX(
     default: Matrix,
     axis: int = 0,

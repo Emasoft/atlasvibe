@@ -1,9 +1,9 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 
 import scipy.signal
 
 
-@flojoy
+@atlasvibe
 def ARGRELMAX(
     default: OrderedPair | Matrix,
     axis: int = 0,

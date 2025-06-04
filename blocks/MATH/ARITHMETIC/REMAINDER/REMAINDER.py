@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import flojoy, OrderedPair, Scalar, Vector
+from atlasvibe import atlasvibe, OrderedPair, Scalar, Vector
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
 from functools import reduce
 
 
-@flojoy
+@atlasvibe
 def REMAINDER(
     a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
 ) -> OrderedPair | Scalar | Vector:

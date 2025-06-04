@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from flojoy import (
+from atlasvibe import (
     DataFrame,
     OrderedPair,
     OrderedTriple,
@@ -15,7 +15,7 @@ from flojoy import (
 
 
 # Test case DataFrame and ParametricDataFrame
-def test_NP_2_DF_dataframe(mock_flojoy_decorator):
+def test_NP_2_DF_dataframe(mock_atlasvibe_decorator):
     import NP_2_DF
 
     # Case DataFrame
@@ -35,7 +35,7 @@ def test_NP_2_DF_dataframe(mock_flojoy_decorator):
 
 
 # Test case OrderedPair and ParametricOrderedPair
-def test_NP_2_DF_orderedpair(mock_flojoy_decorator):
+def test_NP_2_DF_orderedpair(mock_atlasvibe_decorator):
     import NP_2_DF
 
     # Case OrderedPair
@@ -52,7 +52,7 @@ def test_NP_2_DF_orderedpair(mock_flojoy_decorator):
 
 
 # Test case OrderedTriple
-def test_NP_2_DF_orderedtriple(mock_flojoy_decorator):
+def test_NP_2_DF_orderedtriple(mock_atlasvibe_decorator):
     import NP_2_DF
 
     ordTriple = OrderedTriple(
@@ -63,7 +63,7 @@ def test_NP_2_DF_orderedtriple(mock_flojoy_decorator):
 
 
 # Test case Matrix
-def test_NP_2_DF_matrix(mock_flojoy_decorator):
+def test_NP_2_DF_matrix(mock_atlasvibe_decorator):
     import NP_2_DF
 
     mat = Matrix(m=[[0, 1], [2, 3], [4, 5], [6, 7]])
@@ -72,7 +72,7 @@ def test_NP_2_DF_matrix(mock_flojoy_decorator):
 
 
 # Test case Grayscale and ParametricGrayscale
-def test_NP_2_DF_grayscale(mock_flojoy_decorator):
+def test_NP_2_DF_grayscale(mock_atlasvibe_decorator):
     import NP_2_DF
 
     # Case Grayscale
@@ -87,7 +87,7 @@ def test_NP_2_DF_grayscale(mock_flojoy_decorator):
 
 
 # Test case Image
-def test_NP_2_DF_image(mock_flojoy_decorator):
+def test_NP_2_DF_image(mock_atlasvibe_decorator):
     import NP_2_DF
 
     # With a not None
@@ -123,7 +123,7 @@ def test_NP_2_DF_image(mock_flojoy_decorator):
 
 
 # Test case when none and raise an error message.
-def test_NP_2_DF_none(mock_flojoy_decorator):
+def test_NP_2_DF_none(mock_atlasvibe_decorator):
     import NP_2_DF
 
     vec = Vector(v=[[0, 1], [2, 3], [4, 5], [6, 7]])

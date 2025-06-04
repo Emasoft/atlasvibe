@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 import numpy as np
 import pandas as pd
-from flojoy import DataFrame, Grayscale, Image, String, flojoy
+from atlasvibe import DataFrame, Grayscale, Image, String, atlasvibe
 from PIL import Image as PIL_Image
 
 
@@ -23,7 +23,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
     return f_path
 
 
-@flojoy(
+@atlasvibe(
     deps={
         "scikit-image": "0.21.0",
     }

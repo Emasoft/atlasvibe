@@ -14,11 +14,11 @@ export const POETRY_DEP_GROUPS: Pick<
 >[] = [
   {
     name: "blocks",
-    description: "Core dependencies for Flojoy Blocks",
+    description: "Core dependencies for Atlasvibe Blocks",
   },
   {
     name: "dev",
-    description: "Development dependencies for Flojoy Studio",
+    description: "Development dependencies for Atlasvibe Studio",
   },
   {
     name: "ai-ml",

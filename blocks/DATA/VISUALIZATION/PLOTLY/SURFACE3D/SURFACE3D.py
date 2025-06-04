@@ -1,10 +1,10 @@
 import numpy as np
 import plotly.graph_objects as go  # type:ignore
-from flojoy import DataFrame, Matrix, OrderedTriple, Plotly, Surface, flojoy
+from atlasvibe import DataFrame, Matrix, OrderedTriple, Plotly, Surface, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def SURFACE3D(default: OrderedTriple | DataFrame | Surface | Matrix) -> Plotly:
     """Create a Plotly 3D Surface visualization for a given input DataContainer.
 

@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 
 
-def test_PROPHET_PREDICT(mock_flojoy_decorator, mock_flojoy_venv_cache_directory):
+def test_PROPHET_PREDICT(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory):
     pytest.importorskip(
         "fastparquet",
         reason="A suitable version of pyarrow or fastparquet is required for parquet support used by PROPHET_PREDICT.",

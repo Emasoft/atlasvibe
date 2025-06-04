@@ -27,7 +27,7 @@ export const handleDownloadLogs = () => {
   const logs = readFileSync(logFile).toString();
   const savePath = join(
     app.getPath("downloads"),
-    `flojoy-log-${new Date().toISOString().replace(/[-:.]/g, "")}.log`,
+    `atlasvibe-log-${new Date().toISOString().replace(/[-:.]/g, "")}.log`,
   );
   writeFileSync(undefined, savePath, logs);
   dialog

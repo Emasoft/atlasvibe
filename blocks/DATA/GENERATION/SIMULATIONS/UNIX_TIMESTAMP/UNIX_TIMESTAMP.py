@@ -1,10 +1,10 @@
 import time
 import datetime
-from flojoy import flojoy, Scalar, Vector, OrderedPair
+from atlasvibe import atlasvibe, Scalar, Vector, OrderedPair
 from typing import Optional, Literal
 
 
-@flojoy
+@atlasvibe
 def UNIX_TIMESTAMP(
     default: Optional[Scalar] = None,
     dc_type: Literal["Scalar", "Vector"] = "Scalar",

@@ -1,6 +1,6 @@
 from typing import Any, Literal, TypedDict
 
-from flojoy import JobResultBuilder, Scalar, flojoy
+from atlasvibe import JobResultBuilder, Scalar, atlasvibe
 
 
 class ConditionalOutput(TypedDict):
@@ -8,7 +8,7 @@ class ConditionalOutput(TypedDict):
     false: Any
 
 
-@flojoy
+@atlasvibe
 def CONDITIONAL(
     x: Scalar,
     y: Scalar,

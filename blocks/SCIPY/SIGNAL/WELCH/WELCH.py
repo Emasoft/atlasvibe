@@ -1,11 +1,11 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 from typing import Literal
 
 import scipy.signal
 
 
-@flojoy
+@atlasvibe
 def WELCH(
     default: OrderedPair | Matrix,
     fs: float = 1.0,

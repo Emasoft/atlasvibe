@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_DC_CONTENT_TYPE(mock_flojoy_decorator):
+def test_DC_CONTENT_TYPE(mock_atlasvibe_decorator):
     import DC_CONTENT_TYPE
 
     input = Vector(v=np.arange(0, 50))

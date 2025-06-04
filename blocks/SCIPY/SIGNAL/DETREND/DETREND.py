@@ -1,10 +1,10 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 
 import scipy.signal
 
 
-@flojoy
+@atlasvibe
 def DETREND(
     default: OrderedPair | Matrix,
     axis: int = -1,

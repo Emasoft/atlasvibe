@@ -264,7 +264,7 @@
                             "overload": null,
                             "functionName": "MF4_CREATE_WRITER",
                             "param": "dir",
-                            "value": "C:\\Users\\zzzgu\\Documents\\flojoy\\apps\\PEAK_EXAMPLE"
+                            "value": "C:\\Users\\zzzgu\\Documents\\atlasvibe\\apps\\PEAK_EXAMPLE"
                         },
                         "filename": {
                             "type": "str",
@@ -417,7 +417,7 @@
                             "overload": null,
                             "functionName": "MF4_CREATE_READER",
                             "param": "file",
-                            "value": "C:\\Users\\zzzgu\\Documents\\flojoy\\apps\\PEAK_EXAMPLE\\can_exported.mf4"
+                            "value": "C:\\Users\\zzzgu\\Documents\\atlasvibe\\apps\\PEAK_EXAMPLE\\can_exported.mf4"
                         }
                     },
                     "initCtrls": {},
@@ -479,7 +479,7 @@
                             "overload": null,
                             "functionName": "LOAD_DBC",
                             "param": "file_path",
-                            "value": "C:\\Users\\zzzgu\\Documents\\flojoy\\apps\\PEAK_EXAMPLE\\canmod-temp.dbc"
+                            "value": "C:\\Users\\zzzgu\\Documents\\atlasvibe\\apps\\PEAK_EXAMPLE\\canmod-temp.dbc"
                         }
                     },
                     "initCtrls": {},
@@ -610,7 +610,7 @@
                             "overload": null,
                             "functionName": "EXPORT_CSV",
                             "param": "dir",
-                            "value": "C:\\Users\\zzzgu\\Documents\\flojoy\\apps\\PEAK_EXAMPLE"
+                            "value": "C:\\Users\\zzzgu\\Documents\\atlasvibe\\apps\\PEAK_EXAMPLE"
                         },
                         "filename": {
                             "type": "str",
@@ -689,7 +689,7 @@
                             "overload": null,
                             "functionName": "EXPORT_S3",
                             "param": "bucket",
-                            "value": "guillaume-flojoy"
+                            "value": "guillaume-atlasvibe"
                         },
                         "region": {
                             "type": "select",
@@ -754,7 +754,7 @@
                             "overload": null,
                             "functionName": "EXPORT_S3",
                             "param": "file",
-                            "value": "C:\\Users\\zzzgu\\Documents\\flojoy\\apps\\PEAK_EXAMPLE\\exported.csv"
+                            "value": "C:\\Users\\zzzgu\\Documents\\atlasvibe\\apps\\PEAK_EXAMPLE\\exported.csv"
                         }
                     },
                     "initCtrls": {},
@@ -763,7 +763,7 @@
                             "name": "object_name",
                             "id": "object_name",
                             "type": "String",
-                            "desc": "Flojoy input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used.",
+                            "desc": "Atlasvibe input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used.",
                             "multiple": false
                         },
                         {

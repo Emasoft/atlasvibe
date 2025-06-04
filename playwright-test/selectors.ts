@@ -1,5 +1,5 @@
 // Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
-// Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+// Copyright (c) 2024 Atlasvibe (for the original "Atlasvibe Studio" software)
 //
 // This software is licensed under the MIT License.
 // Refer to the LICENSE file for more details.
@@ -36,8 +36,8 @@ export enum Selectors {
   contextDeleteBlockBtn = "context-delete-block",
   blockEditMenuCloseBtn = "block-edit-close-button",
   envModalBtn = "env-var-modal-button",
-  flojoyCloudApiInput = "flojoy-cloud-api-input",
-  flojoyCloudApiSubmit = "flojoy-cloud-api-submit",
+  atlasvibeCloudApiInput = "atlasvibe-cloud-api-input",
+  atlasvibeCloudApiSubmit = "atlasvibe-cloud-api-submit",
   envVarKeyInput = "env-var-key-input",
   envVarValueInput = "env-var-value-input",
   envVarSubmitBtn = "env-var-submit-btn",

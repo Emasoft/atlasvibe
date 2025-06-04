@@ -168,7 +168,7 @@ def sync():
                             block_name=file_name,
                             block_folder_path=current_block_folder_path,
                             description=description,
-                            thumbnail=thumbnail or "https://docs.flojoy.ai/logo.png",
+                            thumbnail=thumbnail or "https://docs.atlasvibe.ai/logo.png",
                         )
                         .add_python_docs_display()
                         .add_python_code()

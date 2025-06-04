@@ -1338,12 +1338,12 @@
             },
             "filename": {
               "type": "str",
-              "default": "flojoy",
-              "desc": "The file name to save or recall (\"flojoy\" results in \"C:/flojoy.set\").",
+              "default": "atlasvibe",
+              "desc": "The file name to save or recall (\"atlasvibe\" results in \"C:/atlasvibe.set\").",
               "overload": null,
               "functionName": "SETUP_FILE_MSO2X",
               "param": "filename",
-              "value": "flojoy001"
+              "value": "atlasvibe001"
             }
           },
           "initCtrls": {},

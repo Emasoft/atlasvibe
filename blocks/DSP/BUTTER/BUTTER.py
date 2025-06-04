@@ -1,9 +1,9 @@
 from scipy import signal
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def BUTTER(
     default: OrderedPair,
     filter_order: int = 1,

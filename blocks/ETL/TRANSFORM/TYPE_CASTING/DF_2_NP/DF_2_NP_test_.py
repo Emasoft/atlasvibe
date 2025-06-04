@@ -1,8 +1,8 @@
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 import pandas as pd
 
 
-def test_DF_2_NP(mock_flojoy_decorator):
+def test_DF_2_NP(mock_atlasvibe_decorator):
     import DF_2_NP
 
     m = [[0, 9, 0], [1, 9, 2], [2.0, 9.0, 4.0], [3, 9, 8], [4, 9, 16]]

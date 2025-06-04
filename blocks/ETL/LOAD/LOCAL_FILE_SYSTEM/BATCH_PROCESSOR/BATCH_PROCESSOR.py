@@ -1,4 +1,4 @@
-from flojoy import flojoy, Scalar, SmallMemory, DefaultParams, String
+from atlasvibe import atlasvibe, Scalar, SmallMemory, DefaultParams, String
 import glob
 from typing import Any, TypedDict
 
@@ -14,7 +14,7 @@ def get_fnames(d, p):
     return [file for file in glob.glob(d + "/" + p, recursive=True)]
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def BATCH_PROCESSOR(
     current_iteration: Scalar,
     default_params: DefaultParams,

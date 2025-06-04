@@ -99,11 +99,11 @@ export const ConnectionHelp = () => {
                     StarTech
                   </Link>
                   . Please see our guides on{" "}
-                  <Link href="https://docs.flojoy.ai/prologix/gpib-to-usb/">
+                  <Link href="https://docs.atlasvibe.ai/prologix/gpib-to-usb/">
                     GPIB-to-USB
                   </Link>{" "}
                   and{" "}
-                  <Link href="https://docs.flojoy.ai/startech/rs232-to-usb/">
+                  <Link href="https://docs.atlasvibe.ai/startech/rs232-to-usb/">
                     RS232-to-USB
                   </Link>{" "}
                   for more info.
@@ -140,7 +140,7 @@ export const ConnectionHelp = () => {
                 <div className="text-xs">
                   After your instrument is physically connected to your computer
                   via a USB or ethernet cable (see Step 1), then it should be
-                  discoverable by Flojoy and listed under the “Hardware Devices”
+                  discoverable by Atlasvibe and listed under the “Hardware Devices”
                   tab. You may have to click the “Refresh” button for it to
                   appear. Devices connected by Ethernet will show up under VISA;
                   deviced connected by USB will show up under Serial.
@@ -162,7 +162,7 @@ export const ConnectionHelp = () => {
                   If your connected device does not show up under the Hardware
                   Devices tab, then click the “Debug” button to troubleshoot.
                   Please see our{" "}
-                  <Link href="https://docs.flojoy.ai/studio/visa-usb/">
+                  <Link href="https://docs.atlasvibe.ai/studio/visa-usb/">
                     troubleshooting FAQ
                   </Link>{" "}
                   and join our free support chat where an engineer will help you
@@ -181,7 +181,7 @@ export const ConnectionHelp = () => {
                 </div>
                 <div className="py-2" />
                 <div className="text-xs">
-                  Supported Flojoy hardware will have a connection block that
+                  Supported Atlasvibe hardware will have a connection block that
                   creates the initial connection with the instrument. To find
                   this block, go to the Add Block sidebar and search the
                   instrument name or manufacturer (example searches: Rigol,

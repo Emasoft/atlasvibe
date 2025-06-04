@@ -1,10 +1,10 @@
 from plotly.express import data
-from flojoy import Plotly, Vector, OrderedPair, DataFrame
+from atlasvibe import Plotly, Vector, OrderedPair, DataFrame
 import numpy as np
 
 
 # Tests that the function returns the expected Plotly object when called with allowed type of data
-def test_default_dataset_key(mock_flojoy_decorator):
+def test_default_dataset_key(mock_atlasvibe_decorator):
     import HEATMAP
 
     v = Vector(v=np.array([1, 2, 3, 4]))

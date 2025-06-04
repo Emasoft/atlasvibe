@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def CHANNEL_MERGE(red: Image, green: Image, blue: Image, alpha: Image) -> Image:
     """Return the merged RGBA channels of an image.
 

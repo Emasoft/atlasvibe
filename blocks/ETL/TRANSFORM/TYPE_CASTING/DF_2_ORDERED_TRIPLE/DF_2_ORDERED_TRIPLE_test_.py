@@ -1,9 +1,9 @@
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 import pandas as pd
 import numpy as np
 
 
-def test_DF_2_ORDERED_TRIPLE_column_errorMessage(mock_flojoy_decorator):
+def test_DF_2_ORDERED_TRIPLE_column_errorMessage(mock_atlasvibe_decorator):
     import DF_2_ORDERED_TRIPLE
 
     df = pd.DataFrame({"x": [0, 1], "y": [4, 9]})
@@ -16,7 +16,7 @@ def test_DF_2_ORDERED_TRIPLE_column_errorMessage(mock_flojoy_decorator):
     )
 
 
-def test_DF_2_ORDERED_TRIPLE_columns_switch_and_dtype(mock_flojoy_decorator):
+def test_DF_2_ORDERED_TRIPLE_columns_switch_and_dtype(mock_atlasvibe_decorator):
     import DF_2_ORDERED_TRIPLE
 
     df = pd.DataFrame({"hello": [0, 1, 2], "-": [3, 4, 5], "world": [6, 7, 8]})

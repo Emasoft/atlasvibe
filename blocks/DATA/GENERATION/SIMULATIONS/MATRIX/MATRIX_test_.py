@@ -1,4 +1,4 @@
-def test_MATRIX(mock_flojoy_decorator):
+def test_MATRIX(mock_atlasvibe_decorator):
     import MATRIX
 
     # create the two matrices

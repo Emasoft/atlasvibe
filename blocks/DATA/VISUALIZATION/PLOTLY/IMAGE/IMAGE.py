@@ -1,10 +1,10 @@
 import numpy as np
 import plotly.express as px
-from flojoy import Grayscale, Image, Plotly, flojoy
+from atlasvibe import Grayscale, Image, Plotly, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def IMAGE(default: Image | Grayscale) -> Plotly:
     """Create a Plotly Image visualization for a given input DataContainer type of image.
 

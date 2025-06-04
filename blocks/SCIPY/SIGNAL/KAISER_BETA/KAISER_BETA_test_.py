@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Matrix, Scalar
+from atlasvibe import OrderedPair, Matrix, Scalar
 
 
-def test_KAISER_BETA(mock_flojoy_decorator):
+def test_KAISER_BETA(mock_atlasvibe_decorator):
     import KAISER_BETA
 
     element_a = OrderedPair(x=np.ones(1), y=np.arange(1))

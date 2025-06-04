@@ -1,10 +1,10 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 from typing import Literal
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def MVSDIST(
     default: OrderedPair | Matrix,
     select_return: Literal["mdist", "vdist", "sdist"] = "mdist",

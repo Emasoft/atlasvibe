@@ -79,7 +79,7 @@ jobs:
           dotnet tool install --global AzureSignTool
 
       - name: Build/release Electron app
-        uses: flojoy-ai/action-electron-builder@main
+        uses: atlasvibe-ai/action-electron-builder@main
         with:
           # GitHub token, automatically provided to the action
           # (No need to define this secret in the repo settings)

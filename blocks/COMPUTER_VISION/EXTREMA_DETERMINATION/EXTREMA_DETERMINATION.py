@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import scipy.fft
 import skimage.filters as filters
-from flojoy import DCNpArrayType, Grayscale, Image, Matrix, Plotly, flojoy
+from atlasvibe import DCNpArrayType, Grayscale, Image, Matrix, Plotly, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from PIL import Image as PILImage
 from scipy import spatial
@@ -28,7 +28,7 @@ class EXTREMA_OUTPUT(TypedDict):
     blobs: Grayscale
 
 
-@flojoy(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
+@atlasvibe(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
 def EXTREMA_DETERMINATION(
     default: Image | Grayscale | Matrix,
     image_mask: Optional[Grayscale | Matrix] = None,

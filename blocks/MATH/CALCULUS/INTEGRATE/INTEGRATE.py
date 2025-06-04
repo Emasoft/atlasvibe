@@ -1,4 +1,4 @@
-from flojoy import flojoy, OrderedPair, Vector
+from atlasvibe import atlasvibe, OrderedPair, Vector
 import numpy as np
 
 
@@ -14,7 +14,7 @@ def trapz(x: np.ndarray, y: np.ndarray):
     return m
 
 
-@flojoy
+@atlasvibe
 def INTEGRATE(default: OrderedPair | Vector) -> OrderedPair:
     """Integrate over an OrderedPair or Vector using the composite trapezoidal rule.
 

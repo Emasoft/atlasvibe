@@ -1,8 +1,8 @@
 from numpy import arange, array_equal, roll
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_SHIFT_VECTOR(mock_flojoy_decorator):
+def test_SHIFT_VECTOR(mock_atlasvibe_decorator):
     import SHIFT_VECTOR
 
     v = arange(1, 11)

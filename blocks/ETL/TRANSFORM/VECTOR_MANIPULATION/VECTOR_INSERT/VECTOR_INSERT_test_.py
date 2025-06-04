@@ -1,9 +1,9 @@
 from numpy import ones, array_equal
-from flojoy import Vector
+from atlasvibe import Vector
 from pytest import raises
 
 
-def test_VECTOR_INSERT(mock_flojoy_decorator):
+def test_VECTOR_INSERT(mock_atlasvibe_decorator):
     import VECTOR_INSERT
 
     v = ones(10)

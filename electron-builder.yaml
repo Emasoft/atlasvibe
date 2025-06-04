@@ -1,7 +1,7 @@
 directories:
   output: dist
-appId: ai.flojoy.studio
-productName: Flojoy Studio
+appId: ai.atlasvibe.studio
+productName: Atlasvibe Studio
 icon: ./public/favicon.ico
 asar: true
 asarUnpack:

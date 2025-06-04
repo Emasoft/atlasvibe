@@ -1,4 +1,4 @@
-from flojoy_cloud import test_sequencer
+from atlasvibe_cloud import test_sequencer
 
 
 def test_one():

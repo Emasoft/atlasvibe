@@ -1,8 +1,8 @@
 from numpy import concatenate
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def VECTOR_INSERT(default: Vector, index: int = 0, value: int = 0) -> Vector:
     """The VECTOR_INSERT node inserts a value to the Vector at the
     specified index.

@@ -1,8 +1,8 @@
-from flojoy import flojoy, Vector, Scalar
+from atlasvibe import atlasvibe, Vector, Scalar
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def BINOM_TEST(
     k: Scalar,
     n: int = 2,

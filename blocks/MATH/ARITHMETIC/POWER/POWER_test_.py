@@ -1,9 +1,9 @@
 import numpy as np
 
-from flojoy import OrderedPair, Vector, Scalar
+from atlasvibe import OrderedPair, Vector, Scalar
 
 
-def test_POWER_Vector_Vector(mock_flojoy_decorator):
+def test_POWER_Vector_Vector(mock_atlasvibe_decorator):
     import POWER
 
     x = Vector(v=np.arange(10, 20, 1))
@@ -13,7 +13,7 @@ def test_POWER_Vector_Vector(mock_flojoy_decorator):
     np.testing.assert_allclose(res.v, np.power(x.v, y.v))
 
 
-def test_POWER_Vector_Scalar(mock_flojoy_decorator):
+def test_POWER_Vector_Scalar(mock_atlasvibe_decorator):
     import POWER
 
     x = Vector(v=np.arange(-10, 10, 1))
@@ -22,7 +22,7 @@ def test_POWER_Vector_Scalar(mock_flojoy_decorator):
     np.testing.assert_allclose(res.v, np.power(x.v, 2))
 
 
-def test_POWER_OrderedPair_Vector(mock_flojoy_decorator):
+def test_POWER_OrderedPair_Vector(mock_atlasvibe_decorator):
     import POWER
 
     x = np.arange(10, 20, 1)

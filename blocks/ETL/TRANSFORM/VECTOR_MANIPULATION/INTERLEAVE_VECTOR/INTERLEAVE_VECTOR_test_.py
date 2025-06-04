@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_INTERLEAVE_VECTOR(mock_flojoy_decorator):
+def test_INTERLEAVE_VECTOR(mock_atlasvibe_decorator):
     import INTERLEAVE_VECTOR
 
     x = np.array([1, 2, 3, 4, 5, 6])

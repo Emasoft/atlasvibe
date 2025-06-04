@@ -1,8 +1,8 @@
-from flojoy import OrderedPair
+from atlasvibe import OrderedPair
 import numpy as np
 
 
-def test_DIFFERENTIATE(mock_flojoy_decorator):
+def test_DIFFERENTIATE(mock_atlasvibe_decorator):
     import DIFFERENTIATE
 
     x = np.array([1, 2, 3, 5, 10])

@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import OrderedPair, flojoy, Scalar, Vector
+from atlasvibe import OrderedPair, atlasvibe, Scalar, Vector
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
 from functools import reduce
 
 
-@flojoy
+@atlasvibe
 def MULTIPLY(
     a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
 ) -> OrderedPair | Scalar | Vector:

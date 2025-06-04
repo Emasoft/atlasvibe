@@ -6,7 +6,7 @@
       {
         "name": "object_name",
         "type": "Optional[String]",
-        "description": "Flojoy input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used."
+        "description": "Atlasvibe input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used."
       },
       {
         "name": "s3_access_key",

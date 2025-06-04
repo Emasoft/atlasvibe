@@ -22,4 +22,4 @@ def add(block_path: Path):
     with open(os.path.join(block_path, "example.md"), "w+") as f:
         f.write("Placeholder for the example app's description")
 
-    print(f"Done! Your Flojoy Block is ready at '{block_path}'")
+    print(f"Done! Your Atlasvibe Block is ready at '{block_path}'")

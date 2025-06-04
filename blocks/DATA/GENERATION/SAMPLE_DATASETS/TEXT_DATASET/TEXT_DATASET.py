@@ -1,4 +1,4 @@
-from flojoy import flojoy, DataFrame, Array
+from atlasvibe import atlasvibe, DataFrame, Array
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.utils import Bunch
 import pandas as pd
@@ -6,7 +6,7 @@ from typing import cast, Literal, Optional
 
 
 # TODO: Add more datasets to this node.
-@flojoy
+@atlasvibe
 def TEXT_DATASET(
     subset: Literal["train", "test", "all"] = "train",
     categories: Optional[Array] = None,

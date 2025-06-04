@@ -1,7 +1,7 @@
-from flojoy import String
+from atlasvibe import String
 
 
-def test_TEXT_CONCAT(mock_flojoy_decorator):
+def test_TEXT_CONCAT(mock_atlasvibe_decorator):
     import TEXT_CONCAT
 
     a = String(s="This is to test that")

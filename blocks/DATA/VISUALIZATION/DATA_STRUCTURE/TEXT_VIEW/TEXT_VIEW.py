@@ -1,8 +1,8 @@
 import pprint
-from flojoy import flojoy, String, Boolean
+from atlasvibe import atlasvibe, String, Boolean
 
 
-@flojoy
+@atlasvibe
 def TEXT_VIEW(default: String | Boolean, prettify: bool = False) -> String:
     """The TEXT_VIEW node creates a text visualization for a given String DataContainer type.
 

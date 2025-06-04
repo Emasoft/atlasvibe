@@ -26,7 +26,7 @@ export function WelcomeModal() {
 
   // useEffect(() => {
   //   window.api.getSetupExecutionTime().then((t) => {
-  //     sendEventToMix(MixPanelEvents.flojoyLoaded, {
+  //     sendEventToMix(MixPanelEvents.atlasvibeLoaded, {
   //       timeTaken: `${t} seconds`,
   //     });
   //   });
@@ -37,7 +37,7 @@ export function WelcomeModal() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Welcome to Flojoy Studio V{packageJson.version}
+            Welcome to Atlasvibe Studio V{packageJson.version}
           </AlertDialogTitle>
           <AlertDialogDescription>
             Introducing our Alpha Release: Expect exciting improvements and
@@ -52,7 +52,7 @@ export function WelcomeModal() {
             id="close-welcome-modal"
             data-testid="close-welcome-modal"
           >
-            Try out Flojoy Studio
+            Try out Atlasvibe Studio
           </Button>
           <Button
             variant="secondary"

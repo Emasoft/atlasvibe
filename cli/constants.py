@@ -5,10 +5,10 @@ BLOCKS_DOCS_FOLDER = "docs/src/content/docs/blocks/"
 BLOCKS_SOURCE_FOLDER = "blocks/"
 
 BLOCK_TEMPLATE = """\
-from flojoy import flojoy, DataContainer
+from atlasvibe import atlasvibe, DataContainer
 
 
-@flojoy
+@atlasvibe
 def {block_name}(
     default: DataContainer,
 ) -> DataContainer:

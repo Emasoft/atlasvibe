@@ -701,7 +701,7 @@ export function TestTable() {
                       setIsImportTestModalOpen(true);
                     } else {
                       toast.info(
-                        "Connect to Flojoy Cloud and select a Test Profile",
+                        "Connect to Atlasvibe Cloud and select a Test Profile",
                       );
                     }
                   }}

@@ -1,9 +1,9 @@
 from skimage import data
-from flojoy import Image
+from atlasvibe import Image
 
 
 # Tests that the function returns the expected 'astronaut' image in DataContainer Image class when called without the 'img_key' parameter
-def test_default_img_key(mock_flojoy_decorator):
+def test_default_img_key(mock_atlasvibe_decorator):
     import SKIMAGE
 
     astronaut_img = getattr(data, "astronaut")()
@@ -22,7 +22,7 @@ def test_default_img_key(mock_flojoy_decorator):
 
 
 # Tests that the function returns the expected "camera" image when called with the 'camera' image_key parameter
-def test_camera_img_key(mock_flojoy_decorator):
+def test_camera_img_key(mock_atlasvibe_decorator):
     import SKIMAGE
 
     camera_img = getattr(data, "camera")()

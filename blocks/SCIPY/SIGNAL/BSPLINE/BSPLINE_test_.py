@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Matrix, Scalar
+from atlasvibe import OrderedPair, Matrix, Scalar
 
 
-def test_BSPLINE(mock_flojoy_decorator):
+def test_BSPLINE(mock_atlasvibe_decorator):
     import BSPLINE
 
     element_a = OrderedPair(x=np.ones(50), y=np.arange(1, 51))

@@ -39,7 +39,7 @@
               "id": "default",
               "type": "Image",
               "multiple": false,
-              "desc": "The input image to be classified.\nThe image must be a PIL.Image object, wrapped in a Flojoy Image object."
+              "desc": "The input image to be classified.\nThe image must be a PIL.Image object, wrapped in a Atlasvibe Image object."
             }
           ],
           "outputs": [

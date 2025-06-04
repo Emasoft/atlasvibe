@@ -1,8 +1,8 @@
-from flojoy import flojoy, Scalar, DataContainer
+from atlasvibe import atlasvibe, Scalar, DataContainer
 from typing import Optional
 
 
-@flojoy
+@atlasvibe
 def SCALAR(
     _: Optional[DataContainer] = None,
     value: float = 3.0,

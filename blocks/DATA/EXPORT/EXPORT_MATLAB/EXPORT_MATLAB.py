@@ -1,11 +1,11 @@
 import os
 import pandas as pd
-from flojoy import (
+from atlasvibe import (
     DataFrame,
     OrderedPair,
     OrderedTriple,
     Matrix,
-    flojoy,
+    atlasvibe,
     DataContainer,
     Directory,
 )
@@ -14,7 +14,7 @@ from scipy.io import savemat
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def EXPORT_MATLAB(
     dc: OrderedPair | OrderedTriple | DataFrame | Matrix,
     dir: Directory,

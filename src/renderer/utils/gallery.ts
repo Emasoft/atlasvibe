@@ -10,7 +10,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "LOOP",
-          docs: "https://docs.flojoy.ai/blocks/control-flow/#loops",
+          docs: "https://docs.atlasvibe.ai/blocks/control-flow/#loops",
         },
       ],
       cloudDemoEnabled: true,
@@ -31,7 +31,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "IMAGE",
-          docs: "https://docs.flojoy.ai/blocks/data/visualization/plotly/image",
+          docs: "https://docs.atlasvibe.ai/blocks/data/visualization/plotly/image",
         },
       ],
       cloudDemoEnabled: true,
@@ -46,7 +46,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "DECODE_I2C_MSO2X",
-          docs: "https://docs.flojoy.ai/blocks/hardware/oscilloscopes/tektronix/mso2x/decode-i2c-mso2x/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/oscilloscopes/tektronix/mso2x/decode-i2c-mso2x/",
         },
       ],
       cloudDemoEnabled: false,
@@ -59,7 +59,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_MDO3XXX",
-          docs: "https://docs.flojoy.ai/blocks/hardware/oscilloscopes/tektronix/mdo3xxx/extract-trace-mdo3xxx/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/oscilloscopes/tektronix/mdo3xxx/extract-trace-mdo3xxx/",
         },
       ],
       cloudDemoEnabled: false,
@@ -72,7 +72,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_DS1074Z",
-          docs: "https://docs.flojoy.ai/instruments-database/oscilloscopes/rigol/rigol-ds1074z/",
+          docs: "https://docs.atlasvibe.ai/instruments-database/oscilloscopes/rigol/rigol-ds1074z/",
         },
       ],
       cloudDemoEnabled: false,
@@ -85,7 +85,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "CONNECT_T3DSO1XXX",
-          docs: "https://docs.flojoy.ai/blocks/hardware/oscilloscopes/teledyne-lecroy/t3dso1xxx/connect-t3dso1xxx/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/oscilloscopes/teledyne-lecroy/t3dso1xxx/connect-t3dso1xxx/",
         },
       ],
       cloudDemoEnabled: false,
@@ -98,7 +98,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_2000",
-          docs: "https://docs.flojoy.ai/blocks/hardware/oscilloscopes/pico/pico2000/extract-trace-2000/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/oscilloscopes/pico/pico2000/extract-trace-2000/",
         },
       ],
       cloudDemoEnabled: false,
@@ -115,7 +115,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "INPUT_PARAM_AFG31000",
-          docs: "https://docs.flojoy.ai/blocks/hardware/function-generators/tektronix/afg31000/input-param-afg31000/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/function-generators/tektronix/afg31000/input-param-afg31000/",
         },
       ],
       cloudDemoEnabled: false,
@@ -130,7 +130,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "READ_ANALOG_LABJACKU3",
-          docs: "https://docs.flojoy.ai/blocks/hardware/daq-boards/labjack/u3/read-a0-pins/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/daq-boards/labjack/u3/read-a0-pins/",
         },
       ],
       cloudDemoEnabled: false,
@@ -151,11 +151,11 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "CONNECT_COMPACTDAQ",
-          docs: "https://docs.flojoy.ai/blocks/hardware/daq-boards/national-instruments/compact-daq/create-task/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/daq-boards/national-instruments/compact-daq/create-task/",
         },
         {
           name: "ANALOG_INPUT",
-          docs: "https://docs.flojoy.ai/blocks/hardware/daq-boards/national-instruments/compact-daq/attach-analog-input-current/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/daq-boards/national-instruments/compact-daq/attach-analog-input-current/",
         },
       ],
       cloudDemoEnabled: false,
@@ -170,7 +170,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "IV_SWEEP_2450",
-          docs: "https://docs.flojoy.ai/blocks/hardware/sourcemeters/keithley/2450/iv-sweep-2450/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/sourcemeters/keithley/2450/iv-sweep-2450/",
         },
       ],
       cloudDemoEnabled: false,
@@ -183,7 +183,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "READ_MEASUREMENT_DMM7510",
-          docs: "https://docs.flojoy.ai/blocks/hardware/multimeters/keithley/dmm7510/read-measurement-dmm7510/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/multimeters/keithley/dmm7510/read-measurement-dmm7510/",
         },
       ],
       cloudDemoEnabled: false,
@@ -199,11 +199,11 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "CONNECT_PCAN",
-          docs: "https://docs.flojoy.ai/blocks/hardware/protocols/can/bus/peak-connect/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/protocols/can/bus/peak-connect/",
         },
         {
           name: "RECEIVE_MESSAGE",
-          docs: "https://docs.flojoy.ai/blocks/hardware/protocols/can/bus/receive-can-message/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/protocols/can/bus/receive-can-message/",
         },
       ],
       cloudDemoEnabled: false,
@@ -217,11 +217,11 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "CONNECT_SLCAN",
-          docs: "https://https://docs.flojoy.ai/blocks/hardware/protocols/can/bus/send-can-message/",
+          docs: "https://https://docs.atlasvibe.ai/blocks/hardware/protocols/can/bus/send-can-message/",
         },
         {
           name: "SEND_MESSAGE",
-          docs: "https://https://docs.flojoy.ai/blocks/hardware/protocols/can/bus/send-can-message/",
+          docs: "https://https://docs.atlasvibe.ai/blocks/hardware/protocols/can/bus/send-can-message/",
         },
       ],
       cloudDemoEnabled: false,
@@ -237,7 +237,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "OPEN_WEBCAM",
-          docs: "https://docs.flojoy.ai/blocks/hardware/imaging/open-webcam/#_top",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/imaging/open-webcam/#_top",
         },
       ],
       cloudDemoEnabled: true,
@@ -250,7 +250,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "CONTROL_TIC_DRIVER",
-          docs: "https://docs.flojoy.ai/blocks/hardware/motors/stepper/polulu/tic/",
+          docs: "https://docs.atlasvibe.ai/blocks/hardware/motors/stepper/polulu/tic/",
         },
       ],
       cloudDemoEnabled: false,
@@ -273,7 +273,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "FIR",
-          docs: "https://docs.flojoy.ai/blocks/dsp/fir/",
+          docs: "https://docs.atlasvibe.ai/blocks/dsp/fir/",
         },
       ],
       cloudDemoEnabled: true,
@@ -286,7 +286,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "FFT",
-          docs: "https://docs.flojoy.ai/blocks/dsp/fft/",
+          docs: "https://docs.atlasvibe.ai/blocks/dsp/fft/",
         },
       ],
       cloudDemoEnabled: true,
@@ -299,7 +299,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "IFFT",
-          docs: "https://docs.flojoy.ai/blocks/dsp/ifft/",
+          docs: "https://docs.atlasvibe.ai/blocks/dsp/ifft/",
         },
       ],
       cloudDemoEnabled: true,
@@ -314,7 +314,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "NLP_CONNECT_VIT_GPT2",
-          docs: "https://docs.flojoy.ai/blocks/ai-ml/image-captioning/nlp-connect-vit-gpt2",
+          docs: "https://docs.atlasvibe.ai/blocks/ai-ml/image-captioning/nlp-connect-vit-gpt2",
         },
       ],
       cloudDemoEnabled: true,
@@ -327,7 +327,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "HUGGING_FACE_PIPELINE",
-          docs: "https://docs.flojoy.ai/blocks/ai-ml/image-classification/hugging-face-pipeline/",
+          docs: "https://docs.atlasvibe.ai/blocks/ai-ml/image-classification/hugging-face-pipeline/",
         },
       ],
       cloudDemoEnabled: true,
@@ -340,7 +340,7 @@ export const data: GalleryData = {
       relevantNodes: [
         {
           name: "PROPHET_PREDICT",
-          docs: "https://docs.flojoy.ai/blocks/ai-ml/predict-time-series/prophet-predict/",
+          docs: "https://docs.atlasvibe.ai/blocks/ai-ml/predict-time-series/prophet-predict/",
         },
       ],
       cloudDemoEnabled: true,

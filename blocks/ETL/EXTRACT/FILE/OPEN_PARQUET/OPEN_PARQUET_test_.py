@@ -13,7 +13,7 @@ except ImportError:
     reason="OPEN_PARQUET requires pyarrow and fastparquet to be installed | Ignore this test in CI",
 )
 @pytest.mark.slow
-def test_OPEN_PARQUET(mock_flojoy_decorator):
+def test_OPEN_PARQUET(mock_atlasvibe_decorator):
     import OPEN_PARQUET
 
     _file_path = (

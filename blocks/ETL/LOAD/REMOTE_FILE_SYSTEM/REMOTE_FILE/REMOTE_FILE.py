@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 
-from flojoy import flojoy, Image, DataFrame, Grayscale, String
+from atlasvibe import atlasvibe, Image, DataFrame, Grayscale, String
 from typing import Literal, Optional
 import numpy as np
 from PIL import Image as PIL_Image
@@ -18,7 +18,7 @@ def get_file_url(url: str):
 
 
 # TODO: Consolidate remote files (S3, HTTP, etc...) and perhaps even merge REMOTE_FILE AND LOCAL_FILE in a single node.
-@flojoy(
+@atlasvibe(
     deps={
         "xlrd": "2.0.1",
         "lxml": "4.9.2",

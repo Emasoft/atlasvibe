@@ -1,11 +1,11 @@
-from flojoy import flojoy, String, Boolean, File, DataContainer, Secret
+from atlasvibe import atlasvibe, String, Boolean, File, DataContainer, Secret
 from typing import Optional, Literal
 import boto3
 import logging
 import os
 
 
-@flojoy(
+@atlasvibe(
     deps={
         "boto3": "1.34.21",
     }
@@ -65,7 +65,7 @@ def EXPORT_S3(
     Parameters
     ----------
     object_name: Optional[String]
-        Flojoy input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used.
+        Atlasvibe input to dynamically provide a string for the name of the object in S3. If not specified, the name of the file will be used.
     s3_access_key : str
         AWS access key.
     s3_secret_key : str

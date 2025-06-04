@@ -1,10 +1,10 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 
 import scipy.signal
 
 
-@flojoy
+@atlasvibe
 def SAVGOL_FILTER(
     default: OrderedPair | Matrix,
     window_length: int = 2,

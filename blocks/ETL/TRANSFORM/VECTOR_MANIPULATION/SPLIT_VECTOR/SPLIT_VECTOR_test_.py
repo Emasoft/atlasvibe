@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_SPLIT_VECTOR(mock_flojoy_decorator):
+def test_SPLIT_VECTOR(mock_atlasvibe_decorator):
     import SPLIT_VECTOR
 
     x = np.array([3, 5, 1, 6, 5])

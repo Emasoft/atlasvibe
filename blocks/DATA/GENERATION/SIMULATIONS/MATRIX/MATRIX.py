@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import flojoy, Matrix, Scalar
+from atlasvibe import atlasvibe, Matrix, Scalar
 
 
-@flojoy
+@atlasvibe
 def MATRIX(row: Scalar = 100, column: Scalar = 100) -> Matrix:
     """Generates a random matrix with values between 0 and 1.
 

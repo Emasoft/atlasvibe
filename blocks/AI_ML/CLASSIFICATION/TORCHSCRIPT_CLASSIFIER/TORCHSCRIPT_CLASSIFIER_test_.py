@@ -4,7 +4,7 @@ import tempfile
 import pandas as pd
 import numpy as np
 import PIL
-from flojoy import run_in_venv, Image, DataFrame
+from atlasvibe import run_in_venv, Image, DataFrame
 
 try:
     import torch  # noqa: F401
@@ -73,8 +73,8 @@ def obama_image():
 )
 @pytest.mark.slow
 def test_TORHSCRIPT_CLASSIFIER(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
     obama_image,
     torchscript_model_path,
     class_names,

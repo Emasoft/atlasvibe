@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def BOOLEAN(status: bool = True) -> Boolean:
     """Takes one argument as input.
     Based on the input, it generates a boolean type data.

@@ -1,10 +1,10 @@
 from typing import Optional
 
 import pandas as pd
-from flojoy import DataFrame, flojoy
+from atlasvibe import DataFrame, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def ONE_HOT_ENCODING(
     data: DataFrame,
     feature_col: Optional[DataFrame] = None,

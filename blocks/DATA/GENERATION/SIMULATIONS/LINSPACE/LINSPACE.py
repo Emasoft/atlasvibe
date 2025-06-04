@@ -1,9 +1,9 @@
 import numpy as np
-from flojoy import flojoy, Vector, OrderedPair
+from atlasvibe import atlasvibe, Vector, OrderedPair
 from typing import Optional
 
 
-@flojoy
+@atlasvibe
 def LINSPACE(
     default: Optional[OrderedPair | Vector] = None,
     start: float = 10,

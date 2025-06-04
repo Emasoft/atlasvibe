@@ -12,7 +12,7 @@ import { cleanup } from "./utils";
 // } from "electron-devtools-assembler";
 
 log.initialize({ preload: true });
-log.info("Welcome to Flojoy Studio!");
+log.info("Welcome to Atlasvibe Studio!");
 process.env.ELECTRON_MODE = app.isPackaged ? "packaged" : "dev";
 
 // The built directory structure
@@ -62,7 +62,7 @@ contextMenu({
   },
 });
 
-app.setName("Flojoy Studio");
+app.setName("Atlasvibe Studio");
 
 app.whenReady().then(async () => {
   createWindow().catch((err) => console.log(err));

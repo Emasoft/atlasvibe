@@ -1,8 +1,8 @@
-from flojoy import OrderedPair
+from atlasvibe import OrderedPair
 import numpy as np
 
 
-def test_INTEGRATE(mock_flojoy_decorator):
+def test_INTEGRATE(mock_atlasvibe_decorator):
     import INTEGRATE
 
     node = INTEGRATE.INTEGRATE(OrderedPair(x=[1, 2, 3, 4, 5], y=[1, 2, 3, 4, 5]))

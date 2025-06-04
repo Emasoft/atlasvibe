@@ -1,7 +1,7 @@
-from flojoy import Boolean
+from atlasvibe import Boolean
 
 
-def test_IMPLIES(mock_flojoy_decorator):
+def test_IMPLIES(mock_atlasvibe_decorator):
     import IMPLIES
 
     x = Boolean(b=True)

@@ -1,10 +1,10 @@
-from flojoy import flojoy, DataFrame, Matrix
+from atlasvibe import atlasvibe, DataFrame, Matrix
 import pandas as pd
 from sklearn import svm, preprocessing
 from typing import Literal
 
 
-@flojoy(deps={"scikit-learn": "1.2.2"})
+@atlasvibe(deps={"scikit-learn": "1.2.2"})
 def SUPPORT_VECTOR_MACHINE(
     train_feature: DataFrame | Matrix,
     train_label: DataFrame | Matrix,

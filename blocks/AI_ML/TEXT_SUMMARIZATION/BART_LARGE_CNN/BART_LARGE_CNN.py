@@ -1,7 +1,7 @@
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 
 
-@flojoy(deps={"transformers": "4.30.2", "torch": "2.0.1", "torchvision": "0.15.2"})
+@atlasvibe(deps={"transformers": "4.30.2", "torch": "2.0.1", "torchvision": "0.15.2"})
 def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
     """Take an input dataframe with multiple rows and a single column, then produce a dataframe with a single "summary_text" column.
 
@@ -19,7 +19,7 @@ def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
     """
 
     import torch
-    from flojoy import snapshot_download
+    from atlasvibe import snapshot_download
     from transformers import BartTokenizer, BartForConditionalGeneration
     import pandas as pd
 

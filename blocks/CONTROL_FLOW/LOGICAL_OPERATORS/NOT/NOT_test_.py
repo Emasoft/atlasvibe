@@ -1,7 +1,7 @@
-from flojoy import Boolean
+from atlasvibe import Boolean
 
 
-def test_NOT(mock_flojoy_decorator):
+def test_NOT(mock_atlasvibe_decorator):
     import NOT
 
     x = Boolean(b=True)

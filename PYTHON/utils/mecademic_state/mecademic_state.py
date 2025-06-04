@@ -1,4 +1,4 @@
-from flojoy import String
+from atlasvibe import String
 import mecademicpy.robot as mdr
 
 from PYTHON.utils.mecademic_state.mecademic_mock import MockRobot

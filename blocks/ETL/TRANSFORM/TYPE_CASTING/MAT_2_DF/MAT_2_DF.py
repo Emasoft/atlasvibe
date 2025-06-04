@@ -1,9 +1,9 @@
 from numpy import asarray
 import pandas as pd
-from flojoy import flojoy, Matrix, DataFrame
+from atlasvibe import atlasvibe, Matrix, DataFrame
 
 
-@flojoy
+@atlasvibe
 def MAT_2_DF(default: Matrix) -> DataFrame:
     """Convert a Matrix DataContainer to a DataFrame DataContainer.
 

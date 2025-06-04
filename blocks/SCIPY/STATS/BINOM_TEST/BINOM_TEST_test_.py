@@ -1,7 +1,7 @@
-from flojoy import Vector, Scalar
+from atlasvibe import Vector, Scalar
 
 
-def test_BINOM_TEST(mock_flojoy_decorator):
+def test_BINOM_TEST(mock_atlasvibe_decorator):
     import BINOM_TEST
 
     res = BINOM_TEST.BINOM_TEST(k=Scalar(c=10), n=20)

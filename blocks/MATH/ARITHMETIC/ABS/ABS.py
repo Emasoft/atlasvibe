@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Scalar, Vector, flojoy
+from atlasvibe import OrderedPair, Scalar, Vector, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def ABS(default: OrderedPair | Vector | Scalar) -> OrderedPair:
     """Take an OrderedPair, Vector, or Scalar as input and return its absolute value.
 

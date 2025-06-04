@@ -31,7 +31,7 @@ test.describe("Custom block import", () => {
     const homePath = await app.evaluate(async ({ app: _app }) => {
       return _app.getPath("home");
     });
-    const blocksCachePath = join(homePath, ".flojoy/custom_blocks_path.txt");
+    const blocksCachePath = join(homePath, ".atlasvibe/custom_blocks_path.txt");
     if (existsSync(blocksCachePath)) {
       try {
         unlinkSync(blocksCachePath);

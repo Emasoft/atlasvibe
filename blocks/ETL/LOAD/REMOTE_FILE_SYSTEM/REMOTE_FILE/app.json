@@ -48,7 +48,7 @@
                 "type": "LOAD",
                 "data": {
                     "id": "REMOTE_FILE-0039398a-d037-427e-8f3d-0975cb4509fd",
-                    "label": "REMOTE FILE (FLOJOY LOGO)",
+                    "label": "REMOTE FILE (ATLASVIBE LOGO)",
                     "func": "REMOTE_FILE",
                     "type": "LOAD",
                     "ctrls": {
@@ -59,7 +59,7 @@
                             "overload": null,
                             "functionName": "REMOTE_FILE",
                             "param": "file_url",
-                            "value": "https://assets-global.website-files.com/64cbb707b16c118bf32db68f/64cbb707b16c118bf32db708_flojoy-fav-icon.png"
+                            "value": "https://assets-global.website-files.com/64cbb707b16c118bf32db68f/64cbb707b16c118bf32db708_atlasvibe-fav-icon.png"
                         },
                         "file_type": {
                             "type": "select",

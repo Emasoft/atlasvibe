@@ -1,8 +1,8 @@
-from flojoy import OrderedTriple
+from atlasvibe import OrderedTriple
 import numpy as np
 
 
-def test_ORDERED_TRIPLE_2_SURFACE_general(mock_flojoy_decorator):
+def test_ORDERED_TRIPLE_2_SURFACE_general(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE
 
     ordTriple = OrderedTriple(
@@ -19,7 +19,7 @@ def test_ORDERED_TRIPLE_2_SURFACE_general(mock_flojoy_decorator):
     )
 
 
-def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_flojoy_decorator):
+def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE
 
     # Test with x,y not unique and len(z) smaller
@@ -54,7 +54,7 @@ def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_flojoy_decorator):
     )
 
 
-def test_ORDERED_TRIPLE_2_SURFACE_no_padding(mock_flojoy_decorator):
+def test_ORDERED_TRIPLE_2_SURFACE_no_padding(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE
 
     # Test with x,y unique and len(z) bigger

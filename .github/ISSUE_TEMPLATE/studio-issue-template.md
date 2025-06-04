@@ -6,4 +6,4 @@ labels: ""
 assignees: ""
 ---
 
-(if you are a part of the Flojoy team, please raise your issue on Linear)
+(if you are a part of the Atlasvibe team, please raise your issue on Linear)

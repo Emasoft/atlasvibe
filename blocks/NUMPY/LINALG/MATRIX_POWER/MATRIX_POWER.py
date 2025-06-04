@@ -1,10 +1,10 @@
-from flojoy import flojoy, Matrix, Scalar
+from atlasvibe import atlasvibe, Matrix, Scalar
 import numpy as np
 
 import numpy.linalg
 
 
-@flojoy
+@atlasvibe
 def MATRIX_POWER(
     default: Matrix,
     n: int = 2,

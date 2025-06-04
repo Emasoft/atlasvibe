@@ -81,7 +81,7 @@
             "cDAQ_start_channel": {
               "type": "NIDAQmxDevice",
               "default": null,
-              "desc": "The device and channel to read from. Flojoy will register this address as a connection.",
+              "desc": "The device and channel to read from. Atlasvibe will register this address as a connection.",
               "overload": null,
               "functionName": "ATTACH_ANALOG_INPUT_CURRENT",
               "param": "cDAQ_start_channel",
@@ -373,7 +373,7 @@
               "name": "default",
               "id": "default",
               "type": "Any",
-              "desc": "Special parameter used by Flojoy to connect blocks together.",
+              "desc": "Special parameter used by Atlasvibe to connect blocks together.",
               "multiple": false
             }
           ],

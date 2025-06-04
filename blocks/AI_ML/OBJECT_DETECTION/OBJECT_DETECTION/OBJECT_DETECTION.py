@@ -1,12 +1,12 @@
 import traceback
-from flojoy import flojoy, Image
+from atlasvibe import atlasvibe, Image
 import numpy as np
 import os
 import requests
 import cv2
 
 
-@flojoy(deps={"opencv-python-headless": "4.8.1.78"})
+@atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def OBJECT_DETECTION(default: Image) -> Image:
     """Detect objects in an input image with YOLOv3, then return an image DataContainer with those objects highlighted.
 

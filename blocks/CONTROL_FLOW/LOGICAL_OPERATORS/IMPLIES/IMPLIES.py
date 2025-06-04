@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def IMPLIES(x: Boolean, y: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical IMPLIES operation on them.
     x implies y

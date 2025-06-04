@@ -2,10 +2,10 @@ import pandas as pd
 import io
 import boto3
 import keyring
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 
 
-@flojoy
+@atlasvibe
 def READ_S3(
     s3_name: str = "",
     bucket_name: str = "",

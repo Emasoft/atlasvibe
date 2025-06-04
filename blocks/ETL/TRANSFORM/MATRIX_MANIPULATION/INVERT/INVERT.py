@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Matrix, OrderedPair, flojoy
+from atlasvibe import Matrix, OrderedPair, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def INVERT(default: OrderedPair | Matrix, rcond: float = 1.0) -> OrderedPair | Matrix:
     """Invert a Matrix or OrderedPair.
 

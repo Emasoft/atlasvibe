@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Matrix, Scalar, Vector, flojoy
+from atlasvibe import Matrix, Scalar, Vector, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def DOT_PRODUCT(a: Matrix | Vector, b: Matrix | Vector) -> Matrix | Vector | Scalar:
     """Take two input matrices, multiply them (by dot product), and return the result.
 

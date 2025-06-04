@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
-# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+# Copyright (c) 2024 Atlasvibe (for the original "Atlasvibe Studio" software)
 #
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
@@ -7,7 +7,7 @@
 from typing import Union
 
 import numpy as np
-from flojoy import (
+from atlasvibe import (
     DataContainer,
     DataFrame,
     Image,

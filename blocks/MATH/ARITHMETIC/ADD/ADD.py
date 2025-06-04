@@ -1,12 +1,12 @@
 from functools import reduce
 
 import numpy as np
-from flojoy import OrderedPair, Scalar, Vector, flojoy
+from atlasvibe import OrderedPair, Scalar, Vector, atlasvibe
 
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
 
 
-@flojoy
+@atlasvibe
 def ADD(
     a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
 ) -> OrderedPair | Scalar | Vector:

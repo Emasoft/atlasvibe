@@ -6,7 +6,7 @@
       {
         "name": "default",
         "type": "Image",
-        "description": "The input image to be classified.\nThe image must be a PIL.Image object, wrapped in a Flojoy Image object."
+        "description": "The input image to be classified.\nThe image must be a PIL.Image object, wrapped in a Atlasvibe Image object."
       },
       {
         "name": "model",

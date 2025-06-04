@@ -86,7 +86,7 @@ export const useImportSequences = () => {
   const { isAdmin } = useWithPermission();
   const handleImport = async () => {
     if (!isAdmin()) {
-      toast.info("Connect to Flojoy Cloud and select a Test Profile");
+      toast.info("Connect to Atlasvibe Cloud and select a Test Profile");
       return;
     }
     const result = await window.api.openFilesPicker(
@@ -128,7 +128,7 @@ export const useImportAllSequencesInFolder = () => {
       if (!isAdmin()) {
         return err(
           Error(
-            "Admin only, Connect to Flojoy Cloud and select a Test Profile",
+            "Admin only, Connect to Atlasvibe Cloud and select a Test Profile",
           ),
         );
       }

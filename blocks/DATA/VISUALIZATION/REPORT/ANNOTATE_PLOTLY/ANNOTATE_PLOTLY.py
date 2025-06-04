@@ -1,7 +1,7 @@
-from flojoy import Plotly, TextArea, flojoy
+from atlasvibe import Plotly, TextArea, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def ANNOTATE_PLOTLY(
     default: Plotly,
     title: str = "",
@@ -22,15 +22,15 @@ def ANNOTATE_PLOTLY(
         The annotated Plotly object
     """
 
-    FLOJOY_COLORS = ["#7B61FF", "#2E83FF", "#FFA927", "#E14092"]
+    ATLASVIBE_COLORS = ["#7B61FF", "#2E83FF", "#FFA927", "#E14092"]
 
     fig = default.fig
 
-    # Set marker colors to Flojoy brand
+    # Set marker colors to Atlasvibe brand
     for i in range(len(fig["data"])):
-        if i < len(FLOJOY_COLORS):
+        if i < len(ATLASVIBE_COLORS):
             if "marker" in fig["data"][i]:
-                fig["data"][i]["marker"]["color"] = FLOJOY_COLORS[i]
+                fig["data"][i]["marker"]["color"] = ATLASVIBE_COLORS[i]
 
     fig["layout"]["title"] = {"text": title, "font": {"color": "rgba(0,0,0,0)"}}
     fig["layout"]["annotations"] = [

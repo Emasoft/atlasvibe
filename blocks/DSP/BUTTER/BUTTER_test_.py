@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair
+from atlasvibe import OrderedPair
 
 
-def test_BUTTER(mock_flojoy_decorator):
+def test_BUTTER(mock_atlasvibe_decorator):
     import BUTTER
 
     x = np.linspace(0.0, 10.0, 1000)

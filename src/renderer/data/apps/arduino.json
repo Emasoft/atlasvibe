@@ -184,7 +184,7 @@
       },
       "type": "TextNode",
       "data": {
-        "text": "Read the [Serial Single measurement](https://docs.flojoy.ai/blocks/hardware/protocols/serial/serial-single-measurement/) docs before running the app"
+        "text": "Read the [Serial Single measurement](https://docs.atlasvibe.ai/blocks/hardware/protocols/serial/serial-single-measurement/) docs before running the app"
       },
       "width": 288,
       "height": 100,

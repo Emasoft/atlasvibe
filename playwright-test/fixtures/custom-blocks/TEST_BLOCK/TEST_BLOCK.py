@@ -1,6 +1,6 @@
-from flojoy import flojoy, DataContainer
+from atlasvibe import atlasvibe, DataContainer
 
 
-@flojoy
+@atlasvibe
 def TEST_BLOCK(input: DataContainer):
     return input

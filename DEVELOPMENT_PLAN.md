@@ -6,11 +6,11 @@ Transform the forked project from a lab-focused visual programming IDE ("Flojoy 
 
 ## Phase 1: Rebranding and Initial Cleanup
 
-This phase focuses on changing the project's identity from "Flojoy Studio" to "atlasvibe" and updating all relevant information.
+This phase focuses on changing the project's identity from "Atlasvibe Studio" to "atlasvibe" and updating all relevant information.
 
 **Task 1.1: Project Name and Identity**
-*   **Action:** Globally replace "Flojoy Studio", "Flojoy", "flojoy-ai" (where appropriate, distinguishing from the `flojoy` Python library if it's reused) with "atlasvibe" and "Emasoft".
-*   **Scope:** Codebase comments, UI text, internal identifiers, documentation, marketing materials (if any).
+*   **Action:** Globally replace the remaining occurrences of "Flojoy  Studio", "Flojoy", "flojoy-ai" (where appropriate, distinguishing from the `flojoy` Python library if it's reused) with "atlasvibe" and "Emasoft".
+*   **Scope:** Update codebase comments, UI text, internal identifiers, assets names, documentation, marketing materials (if any).
 *   **Details:**
     *   Update window titles, application names.
     *   Plan for new logo and branding assets (initial step: remove old logo).
@@ -23,7 +23,7 @@ This phase focuses on changing the project's identity from "Flojoy Studio" to "a
 *   **Action:**
     *   Change primary author and copyright holder to "Emasoft".
     *   Update `LICENSE` file (already done) or add a `NOTICE` file if more detailed acknowledgments are needed beyond README/About.
-    *   In `README.md` and any "About" sections, clearly state that atlasvibe is forked from the open-source Flojoy Studio project.
+    *   In `README.md` and any "About" sections, clearly state that atlasvibe is forked from the open-source Atlasvibe Studio project.
     *   Acknowledge the original developers/project for their foundational work. Ensure compliance with the original MIT license.
 *   **Example Acknowledgment Text (to be refined):**
     > "atlasvibe is a derivative of Flojoy Studio, an open-source project originally developed by the Flojoy team. We extend our gratitude for their significant contributions and for making their work available under the MIT license. Atlasvibe aims to build upon this foundation for new purposes, and all original licensing terms are respected."
@@ -40,7 +40,7 @@ This phase focuses on changing the project's identity from "Flojoy Studio" to "a
 **Task 1.5: UI Text and Asset Review**
 *   **Action:** Systematically review all user-facing text.
 *   **Scope:** Buttons, labels, tooltips, menu items, "About" dialogs, "Help" sections, links.
-*   **Details:** Ensure all references to "Flojoy", its specific features (e.g., "test sequencer for hardware validation" unless retained), or personnel are updated or removed. Remove the old logo from the UI.
+*   **Details:** Ensure all references to "Atlasvibe", its specific features (e.g., "test sequencer for hardware validation" unless retained), or personnel are updated or removed. Remove the old logo from the UI.
 
 ## Phase 2: Core Block System Transformation
 
@@ -65,7 +65,7 @@ This phase redefines how blocks are created, managed, and used within a project.
         1.  Prompt the user for a new, unique name for this specific instance (e.g., "MyCustomMatrixViewer").
         2.  Duplicate the chosen blueprint's entire folder (e.g., `MATRIX_VIEW/`) into the current project's `atlasvibe_blocks/` directory, renaming the folder to the user-provided name.
         3.  Rename the main Python file inside this new folder (e.g., `MATRIX_VIEW.py` to `MyCustomMatrixViewer.py`).
-        4.  **Crucially, update the `@flojoy` decorated function name inside the new Python file to match the new filename/block name.** This is essential for the system to recognize it.
+        4.  **Crucially, update the `@atlasvibe` decorated function name inside the new Python file to match the new filename/block name.** This is essential for the system to recognize it.
         5.  Update metadata files (`app.json`, `block_data.json`) within the new custom block's folder to reflect its new name and identity.
     *   This new, duplicated block is now a "custom block" specific to the current project.
 
@@ -81,7 +81,7 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   Each node representing a custom block should have an "Edit Code" option.
     *   When code is saved:
         1.  The corresponding Python file in the project's `atlasvibe_blocks/` directory is updated.
-        2.  A process to regenerate metadata (`app.json`, `block_data.json`) for that specific custom block is triggered. This might involve re-parsing the Python file for the `@flojoy` decorator and its parameters.
+        2.  A process to regenerate metadata (`app.json`, `block_data.json`) for that specific custom block is triggered. This might involve re-parsing the Python file for the `@atlasvibe` decorator and its parameters.
 
 **Task 2.6: Data Persistence and Project Files**
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.
@@ -100,7 +100,7 @@ This phase will focus on the long-term goal of transforming nodes into AI agents
 
 ## General Considerations
 
-*   **Virtual Environments:** The existing per-node venv approach needs to be compatible with the new custom block structure. Ensure that when a custom block is created, its venv setup is also handled correctly.
+*   **Virtual Environments:** The existing per-node venv approach needs to be compatible with the new custom block structure. Ensure that when a custom block is created, its venv setup is also handled correctly using uv. Only uv must be used as environment manager.
 *   **Metadata Generation:** The scripts/logic responsible for generating `app.json`, `block_data.json`, etc., must be adapted to work with on-the-fly created custom blocks and potentially modified code.
 *   **Testing:** Develop a robust testing strategy for all new functionalities, especially the block creation and editing workflows.
 *   **User Experience (UX):** Prioritize an intuitive and clear UX for the new block management and project system.

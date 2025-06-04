@@ -1,9 +1,9 @@
 from typing import Optional
 
-from flojoy import DataFrame, flojoy
+from atlasvibe import DataFrame, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def ACCURACY(
     true_data: DataFrame,
     predicted_data: DataFrame,

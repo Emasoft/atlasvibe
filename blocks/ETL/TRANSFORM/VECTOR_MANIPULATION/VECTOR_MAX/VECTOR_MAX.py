@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import flojoy, Vector, Scalar
+from atlasvibe import atlasvibe, Vector, Scalar
 
 
-@flojoy
+@atlasvibe
 def VECTOR_MAX(default: Vector) -> Scalar:
     """The VECTOR_MAX node returns the maximum value from the Vector.
 

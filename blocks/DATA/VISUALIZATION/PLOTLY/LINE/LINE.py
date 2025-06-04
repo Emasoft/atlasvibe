@@ -1,11 +1,11 @@
 import plotly.graph_objects as go
-from flojoy import DataFrame, Matrix, OrderedPair, Plotly, Vector, flojoy
+from atlasvibe import DataFrame, Matrix, OrderedPair, Plotly, Vector, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from numpy import arange
 from pandas.api.types import is_datetime64_any_dtype
 
 
-@flojoy
+@atlasvibe
 def LINE(
     default: OrderedPair | DataFrame | Matrix | Vector,
     xaxis_title: str = "",

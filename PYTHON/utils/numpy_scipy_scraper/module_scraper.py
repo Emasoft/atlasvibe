@@ -4,8 +4,8 @@ import re
 import docstring_parser as parse
 
 
-class FlojoyWrapper:
-    """Class for creating a Flojoy wrapper of NumPy and SciPy functions.
+class AtlasvibeWrapper:
+    """Class for creating a Atlasvibe wrapper of NumPy and SciPy functions.
     Run the script from the nodes directory.
     """
 
@@ -49,12 +49,12 @@ class FlojoyWrapper:
         except IndexError:  # this means argument_names is none
             self.first_argument = None
             self.parameters = {}
-        self.data = "from flojoy import OrderedPair, flojoy, Matrix, Scalar\n"
+        self.data = "from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar\n"
         self.data += "import numpy as np\n"
         self.data += "from collections import namedtuple\n"
         self.data += "from typing import Literal\n\n"
         self.data += f"import {module.__name__}\n\n\n"
-        self.data += "@flojoy(node_type='default')"
+        self.data += "@atlasvibe(node_type='default')"
         self.data += f"\ndef {self.name.upper()}(\n\t"
         self.data += "default: OrderedPair | Matrix,\n\t"
 
@@ -243,7 +243,7 @@ class FlojoyWrapper:
             )
             self.data = self.data.replace("OrderedPair | Matrix", "Matrix")
             self.data = self.data.replace(
-                "import OrderedPair, flojoy,", "import flojoy,"
+                "import OrderedPair, atlasvibe,", "import atlasvibe,"
             )
 
             self.data += f"\tresult = {self.module.__name__}.{self.name}(\n\t\t\t" + (
@@ -332,8 +332,8 @@ class FlojoyWrapper:
         nodename = self.name.upper()
 
         self.test_script = "import numpy as np\n"
-        self.test_script += "from flojoy import OrderedPair, Matrix, Scalar\n\n"
-        self.test_script += f"def test_{nodename}(mock_flojoy_decorator):"
+        self.test_script += "from atlasvibe import OrderedPair, Matrix, Scalar\n\n"
+        self.test_script += f"def test_{nodename}(mock_atlasvibe_decorator):"
         self.test_script += f"\n\timport {nodename}\n\n\t"
 
         if self.module.__name__ == "numpy.linalg":
@@ -423,7 +423,7 @@ if __name__ == "__main__":
 
                 # Create object (above) for each function
                 if func_is_valid:
-                    fw = FlojoyWrapper(
+                    fw = AtlasvibeWrapper(
                         func, default_optional_params, submodule, all_arg_names
                     )
                     fw.write_wrapper(f"{module.upper()}_{submodule_name.upper()}")

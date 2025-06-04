@@ -1,9 +1,9 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def BAYES_MVS(
     default: OrderedPair | Matrix,
     alpha: float = 0.9,

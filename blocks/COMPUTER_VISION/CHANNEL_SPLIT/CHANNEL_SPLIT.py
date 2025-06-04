@@ -1,4 +1,4 @@
-from flojoy import flojoy, Image, Matrix
+from atlasvibe import atlasvibe, Image, Matrix
 from typing import TypedDict
 import numpy as np
 
@@ -10,7 +10,7 @@ class ChannelSplitOutput(TypedDict):
     a: Image
 
 
-@flojoy
+@atlasvibe
 def CHANNEL_SPLIT(default: Image | Matrix) -> ChannelSplitOutput:
     """Return the RGBA channels of an image as 4 separate images for direct visualization.
 

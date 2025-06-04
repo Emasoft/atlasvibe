@@ -1,6 +1,6 @@
 import json
 from typing import TypedDict, Any, Optional
-from flojoy import JobResultBuilder, DataContainer, flojoy, DefaultParams, SmallMemory
+from atlasvibe import JobResultBuilder, DataContainer, atlasvibe, DefaultParams, SmallMemory
 
 memory_key = "loop-info"
 
@@ -54,7 +54,7 @@ class LoopData:
         print(f"{prefix}loop Data:", json.dumps(self.get_data(), indent=2))
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def LOOP(
     default_params: DefaultParams,
     default: Optional[DataContainer] = None,

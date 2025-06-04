@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean, Scalar
+from atlasvibe import atlasvibe, Boolean, Scalar
 
 
-@flojoy
+@atlasvibe
 def BOOLEAN_2_SCALAR(default: Boolean) -> Scalar:
     """Takes boolean type data and converts it into scalar data type.
     1 means true and 0 means false

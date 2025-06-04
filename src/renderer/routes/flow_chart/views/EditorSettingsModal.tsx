@@ -22,7 +22,7 @@ export const EditorSettingsModal = ({
       settings={settings}
       updateSettings={updateSettings}
       title="Editor Settings"
-      description="Applies to the Flojoy editor"
+      description="Applies to the Atlasvibe editor"
     />
   );
 };

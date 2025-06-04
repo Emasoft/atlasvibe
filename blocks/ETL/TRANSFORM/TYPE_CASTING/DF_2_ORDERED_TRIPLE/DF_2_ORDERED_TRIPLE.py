@@ -1,7 +1,7 @@
-from flojoy import flojoy, DataFrame, OrderedTriple
+from atlasvibe import atlasvibe, DataFrame, OrderedTriple
 
 
-@flojoy
+@atlasvibe
 def DF_2_ORDERED_TRIPLE(
     default: DataFrame, x: int = 0, y: int = 1, z: int = 2
 ) -> OrderedTriple:

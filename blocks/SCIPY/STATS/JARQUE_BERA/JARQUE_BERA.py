@@ -1,11 +1,11 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 from typing import Literal
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def JARQUE_BERA(
     default: OrderedPair | Matrix,
     select_return: Literal["jb_value", "p"] = "jb_value",

@@ -10,11 +10,11 @@
 #       - closed
 #
 # env:
-#   PROJECT_OWNER: flojoy-io
+#   PROJECT_OWNER: atlasvibe-io
 #   PROJECT_REPO: rc
 #   PROJECT_WORKFLOW_ID: terraform-test-env.yml
-#   PROJECT_TOKEN: ${{ secrets.ACCESS_TOKEN_FLOJOY_RC }}
-#   REFLECT_SUITE: flojoy-live-test
+#   PROJECT_TOKEN: ${{ secrets.ACCESS_TOKEN_ATLASVIBE_RC }}
+#   REFLECT_SUITE: atlasvibe-live-test
 #   REFLECT_TOKEN: ${{ secrets.REFLECT_TOKEN }}
 #
 # jobs:
@@ -53,15 +53,15 @@
 #         uses: peter-evans/find-comment@v2
 #         id: fc
 #         with:
-#           token: ${{ secrets.ACCESS_TOKEN_FLOJOY_RC }}
+#           token: ${{ secrets.ACCESS_TOKEN_ATLASVIBE_RC }}
 #           issue-number: ${{ github.event.pull_request.number }}
-#           body-regex: 'flojoy-test\.com:3000'
+#           body-regex: 'atlasvibe-test\.com:3000'
 #
 #       - name: Extract test URLs
 #         if: github.event.action == 'opened' || github.event.action == 'synchronize'
 #         id: extract-ip-port
 #         run: |
-#           URL_REGEX='([0-9]+)_(windows|linux)\.flojoy-test\.com'
+#           URL_REGEX='([0-9]+)_(windows|linux)\.atlasvibe-test\.com'
 #           if [[ "${{ steps.fc.outputs.comment-body }}" =~ $URL_REGEX ]]; then
 #             export FC_COMMENT_BODY="${{ steps.fc.outputs.comment-body }}"
 #             while [[ "${FC_COMMENT_BODY}" =~ $URL_REGEX ]]; do
@@ -69,9 +69,9 @@
 #               platform="${BASH_REMATCH[2]}"
 #
 #               if [[ $platform == "windows" ]]; then
-#                 echo "domain_windows=${domain}_windows.flojoy-test.com" >> $GITHUB_OUTPUT
+#                 echo "domain_windows=${domain}_windows.atlasvibe-test.com" >> $GITHUB_OUTPUT
 #               elif [[ $platform == "linux" ]]; then
-#                 echo "domain_linux=${domain}_linux.flojoy-test.com" >> $GITHUB_OUTPUT
+#                 echo "domain_linux=${domain}_linux.atlasvibe-test.com" >> $GITHUB_OUTPUT
 #               fi
 #
 #               # Replace the matched URL with an empty string to continue searching for more URLs
@@ -81,28 +81,28 @@
 #             echo "No matching URLs found in the comment body."
 #           fi
 #
-#       - name: Test if Flojoy-studio is up
+#       - name: Test if Atlasvibe-studio is up
 #         if: github.event.action == 'opened' || github.event.action == 'synchronize'
 #         id: test-http-page
 #         run: |
 #           echo "Test on http://${{ steps.extract-ip-port.outputs.domain_windows }}:3000"
 #           CONTENT=$(curl -s "${{ steps.extract-ip-port.outputs.domain_windows }}:3000")
-#           if [[ $CONTENT == *"<title>FLOJOY</title>"* ]]; then
-#             echo "The HTTP page contains '<title>FLOJOY</title>'."
+#           if [[ $CONTENT == *"<title>ATLASVIBE</title>"* ]]; then
+#             echo "The HTTP page contains '<title>ATLASVIBE</title>'."
 #             echo "Test passed on Windows."
 #           else
-#             echo "The HTTP page does not contain '<title>FLOJOY</title>'."
+#             echo "The HTTP page does not contain '<title>ATLASVIBE</title>'."
 #             echo "Test failed on Windows."
 #             exit 1
 #           fi
 #
 #           echo "Test on http://${{ steps.extract-ip-port.outputs.domain_linux }}:3000"
 #           CONTENT=$(curl -s "${{ steps.extract-ip-port.outputs.domain_linux }}:3000")
-#           if [[ $CONTENT == *"<title>FLOJOY</title>"* ]]; then
-#             echo "The HTTP page contains '<title>FLOJOY</title>'."
+#           if [[ $CONTENT == *"<title>ATLASVIBE</title>"* ]]; then
+#             echo "The HTTP page contains '<title>ATLASVIBE</title>'."
 #             echo "Test passed on Linux."
 #           else
-#             echo "The HTTP page does not contain '<title>FLOJOY</title>'."
+#             echo "The HTTP page does not contain '<title>ATLASVIBE</title>'."
 #             echo "Test failed on Linux."
 #             exit1
 #           fi

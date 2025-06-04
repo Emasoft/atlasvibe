@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as spa
 from scipy.sparse.linalg import splu
-from flojoy import flojoy, OrderedPair, SmallMemory, DefaultParams
+from atlasvibe import atlasvibe, OrderedPair, SmallMemory, DefaultParams
 from typing import Optional
 
 
@@ -42,7 +42,7 @@ def CrankNicolson(psi, V, x, dt):
 memory_key = "WAVEPACKET"
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def WAVEPACKET(
     default_params: DefaultParams,
     default: Optional[OrderedPair] = None,

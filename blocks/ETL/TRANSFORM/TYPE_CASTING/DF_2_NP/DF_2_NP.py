@@ -1,7 +1,7 @@
-from flojoy import flojoy, DataFrame, Matrix
+from atlasvibe import atlasvibe, DataFrame, Matrix
 
 
-@flojoy
+@atlasvibe
 def DF_2_NP(default: DataFrame) -> Matrix:
     """Convert a DataFrame DataContainer to a Matrix DataContainer.
 

@@ -1,8 +1,8 @@
-from flojoy import String, flojoy
+from atlasvibe import String, atlasvibe
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def TEXT_CONCAT(
     a: String,
     b: String,

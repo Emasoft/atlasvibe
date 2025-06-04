@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector, Scalar
+from atlasvibe import atlasvibe, Vector, Scalar
 
 
-@flojoy
+@atlasvibe
 def VECTOR_LENGTH(default: Vector) -> Scalar:
     """The VECTOR_LENGTH node returns the length of the input vector.
 

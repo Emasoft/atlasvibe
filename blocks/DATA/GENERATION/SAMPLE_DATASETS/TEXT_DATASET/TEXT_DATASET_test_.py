@@ -1,4 +1,4 @@
-from flojoy import DataFrame, Array
+from atlasvibe import DataFrame, Array
 import pytest
 
 
@@ -7,7 +7,7 @@ import pytest
     strict=False,
     reason="Sporadic errors might be raised by scikit-learn. Fixed by scikit-learn#27251",
 )
-def test_load_training_set_by_default(mock_flojoy_decorator):
+def test_load_training_set_by_default(mock_atlasvibe_decorator):
     from TEXT_DATASET import TEXT_DATASET
 
     result = TEXT_DATASET()
@@ -45,7 +45,7 @@ def test_load_training_set_by_default(mock_flojoy_decorator):
     strict=False,
     reason="Sporadic errors might be raised by scikit-learn. Fixed by scikit-learn#27251",
 )
-def test_load_specific_categories(mock_flojoy_decorator):
+def test_load_specific_categories(mock_atlasvibe_decorator):
     from TEXT_DATASET import TEXT_DATASET
 
     result = TEXT_DATASET(
@@ -64,7 +64,7 @@ def test_load_specific_categories(mock_flojoy_decorator):
     strict=False,
     reason="Sporadic errors might be raised by scikit-learn. Fixed by scikit-learn#27251",
 )
-def test_non_existent_category(mock_flojoy_decorator):
+def test_non_existent_category(mock_atlasvibe_decorator):
     from TEXT_DATASET import TEXT_DATASET
 
     with pytest.raises(ValueError):

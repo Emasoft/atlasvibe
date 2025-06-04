@@ -1,9 +1,9 @@
 import numpy as np
 from typing import Optional
-from flojoy import flojoy, OrderedPair, Matrix
+from atlasvibe import atlasvibe, OrderedPair, Matrix
 
 
-@flojoy
+@atlasvibe
 def LEAST_SQUARES(
     a: OrderedPair | Matrix, b: Optional[OrderedPair | Matrix] = None
 ) -> Matrix | OrderedPair:

@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector, Scalar
+from atlasvibe import atlasvibe, Vector, Scalar
 
 
-@flojoy
+@atlasvibe
 def VECTOR_INDEXING(
     default: Vector,
     index: int = 0,

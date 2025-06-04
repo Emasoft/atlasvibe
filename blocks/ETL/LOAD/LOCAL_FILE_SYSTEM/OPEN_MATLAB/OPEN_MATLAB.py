@@ -2,11 +2,11 @@ from os import path
 
 import numpy as np
 import pandas as pd
-from flojoy import DataFrame, File, flojoy
+from atlasvibe import DataFrame, File, atlasvibe
 from scipy.io import loadmat
 
 
-@flojoy
+@atlasvibe
 def OPEN_MATLAB(file_path: File | None = None) -> DataFrame:
     """The OPEN_MATLAB node loads a local file of the .mat file format.
 

@@ -1,8 +1,8 @@
 from numpy import append
-from flojoy import flojoy, OrderedPair, Matrix, DataFrame, Vector, Scalar
+from atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
 
 
-@flojoy
+@atlasvibe
 def APPEND(
     primary_dp: OrderedPair | Matrix | DataFrame | Scalar | Vector | None,
     secondary_dp: OrderedPair | Matrix | DataFrame | Scalar | Vector,

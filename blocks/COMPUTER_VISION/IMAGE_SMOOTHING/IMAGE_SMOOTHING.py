@@ -2,10 +2,10 @@ from typing import Literal
 
 import cv2
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 
 
-@flojoy(deps={"opencv-python-headless": "4.8.1.78"})
+@atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def IMAGE_SMOOTHING(
     default: Image,
     kernel: int = 5,

@@ -1,4 +1,4 @@
-from flojoy import String
+from atlasvibe import String
 
 _robot_handle_map = None
 

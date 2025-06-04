@@ -202,7 +202,7 @@
               "desc": "The value set in Parameters",
               "functionName": "TEXT",
               "param": "value",
-              "value": "Welcome to Flojoy!"
+              "value": "Welcome to Atlasvibe!"
             }
           },
           "initCtrls": {},
@@ -363,7 +363,7 @@
       },
       "type": "TextNode",
       "data": {
-        "text": "Once the LOOP finishes, the branch at the bottom will be executed. \n\nThis is why \"**Welcome to Flojoy!**\" got displayed at the very end!"
+        "text": "Once the LOOP finishes, the branch at the bottom will be executed. \n\nThis is why \"**Welcome to Atlasvibe!**\" got displayed at the very end!"
       },
       "width": 375,
       "height": 182,

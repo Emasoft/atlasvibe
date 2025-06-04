@@ -1,9 +1,9 @@
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 from skimage.transform import swirl
 
 
-@flojoy(deps={"scikit-image": "0.21.0"})
+@atlasvibe(deps={"scikit-image": "0.21.0"})
 def IMAGE_SWIRL(
     default: Image,
     rotation: float = 0,

@@ -1,12 +1,12 @@
 *** Settings ***
-Library    flojoy_cloud.test_sequencer
+Library    atlasvibe_cloud.test_sequencer
 Library     calculate.py
 
 *** Test Cases ***
 TEST EXPORT
     ${result}              Calculate       3 + 1
     # Export the `result` so it's display in the sequencer
-    #  + this value will be upload to Flojoy Cloud
+    #  + this value will be upload to Atlasvibe Cloud
     Export                 ${result}
     Should Not Be Equal    4               ${result}
 

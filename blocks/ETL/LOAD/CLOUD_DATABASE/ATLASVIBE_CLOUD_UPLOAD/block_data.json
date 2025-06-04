@@ -1,0 +1,40 @@
+{
+  "docstring": {
+    "long_description": "Atlasvibe Cloud is still in beta, feel free to try it out and give us feedback!",
+    "short_description": "Upload a DataContainer to Atlasvibe Cloud (beta).",
+    "parameters": [
+      {
+        "name": "default",
+        "type": "DataContainer",
+        "description": "The data to be uploaded to Atlasvibe Cloud."
+      },
+      {
+        "name": "hardware_device_id",
+        "type": "str",
+        "description": "The measurement id of the data to be uploaded to Atlasvibe Cloud."
+      },
+      {
+        "name": "test_id",
+        "type": "str",
+        "description": "The test id of the data to be uploaded to Atlasvibe Cloud."
+      },
+      {
+        "name": "name",
+        "type": "str",
+        "description": "A name describing the test."
+      },
+      {
+        "name": "pass_fail",
+        "type": "Boolean",
+        "description": "Optional parameter to define if the test passed or failed."
+      }
+    ],
+    "returns": [
+      {
+        "name": null,
+        "type": "DataContainer",
+        "description": "The input DataContainer will be returned as it is."
+      }
+    ]
+  }
+}

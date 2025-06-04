@@ -58,7 +58,7 @@ const TestSequencerView = () => {
                       Sequencer
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Execute and report to Flojoy Cloud
+                      Execute and report to Atlasvibe Cloud
                     </p>
                   </div>
                 )}

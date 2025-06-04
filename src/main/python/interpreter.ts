@@ -22,7 +22,7 @@ const CondaInfo = z.object({
 
 export const interpreterCachePath = join(
   app.getPath("appData"),
-  "flojoy_py_interpreter",
+  "atlasvibe_py_interpreter",
 );
 export class PythonManager {
   defaultBinPaths = {

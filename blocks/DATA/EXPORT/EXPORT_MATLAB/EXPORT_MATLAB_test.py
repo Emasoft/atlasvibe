@@ -1,11 +1,11 @@
 import numpy as np
-from flojoy import DataFrame, Directory, Matrix, OrderedPair
+from atlasvibe import DataFrame, Directory, Matrix, OrderedPair
 import pandas as pd
 import os
 import scipy
 
 
-def test_EXPORT_MATLAB_dataframe(mock_flojoy_decorator):
+def test_EXPORT_MATLAB_dataframe(mock_atlasvibe_decorator):
     import EXPORT_MATLAB
 
     m = 10
@@ -41,7 +41,7 @@ def test_EXPORT_MATLAB_dataframe(mock_flojoy_decorator):
             os.remove(file_path)
 
 
-def test_EXPORT_MATLAB_pair(mock_flojoy_decorator):
+def test_EXPORT_MATLAB_pair(mock_atlasvibe_decorator):
     import EXPORT_MATLAB
 
     m = 10
@@ -75,7 +75,7 @@ def test_EXPORT_MATLAB_pair(mock_flojoy_decorator):
             os.remove(file_path)
 
 
-def test_EXPORT_MATLAB_matrix(mock_flojoy_decorator):
+def test_EXPORT_MATLAB_matrix(mock_atlasvibe_decorator):
     import EXPORT_MATLAB
 
     data = np.random.rand(10, 10, 10)

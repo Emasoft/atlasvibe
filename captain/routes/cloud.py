@@ -2,8 +2,8 @@ import json
 import logging
 import requests
 from fastapi import APIRouter, Header, Response
-from flojoy.env_var import get_env_var, get_flojoy_cloud_url
-from flojoy_cloud import test_sequencer
+from atlasvibe.env_var import get_env_var, get_atlasvibe_cloud_url
+from atlasvibe_cloud import test_sequencer
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 import datetime
@@ -51,7 +51,7 @@ def temporary_cache(*args, ttl=20):
 
 async def get_cloud_part_variation(part_variation_id: str):
     logging.info("Querying part variation")
-    url = get_flojoy_cloud_url() + "partVariation/" + part_variation_id
+    url = get_atlasvibe_cloud_url() + "partVariation/" + part_variation_id
     response = requests.get(url, headers=headers_builder())
     res = response.json()
     res["partVariationId"] = part_variation_id
@@ -64,7 +64,7 @@ class SecretNotFound(Exception):
 
 
 def error_response_builder(e: Exception) -> Response:
-    logging.error(f"Error from Flojoy Cloud: {e}")
+    logging.error(f"Error from Atlasvibe Cloud: {e}")
     if isinstance(e, SecretNotFound):
         return Response(status_code=401, content=json.dumps([]))
     else:
@@ -73,22 +73,22 @@ def error_response_builder(e: Exception) -> Response:
 
 @temporary_cache
 def headers_builder(with_workspace_id=True) -> dict:
-    workspace_secret = get_env_var("FLOJOY_CLOUD_WORKSPACE_SECRET")
+    workspace_secret = get_env_var("ATLASVIBE_CLOUD_WORKSPACE_SECRET")
     logging.info("Querying workspace current")
     if workspace_secret is None:
         raise SecretNotFound
     headers = {
         "Content-Type": "application/json",
-        "flojoy-workspace-personal-secret": workspace_secret,
+        "atlasvibe-workspace-personal-secret": workspace_secret,
     }
     if with_workspace_id:
-        url = get_flojoy_cloud_url() + "workspace/"
+        url = get_atlasvibe_cloud_url() + "workspace/"
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             logging.error(f"Failed to get workspace id {url}: {response.text}")
             raise Exception("Failed to get workspace id")
         workspace_id = response.json()[0]["id"]
-        headers["flojoy-workspace-id"] = workspace_id
+        headers["atlasvibe-workspace-id"] = workspace_id
     return headers
 
 
@@ -189,7 +189,7 @@ def get_measurement(m: Measurement) -> MeasurementData:
 
 async def get_part(part_id: str) -> Part:
     logging.info("Querying part")
-    url = get_flojoy_cloud_url() + "part/" + part_id
+    url = get_atlasvibe_cloud_url() + "part/" + part_id
     response = requests.get(url, headers=headers_builder())
     return Part(**response.json())
 
@@ -203,11 +203,11 @@ router = APIRouter(tags=["cloud"])
 @router.get("/cloud/projects/")
 async def get_cloud_projects():
     """
-    Get all projects from the Flojoy Cloud.
+    Get all projects from the Atlasvibe Cloud.
     """
     try:
         logging.info("Querying projects")
-        url = get_flojoy_cloud_url() + "project/"
+        url = get_atlasvibe_cloud_url() + "project/"
         response = requests.get(url, headers=headers_builder())
         if response.status_code != 200:
             return Response(status_code=response.status_code, content=json.dumps([]))
@@ -237,15 +237,15 @@ async def get_cloud_projects():
 @router.get("/cloud/stations/{project_id}")
 async def get_cloud_stations(project_id: str):
     """
-    Get all station of a project from the Flojoy Cloud.
+    Get all station of a project from the Atlasvibe Cloud.
     """
     try:
         logging.info("Querying stations")
-        url = get_flojoy_cloud_url() + "station/"
+        url = get_atlasvibe_cloud_url() + "station/"
         querystring = {"projectId": project_id}
         response = requests.get(url, headers=headers_builder(), params=querystring)
         if response.status_code != 200:
-            logging.error(f"Error getting stations from Flojoy Cloud: {response.text}")
+            logging.error(f"Error getting stations from Atlasvibe Cloud: {response.text}")
             return Response(status_code=response.status_code, content=json.dumps([]))
         stations = [Station(**s) for s in response.json()]
         return Response(
@@ -260,10 +260,10 @@ async def get_cloud_stations(project_id: str):
 async def get_cloud_variant_unit(part_var_id: str):
     try:
         logging.info(f"Querying unit for part {part_var_id}")
-        url = f"{get_flojoy_cloud_url()}partVariation/{part_var_id}/unit"
+        url = f"{get_atlasvibe_cloud_url()}partVariation/{part_var_id}/unit"
         response = requests.get(url, headers=headers_builder())
         if response.status_code != 200:
-            logging.error(f"Error getting stations from Flojoy Cloud: {response.text}")
+            logging.error(f"Error getting stations from Atlasvibe Cloud: {response.text}")
             return Response(status_code=response.status_code, content=json.dumps([]))
         units = [Unit(**u) for u in response.json()]
         dict_model = [unit.model_dump(by_alias=True) for unit in units]
@@ -276,7 +276,7 @@ async def get_cloud_variant_unit(part_var_id: str):
 async def post_cloud_session(_: Response, body: Session):
     try:
         logging.info("Posting session")
-        url = get_flojoy_cloud_url() + "session/"
+        url = get_atlasvibe_cloud_url() + "session/"
         payload = body.model_dump(by_alias=True)
         payload["createdAt"] = utcnow_str()
         for i, m in enumerate(payload["measurements"]):
@@ -300,9 +300,9 @@ async def post_cloud_session(_: Response, body: Session):
 async def get_user_info(secret: Annotated[str | None, Header()]):
     try:
         logging.info("Querying user info")
-        url = get_flojoy_cloud_url() + "user/"
+        url = get_atlasvibe_cloud_url() + "user/"
         headers = (
-            {"flojoy-workspace-personal-secret": secret}
+            {"atlasvibe-workspace-personal-secret": secret}
             if secret
             else headers_builder(with_workspace_id=False)
         )
@@ -323,7 +323,7 @@ async def get_cloud_health(url: Annotated[str | None, Header()]):
     try:
         logging.info("Querying health")
         if url is None:
-            url = get_flojoy_cloud_url()
+            url = get_atlasvibe_cloud_url()
         url = url + "health/"
         response = requests.get(url)
         if response.status_code == 200:

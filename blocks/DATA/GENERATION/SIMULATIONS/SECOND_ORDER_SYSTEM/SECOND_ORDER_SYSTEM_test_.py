@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import Scalar
+from atlasvibe import Scalar
 
 
-def test_SECOND_ORDER_SYSTEM(mock_flojoy_decorator):
+def test_SECOND_ORDER_SYSTEM(mock_atlasvibe_decorator):
     import SECOND_ORDER_SYSTEM
-    from flojoy import DefaultParams
+    from atlasvibe import DefaultParams
 
     defaultP = DefaultParams(
         node_id="SECOND_ORDER_SYSTEM", job_id="0", jobset_id="0", node_type="default"

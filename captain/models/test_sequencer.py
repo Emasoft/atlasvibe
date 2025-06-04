@@ -17,7 +17,7 @@ class LockedContextType(BaseModel):
 class TestTypes(StrEnum):
     pytest = "pytest"
     python = "python"
-    flojoy = "flojoy"
+    atlasvibe = "atlasvibe"
     matlab = "matlab"
     placeholder = "placeholder"
     robotframework = "robotframework"

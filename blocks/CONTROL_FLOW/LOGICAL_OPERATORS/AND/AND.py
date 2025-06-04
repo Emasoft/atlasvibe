@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def AND(default: Boolean, a: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical AND operation on them.
 

@@ -1,10 +1,10 @@
-from flojoy import flojoy, DataContainer, SmallMemory, NodeReference
+from atlasvibe import atlasvibe, DataContainer, SmallMemory, NodeReference
 from typing import Optional, Any
 
 memory_key = "loop-info"
 
 
-@flojoy
+@atlasvibe
 def BREAK(
     referred_node: NodeReference,
     default: Optional[DataContainer] = None,
@@ -12,7 +12,7 @@ def BREAK(
     """End the iteration of a loop.
 
     It should be used in conjunction with conditionals to determine when to break the loop.
-    It is needed to be able to generate 'while loops' in Flojoy (combined with an 'infinite loop').
+    It is needed to be able to generate 'while loops' in Atlasvibe (combined with an 'infinite loop').
 
     Parameters
     ----------

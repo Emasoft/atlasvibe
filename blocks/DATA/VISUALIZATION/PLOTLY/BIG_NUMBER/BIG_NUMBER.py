@@ -1,5 +1,5 @@
-from flojoy import (
-    flojoy,
+from atlasvibe import (
+    atlasvibe,
     Plotly,
     OrderedPair,
     DefaultParams,
@@ -14,7 +14,7 @@ from blocks.DATA.VISUALIZATION.template import plot_layout
 MEMORY_KEY = "BIG_NUMBER_MEMORY_KEY"
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def BIG_NUMBER(
     default: OrderedPair | Scalar | Vector,
     default_params: DefaultParams,

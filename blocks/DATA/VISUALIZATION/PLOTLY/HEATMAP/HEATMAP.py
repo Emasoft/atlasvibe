@@ -1,7 +1,7 @@
-from flojoy import (
+from atlasvibe import (
     Plotly,
     OrderedPair,
-    flojoy,
+    atlasvibe,
     Matrix,
     Grayscale,
     DataFrame,
@@ -17,7 +17,7 @@ import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def HEATMAP(
     default: OrderedPair
     | Matrix

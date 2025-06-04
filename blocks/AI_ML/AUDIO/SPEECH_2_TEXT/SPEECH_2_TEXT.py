@@ -1,9 +1,9 @@
-from flojoy import flojoy, DataContainer, String, File
+from atlasvibe import atlasvibe, DataContainer, String, File
 from typing import Optional
 from huggingsound import SpeechRecognitionModel
 
 
-@flojoy(deps={"huggingsound": "0.1.6"})
+@atlasvibe(deps={"huggingsound": "0.1.6"})
 def SPEECH_2_TEXT(
     file_path: File | None = None,
     default: Optional[DataContainer] = None,

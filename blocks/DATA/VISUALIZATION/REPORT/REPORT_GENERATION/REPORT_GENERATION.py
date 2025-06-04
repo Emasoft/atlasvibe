@@ -6,10 +6,10 @@ import webbrowser
 
 import plotly
 from typing import Optional
-from flojoy import Boolean, Plotly, String, flojoy
+from atlasvibe import Boolean, Plotly, String, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def REPORT_GENERATION(
     title: Optional[String],
     img_url: Optional[String],

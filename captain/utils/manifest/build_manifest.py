@@ -14,7 +14,7 @@ from typing import (
 )
 
 from docstring_parser.numpydoc import NumpydocParser, ParamSection
-from flojoy import (
+from atlasvibe import (
     Array,
     CameraConnection,
     CameraDevice,

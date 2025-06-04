@@ -1,4 +1,4 @@
-from flojoy import flojoy, Vector, OrderedPair
+from atlasvibe import atlasvibe, Vector, OrderedPair
 from typing import TypedDict
 
 
@@ -7,7 +7,7 @@ class ResultSplit(TypedDict):
     y: Vector
 
 
-@flojoy
+@atlasvibe
 def ORDERED_PAIR_2_VECTOR(default: OrderedPair) -> ResultSplit:
     """Returns the split components (x, y) of an ordered pair as Vectors.
 

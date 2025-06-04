@@ -1,8 +1,8 @@
-from flojoy import OrderedTriple
+from atlasvibe import OrderedTriple
 import numpy as np
 
 
-def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_flojoy_decorator):
+def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
     a_triple = OrderedTriple(
@@ -14,7 +14,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_flojoy_decorator):
     np.testing.assert_array_equal(c, output.m)
 
 
-def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_flojoy_decorator):
+def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
     a_triple = OrderedTriple(
@@ -31,7 +31,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_flojoy_decorator):
     )
 
 
-def test_DOUBLE_INDEFINITE_INTEGRAL_str_errorMessage(mock_flojoy_decorator):
+def test_DOUBLE_INDEFINITE_INTEGRAL_str_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
     b_triple = OrderedTriple(

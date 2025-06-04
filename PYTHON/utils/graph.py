@@ -3,7 +3,7 @@ from collections import defaultdict
 
 class Graph:
     """
-    Flojoy's internal representation of a flow chart
+    Atlasvibe's internal representation of a flow chart
     (That's how we intend/can to use it - @dev.nested)
     """
 

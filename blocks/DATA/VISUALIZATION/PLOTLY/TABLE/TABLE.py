@@ -1,10 +1,10 @@
 import pandas as pd
 import plotly.graph_objects as go
-from flojoy import DataFrame, OrderedPair, OrderedTriple, Plotly, Scalar, Vector, flojoy
+from atlasvibe import DataFrame, OrderedPair, OrderedTriple, Plotly, Scalar, Vector, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def TABLE(default: OrderedTriple | OrderedPair | DataFrame | Vector) -> Plotly:
     """Create a Plotly Table visualization for a given input DataContainer.
 

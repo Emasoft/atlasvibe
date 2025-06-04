@@ -59,7 +59,7 @@ test.describe("Apps gallery", () => {
     const categoriesToRun = ["Fundamentals", "DSP"];
 
     // Define app names to exclude from test
-    const excludeApps = ["Stream to Flojoy Cloud"];
+    const excludeApps = ["Stream to Atlasvibe Cloud"];
 
     // Filter out categories
     const categories = Object.keys(appsGallery)

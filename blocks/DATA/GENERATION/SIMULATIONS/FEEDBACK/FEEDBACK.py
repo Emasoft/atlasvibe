@@ -1,15 +1,15 @@
 from typing import Any, Optional
 
-from flojoy import (
+from atlasvibe import (
     DataContainer,
     JobResultBuilder,
     NodeReference,
-    flojoy,
+    atlasvibe,
     get_job_result,
 )
 
 
-@flojoy
+@atlasvibe
 def FEEDBACK(
     referred_node: NodeReference,
     default: Optional[DataContainer] = None,

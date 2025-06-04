@@ -1,9 +1,9 @@
-from flojoy import flojoy, Image
+from atlasvibe import atlasvibe, Image
 from skimage import data
 from typing import Literal
 
 
-@flojoy(deps={"scikit-image": "0.21.0"})
+@atlasvibe(deps={"scikit-image": "0.21.0"})
 def SKIMAGE(
     img_key: Literal[
         "astronaut",

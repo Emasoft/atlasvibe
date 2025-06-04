@@ -1,7 +1,7 @@
 import os
 import pytest
 import pandas as pd
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 
 try:
     import torch
@@ -23,9 +23,9 @@ def long_text():
 )
 @pytest.mark.slow
 def test_BART_LARGE_CNN(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
     long_text,
 ):
     import BART_LARGE_CNN

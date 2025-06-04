@@ -1,9 +1,9 @@
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 from skimage.exposure import adjust_gamma
 
 
-@flojoy(deps={"scikit-image": "0.21.0"})
+@atlasvibe(deps={"scikit-image": "0.21.0"})
 def GAMMA_ADJUSTMENT(
     default: Image,
     gain: float = 1,

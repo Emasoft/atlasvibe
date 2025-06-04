@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Matrix, Scalar
+from atlasvibe import OrderedPair, Matrix, Scalar
 
 
-def test_EIGH(mock_flojoy_decorator):
+def test_EIGH(mock_atlasvibe_decorator):
     import EIGH
 
     array1 = np.eye(5)

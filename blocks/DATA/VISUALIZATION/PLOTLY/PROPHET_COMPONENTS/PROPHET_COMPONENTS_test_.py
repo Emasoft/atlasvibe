@@ -1,7 +1,7 @@
 import pytest
 import os
 import pandas as pd
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 from plotly.graph_objs import Figure
 
 
@@ -25,8 +25,8 @@ def mock_prophet_output_dataframe():
 
 
 def test_PROPHET_COMPONENTS(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
     mock_prophet_model_json,
     mock_prophet_output_dataframe,
 ):

@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import flojoy, Matrix
+from atlasvibe import atlasvibe, Matrix
 
 
-@flojoy
+@atlasvibe
 def MATMUL(a: Matrix, b: Matrix) -> Matrix:
     """Take two input matrices, multiply them, and return the result.
 

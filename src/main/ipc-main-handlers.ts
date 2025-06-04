@@ -125,7 +125,7 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.ping, (_, addr) => ping(addr));
   ipcMain.handle(API.netstat, netstat);
   ipcMain.handle(API.ifconfig, ifconfig);
-  ipcMain.handle(API.restartFlojoyStudio, () => {
+  ipcMain.handle(API.restartAtlasvibeStudio, () => {
     app.relaunch();
     app.exit();
   });

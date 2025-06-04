@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.signal
-from flojoy import Matrix, OrderedPair, Scalar, flojoy
+from atlasvibe import Matrix, OrderedPair, Scalar, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def BSPLINE(
     default: OrderedPair | Matrix,
     n: int = 2,

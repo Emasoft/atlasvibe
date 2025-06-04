@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Matrix, Vector
+from atlasvibe import Matrix, Vector
 
 
-def test_DOT_PRODUCT(mock_flojoy_decorator):
+def test_DOT_PRODUCT(mock_atlasvibe_decorator):
     import DOT_PRODUCT
 
     # mat * mat

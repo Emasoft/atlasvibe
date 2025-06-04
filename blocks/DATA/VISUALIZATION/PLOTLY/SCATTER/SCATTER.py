@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from flojoy import DataFrame, Matrix, OrderedPair, Plotly, Vector, flojoy
+from atlasvibe import DataFrame, Matrix, OrderedPair, Plotly, Vector, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def SCATTER(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
     """Create a Plotly Scatter visualization for a given input DataContainer.
 

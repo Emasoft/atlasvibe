@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def test_SCALAR(mock_flojoy_decorator):
+def test_SCALAR(mock_atlasvibe_decorator):
     import SCALAR
 
     res = SCALAR.SCALAR(value=20)

@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_SINE(mock_flojoy_decorator):
+def test_SINE(mock_atlasvibe_decorator):
     import SINE
 
     x = np.linspace(0, 10, 1000)

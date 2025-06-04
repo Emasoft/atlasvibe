@@ -1,7 +1,7 @@
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 
 
-@flojoy
+@atlasvibe
 def ORDERED_PAIR_XY_INVERT(
     default: OrderedPair,
 ) -> OrderedPair:

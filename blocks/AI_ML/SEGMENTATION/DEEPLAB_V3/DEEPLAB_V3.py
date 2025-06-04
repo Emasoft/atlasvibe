@@ -1,7 +1,7 @@
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 
 
-@flojoy(deps={"torch": "2.0.1", "torchvision": "0.15.2"})
+@atlasvibe(deps={"torch": "2.0.1", "torchvision": "0.15.2"})
 def DEEPLAB_V3(default: Image) -> Image:
     """Return a segmentation mask from an input image.
 
@@ -26,8 +26,8 @@ def DEEPLAB_V3(default: Image) -> Image:
     import PIL.Image
     import torch
     import torchvision.transforms.functional as TF
-    from flojoy import Image
-    from flojoy.utils import FLOJOY_CACHE_DIR
+    from atlasvibe import Image
+    from atlasvibe.utils import ATLASVIBE_CACHE_DIR
     from torchvision import transforms
 
     # Parse input image
@@ -39,7 +39,7 @@ def DEEPLAB_V3(default: Image) -> Image:
     # Convert input image
     input_image = TF.to_pil_image(nparray).convert("RGB")
     # Set torch hub cache directory
-    torch.hub.set_dir(os.path.join(FLOJOY_CACHE_DIR, "cache", "torch_hub"))
+    torch.hub.set_dir(os.path.join(ATLASVIBE_CACHE_DIR, "cache", "torch_hub"))
     model = torch.hub.load(
         "pytorch/vision:v0.15.2",
         "deeplabv3_resnet50",

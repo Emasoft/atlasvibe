@@ -1,5 +1,5 @@
 {
-  "name": "Stream to Flojoy Cloud",
+  "name": "Stream to Atlasvibe Cloud",
   "rfInstance": {
     "nodes": [
       {
@@ -349,19 +349,19 @@
       {
         "width": 160,
         "height": 160,
-        "id": "FLOJOY_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
+        "id": "ATLASVIBE_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
         "type": "LOADERS",
         "data": {
-          "id": "FLOJOY_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
-          "label": "FLOJOY CLOUD UPLOAD",
-          "func": "FLOJOY_CLOUD_UPLOAD",
+          "id": "ATLASVIBE_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
+          "label": "ATLASVIBE CLOUD UPLOAD",
+          "func": "ATLASVIBE_CLOUD_UPLOAD",
           "type": "LOADERS",
           "ctrls": {
             "measurement_id": {
               "type": "str",
               "default": null,
               "desc": null,
-              "functionName": "FLOJOY_CLOUD_UPLOAD",
+              "functionName": "ATLASVIBE_CLOUD_UPLOAD",
               "param": "measurement_id",
               "value": ""
             }
@@ -384,7 +384,7 @@
               "desc": "The input DataContainer will be returned as it is"
             }
           ],
-          "path": "PYTHON/nodes/LOADERS/CLOUD_DATABASE/FLOJOY_CLOUD_UPLOAD/FLOJOY_CLOUD_UPLOAD.py",
+          "path": "PYTHON/nodes/LOADERS/CLOUD_DATABASE/ATLASVIBE_CLOUD_UPLOAD/ATLASVIBE_CLOUD_UPLOAD.py",
           "selected": false
         },
         "position": {
@@ -532,9 +532,9 @@
       {
         "source": "ADD-a3c1e32a-5032-4bed-8814-29f803ace0b6",
         "sourceHandle": "default",
-        "target": "FLOJOY_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
+        "target": "ATLASVIBE_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2",
         "targetHandle": "default",
-        "id": "reactflow__edge-ADD-a3c1e32a-5032-4bed-8814-29f803ace0b6default-FLOJOY_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2default"
+        "id": "reactflow__edge-ADD-a3c1e32a-5032-4bed-8814-29f803ace0b6default-ATLASVIBE_CLOUD_UPLOAD-4cbdf58e-2adc-4274-ab56-4564e504c2c2default"
       },
       {
         "source": "ADD-a3c1e32a-5032-4bed-8814-29f803ace0b6",

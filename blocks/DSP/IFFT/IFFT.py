@@ -1,9 +1,9 @@
 from scipy import fft
-from flojoy import flojoy, OrderedPair, DataFrame
+from atlasvibe import atlasvibe, OrderedPair, DataFrame
 import pandas as pd
 
 
-@flojoy
+@atlasvibe
 def IFFT(default: DataFrame, real_signal: bool = True) -> OrderedPair:
     """Perform the Inverse Discrete Fourier Transform on an input signal.
 

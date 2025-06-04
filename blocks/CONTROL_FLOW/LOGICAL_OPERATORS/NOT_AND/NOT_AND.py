@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def NOT_AND(default: Boolean, a: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical NOT AND operation on them.
 

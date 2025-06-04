@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from flojoy import (
-    flojoy,
+from atlasvibe import (
+    atlasvibe,
     DataContainer,
     DataFrame,
     OrderedPair,
@@ -18,7 +18,7 @@ from flojoy import (
 )
 
 
-@flojoy
+@atlasvibe
 def NP_2_DF(default: DataContainer) -> DataFrame:
     """Infer the type of an array-like DataContainer, then convert it to a DataFrame DataContainer'.
 

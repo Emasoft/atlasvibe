@@ -1,8 +1,8 @@
-from flojoy import DataContainer, String, flojoy
+from atlasvibe import DataContainer, String, atlasvibe
 from pprint import pformat
 
 
-@flojoy()
+@atlasvibe()
 def PRINT_DATACONTAINER(
     default: DataContainer,
 ) -> String:

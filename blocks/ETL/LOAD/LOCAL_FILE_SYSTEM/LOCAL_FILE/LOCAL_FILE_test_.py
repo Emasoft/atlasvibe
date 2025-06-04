@@ -1,5 +1,5 @@
 import pytest
-from flojoy import Image, DataFrame, String
+from atlasvibe import Image, DataFrame, String
 import numpy as np
 from PIL import Image as PIL_Image
 from os import path
@@ -40,7 +40,7 @@ def insurance_excel():
 
 
 def test_LOCAL_FILE_img(
-    mock_flojoy_decorator, astronaut_img_array_rgb, camera_img_array_rgb
+    mock_atlasvibe_decorator, astronaut_img_array_rgb, camera_img_array_rgb
 ):
     image_path = f"{path.dirname(path.realpath(__file__))}/assets/camera.png"
 
@@ -83,7 +83,7 @@ def test_LOCAL_FILE_img(
     np.testing.assert_array_equal(None, default_image.a)
 
 
-def test_LOCAL_FILE_csv(mock_flojoy_decorator, iris_csv):
+def test_LOCAL_FILE_csv(mock_atlasvibe_decorator, iris_csv):
     import LOCAL_FILE
 
     output = LOCAL_FILE.LOCAL_FILE(file_path=iris_csv, file_type="CSV")
@@ -135,7 +135,7 @@ def test_LOCAL_FILE_csv(mock_flojoy_decorator, iris_csv):
     assert output.m.equals(output_from_textblob.m)
 
 
-# def test_LOCAL_FILE_xml(mock_flojoy_decorator, menu_xml):
+# def test_LOCAL_FILE_xml(mock_atlasvibe_decorator, menu_xml):
 #     import LOCAL_FILE
 
 #     output = LOCAL_FILE.LOCAL_FILE(file_path=menu_xml, file_type="XML")
@@ -150,7 +150,7 @@ def test_LOCAL_FILE_csv(mock_flojoy_decorator, iris_csv):
 #     assert output.m.equals(output_from_textblob.m)
 
 
-def test_LOCAL_FILE_json(mock_flojoy_decorator, employees_json):
+def test_LOCAL_FILE_json(mock_atlasvibe_decorator, employees_json):
     import LOCAL_FILE
 
     output = LOCAL_FILE.LOCAL_FILE(file_path=employees_json, file_type="JSON")
@@ -176,7 +176,7 @@ def test_LOCAL_FILE_json(mock_flojoy_decorator, employees_json):
     assert output.m.equals(output_from_textblob.m)
 
 
-# def test_LOCAL_FILE_xlsx(mock_flojoy_decorator, insurance_excel):
+# def test_LOCAL_FILE_xlsx(mock_atlasvibe_decorator, insurance_excel):
 #     import LOCAL_FILE
 
 #     output = LOCAL_FILE.LOCAL_FILE(file_path=insurance_excel, file_type="Excel")
@@ -202,7 +202,7 @@ def test_LOCAL_FILE_json(mock_flojoy_decorator, employees_json):
 
 
 # @pytest.mark.parametrize("file_type", ("CSV", "XML", "JSON", "Excel"))
-# def test_LOCAL_FILE_no_file_path(mock_flojoy_decorator, file_type):
+# def test_LOCAL_FILE_no_file_path(mock_atlasvibe_decorator, file_type):
 #     import LOCAL_FILE
 
 #     expected_error_message_start = "The file path of the input file is missing"

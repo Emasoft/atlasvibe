@@ -3,7 +3,7 @@ import sys
 import pytest
 import urllib.request
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 from tempfile import TemporaryDirectory
 
 try:
@@ -29,9 +29,9 @@ ALEX_NET_MODEL = f"{ONNX_MODEL_ZOO_BASE_URL}/vision/classification/alexnet/model
 )
 @pytest.mark.slow
 def test_ONNX_MODEL_local_file_path(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
 ):
     """ONNX_MODEL functional test for a local file."""
     from ONNX_MODEL import ONNX_MODEL
@@ -59,9 +59,9 @@ def test_ONNX_MODEL_local_file_path(
     reason="This test might fail on Windows when run using pytest-xdist.",
 )
 def test_ONNX_MODEL_remote_file_path(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
 ):
     """ONNX_MODEL functional test for a remote file path."""
     from ONNX_MODEL import ONNX_MODEL
@@ -82,9 +82,9 @@ def test_ONNX_MODEL_remote_file_path(
     reason="This test might fail on Windows when run using pytest-xdist.",
 )
 def test_ONNX_MODEL_wrong_usages(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
 ):
     from ONNX_MODEL import ONNX_MODEL
 

@@ -1,9 +1,9 @@
 import numpy as np
 
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_POPULATE_array_value_uniform(mock_flojoy_decorator):
+def test_POPULATE_array_value_uniform(mock_atlasvibe_decorator):
     import POPULATE
 
     x = Vector(v=np.arange(0, 99, 2))
@@ -15,7 +15,7 @@ def test_POPULATE_array_value_uniform(mock_flojoy_decorator):
     assert np.all(res.y > 0)
 
 
-def test_POPULATE_array_value_normal(mock_flojoy_decorator):
+def test_POPULATE_array_value_normal(mock_atlasvibe_decorator):
     import POPULATE
 
     x = Vector(v=np.arange(0, 100000, 1))
@@ -30,7 +30,7 @@ def test_POPULATE_array_value_normal(mock_flojoy_decorator):
     assert abs(np.std(res.y) - 1) < 0.01
 
 
-def test_POPULATE_array_value_poisson(mock_flojoy_decorator):
+def test_POPULATE_array_value_poisson(mock_atlasvibe_decorator):
     import POPULATE
 
     x = Vector(v=np.arange(0, 100000, 1))

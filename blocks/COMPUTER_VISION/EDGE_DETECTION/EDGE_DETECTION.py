@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from flojoy import Image, flojoy
+from atlasvibe import Image, atlasvibe
 from PIL import Image as PILImage
 from PIL import ImageFilter
 
 
-@flojoy(deps={"opencv-python-headless": "4.8.1.78"})
+@atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def EDGE_DETECTION(default: Image) -> Image:
     """Detect edges in the image that was passed to it.
 

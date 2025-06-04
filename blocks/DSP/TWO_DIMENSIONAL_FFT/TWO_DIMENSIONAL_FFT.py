@@ -1,5 +1,5 @@
 from scipy import fft
-from flojoy import flojoy, DataFrame, Matrix, Image, Grayscale
+from atlasvibe import atlasvibe, DataFrame, Matrix, Image, Grayscale
 from typing import Literal
 from PIL import Image as PillowImage
 import pandas as pd
@@ -10,7 +10,7 @@ def extrapolate(x):
     return (x - x.min()) / (x.max() - x.min())
 
 
-@flojoy
+@atlasvibe
 def TWO_DIMENSIONAL_FFT(
     default: Grayscale | DataFrame | Image | Matrix,
     real_signal: bool = True,

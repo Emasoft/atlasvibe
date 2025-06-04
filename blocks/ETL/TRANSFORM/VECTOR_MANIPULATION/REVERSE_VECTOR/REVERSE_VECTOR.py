@@ -1,8 +1,8 @@
 from numpy import flip
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def REVERSE_VECTOR(
     default: Vector,
 ) -> Vector:

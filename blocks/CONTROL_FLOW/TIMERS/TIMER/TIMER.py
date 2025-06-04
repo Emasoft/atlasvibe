@@ -1,10 +1,10 @@
-from flojoy import flojoy, DataContainer
-from flojoy.job_result_builder import JobResultBuilder
+from atlasvibe import atlasvibe, DataContainer
+from atlasvibe.job_result_builder import JobResultBuilder
 import time
 from typing import Optional, cast
 
 
-@flojoy
+@atlasvibe
 def TIMER(
     default: Optional[DataContainer] = None,
     sleep_time: float = 0,

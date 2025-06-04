@@ -16,8 +16,8 @@ export const env = createEnv({
     VITE_STUDIO_REPO: z
       .string()
       .url()
-      .default("https://github.com/flojoy-ai/studio/blob/main"),
-    VITE_DOCS_LINK: z.string().url().default("https://docs.flojoy.ai"),
+      .default("https://github.com/atlasvibe-ai/studio/blob/main"),
+    VITE_DOCS_LINK: z.string().url().default("https://docs.atlasvibe.ai"),
     VITE_REQUEST_BLOCK_URL: z
       .string()
       .url()

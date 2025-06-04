@@ -1,11 +1,11 @@
 from numpy import exp, ndarray, insert, zeros
-from flojoy import flojoy, OrderedPair, DefaultParams, SmallMemory, Vector, Scalar
+from atlasvibe import atlasvibe, OrderedPair, DefaultParams, SmallMemory, Vector, Scalar
 
 
 memory_key = "SECOND_ORDER_SYSTEM"
 
 
-@flojoy(inject_node_metadata=True)
+@atlasvibe(inject_node_metadata=True)
 def SECOND_ORDER_SYSTEM(
     default: OrderedPair | Vector | Scalar,
     default_params: DefaultParams,

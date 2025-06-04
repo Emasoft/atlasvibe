@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import flojoy, Scalar, Vector
+from atlasvibe import atlasvibe, Scalar, Vector
 
 
-@flojoy
+@atlasvibe
 def VEC_2_LINSPACE(
     default: Scalar | Vector,
     start: float = -10,

@@ -4,7 +4,7 @@ import pytest
 import PIL.Image
 import numpy as np
 
-from flojoy import Image
+from atlasvibe import Image
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def obama_image_array_rgb():
 
 
 @pytest.mark.slow
-def test_OPEN_IMAGE(mock_flojoy_decorator, obama_image_array_rgb):
+def test_OPEN_IMAGE(mock_atlasvibe_decorator, obama_image_array_rgb):
     import OPEN_IMAGE
 
     _image_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/President_Barack_Obama.jpg"

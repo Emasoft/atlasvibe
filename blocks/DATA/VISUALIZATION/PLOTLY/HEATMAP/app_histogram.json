@@ -18,7 +18,7 @@
                             "desc": "path to the file to be loaded",
                             "functionName": "LOCAL_FILE",
                             "param": "file_path",
-                            "value": "/home/trbritt/Desktop/Data/projects/flojoy/studio/PYTHON/nodes/VISUALIZERS/PLOTLY/HEATMAP/assets/heatmap.tif"
+                            "value": "/home/trbritt/Desktop/Data/projects/atlasvibe/studio/PYTHON/nodes/VISUALIZERS/PLOTLY/HEATMAP/assets/heatmap.tif"
                         },
                         "file_type": {
                             "type": "select",

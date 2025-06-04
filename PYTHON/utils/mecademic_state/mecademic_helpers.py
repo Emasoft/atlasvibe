@@ -1,7 +1,7 @@
 import functools
 import logging
 import traceback
-from flojoy import JobFailure, JobSuccess
+from atlasvibe import JobFailure, JobSuccess
 from PYTHON.utils.mecademic_state.mecademic_state import query_for_handle
 
 logger = logging.getLogger("MECADEMIC ROBOT LOG")

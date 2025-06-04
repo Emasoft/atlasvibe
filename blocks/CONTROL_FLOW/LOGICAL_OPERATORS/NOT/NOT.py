@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def NOT(default: Boolean) -> Boolean:
     """Takes a boolean data type and computs logical NOT operation on them.
 

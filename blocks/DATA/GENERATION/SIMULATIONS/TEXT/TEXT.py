@@ -1,8 +1,8 @@
-from flojoy import String, flojoy, DataContainer, TextArea
+from atlasvibe import String, atlasvibe, DataContainer, TextArea
 from typing import Optional
 
 
-@flojoy
+@atlasvibe
 def TEXT(
     _: Optional[DataContainer] = None,
     value: TextArea = TextArea("Hello World!"),

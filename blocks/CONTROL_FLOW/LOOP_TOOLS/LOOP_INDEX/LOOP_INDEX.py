@@ -1,5 +1,5 @@
-from flojoy import (
-    flojoy,
+from atlasvibe import (
+    atlasvibe,
     Scalar,
     OrderedPair,
     SmallMemory,
@@ -11,14 +11,14 @@ from typing import Optional
 memory_key = "LOOP_INDEX"
 
 
-@flojoy
+@atlasvibe
 def LOOP_INDEX(
     loop_node: NodeReference,
     default: Optional[OrderedPair | Scalar] = None,
 ) -> Scalar:
     """Load the loop index from the LOOP node.
 
-    A loop index in Flojoy starts at 1 and increases by 1 for each loop.
+    A loop index in Atlasvibe starts at 1 and increases by 1 for each loop.
 
     Parameters
     ----------

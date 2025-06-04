@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector, Matrix
+from atlasvibe import atlasvibe, Vector, Matrix
 
 
-@flojoy
+@atlasvibe
 def VECTOR_2_MATRIX(default: Vector, row: int, col: int) -> Matrix:
     """Convert a Vector DataContainer to a Matrix DataContainer.
 

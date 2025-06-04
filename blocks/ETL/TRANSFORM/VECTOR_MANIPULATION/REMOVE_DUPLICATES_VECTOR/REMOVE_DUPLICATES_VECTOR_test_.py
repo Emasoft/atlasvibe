@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_REMOVE_DUPLICATES_VECTOR(mock_flojoy_decorator):
+def test_REMOVE_DUPLICATES_VECTOR(mock_atlasvibe_decorator):
     import REMOVE_DUPLICATES_VECTOR
 
     x = np.array([3, 5, 5, 6, 6, 1])

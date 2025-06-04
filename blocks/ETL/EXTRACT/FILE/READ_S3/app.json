@@ -17,7 +17,7 @@
                             "overload": null,
                             "functionName": "READ_S3",
                             "param": "s3_name",
-                            "value": "FLOJOY"
+                            "value": "ATLASVIBE"
                         },
                         "bucket_name": {
                             "type": "str",
@@ -26,7 +26,7 @@
                             "overload": null,
                             "functionName": "READ_S3",
                             "param": "bucket_name",
-                            "value": "flojoy-test"
+                            "value": "atlasvibe-test"
                         },
                         "file_name": {
                             "type": "str",

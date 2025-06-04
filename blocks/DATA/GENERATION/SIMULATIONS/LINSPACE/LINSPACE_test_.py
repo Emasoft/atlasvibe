@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def test_LINSPACE(mock_flojoy_decorator):
+def test_LINSPACE(mock_atlasvibe_decorator):
     import LINSPACE
 
     x = np.linspace(0, 10, 1000)

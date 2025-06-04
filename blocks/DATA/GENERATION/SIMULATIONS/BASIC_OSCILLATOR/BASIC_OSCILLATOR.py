@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 from scipy import signal
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def BASIC_OSCILLATOR(
     sample_rate: int = 100,
     time: int = 10,

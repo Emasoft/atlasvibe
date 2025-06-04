@@ -8,9 +8,9 @@
 # when importing from 'atlasvibe_sdk'.
 
 from .data_container import *  # noqa: F403
-from .node_decorator import *  # noqa: F403 # Assuming flojoy_python.py is now node_decorator.py
+from .node_decorator import *  # noqa: F403 # Assuming atlasvibe_python.py is now node_decorator.py
 from .job_result_builder import *  # noqa: F403
-from .atlasvibe_instruction import *  # noqa: F403 # Renamed from flojoy_instruction
+from .atlasvibe_instruction import *  # noqa: F403 # Renamed from atlasvibe_instruction
 from .plotly_utils import *  # noqa: F403
 from .module_scraper import *  # noqa: F403
 from .job_result_utils import *  # noqa: F403
@@ -18,7 +18,7 @@ from .job_result_utils import *  # noqa: F403
 from .utils import *  # noqa: F403
 from .parameter_types import *  # noqa: F403
 from .small_memory import *  # noqa: F403
-from .node_venv import *  # noqa: F403 # Assuming flojoy_node_venv.py is now node_venv.py
+from .node_venv import *  # noqa: F403 # Assuming atlasvibe_node_venv.py is now node_venv.py
 from .job_service import *  # noqa: F403
 from .node_init import *  # noqa: F403
 from .config import *  # noqa: F403

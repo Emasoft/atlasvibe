@@ -1,8 +1,8 @@
 from numpy import arange, array_equal
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_MAX(mock_flojoy_decorator):
+def test_VECTOR_MAX(mock_atlasvibe_decorator):
     import VECTOR_MAX
 
     v = arange(10)

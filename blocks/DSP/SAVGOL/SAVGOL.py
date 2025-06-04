@@ -1,9 +1,9 @@
 import scipy
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 import warnings
 
 
-@flojoy
+@atlasvibe
 def SAVGOL(
     default: OrderedPair, window_length: int = 50, poly_order: int = 1
 ) -> OrderedPair:

@@ -1,18 +1,18 @@
 import pandas as pd
 import os
-from flojoy import (
+from atlasvibe import (
     DataFrame,
     OrderedPair,
     OrderedTriple,
     Matrix,
-    flojoy,
+    atlasvibe,
     DataContainer,
     Directory,
 )
 from typing import Optional
 
 
-@flojoy
+@atlasvibe
 def EXPORT_CSV(
     dc: OrderedPair | OrderedTriple | DataFrame | Matrix,
     dir: Directory,

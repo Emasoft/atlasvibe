@@ -2,7 +2,7 @@ import os
 import pytest
 from PIL import Image as PIL_Image
 import numpy as np
-from flojoy import Image
+from atlasvibe import Image
 
 try:
     import torch
@@ -36,9 +36,9 @@ def obama_segmentation_array_rgb():
 )
 @pytest.mark.slow
 def test_DEEPLAB_V3(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
     obama_image_array_rgb,
     obama_segmentation_array_rgb,
 ):

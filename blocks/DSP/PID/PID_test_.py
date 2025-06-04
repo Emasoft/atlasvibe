@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import DefaultParams, Scalar
+from atlasvibe import DefaultParams, Scalar
 
 
-def test_PID(mock_flojoy_decorator):
+def test_PID(mock_atlasvibe_decorator):
     import PID
 
     default = DefaultParams(

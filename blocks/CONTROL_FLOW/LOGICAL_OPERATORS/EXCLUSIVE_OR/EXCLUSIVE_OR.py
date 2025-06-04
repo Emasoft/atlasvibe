@@ -1,7 +1,7 @@
-from flojoy import flojoy, Boolean
+from atlasvibe import atlasvibe, Boolean
 
 
-@flojoy
+@atlasvibe
 def EXCLUSIVE_OR(default: Boolean, a: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical EXCLUSIVE OR operation on them.
 

@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_2_ORDERED_PAIR(mock_flojoy_decorator):
+def test_VECTOR_2_ORDERED_PAIR(mock_atlasvibe_decorator):
     import VECTOR_2_ORDERED_PAIR
 
     x = np.linspace(2.0, 3.0, num=5)

@@ -1,9 +1,9 @@
 from typing import Literal
 
-from flojoy import DataFrame, flojoy
+from atlasvibe import DataFrame, atlasvibe
 
 
-@flojoy()
+@atlasvibe()
 def SCIKIT_LEARN_DATASET(
     dataset_name: Literal[
         "iris", "diabetes", "digits", "linnerud", "wine", "breast_cancer"

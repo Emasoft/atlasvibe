@@ -1,8 +1,8 @@
-from flojoy import flojoy, OrderedPair, Vector
+from atlasvibe import atlasvibe, OrderedPair, Vector
 import numpy as np
 
 
-@flojoy
+@atlasvibe
 def DIFFERENTIATE(default: OrderedPair | Vector) -> OrderedPair:
     """Compute the derivative of the input with respect to x.
 

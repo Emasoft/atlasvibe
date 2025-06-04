@@ -128,7 +128,7 @@ export function CloudPanel() {
       if (envsQuery.isSuccess) {
         if (
           envsQuery.data.some(
-            (c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET",
+            (c) => c.key === "ATLASVIBE_CLOUD_WORKSPACE_SECRET",
           ) &&
           partVarId !== ""
         ) {
@@ -161,7 +161,7 @@ export function CloudPanel() {
     queryFn: async () => {
       if (envsQuery.isSuccess) {
         if (
-          envsQuery.data.some((c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET")
+          envsQuery.data.some((c) => c.key === "ATLASVIBE_CLOUD_WORKSPACE_SECRET")
         ) {
           const res = await getCloudProjects();
           return res.match(
@@ -265,14 +265,14 @@ export function CloudPanel() {
   }
 
   const isCloudKeySet = envsQuery.data.some(
-    (c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET",
+    (c) => c.key === "ATLASVIBE_CLOUD_WORKSPACE_SECRET",
   );
 
   return (
     <div className="w-full">
       {!isCloudKeySet ? (
         <Button onClick={() => setIsEnvVarModalOpen(true)} className="w-full">
-          Connect to Flojoy Cloud
+          Connect to Atlasvibe Cloud
         </Button>
       ) : (
         <div>
@@ -456,7 +456,7 @@ export function CloudPanel() {
                 handleUpload(status === "aborted", true);
               }}
             >
-              {isUploaded ? "Upload Done" : "Upload to Flojoy Cloud"}
+              {isUploaded ? "Upload Done" : "Upload to Atlasvibe Cloud"}
             </Button>
           </div>
         </div>

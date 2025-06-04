@@ -1,8 +1,8 @@
 from numpy import any, array, arange, take
-from flojoy import flojoy, Vector, Array
+from atlasvibe import atlasvibe, Vector, Array
 
 
-@flojoy
+@atlasvibe
 def VECTOR_SUBSET(default: Vector, indices: Array, length: int = 1) -> Vector:
     """The VECTOR_SUBSET node returns the subset of values from requested indices
     Inputs

@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from flojoy import Image, DataFrame
+from atlasvibe import Image, DataFrame
 from PIL import Image as PIL_Image
 
 try:
@@ -29,9 +29,9 @@ def ada_lovelace_array_rgb():
     reason="HUGGING_FACE_PIPELINE requires transformers to be installed | Ignore this test in CI",
 )
 def test_HUGGING_FACE_PIPELINE_default(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
     ada_lovelace_array_rgb,
 ):
     """HUGGING_FACE_PIPELINE functional test for the example application."""
@@ -74,9 +74,9 @@ def test_HUGGING_FACE_PIPELINE_default(
     reason="HUGGING_FACE_PIPELINE requires transformers to be installed | Ignore this test in CI",
 )
 def test_HUGGING_FACE_PIPELINE_common_model_and_revisions(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
     ada_lovelace_array_rgb,
     model,
     revision,

@@ -1,9 +1,9 @@
 import numpy as np
 from scipy import fft
-from flojoy import OrderedPair
+from atlasvibe import OrderedPair
 
 
-def test_FIR(mock_flojoy_decorator):
+def test_FIR(mock_atlasvibe_decorator):
     import FIR
 
     N = 1000

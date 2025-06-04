@@ -1,10 +1,10 @@
 from os import path
 
 import pandas as pd
-from flojoy import DataFrame, File, flojoy
+from atlasvibe import DataFrame, File, atlasvibe
 
 
-@flojoy(deps={"pyarrow": "12.0.1", "fastparquet": "2023.7.0"})
+@atlasvibe(deps={"pyarrow": "12.0.1", "fastparquet": "2023.7.0"})
 def OPEN_PARQUET(file_path: File | None = None) -> DataFrame:
     """Load a local parquet file, then return the data as a dataframe.
 

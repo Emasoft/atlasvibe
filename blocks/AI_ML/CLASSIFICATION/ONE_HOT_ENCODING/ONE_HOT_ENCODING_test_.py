@@ -1,8 +1,8 @@
 import pandas as pd
 
 
-def test_ONE_HOT_ENCODING(mock_flojoy_decorator):
-    from flojoy import DataFrame
+def test_ONE_HOT_ENCODING(mock_atlasvibe_decorator):
+    from atlasvibe import DataFrame
     import ONE_HOT_ENCODING
 
     # Test the function with a dataframe containing columns object and category

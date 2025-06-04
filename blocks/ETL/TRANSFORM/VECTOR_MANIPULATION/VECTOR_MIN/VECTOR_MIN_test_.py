@@ -1,8 +1,8 @@
 from numpy import arange, array_equal
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_MIN(mock_flojoy_decorator):
+def test_VECTOR_MIN(mock_atlasvibe_decorator):
     import VECTOR_MIN
 
     v = arange(10)

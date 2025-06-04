@@ -1,8 +1,8 @@
 from numpy import unique
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def REMOVE_DUPLICATES_VECTOR(
     default: Vector,
 ) -> Vector:

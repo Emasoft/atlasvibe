@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
-from flojoy import NoInitFunctionError, get_node_init_function
+from atlasvibe import NoInitFunctionError, get_node_init_function
 
 from captain.models.topology import Topology
 from captain.utils.logger import logger
@@ -25,7 +25,7 @@ def pre_import_functions(topology: Topology):
             (
                 f
                 for f in module.__dict__.values()
-                if callable(f) and getattr(f, "is_flojoy_preflight", False)
+                if callable(f) and getattr(f, "is_atlasvibe_preflight", False)
             ),
             None,
         )

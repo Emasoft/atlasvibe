@@ -1,8 +1,8 @@
 from numpy import any, array, arange, put
-from flojoy import flojoy, Vector, Array
+from atlasvibe import atlasvibe, Vector, Array
 
 
-@flojoy
+@atlasvibe
 def REPLACE_SUBSET(
     default: Vector, indices: Array, values: Array, length: int = 1
 ) -> Vector:

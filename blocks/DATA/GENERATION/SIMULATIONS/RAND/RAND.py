@@ -2,10 +2,10 @@ import random
 from typing import Literal, Optional
 
 import numpy as np
-from flojoy import DataContainer, Scalar, Vector, display, flojoy
+from atlasvibe import DataContainer, Scalar, Vector, display, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def RAND(
     default: Optional[DataContainer] = None,
     distribution: Literal["normal", "uniform", "poisson"] = "normal",

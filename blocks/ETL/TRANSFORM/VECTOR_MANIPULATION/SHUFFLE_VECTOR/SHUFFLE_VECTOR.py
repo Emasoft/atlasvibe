@@ -1,8 +1,8 @@
 from numpy.random import permutation
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def SHUFFLE_VECTOR(
     default: Vector,
 ) -> Vector:

@@ -37,14 +37,14 @@ Each block consists of the following files:
 
 ## Block Implementation
 
-### The @flojoy Decorator
+### The @atlasvibe Decorator
 
-Blocks are implemented as Python functions decorated with `@flojoy` (which is currently an alias for `@atlasvibe_node` in the migration from Flojoy to AtlasVibe):
+Blocks are implemented as Python functions decorated with `@atlasvibe` (which is currently an alias for `@atlasvibe_node` in the migration from Atlasvibe to AtlasVibe):
 
 ```python
-from flojoy import flojoy, OrderedPair, Scalar, Vector
+from atlasvibe import atlasvibe, OrderedPair, Scalar, Vector
 
-@flojoy
+@atlasvibe
 def ADD(
     a: OrderedPair | Scalar | Vector, 
     b: list[OrderedPair | Scalar | Vector]
@@ -55,7 +55,7 @@ def ADD(
 
 ### Decorator Functionality
 
-The `@flojoy` decorator:
+The `@atlasvibe` decorator:
 - Wraps the function to handle data flow between blocks
 - Manages input fetching from previous blocks
 - Handles parameter injection from the UI
@@ -159,7 +159,7 @@ def BLOCK(a: DataContainer, b: list[DataContainer]) -> DataContainer:
 To create a new block:
 
 1. Create a directory under the appropriate category
-2. Implement the Python function with `@flojoy` decorator
+2. Implement the Python function with `@atlasvibe` decorator
 3. Create `block_data.json` with documentation
 4. Create `app.json` with an example workflow
 5. Add unit tests in `BLOCK_NAME_test_.py`
@@ -176,4 +176,4 @@ To create a new block:
 
 ## Migration Note
 
-The system is currently migrating from "Flojoy" to "AtlasVibe" branding. The `@flojoy` decorator remains for backward compatibility but internally uses the `atlasvibe_node` implementation from the `atlasvibe_sdk` package.
+The system is currently migrating from "Atlasvibe" to "AtlasVibe" branding. The `@atlasvibe` decorator remains for backward compatibility but internally uses the `atlasvibe_node` implementation from the `atlasvibe_sdk` package.

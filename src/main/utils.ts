@@ -100,7 +100,7 @@ export const pickDirectory = async (
 };
 
 export const getCustomBlocksDir = async () => {
-  const filePath = join(app.getPath("home"), ".flojoy/custom_blocks_path.txt");
+  const filePath = join(app.getPath("home"), ".atlasvibe/custom_blocks_path.txt");
 
   if (!fs.existsSync(filePath)) {
     return undefined;
@@ -118,11 +118,11 @@ export const getCustomBlocksDir = async () => {
 };
 
 export const cacheCustomBlocksDir = (_, dirPath: string) => {
-  const flojoyDir = join(app.getPath("home"), ".flojoy");
-  if (!fs.existsSync(flojoyDir)) {
-    fs.mkdirSync(flojoyDir);
+  const atlasvibeDir = join(app.getPath("home"), ".atlasvibe");
+  if (!fs.existsSync(atlasvibeDir)) {
+    fs.mkdirSync(atlasvibeDir);
   }
-  const cacheFilePath = join(flojoyDir, "custom_blocks_path.txt");
+  const cacheFilePath = join(atlasvibeDir, "custom_blocks_path.txt");
   fs.writeFileSync(cacheFilePath, dirPath);
 };
 

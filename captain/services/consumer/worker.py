@@ -2,8 +2,8 @@ import uuid
 from queue import Queue
 from typing import Any, cast
 
-from flojoy import JobFailure, JobService, JobSuccess
-from flojoy.flojoy_node_venv import PipInstallThread
+from atlasvibe import JobFailure, JobService, JobSuccess
+from atlasvibe.atlasvibe_node_venv import PipInstallThread
 
 from captain.types.worker import JobInfo, PoisonPill
 from captain.utils.broadcast import Signaler

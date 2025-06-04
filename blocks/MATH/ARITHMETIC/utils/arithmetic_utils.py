@@ -1,4 +1,4 @@
-from flojoy import OrderedPair, Scalar, Vector, DCNpArrayType
+from atlasvibe import OrderedPair, Scalar, Vector, DCNpArrayType
 
 
 def get_val(

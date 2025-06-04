@@ -1,9 +1,9 @@
 import numpy as np
 from scipy import fft
-from flojoy import OrderedPair
+from atlasvibe import OrderedPair
 
 
-def test_FFT(mock_flojoy_decorator):
+def test_FFT(mock_atlasvibe_decorator):
     import FFT
 
     N = 600

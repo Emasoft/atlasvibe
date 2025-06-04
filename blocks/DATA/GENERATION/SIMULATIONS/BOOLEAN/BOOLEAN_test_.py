@@ -1,4 +1,4 @@
-def test_BOOLEAN(mock_flojoy_decorator):
+def test_BOOLEAN(mock_atlasvibe_decorator):
     import BOOLEAN
 
     test1 = BOOLEAN.BOOLEAN(True)

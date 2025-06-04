@@ -1,4 +1,4 @@
-from flojoy import flojoy, OrderedTriple, Matrix
+from atlasvibe import atlasvibe, OrderedTriple, Matrix
 import numpy as np
 
 
@@ -10,7 +10,7 @@ def contains_only_numbers(column, colName):
             )
 
 
-@flojoy
+@atlasvibe
 def DOUBLE_INDEFINITE_INTEGRAL(
     default: OrderedTriple, width: int = 3, height: int = 3
 ) -> Matrix:

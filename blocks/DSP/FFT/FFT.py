@@ -1,11 +1,11 @@
 from scipy import signal, fft
 from numpy import abs
-from flojoy import flojoy, OrderedPair, DataFrame
+from atlasvibe import atlasvibe, OrderedPair, DataFrame
 from typing import Literal
 from pandas import DataFrame as df
 
 
-@flojoy
+@atlasvibe
 def FFT(
     default: OrderedPair,
     window: Literal[

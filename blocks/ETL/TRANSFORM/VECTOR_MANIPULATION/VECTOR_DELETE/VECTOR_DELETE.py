@@ -1,8 +1,8 @@
 from numpy import any, array, delete, arange
-from flojoy import flojoy, Vector, Array
+from atlasvibe import atlasvibe, Vector, Array
 
 
-@flojoy
+@atlasvibe
 def VECTOR_DELETE(default: Vector, indices: Array, length: int = 1) -> Vector:
     """The VECTOR_DELETE node returns a new Vector with elements deleted from requested indices
 

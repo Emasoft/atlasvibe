@@ -1,9 +1,9 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 import pytest
 
 
-def test_VECTOR_INDEXING(mock_flojoy_decorator):
+def test_VECTOR_INDEXING(mock_atlasvibe_decorator):
     import VECTOR_INDEXING
 
     x = np.ones(5)

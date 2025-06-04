@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
-from flojoy import Image
+from atlasvibe import Image
 
 
-def test_IMAGE_SMOOTHING(mock_flojoy_decorator):
+def test_IMAGE_SMOOTHING(mock_atlasvibe_decorator):
     import IMAGE_SMOOTHING
 
     x = np.eye(3)

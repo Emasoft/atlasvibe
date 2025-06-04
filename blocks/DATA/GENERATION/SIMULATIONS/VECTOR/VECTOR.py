@@ -1,9 +1,9 @@
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 from numpy import array
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def VECTOR(
     elements: str = "", elements_type: Literal["boolean", "numeric"] = "boolean"
 ) -> Vector:

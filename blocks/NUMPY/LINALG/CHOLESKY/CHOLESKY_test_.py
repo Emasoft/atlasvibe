@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import OrderedPair, Matrix, Scalar
+from atlasvibe import OrderedPair, Matrix, Scalar
 
 
-def test_CHOLESKY(mock_flojoy_decorator):
+def test_CHOLESKY(mock_atlasvibe_decorator):
     import CHOLESKY
 
     array1 = np.eye(5)

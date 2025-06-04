@@ -1,4 +1,4 @@
-def test_TEXT(mock_flojoy_decorator):
+def test_TEXT(mock_atlasvibe_decorator):
     import TEXT
 
     res = TEXT.TEXT(value="Hello World!")

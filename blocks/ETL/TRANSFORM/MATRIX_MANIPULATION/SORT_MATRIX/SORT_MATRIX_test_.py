@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Matrix
+from atlasvibe import Matrix
 
 
-def test_SORT_MATRIX(mock_flojoy_decorator):
+def test_SORT_MATRIX(mock_atlasvibe_decorator):
     import SORT_MATRIX
 
     x = np.array([[3, 2, 1], [6, 5, 4], [9, 8, 7]])

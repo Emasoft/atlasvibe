@@ -39,8 +39,8 @@ const EnvVarModal = () => {
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
 
-  const [flojoyCloudKey, setFlojoyCloudKey] = useState<string>("");
-  const [flojoyCloudUrl, setFlojoyCloudUrl] = useState<string>("");
+  const [atlasvibeCloudKey, setAtlasvibeCloudKey] = useState<string>("");
+  const [atlasvibeCloudUrl, setAtlasvibeCloudUrl] = useState<string>("");
 
   const fetchCredentials = useCallback(async () => {
     const res = await getEnvironmentVariables();
@@ -102,27 +102,27 @@ const EnvVarModal = () => {
   };
 
   const handleSetCloudKey = async () => {
-    if (flojoyCloudKey === "") {
-      toast("Please enter your Flojoy Cloud workspace secret");
+    if (atlasvibeCloudKey === "") {
+      toast("Please enter your Atlasvibe Cloud workspace secret");
       return;
     }
-    const user = await getCloudUser(flojoyCloudKey);
+    const user = await getCloudUser(atlasvibeCloudKey);
     if (user.isErr()) {
-      toast.error("Invalid Flojoy Cloud workspace secret");
+      toast.error("Invalid Atlasvibe Cloud workspace secret");
       return;
     }
     const res = await postEnvironmentVariable({
-      key: "FLOJOY_CLOUD_WORKSPACE_SECRET",
-      value: flojoyCloudKey,
+      key: "ATLASVIBE_CLOUD_WORKSPACE_SECRET",
+      value: atlasvibeCloudKey,
     });
     res.match(
       () => {
-        toast("Successfully set your Flojoy Cloud workspace secret!");
-        setFlojoyCloudKey("");
+        toast("Successfully set your Atlasvibe Cloud workspace secret!");
+        setAtlasvibeCloudKey("");
         fetchCredentials();
       },
       (e) => {
-        toast("Error adding your Flojoy Cloud workspace secret", {
+        toast("Error adding your Atlasvibe Cloud workspace secret", {
           description: e.message,
         });
       },
@@ -130,30 +130,30 @@ const EnvVarModal = () => {
   };
 
   const handleSetCloudUrl = async () => {
-    if (flojoyCloudUrl === "") {
-      toast("Please enter your Flojoy Cloud");
+    if (atlasvibeCloudUrl === "") {
+      toast("Please enter your Atlasvibe Cloud");
       return;
     }
-    if (!flojoyCloudUrl.endsWith("/")) {
-      setFlojoyCloudUrl(flojoyCloudUrl + "/");
+    if (!atlasvibeCloudUrl.endsWith("/")) {
+      setAtlasvibeCloudUrl(atlasvibeCloudUrl + "/");
     }
-    const serverHealth = await getCloudHealth(flojoyCloudUrl);
+    const serverHealth = await getCloudHealth(atlasvibeCloudUrl);
     if (serverHealth.isErr()) {
-      toast.error("Invalid Flojoy Cloud URL");
+      toast.error("Invalid Atlasvibe Cloud URL");
       return;
     }
     const res = await postEnvironmentVariable({
-      key: "FLOJOY_CLOUD_URL",
-      value: flojoyCloudUrl,
+      key: "ATLASVIBE_CLOUD_URL",
+      value: atlasvibeCloudUrl,
     });
     res.match(
       () => {
-        toast("Successfully set your Flojoy Cloud Url!");
-        setFlojoyCloudUrl("");
+        toast("Successfully set your Atlasvibe Cloud Url!");
+        setAtlasvibeCloudUrl("");
         fetchCredentials();
       },
       (e) => {
-        toast("Error adding your Flojoy Cloud Url", {
+        toast("Error adding your Atlasvibe Cloud Url", {
           description: e.message,
         });
       },
@@ -170,27 +170,27 @@ const EnvVarModal = () => {
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col">
-          <div className="text-lg font-bold">Flojoy Cloud</div>
+          <div className="text-lg font-bold">Atlasvibe Cloud</div>
           <div className="py-1" />
           <a
-            href={"https://cloud.flojoy.ai"} // TODO: repalce this with the ytb video link
+            href={"https://cloud.atlasvibe.ai"} // TODO: repalce this with the ytb video link
             target="_blank"
             className="text-xs underline"
           >
-            Get your Flojoy Cloud workspace secret (in your workspace settings)
+            Get your Atlasvibe Cloud workspace secret (in your workspace settings)
           </a>
           <div className="py-1" />
           <div className="flex w-full items-center space-x-2">
             <Input
               type="text"
-              value={flojoyCloudKey}
-              onChange={(e) => setFlojoyCloudKey(e.target.value)}
+              value={atlasvibeCloudKey}
+              onChange={(e) => setAtlasvibeCloudKey(e.target.value)}
               className="bg-modal"
-              data-testid="flojoy-cloud-api-input"
-              placeholder="Paste your Flojoy Cloud workspace secret here :)"
+              data-testid="atlasvibe-cloud-api-input"
+              placeholder="Paste your Atlasvibe Cloud workspace secret here :)"
             />
             <Button
-              data-testid="flojoy-cloud-api-submit"
+              data-testid="atlasvibe-cloud-api-submit"
               type="submit"
               onClick={withPermissionCheck(handleSetCloudKey)}
             >
@@ -199,19 +199,19 @@ const EnvVarModal = () => {
           </div>
 
           <div className="py-1" />
-          <p className="text-xs">Private Flojoy Cloud URL</p>
+          <p className="text-xs">Private Atlasvibe Cloud URL</p>
           <div className="py-1" />
           <div className="flex w-full items-center space-x-2">
             <Input
               type="text"
               className="bg-modal"
-              data-testid="flojoy-cloud-url"
-              onChange={(e) => setFlojoyCloudUrl(e.target.value)}
-              value={flojoyCloudUrl}
-              placeholder="If not provided: https://cloud.flojoy.ai"
+              data-testid="atlasvibe-cloud-url"
+              onChange={(e) => setAtlasvibeCloudUrl(e.target.value)}
+              value={atlasvibeCloudUrl}
+              placeholder="If not provided: https://cloud.atlasvibe.ai"
             />
             <Button
-              data-testid="flojoy-cloud-url-submit"
+              data-testid="atlasvibe-cloud-url-submit"
               type="submit"
               onClick={withPermissionCheck(handleSetCloudUrl)}
             >

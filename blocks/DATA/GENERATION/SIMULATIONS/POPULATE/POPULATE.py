@@ -2,10 +2,10 @@ import random
 from typing import Literal
 
 import numpy as np
-from flojoy import OrderedPair, Vector, display, flojoy
+from atlasvibe import OrderedPair, Vector, display, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def POPULATE(
     default: OrderedPair | Vector,
     distribution: Literal["normal", "uniform", "poisson"] = "normal",

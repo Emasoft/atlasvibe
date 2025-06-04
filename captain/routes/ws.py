@@ -22,14 +22,14 @@ async def websocket_endpoint(websocket: WebSocket, socket_id: str):
             json.dumps(
                 {
                     "type": "connection_established",
-                    "msg": "You are now connected to flojoy servers",
+                    "msg": "You are now connected to atlasvibe servers",
                     "socketId": socket_id,
                     "SYSTEM_STATUS": STATUS_CODES["STANDBY"],
                 }
             )
         )
         print(
-            "Flojoy Studio is running! Visit community.flojoy.ai or discord.gg/7HEBr7yG8c for help.",
+            "Atlasvibe Studio is running! Visit community.atlasvibe.ai or discord.gg/7HEBr7yG8c for help.",
             flush=True,
         )
 

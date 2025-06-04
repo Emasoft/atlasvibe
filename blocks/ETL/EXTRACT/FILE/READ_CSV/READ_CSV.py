@@ -1,8 +1,8 @@
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 import pandas as pd
 
 
-@flojoy
+@atlasvibe
 def READ_CSV(
     file_path: str = "https://raw.githubusercontent.com/cs109/2014_data/master/countries.csv",
 ) -> DataFrame:

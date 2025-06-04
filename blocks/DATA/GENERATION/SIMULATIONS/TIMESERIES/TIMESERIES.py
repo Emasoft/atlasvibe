@@ -1,10 +1,10 @@
 import numpy as np
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 import pandas as pd
 import traceback
 
 
-@flojoy
+@atlasvibe
 def TIMESERIES(
     start_date: str = "2023-01-01", end_date: str = "2023-07-20"
 ) -> DataFrame:

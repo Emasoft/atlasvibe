@@ -1,11 +1,11 @@
 # Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
-# Copyright (c) 2024 Flojoy (for the original "Flojoy Studio" software)
+# Copyright (c) 2024 Atlasvibe (for the original "Atlasvibe Studio" software)
 #
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
 import numpy as np
-from flojoy import Array, NodeInitContainer, OrderedPair, atlasvibe_node, node_initialization # CHANGED
+from atlasvibe import Array, NodeInitContainer, OrderedPair, atlasvibe_node, node_initialization # CHANGED
 
 
 @atlasvibe_node(node_type="TEST_TYPE") # CHANGED

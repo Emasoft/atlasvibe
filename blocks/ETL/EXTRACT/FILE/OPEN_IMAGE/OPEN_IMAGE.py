@@ -1,11 +1,11 @@
 from os import path
 
-from flojoy import File, Image, flojoy
+from atlasvibe import File, Image, atlasvibe
 from matplotlib import image
 from numpy import asarray
 
 
-@flojoy
+@atlasvibe
 def OPEN_IMAGE(file_path: File | None = None) -> Image:
     """Load an image file from disk and return a DataContainer of type 'image'.
 

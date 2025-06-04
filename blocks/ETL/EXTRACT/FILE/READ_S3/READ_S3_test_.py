@@ -40,7 +40,7 @@ def mock_keyring_get_password():
 
 
 def test_READ_S3(
-    mock_flojoy_decorator,
+    mock_atlasvibe_decorator,
     mock_bucket,
     mock_keyring_get_password,
     test_dataframe,

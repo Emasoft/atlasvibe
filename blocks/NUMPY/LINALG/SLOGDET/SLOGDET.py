@@ -1,11 +1,11 @@
-from flojoy import flojoy, Matrix, Scalar
+from atlasvibe import atlasvibe, Matrix, Scalar
 import numpy as np
 from typing import Literal
 
 import numpy.linalg
 
 
-@flojoy
+@atlasvibe
 def SLOGDET(
     default: Matrix,
     select_return: Literal["sign", "logdet"] = "sign",

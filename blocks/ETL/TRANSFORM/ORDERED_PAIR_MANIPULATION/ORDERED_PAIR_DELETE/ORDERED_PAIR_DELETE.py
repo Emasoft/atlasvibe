@@ -1,8 +1,8 @@
 from numpy import any, array, delete, arange
-from flojoy import flojoy, OrderedPair, Array
+from atlasvibe import atlasvibe, OrderedPair, Array
 
 
-@flojoy
+@atlasvibe
 def ORDERED_PAIR_DELETE(
     default: OrderedPair,
     indices: Array,

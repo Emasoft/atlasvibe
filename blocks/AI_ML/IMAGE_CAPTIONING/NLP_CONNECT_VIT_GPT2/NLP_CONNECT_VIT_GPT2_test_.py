@@ -2,7 +2,7 @@ import os
 import pytest
 import PIL.Image
 import numpy as np
-from flojoy import Image
+from atlasvibe import Image
 
 try:
     import torch
@@ -23,9 +23,9 @@ def obama_image_array_rgb():
     reason="NLP_CONNECT_VIT_GPT2 requires torch to be installed | Ignore this test in CI",
 )
 def test_NLP_CONNECT_VIT_GPT2(
-    mock_flojoy_decorator,
-    mock_flojoy_venv_cache_directory,
-    cleanup_flojoy_cache_fixture,
+    mock_atlasvibe_decorator,
+    mock_atlasvibe_venv_cache_directory,
+    cleanup_atlasvibe_cache_fixture,
     obama_image_array_rgb,
 ):
     import NLP_CONNECT_VIT_GPT2

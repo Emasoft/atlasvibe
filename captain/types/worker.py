@@ -1,7 +1,7 @@
 from queue import Queue
 from typing import Any, Callable, Union
 
-from flojoy import JobFailure, JobSuccess
+from atlasvibe import JobFailure, JobSuccess
 
 
 class PoisonPill(Exception):

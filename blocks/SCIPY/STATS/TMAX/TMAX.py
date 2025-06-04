@@ -1,10 +1,10 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def TMAX(
     default: OrderedPair | Matrix,
     upperlimit: float = 0.1,

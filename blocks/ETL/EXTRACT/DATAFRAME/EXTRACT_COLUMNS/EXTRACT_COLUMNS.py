@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Array, DataFrame, Matrix, flojoy
+from atlasvibe import Array, DataFrame, Matrix, atlasvibe
 
 
-@flojoy
+@atlasvibe
 def EXTRACT_COLUMNS(default: DataFrame | Matrix, columns: Array) -> DataFrame:
     """Take an input dataframe/matrix and returns a dataframe/matrix with only the specified columns.
 

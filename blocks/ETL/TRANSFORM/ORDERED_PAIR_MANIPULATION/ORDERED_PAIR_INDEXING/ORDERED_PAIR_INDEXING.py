@@ -1,7 +1,7 @@
-from flojoy import flojoy, OrderedPair, Scalar
+from atlasvibe import atlasvibe, OrderedPair, Scalar
 
 
-@flojoy
+@atlasvibe
 def ORDERED_PAIR_INDEXING(
     default: OrderedPair,
     index: int = 0,

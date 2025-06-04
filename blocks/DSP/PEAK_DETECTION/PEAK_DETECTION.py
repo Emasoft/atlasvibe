@@ -1,8 +1,8 @@
 from scipy.signal import find_peaks
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 
 
-@flojoy
+@atlasvibe
 def PEAK_DETECTION(
     default: OrderedPair,
     height: str = None,

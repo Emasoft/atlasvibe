@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def test_TIMESERIES(mock_flojoy_decorator):
+def test_TIMESERIES(mock_atlasvibe_decorator):
     import TIMESERIES
 
     start = pd.Timestamp("2023-01-01")

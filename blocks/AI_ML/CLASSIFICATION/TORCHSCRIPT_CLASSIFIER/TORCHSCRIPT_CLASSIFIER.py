@@ -1,7 +1,7 @@
-from flojoy import DataFrame, Image, flojoy
+from atlasvibe import DataFrame, Image, atlasvibe
 
 
-@flojoy(
+@atlasvibe(
     deps={
         "torch": "2.0.1",
         "torchvision": "0.15.2",

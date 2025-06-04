@@ -1,7 +1,7 @@
-from flojoy import Boolean
+from atlasvibe import Boolean
 
 
-def test_EXCLUSIVE_OR(mock_flojoy_decorator):
+def test_EXCLUSIVE_OR(mock_atlasvibe_decorator):
     import EXCLUSIVE_OR
 
     x = Boolean(b=True)

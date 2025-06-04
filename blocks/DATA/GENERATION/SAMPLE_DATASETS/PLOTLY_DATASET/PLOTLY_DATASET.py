@@ -1,9 +1,9 @@
-from flojoy import flojoy, DataFrame
+from atlasvibe import atlasvibe, DataFrame
 from plotly.express import data
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def PLOTLY_DATASET(
     dataset_key: Literal[
         "wind",

@@ -16,7 +16,7 @@ export const API = {
   spawnCaptain: "SPAWN_CAPTAIN",
   killCaptain: "KILL_CAPTAIN",
   openLogFolder: "OPEN_LOG_FOLDER",
-  restartFlojoyStudio: "RESTART_STUDIO",
+  restartAtlasvibeStudio: "RESTART_STUDIO",
   setUnsavedChanges: "SET_UNSAVED_CHANGES",
   statusBarLogging: "STATUSBAR_LOGGING",
   setPythonInterpreter: "SET_PY_INTERPRETER",
@@ -86,8 +86,8 @@ export default {
   spawnCaptain: (): Promise<void> => ipcRenderer.invoke(API.spawnCaptain),
   killCaptain: (): Promise<string> => ipcRenderer.invoke(API.killCaptain),
   openLogFolder: (): Promise<void> => ipcRenderer.invoke(API.openLogFolder),
-  restartFlojoyStudio: (): Promise<void> =>
-    ipcRenderer.invoke(API.restartFlojoyStudio),
+  restartAtlasvibeStudio: (): Promise<void> =>
+    ipcRenderer.invoke(API.restartAtlasvibeStudio),
   setPythonInterpreter: (interpreter: string): Promise<void> =>
     ipcRenderer.invoke(API.setPythonInterpreter, interpreter),
   browsePyInterpreter: (): Promise<string | null> =>

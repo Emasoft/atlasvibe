@@ -55,7 +55,7 @@ export const DebugSettingsModal = ({
         <DialogHeader className="text-left">
           <DialogTitle>Debug Settings</DialogTitle>
           <DialogDescription>
-            Advanced settings for debugging Flojoy Studio itself.
+            Advanced settings for debugging Atlasvibe Studio itself.
           </DialogDescription>
         </DialogHeader>
         <div>

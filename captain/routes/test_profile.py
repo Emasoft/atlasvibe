@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Header, Response
 import os
 import json
-from captain.utils.blocks_path import get_flojoy_dir
+from captain.utils.blocks_path import get_atlasvibe_dir
 
 
 router = APIRouter(tags=["test_profile"])
@@ -113,7 +113,7 @@ def verify_git_install():
 
 
 def get_profiles_dir():
-    profiles_dir = os.path.join(get_flojoy_dir(), f"test_profiles{os.sep}")
+    profiles_dir = os.path.join(get_atlasvibe_dir(), f"test_profiles{os.sep}")
     if not os.path.exists(profiles_dir):
         os.makedirs(profiles_dir)
     return profiles_dir

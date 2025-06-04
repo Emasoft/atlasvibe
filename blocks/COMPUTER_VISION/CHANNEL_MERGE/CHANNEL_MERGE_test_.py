@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Image
+from atlasvibe import Image
 
 
-def test_CHANNEL_MERGE(mock_flojoy_decorator):
+def test_CHANNEL_MERGE(mock_atlasvibe_decorator):
     import CHANNEL_MERGE
 
     r = 255 * np.ones((600, 600), dtype=np.uint8)

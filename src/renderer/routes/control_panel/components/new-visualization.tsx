@@ -24,8 +24,8 @@ import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 import { FormIconLabel } from "@/renderer/components/common/form-icon-label";
 import {
-  FlojoyType,
-  FLOJOY_TYPES,
+  AtlasvibeType,
+  ATLASVIBE_TYPES,
   VisualizationType,
   VISUALIZATIONS,
 } from "@/renderer/types/control";
@@ -36,8 +36,8 @@ import {
 } from "@/renderer/components/common/clickables";
 
 const mapTypesToVisualizations = () => {
-  const res: Record<FlojoyType, VisualizationType[]> = typedObjectFromEntries(
-    FLOJOY_TYPES.map((t) => [t, []]),
+  const res: Record<AtlasvibeType, VisualizationType[]> = typedObjectFromEntries(
+    ATLASVIBE_TYPES.map((t) => [t, []]),
   );
 
   for (const k of typedObjectKeys(VISUALIZATIONS)) {

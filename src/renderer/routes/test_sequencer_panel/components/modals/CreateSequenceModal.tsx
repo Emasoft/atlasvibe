@@ -42,7 +42,7 @@ export const CreateSequenceModal = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [interpreterPath, setInterpreterPath] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [type, setType] = useState<InterpreterType>("flojoy");
+  const [type, setType] = useState<InterpreterType>("atlasvibe");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -63,7 +63,7 @@ export const CreateSequenceModal = () => {
         interpreter: {
           type: type,
           path: interpreterPath === "" ? null : interpreterPath,
-          requirementsPath: "flojoy_requirements.txt",
+          requirementsPath: "atlasvibe_requirements.txt",
         },
       },
       setIsCreateProjectModalOpen,

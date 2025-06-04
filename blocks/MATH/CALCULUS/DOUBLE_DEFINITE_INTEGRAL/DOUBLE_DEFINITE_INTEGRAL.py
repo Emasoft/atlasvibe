@@ -1,9 +1,9 @@
-from flojoy import flojoy, Scalar
+from atlasvibe import atlasvibe, Scalar
 from scipy import integrate
 from sympy import parse_expr, lambdify
 
 
-@flojoy(deps={"sympy": "1.12"})
+@atlasvibe(deps={"sympy": "1.12"})
 def DOUBLE_DEFINITE_INTEGRAL(
     function: str = "",
     upper_bound_x: float = 0.0,

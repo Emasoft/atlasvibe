@@ -1,8 +1,8 @@
 from numpy import sort
-from flojoy import flojoy, Matrix
+from atlasvibe import atlasvibe, Matrix
 
 
-@flojoy
+@atlasvibe
 def SORT_MATRIX(a: Matrix, axis: int = -1) -> Matrix:
     """Take an input matrix and sort it along the chosen axis.
 

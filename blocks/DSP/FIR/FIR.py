@@ -1,9 +1,9 @@
 from scipy import signal
-from flojoy import flojoy, OrderedPair
+from atlasvibe import atlasvibe, OrderedPair
 from typing import Literal
 
 
-@flojoy
+@atlasvibe
 def FIR(
     default: OrderedPair,
     sample_rate: int = 100,

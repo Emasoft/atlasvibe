@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector, OrderedPair
+from atlasvibe import atlasvibe, Vector, OrderedPair
 
 
-@flojoy
+@atlasvibe
 def VECTOR_2_ORDERED_PAIR(default: Vector, y: Vector) -> OrderedPair:
     """Convert a Vector DataContainer to an OrderedPair DataContainer.
 

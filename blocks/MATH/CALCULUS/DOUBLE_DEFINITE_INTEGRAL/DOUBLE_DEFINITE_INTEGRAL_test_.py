@@ -1,4 +1,4 @@
-def test_DOUBLE_DEFINITE_INTEGRAL(mock_flojoy_decorator):
+def test_DOUBLE_DEFINITE_INTEGRAL(mock_atlasvibe_decorator):
     import DOUBLE_DEFINITE_INTEGRAL
 
     function = "2*x*y"

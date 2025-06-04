@@ -1,4 +1,4 @@
-from flojoy import DataFrame
+from atlasvibe import DataFrame
 import pytest
 
 sklear_imported = True
@@ -12,7 +12,7 @@ except ImportError:
     sklear_imported is None,
     reason="LOAD_IRIS requires torch to be installed | Ignore this test in CI",
 )
-def test_load_iris(mock_flojoy_decorator):
+def test_load_iris(mock_atlasvibe_decorator):
     import SCIKIT_LEARN_DATASET
 
     result = SCIKIT_LEARN_DATASET.SCIKIT_LEARN_DATASET(dataset_name="iris")  # type: ignore
@@ -24,7 +24,7 @@ def test_load_iris(mock_flojoy_decorator):
     sklear_imported is None,
     reason="LOAD_IRIS requires torch to be installed | Ignore this test in CI",
 )
-def test_load_diabetes(mock_flojoy_decorator):
+def test_load_diabetes(mock_atlasvibe_decorator):
     import SCIKIT_LEARN_DATASET
 
     result = SCIKIT_LEARN_DATASET.SCIKIT_LEARN_DATASET(dataset_name="diabetes")  # type: ignore

@@ -1,8 +1,8 @@
 from numpy import stack
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def INTERLEAVE_VECTOR(
     default: Vector,
     a: list[Vector],

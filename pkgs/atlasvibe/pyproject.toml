@@ -1,0 +1,44 @@
+[tool.poetry]
+authors = [
+  "Jack Palmer <jp@atlasvibe.io>",
+  "Joey Yu <joey@atlasvibe.io>",
+  "Jeff Zhang <jeff@atlasvibe.io>",
+  "Syed Mahbub <smahmed776@gmail.com>",
+  "Dallas Strandell <dalstrande@outlook.com>",
+]
+name = "atlasvibe"
+version = "0.4.1"
+description = ""
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11"
+pandas = "~2"
+numpy = "~1"
+plotly = "~5"
+pillow = "~10"
+python-dotenv = "~1"
+pyyaml = "~6.0"
+requests = "~2"
+keyring = "~24"
+python-box = "~7"
+pydantic = "~2"
+huggingface-hub = "~0"
+cloudpickle = "~2"
+networkx = "~3"
+scipy = "~1.12"
+matplotlib = "~3"
+portalocker = "~2"
+qcodes = "~0"
+tm-devices = "^1.0.0"
+httpx = "^0.26.0"
+keyrings-cryptfile = "^1.3.9"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+ruff = "^0.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

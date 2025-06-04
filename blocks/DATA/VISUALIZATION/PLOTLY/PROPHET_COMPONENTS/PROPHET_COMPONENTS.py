@@ -3,10 +3,10 @@ import sys
 
 import numpy as np
 import pandas as pd
-from flojoy import DataFrame, Plotly, flojoy
+from atlasvibe import DataFrame, Plotly, atlasvibe
 
 
-@flojoy(deps={"prophet": "1.1.5"})
+@atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_COMPONENTS(default: DataFrame, periods: int = 365) -> Plotly:
     """The PROPHET_COMPONENTS node plots the components of the prophet model trained in the PROPHET_PREDICT node.
 

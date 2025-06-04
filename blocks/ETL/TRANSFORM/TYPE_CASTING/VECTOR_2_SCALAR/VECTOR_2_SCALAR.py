@@ -1,8 +1,8 @@
 from numpy import bool_, int_
-from flojoy import flojoy, Vector, Scalar
+from atlasvibe import atlasvibe, Vector, Scalar
 
 
-@flojoy
+@atlasvibe
 def VECTOR_2_SCALAR(default: Vector) -> Scalar:
     """Takes a vector and transform it into scalar data type.
     If the vector consists of all boolean type data, then it reads the vector in binary number where True is 1 and False is 0.

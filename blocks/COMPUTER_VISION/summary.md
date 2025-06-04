@@ -1,8 +1,8 @@
 ---
 title: Computer Vision
-description: "Welcome to Flojoy's Computer Vision Blocks page. Here you can find information about all the Flojoy Blocks that can be used to perform computer vision tasks."
+description: "Welcome to Atlasvibe's Computer Vision Blocks page. Here you can find information about all the Atlasvibe Blocks that can be used to perform computer vision tasks."
 ---
 
-Welcome to Flojoy's Computer Vision Blocks page.
-Here you can find information about all the Flojoy Blocks
+Welcome to Atlasvibe's Computer Vision Blocks page.
+Here you can find information about all the Atlasvibe Blocks
 that can be used to perform computer vision tasks.

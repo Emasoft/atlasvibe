@@ -3,10 +3,10 @@ import sys
 
 import numpy as np
 import pandas as pd
-from flojoy import DataFrame, Plotly, flojoy
+from atlasvibe import DataFrame, Plotly, atlasvibe
 
 
-@flojoy(deps={"prophet": "1.1.5"})
+@atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_PLOT(default: DataFrame, periods: int = 365) -> Plotly:
     """The PROPHET_PLOT node plots the forecasted trend of the time series data that was passed in.
 

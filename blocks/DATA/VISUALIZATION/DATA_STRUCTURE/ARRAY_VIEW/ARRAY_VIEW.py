@@ -1,6 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
-from flojoy import DataFrame, Image, Matrix, OrderedPair, Plotly, flojoy
+from atlasvibe import DataFrame, Image, Matrix, OrderedPair, Plotly, atlasvibe
 
 CELL_SIZE = 50
 FONT_SIZE = 10
@@ -18,7 +18,7 @@ def numpy_array_as_table(arr: np.ndarray):
     return new_arr.reshape(-1, 1)
 
 
-@flojoy
+@atlasvibe
 def ARRAY_VIEW(default: OrderedPair | Matrix | DataFrame | Image) -> Plotly:
     """The ARRAY_VIEW node takes OrderedPair, DataFrame, Matrix, and Image DataContainer objects as input, and visualizes it in array format.
 

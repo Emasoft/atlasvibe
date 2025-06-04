@@ -10,7 +10,7 @@ from threading import Thread
 from typing import Any, cast
 
 import networkx as nx
-from flojoy.utils import clear_flojoy_memory
+from atlasvibe.utils import clear_atlasvibe_memory
 
 from captain.internal.manager import Manager
 from captain.models.topology import Topology
@@ -218,7 +218,7 @@ def flowchart_to_nx_graph(flowchart: dict[str, Any]):
 
 # clears memory used by some worker nodes and job results
 def clear_memory():
-    clear_flojoy_memory()
+    clear_atlasvibe_memory()
 
 
 async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):

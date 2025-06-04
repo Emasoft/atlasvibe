@@ -1,7 +1,7 @@
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 
 
-@flojoy
+@atlasvibe
 def SORT_VECTOR(
     default: Vector,
     reverse: bool = False,

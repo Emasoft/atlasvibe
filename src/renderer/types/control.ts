@@ -180,14 +180,14 @@ export type WidgetProps<
   T extends WidgetConfig | undefined = WidgetConfig | undefined,
 > = NodeProps<WidgetData<T>>;
 
-export const FLOJOY_TYPES = ["Scalar", "Plotly"] as const;
-export const FlojoyType = z.enum(FLOJOY_TYPES);
-export type FlojoyType = z.infer<typeof FlojoyType>;
+export const ATLASVIBE_TYPES = ["Scalar", "Plotly"] as const;
+export const AtlasvibeType = z.enum(ATLASVIBE_TYPES);
+export type AtlasvibeType = z.infer<typeof AtlasvibeType>;
 
 type VisualizationEntry = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   node: React.FC<VisualizationProps>;
-  allowedTypes: FlojoyType[];
+  allowedTypes: AtlasvibeType[];
   icon: LucideIcon;
 };
 

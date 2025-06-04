@@ -1,15 +1,15 @@
 import os
 import json
-from flojoy import (
-    flojoy,
+from atlasvibe import (
+    atlasvibe,
     DataContainer,
     Directory,
 )
-from flojoy.utils import PlotlyJSONEncoder
+from atlasvibe.utils import PlotlyJSONEncoder
 from typing import Optional
 
 
-@flojoy
+@atlasvibe
 def EXPORT_JSON(
     dc: DataContainer,
     dir: Directory,

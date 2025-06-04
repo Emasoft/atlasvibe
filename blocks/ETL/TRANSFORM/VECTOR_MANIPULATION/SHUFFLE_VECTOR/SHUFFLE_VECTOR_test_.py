@@ -1,8 +1,8 @@
 import numpy as np
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_SHUFFLE_VECTOR(mock_flojoy_decorator):
+def test_SHUFFLE_VECTOR(mock_atlasvibe_decorator):
     import SHUFFLE_VECTOR
 
     np.random.seed(42)

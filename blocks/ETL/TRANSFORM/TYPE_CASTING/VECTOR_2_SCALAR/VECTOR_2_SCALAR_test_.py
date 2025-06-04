@@ -1,8 +1,8 @@
 from numpy import array
-from flojoy import Vector
+from atlasvibe import Vector
 
 
-def test_VECTOR_2_SCALAR(mock_flojoy_decorator):
+def test_VECTOR_2_SCALAR(mock_atlasvibe_decorator):
     import VECTOR_2_SCALAR
 
     x = array([True, False, True])

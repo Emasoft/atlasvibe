@@ -3,11 +3,11 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 import PIL.Image as PILImage
-from flojoy import DataFrame, Image, flojoy
-from flojoy.utils import FLOJOY_CACHE_DIR
+from atlasvibe import DataFrame, Image, atlasvibe
+from atlasvibe.utils import ATLASVIBE_CACHE_DIR
 
 
-@flojoy(deps={"transformers": "4.30.2"})
+@atlasvibe(deps={"transformers": "4.30.2"})
 def HUGGING_FACE_PIPELINE(
     default: Image,
     model: str = "google/vit-base-patch16-224",
@@ -28,7 +28,7 @@ def HUGGING_FACE_PIPELINE(
     ----------
     default : Image
         The input image to be classified.
-        The image must be a PIL.Image object, wrapped in a Flojoy Image object.
+        The image must be a PIL.Image object, wrapped in a Atlasvibe Image object.
     model : str
         The model to be used for classification.
         If not specified, Vision Transformers (i.e. 'google/vit-base-patch16-224') are used.
@@ -44,9 +44,9 @@ def HUGGING_FACE_PIPELINE(
         All scores are between 0 and 1, and sum to 1.
     """
 
-    # Setting transformers cache directory to flojoy cache directory before importing transformers
+    # Setting transformers cache directory to atlasvibe cache directory before importing transformers
     # not to pollute the user's cache directory.
-    os.environ["TRANSFORMERS_CACHE"] = os.path.join(FLOJOY_CACHE_DIR, "transformers")
+    os.environ["TRANSFORMERS_CACHE"] = os.path.join(ATLASVIBE_CACHE_DIR, "transformers")
 
     from transformers import pipeline as ts_pipeline
 

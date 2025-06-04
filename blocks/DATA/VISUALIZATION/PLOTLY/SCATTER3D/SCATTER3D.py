@@ -1,10 +1,10 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from flojoy import DataFrame, OrderedTriple, Plotly, flojoy
+from atlasvibe import DataFrame, OrderedTriple, Plotly, atlasvibe
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
 
-@flojoy
+@atlasvibe
 def SCATTER3D(default: OrderedTriple | DataFrame) -> Plotly:
     """Create a Plotly 3D Scatter visualization for a given input DataContainer.
 

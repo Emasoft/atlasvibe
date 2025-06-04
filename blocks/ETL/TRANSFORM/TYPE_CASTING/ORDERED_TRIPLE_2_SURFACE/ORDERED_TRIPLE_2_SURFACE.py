@@ -1,8 +1,8 @@
-from flojoy import flojoy, OrderedTriple, Surface
+from atlasvibe import atlasvibe, OrderedTriple, Surface
 import numpy as np
 
 
-@flojoy
+@atlasvibe
 def ORDERED_TRIPLE_2_SURFACE(default: OrderedTriple) -> Surface:
     """Convert an OrderedTriple DataContainer to a Surface DataContainer.
 

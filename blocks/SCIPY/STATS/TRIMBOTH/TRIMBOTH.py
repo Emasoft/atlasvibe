@@ -1,10 +1,10 @@
-from flojoy import OrderedPair, flojoy, Matrix, Scalar
+from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
 import numpy as np
 
 import scipy.stats
 
 
-@flojoy
+@atlasvibe
 def TRIMBOTH(
     default: OrderedPair | Matrix,
     proportiontocut: float = 0.1,

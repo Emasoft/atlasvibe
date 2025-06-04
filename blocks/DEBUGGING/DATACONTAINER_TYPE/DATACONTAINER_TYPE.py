@@ -1,7 +1,7 @@
-from flojoy import DataContainer, String, flojoy
+from atlasvibe import DataContainer, String, atlasvibe
 
 
-@flojoy()
+@atlasvibe()
 def DATACONTAINER_TYPE(
     default: DataContainer,
 ) -> String:

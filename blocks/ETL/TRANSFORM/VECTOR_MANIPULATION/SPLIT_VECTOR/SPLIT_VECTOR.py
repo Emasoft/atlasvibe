@@ -1,4 +1,4 @@
-from flojoy import flojoy, Vector
+from atlasvibe import atlasvibe, Vector
 from typing import TypedDict
 
 
@@ -7,7 +7,7 @@ class resultSplit(TypedDict):
     vector2: Vector
 
 
-@flojoy
+@atlasvibe
 def SPLIT_VECTOR(
     default: Vector,
     index: int = 0,

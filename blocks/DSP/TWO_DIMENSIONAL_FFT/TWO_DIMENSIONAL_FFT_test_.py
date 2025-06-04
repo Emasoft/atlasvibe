@@ -1,10 +1,10 @@
 import numpy as np
 from scipy import fft
 
-from flojoy import Matrix
+from atlasvibe import Matrix
 
 
-def test_2DFFT(mock_flojoy_decorator):
+def test_2DFFT(mock_atlasvibe_decorator):
     import TWO_DIMENSIONAL_FFT
 
     m = np.mgrid[:5, :5][0]
