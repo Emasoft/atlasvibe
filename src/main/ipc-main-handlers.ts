@@ -185,8 +185,11 @@ export const registerIpcMainHandlers = () => {
   // Custom block creation handler
   ipcMain.handle("create-custom-block", async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
     try {
+      // Get the backend URL from environment or default
+      const backendUrl = process.env.BACKEND_URL || "http://localhost:5392";
+      
       // Call the backend API to create the custom block
-      const response = await fetch("http://localhost:5392/blocks/create-custom/", {
+      const response = await fetch(`${backendUrl}/blocks/create-custom/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -200,14 +203,17 @@ export const registerIpcMainHandlers = () => {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || "Failed to create custom block");
+        const errorMessage = error.detail || `Failed to create custom block (${response.status})`;
+        console.error("Custom block creation failed:", errorMessage);
+        throw new Error(errorMessage);
       }
       
       const blockDefinition = await response.json();
       return blockDefinition;
     } catch (error) {
       console.error("Error creating custom block:", error);
-      return undefined;
+      // Re-throw to let the renderer handle the error properly
+      throw error;
     }
   });
 };

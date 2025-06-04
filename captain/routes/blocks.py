@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Optional
 
 from fastapi import APIRouter, Response, HTTPException
 from pydantic import BaseModel
@@ -11,7 +12,8 @@ from captain.utils.import_blocks import create_map
 from captain.utils.logger import logger
 from captain.utils.project_structure import (
     copy_blueprint_to_project,
-    ProjectStructureError
+    ProjectStructureError,
+    validate_block_name
 )
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import process_block_directory
@@ -63,6 +65,26 @@ async def get_metadata(
         )
 
 
+def find_blueprint_path(blueprint_key: str) -> Optional[Path]:
+    """Find the path to a blueprint block by its key.
+    
+    Args:
+        blueprint_key: The key/name of the blueprint block
+        
+    Returns:
+        Path to the blueprint directory if found, None otherwise
+    """
+    blocks_base_path = Path(get_blocks_path())
+    
+    # Use glob to search more efficiently
+    for pattern in ["*/*", "*/*/*"]:  # Support 2 and 3 level nesting
+        for block_dir in blocks_base_path.glob(f"{pattern}/{blueprint_key}"):
+            if block_dir.is_dir():
+                return block_dir
+    
+    return None
+
+
 @router.post("/blocks/create-custom/")
 async def create_custom_block(request: CreateCustomBlockRequest):
     """Create a custom block from a blueprint for a specific project.
@@ -73,31 +95,23 @@ async def create_custom_block(request: CreateCustomBlockRequest):
     Returns:
         Block definition with additional path information
     """
+    # Validate the block name early
+    try:
+        validate_block_name(request.new_block_name)
+    except ProjectStructureError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    
+    # Validate project path
+    if not request.project_path or not request.project_path.endswith('.atlasvibe'):
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid project path. Must be a .atlasvibe file"
+        )
+    
     try:
         # Find the blueprint block directory
-        blocks_base_path = get_blocks_path()
-        blueprint_path = None
+        blueprint_path = find_blueprint_path(request.blueprint_key)
         
-        # Search for the blueprint in all categories
-        for category_dir in Path(blocks_base_path).iterdir():
-            if not category_dir.is_dir():
-                continue
-                
-            for subcategory_dir in category_dir.iterdir():
-                if not subcategory_dir.is_dir():
-                    continue
-                    
-                for block_dir in subcategory_dir.iterdir():
-                    if block_dir.is_dir() and block_dir.name == request.blueprint_key:
-                        blueprint_path = str(block_dir)
-                        break
-                        
-                if blueprint_path:
-                    break
-                    
-            if blueprint_path:
-                break
-                
         if not blueprint_path:
             raise HTTPException(
                 status_code=404,
@@ -106,7 +120,7 @@ async def create_custom_block(request: CreateCustomBlockRequest):
         
         # Copy the blueprint to the project
         new_block_path = copy_blueprint_to_project(
-            blueprint_path,
+            str(blueprint_path),
             request.project_path,
             request.new_block_name
         )
@@ -133,6 +147,8 @@ async def create_custom_block(request: CreateCustomBlockRequest):
     except ProjectStructureError as e:
         logger.error(f"Project structure error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
-        logger.error(f"Error creating custom block: {e}")
+        logger.error(f"Error creating custom block: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

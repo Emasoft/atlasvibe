@@ -53,11 +53,15 @@ This phase redefines how blocks are created, managed, and used within a project.
 - The IPC handler for `create-custom-block` is declared but not implemented
 - Block manifests are generated from Python docstrings and decorators
 
-**Task 2.1: Project-Centric Structure**
+**Task 2.1: Project-Centric Structure** ✅ COMPLETED
 *   **Action:** Define and implement a new project structure where each atlasvibe project is self-contained in its own directory.
 *   **Details:**
     *   A project directory will contain the main flow/graph file and a subdirectory for its custom blocks (e.g., `MyProject/atlasvibe_blocks/`).
     *   The concept of globally importing a "custom blocks folder" will be removed. The project's block directory *is* the custom blocks source for that project.
+*   **Implementation:**
+    *   Created `captain/utils/project_structure.py` module with utilities for managing project directories
+    *   Projects now have an `atlasvibe_blocks/` directory for custom blocks
+    *   Added validation and initialization functions for project structures
 
 **Task 2.2: Block Blueprints**
 *   **Action:** Treat existing blocks (e.g., those in the current `./blocks/` directory) as "blueprints."
@@ -65,7 +69,7 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   These blueprints will be listed in the UI for users to select from when adding a new node.
     *   Blueprints themselves are not directly part of a user's project graph but are templates.
 
-**Task 2.3: Custom Block Creation on-the-fly**
+**Task 2.3: Custom Block Creation on-the-fly** ✅ PARTIAL IMPLEMENTATION
 *   **Action:** Implement the new workflow for adding blocks to a project.
 *   **Details:**
     *   When a user adds a block (e.g., drags a blueprint to the canvas):
@@ -75,6 +79,12 @@ This phase redefines how blocks are created, managed, and used within a project.
         4.  **Crucially, update the `@atlasvibe` decorated function name inside the new Python file to match the new filename/block name.** This is essential for the system to recognize it.
         5.  Update metadata files (`app.json`, `block_data.json`) within the new custom block's folder to reflect its new name and identity.
     *   This new, duplicated block is now a "custom block" specific to the current project.
+*   **Implementation:**
+    *   Backend API endpoint `/blocks/create-custom/` implemented
+    *   IPC handler added for `create-custom-block` event
+    *   Frontend `useAddBlock` hook already prompts for name and calls the API
+    *   Function renaming and metadata updates implemented in `project_structure.py`
+    *   **Still needed:** Update the block discovery/loading to include project-specific blocks
 
 **Task 2.4: Project-Scoped Block Loading and Management**
 *   **Action:** Modify the application to discover and load blocks primarily from the active project's `atlasvibe_blocks/` directory.

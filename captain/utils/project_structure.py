@@ -5,6 +5,8 @@
 # - Initial implementation of project structure utilities for atlasvibe
 # - Created functions to manage project directories and custom blocks
 # - Added project validation and initialization functions
+# - Added block name validation and better error handling
+# - Improved function name replacement with regex
 # 
 
 """Project structure management utilities for atlasvibe.
@@ -15,6 +17,7 @@ directory structures where each project contains its own custom blocks.
 
 import json
 import shutil
+import re
 from pathlib import Path
 from typing import Optional, List
 from captain.utils.logger import logger
@@ -90,7 +93,7 @@ def validate_project_structure(project_path: str) -> bool:
             
         blocks_dir = get_project_blocks_dir(project_path)
         return blocks_dir.exists() and blocks_dir.is_dir()
-    except Exception:
+    except (ProjectStructureError, OSError, ValueError):
         return False
 
 
@@ -118,6 +121,36 @@ def list_project_blocks(project_path: str) -> List[str]:
     return sorted(blocks)
 
 
+def validate_block_name(name: str) -> None:
+    """Validate a block name for safety and correctness.
+    
+    Args:
+        name: The block name to validate
+        
+    Raises:
+        ProjectStructureError: If the name is invalid
+    """
+    if not name or not name.strip():
+        raise ProjectStructureError("Block name cannot be empty")
+    
+    # Check for valid Python identifier
+    if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', name):
+        raise ProjectStructureError(
+            "Block name must start with a letter and contain only letters, "
+            "numbers, and underscores"
+        )
+    
+    # Check for Python reserved words
+    import keyword
+    if keyword.iskeyword(name):
+        raise ProjectStructureError(f"'{name}' is a Python reserved word")
+    
+    # Check for common problematic names
+    reserved_names = {'__init__', '__main__', 'test', 'tests'}
+    if name.lower() in reserved_names:
+        raise ProjectStructureError(f"'{name}' is a reserved name")
+
+
 def copy_blueprint_to_project(
     blueprint_path: str,
     project_path: str,
@@ -136,20 +169,27 @@ def copy_blueprint_to_project(
     Raises:
         ProjectStructureError: If the operation fails
     """
+    # Validate the block name first
+    validate_block_name(new_block_name)
+    
+    # Ensure project structure exists
+    initialize_project_structure(project_path)
+    
+    blocks_dir = get_project_blocks_dir(project_path)
+    new_block_dir = blocks_dir / new_block_name
+    
+    if new_block_dir.exists():
+        raise ProjectStructureError(
+            f"Block '{new_block_name}' already exists in project"
+        )
+    
+    # Track if we need to rollback
+    created_dir = False
+    
     try:
-        # Ensure project structure exists
-        initialize_project_structure(project_path)
-        
-        blocks_dir = get_project_blocks_dir(project_path)
-        new_block_dir = blocks_dir / new_block_name
-        
-        if new_block_dir.exists():
-            raise ProjectStructureError(
-                f"Block '{new_block_name}' already exists in project"
-            )
-        
         # Copy the blueprint directory
         shutil.copytree(blueprint_path, new_block_dir)
+        created_dir = True
         
         # Rename the main Python file
         blueprint_name = Path(blueprint_path).name
@@ -161,6 +201,10 @@ def copy_blueprint_to_project(
             
             # Update function name in the Python file
             update_block_function_name(new_py_file, blueprint_name, new_block_name)
+        else:
+            raise ProjectStructureError(
+                f"Blueprint Python file '{blueprint_name}.py' not found"
+            )
         
         # Update metadata files
         update_block_metadata(new_block_dir, blueprint_name, new_block_name)
@@ -169,7 +213,17 @@ def copy_blueprint_to_project(
         return str(new_block_dir)
         
     except Exception as e:
+        # Rollback on failure
+        if created_dir and new_block_dir.exists():
+            try:
+                shutil.rmtree(new_block_dir)
+                logger.info(f"Rolled back creation of block '{new_block_name}'")
+            except Exception as rollback_error:
+                logger.error(f"Failed to rollback: {rollback_error}")
+        
         logger.error(f"Failed to copy blueprint to project: {e}")
+        if isinstance(e, ProjectStructureError):
+            raise
         raise ProjectStructureError(str(e))
 
 
@@ -187,10 +241,19 @@ def update_block_function_name(
     """
     content = py_file.read_text()
     
-    # Replace the decorated function name
-    content = content.replace(f"def {old_name}(", f"def {new_name}(")
+    # Use regex to replace function definition more precisely
+    # This handles cases with different spacing and ensures we only replace
+    # the function definition, not other occurrences of the name
+    pattern = rf'^(\s*def\s+){re.escape(old_name)}(\s*\()'
+    replacement = rf'\1{new_name}\2'
     
-    py_file.write_text(content)
+    # Use MULTILINE flag to match at the beginning of any line
+    updated_content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
+    
+    if updated_content == content:
+        logger.warning(f"Function definition 'def {old_name}(' not found in {py_file}")
+    
+    py_file.write_text(updated_content)
 
 
 def update_block_metadata(
