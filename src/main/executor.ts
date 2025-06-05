@@ -9,6 +9,7 @@ export function execCommand(
   command: Command,
   options?: {
     quiet?: boolean;
+    cwd?: string;
   },
 ): Promise<string> {
   log.info("execCommand: " + command.getCommand());
@@ -21,8 +22,13 @@ export function execCommand(
       return;
     }
 
+    // Get the app root directory
+    const appRoot = app.isPackaged 
+      ? require('path').join(app.getAppPath(), '..')  // Go up from app directory
+      : process.cwd();
+
     const child = exec(cmd, {
-      cwd: app.isPackaged ? process.resourcesPath : undefined,
+      cwd: options?.cwd || appRoot,
     });
 
     let stdout = "";

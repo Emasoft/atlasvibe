@@ -124,6 +124,11 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   Created deployment scripts that properly configure Python 3.11 environment
     *   Fixed module import issues with proper package installation
     *   Updated all Python-related commands in TypeScript to use uv instead of Poetry
+    *   Created comprehensive build and test scripts:
+        - `build-and-test.sh` - Complete build and test pipeline with uv
+        - `run-tests-with-uv.sh` - Run Playwright tests with backend server
+        - `run-server-with-uv.sh` - Run server directly without Electron
+        - `run-with-uv.sh` - Run either server or app with proper environment
 
 **Task 2.6: Data Persistence and Project Files**
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.
@@ -140,6 +145,34 @@ This phase will focus on the long-term goal of transforming nodes into AI agents
     *   Develop UI/UX for managing AI-driven code generation (prompts, suggestions, versioning).
 *   **Detailed planning for this phase will occur after Phases 1 and 2 are substantially complete.**
 
+## Phase 4: Simplified Packaging and Distribution ✅ COMPLETED
+
+**Task 4.1: Remove ASAR Packaging** ✅ COMPLETED
+*   **Action:** Eliminate ASAR packaging to simplify file access and development
+*   **Implementation:**
+    *   Set `asar: false` in electron-builder.yaml
+    *   Updated all `process.resourcesPath` references to use app directory
+    *   Modified path resolution in consts.ts, executor.ts, utils.ts, and python/index.ts
+    *   Electron app now runs with unpacked files for easier debugging
+
+**Task 4.2: Create Python Package Structure** ✅ COMPLETED
+*   **Action:** Transform AtlasVibe into a standard pip-installable Python package
+*   **Implementation:**
+    *   Created `atlasvibe` package with CLI entry points
+    *   Added `atlasvibe.cli` module with commands: run, server, ui, init
+    *   Created build_hooks.py for bundling Electron app with Python package
+    *   Updated pyproject.toml with script entry points
+    *   Created MANIFEST.in for proper file inclusion
+    *   Created install.sh for easy installation from source
+
+**Task 4.3: Unified Distribution** ✅ COMPLETED
+*   **Benefits:**
+    *   Single `pip install atlasvibe` command for full installation
+    *   No platform-specific Electron builds needed
+    *   Python and JavaScript code in same package
+    *   Simplified deployment and version management
+    *   Better integration between frontend and backend
+
 ## General Considerations
 
 *   **Virtual Environments:** The existing per-node venv approach needs to be compatible with the new custom block structure. Ensure that when a custom block is created, its venv setup is also handled correctly using uv. Only uv must be used as environment manager.
@@ -147,4 +180,5 @@ This phase will focus on the long-term goal of transforming nodes into AI agents
 *   **Testing:** Develop a robust testing strategy for all new functionalities, especially the block creation and editing workflows.
 *   **User Experience (UX):** Prioritize an intuitive and clear UX for the new block management and project system.
 *   **Backwards Compatibility:** Projects created with the old system will likely not be compatible. This should be clearly communicated.
+*   **Package Distribution:** The new pip-based distribution simplifies installation but requires proper testing of the bundled Electron app across platforms.
 

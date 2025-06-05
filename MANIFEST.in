@@ -1,0 +1,45 @@
+# Include all Python modules
+recursive-include atlasvibe *.py
+recursive-include captain *.py
+recursive-include blocks *.py *.json *.md *.txt *.cfg
+recursive-include pkgs *.py *.pyi *.json *.md *.txt
+recursive-include PYTHON *.py
+recursive-include cli *.py
+recursive-include atlasvibe_engine *.py
+
+# Include the main entry point
+include main.py
+
+# Include Electron app files (when built)
+recursive-include electron_dist *
+
+# Include configuration files
+include pyproject.toml
+include pyproject-build.toml
+include setup.cfg
+include requirements.txt
+include package.json
+include package-lock.json
+include electron-builder.yaml
+
+# Include documentation
+include README.md
+include LICENSE
+include DEVELOPMENT_PLAN.md
+include CLAUDE.md
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.log
+global-exclude .gitignore
+
+# Exclude development directories
+prune .git
+prune .venv
+prune test-results
+prune temp_test
+prune out
+prune dist
+prune node_modules  # We'll handle this separately in build_hooks.py

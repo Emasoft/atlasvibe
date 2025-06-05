@@ -365,11 +365,27 @@ pnpm run check           # Check formatting without fixing
 # Frontend build
 pnpm run build
 
-# Electron packages
-pnpm run electron-package          # All platforms
-pnpm run electron-package:windows   # Windows only
-pnpm run electron-package:mac       # macOS only
-pnpm run electron-package:linux     # Linux only
+# Build Python package (includes Electron app)
+./install.sh              # Full installation from source
+uv run python -m build    # Build wheel only
+
+# Install package
+pip install dist/*.whl    # Install built wheel
+pip install -e .         # Development install
+```
+
+### Running AtlasVibe
+```bash
+# After installation via pip
+atlasvibe                    # Run full application
+atlasvibe server             # Run backend server only
+atlasvibe ui                 # Run UI only
+atlasvibe ui --dev          # Run UI in development mode
+atlasvibe init my-project    # Create new project
+
+# Development mode (without installation)
+uv run python main.py        # Run backend
+pnpm run dev                 # Run frontend (separate terminal)
 ```
 
 ### Block Management
@@ -383,6 +399,27 @@ just add <path>          # or: uv run python3 fjblock.py add <path>
 # Initialize docs and blocks
 just init
 ```
+
+## Package Structure (NEW)
+
+AtlasVibe is now distributed as a standard Python package that includes both backend and frontend:
+
+### No More ASAR Packaging
+- Electron app is distributed unpacked (asar: false)
+- Simplifies file access and debugging
+- No more path resolution issues with process.resourcesPath
+- All files are directly accessible in the installed package
+
+### Unified Distribution
+- Single `pip install atlasvibe` installs everything
+- No need for platform-specific Electron builds
+- Python backend and Electron frontend in same package
+- Simplified deployment and version management
+
+### Installation Methods
+1. **From Source**: `./install.sh` - builds and installs complete package
+2. **From PyPI**: `pip install atlasvibe` (when published)
+3. **Development**: `pip install -e .` for editable install
 
 ## Architecture Overview
 

@@ -3,9 +3,7 @@ directories:
 appId: com.emasoft.atlasvibe
 productName: atlasvibe
 icon: ./public/favicon.ico
-asar: true
-asarUnpack:
-  - resources/**
+asar: false
 # Notarization is currently disabled as it requires Apple Developer credentials and incurs additional costs.
 # afterSign: ./scripts/notarize.js
 files:

@@ -56,13 +56,45 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+include = [
+    "atlasvibe_engine/**/*",
+    "captain/**/*",
+    "blocks/**/*",
+    "pkgs/**/*",
+    "PYTHON/**/*",
+    "cli/**/*",
+    "main.py",
+    "electron/**/*",  # Include Electron app files
+    "package.json",
+    "package-lock.json",
+    "electron-builder.yaml",
+    "README.md",
+    "LICENSE",
+]
+exclude = [
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".venv",
+    "test-results",
+    "temp_test",
+    "out",
+    "node_modules",  # We'll handle this separately
+    "dist",  # Build artifacts
+]
+
 [tool.hatch.build.targets.wheel]
 packages = [
   "atlasvibe_engine",
   "pkgs/atlasvibe_sdk",
   "pkgs/atlasvibe",
   "cli",
+  "captain",
 ]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "build_hooks.py"
 
 [tool.pytest.ini_options]
 minversion = "7.0"

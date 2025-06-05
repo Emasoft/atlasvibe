@@ -136,11 +136,16 @@ export async function ensureUvEnvironment(): Promise<void> {
     await installUv();
   }
   
+  // Get the app root directory (without ASAR, resourcesPath points to app contents)
+  const appRoot = app.isPackaged 
+    ? join(app.getAppPath(), '..')  // Go up from app.asar directory
+    : process.cwd();
+    
   // Ensure virtual environment exists
-  const venvPath = join(app.isPackaged ? process.resourcesPath! : process.cwd(), ".venv");
+  const venvPath = join(appRoot, ".venv");
   if (!existsSync(venvPath)) {
     log.info("Creating virtual environment with uv...");
-    await execCommand(new Command("uv venv --python 3.11"));
+    await execCommand(new Command("uv venv --python 3.11"), { cwd: appRoot });
   }
   
   // Set UV_PYTHON to use the venv
@@ -174,14 +179,19 @@ export async function spawnCaptain(): Promise<void> {
     
     const command = new Command(`"${pythonCommand}" main.py`);
 
+    // Get the app root directory
+    const appRoot = app.isPackaged 
+      ? join(app.getAppPath(), '..')  // Go up from app.asar directory
+      : process.cwd();
+      
     log.info("execCommand: " + command.getCommand());
-    log.info("Working directory: " + (app.isPackaged ? process.resourcesPath : process.cwd()));
+    log.info("Working directory: " + appRoot);
 
     global.captainProcess = spawn(
       command.getCommand().split(" ")[0],
       command.getCommand().split(" ").slice(1),
       {
-        cwd: app.isPackaged ? process.resourcesPath : undefined,
+        cwd: appRoot,
         shell: true,
         env: {
           ...process.env,
