@@ -1,6 +1,8 @@
 from threading import Lock
 
-from tm_devices.drivers.pi.pi_device import PIDevice
+# Temporarily disabled - tm_devices API changed
+# from tm_devices.drivers.pi.pi_device import PIDevice
+PIDevice = None
 
 from atlasvibe.parameter_types import (
     HardwareConnection,

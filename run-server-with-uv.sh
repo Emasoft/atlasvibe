@@ -24,9 +24,15 @@ fi
 echo "Installing/updating dependencies..."
 uv sync --all-extras
 
-# 3. Setup environment variables
+# 3. Install atlasvibe package if needed
+if ! uv pip show atlasvibe >/dev/null 2>&1; then
+    echo "Installing atlasvibe package..."
+    cd pkgs/atlasvibe && uv pip install -e . && cd ../..
+fi
+
+# 4. Setup environment variables
 export VIRTUAL_ENV="$PROJECT_DIR/.venv"
-export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/pkgs/atlasvibe:$PROJECT_DIR/pkgs/atlasvibe_sdk:$PYTHONPATH"
+export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/pkgs:$PROJECT_DIR/pkgs/atlasvibe:$PROJECT_DIR/pkgs/atlasvibe_sdk:$PYTHONPATH"
 export UV_PYTHON="$VIRTUAL_ENV/bin/python"
 
 # 4. Display environment info

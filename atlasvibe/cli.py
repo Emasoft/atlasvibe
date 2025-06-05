@@ -17,7 +17,8 @@ def get_app_dir() -> Path:
     """Get the installed app directory."""
     # When installed via pip, the app files are in the package directory
     import atlasvibe
-    return Path(atlasvibe.__file__).parent
+    # The actual app files are in the parent directory of the atlasvibe package
+    return Path(atlasvibe.__file__).parent.parent
 
 
 def setup_environment() -> None:
@@ -27,13 +28,19 @@ def setup_environment() -> None:
     # Set environment variables
     os.environ['ATLASVIBE_HOME'] = str(app_dir)
     
-    # Add Python paths
+    # Add Python paths - include the pkgs directory so imports work
     python_paths = [
         str(app_dir),
         str(app_dir / 'captain'),
+        str(app_dir / 'pkgs'),  # This allows "from atlasvibe import ..." to work
         str(app_dir / 'pkgs' / 'atlasvibe'),
         str(app_dir / 'pkgs' / 'atlasvibe_sdk'),
     ]
+    
+    # Also add to sys.path for immediate effect
+    for path in python_paths:
+        if path not in sys.path:
+            sys.path.insert(0, path)
     
     current_pythonpath = os.environ.get('PYTHONPATH', '')
     new_pythonpath = ':'.join(python_paths + [current_pythonpath] if current_pythonpath else python_paths)
