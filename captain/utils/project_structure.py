@@ -7,6 +7,7 @@
 # - Added project validation and initialization functions
 # - Added block name validation and better error handling
 # - Improved function name replacement with regex
+# - Integrated automatic block_data.json regeneration when blocks are cloned
 # 
 
 """Project structure management utilities for atlasvibe.
@@ -21,6 +22,7 @@ import re
 from pathlib import Path
 from typing import Optional, List
 from captain.utils.logger import logger
+from captain.utils.block_metadata_generator import regenerate_block_data_json
 
 
 class ProjectStructureError(Exception):
@@ -225,6 +227,12 @@ def copy_blueprint_to_project(
         
         # Update metadata files
         update_block_metadata(new_block_dir, blueprint_name, new_block_name)
+        
+        # Regenerate block_data.json from the updated docstring
+        if regenerate_block_data_json(str(new_block_dir)):
+            logger.info(f"Regenerated block_data.json for '{new_block_name}'")
+        else:
+            logger.warning(f"Failed to regenerate block_data.json for '{new_block_name}'")
         
         logger.info(f"Created custom block '{new_block_name}' from blueprint '{blueprint_name}'")
         return str(new_block_dir)

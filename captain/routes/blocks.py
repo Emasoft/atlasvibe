@@ -17,6 +17,7 @@ from captain.utils.project_structure import (
 )
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
+from captain.utils.block_metadata_generator import regenerate_block_data_json
 
 router = APIRouter(tags=["blocks"])
 
@@ -200,6 +201,10 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             
             # Extract block name from path
             block_name = block_file.parent.name
+            
+            # Regenerate block_data.json from the updated docstring
+            if not regenerate_block_data_json(str(block_file.parent)):
+                logger.warning(f"Failed to regenerate block_data.json for '{block_name}'")
             
             # Regenerate manifest for the updated block
             block_manifest = create_manifest(str(block_file))

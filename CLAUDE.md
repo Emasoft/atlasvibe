@@ -1217,17 +1217,15 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 
 #### 2. Automatic File Generation for Custom Blocks (NEW)
 - **Module**: `captain/utils/block_metadata_generator.py`
-- **Trigger**: Automatically when a new Python file is created in a block directory
+- **Integration Points**:
+  - `/blocks/create-custom/` API (when cloning blueprints)
+  - `/blocks/update-code/` API (when editing block code)
+  - BlocksWatcher (fallback for direct file changes)
 - **Process**:
-  1. BlocksWatcher detects new Python file matching directory name
-  2. Checks if metadata files exist
-  3. If new block, generates all metadata files:
-     - `block_data.json` - From docstring
-     - `app.json` - Default workflow template
-     - `example.md` - Basic documentation template
-     - `*_test_.py` - Test file template
-  4. If existing block modified, regenerates only `block_data.json`
-- **Integration**: Fully integrated into BlocksWatcher service
+  1. When blueprint is cloned: Regenerates `block_data.json` from updated function
+  2. When code is edited: Regenerates `block_data.json` from modified docstring
+  3. BlocksWatcher: Detects external file changes and triggers regeneration
+- **Integration**: Seamlessly integrated into AtlasVibe's clone-and-edit workflow
 
 #### 3. block_data.json Generation
 - **Function**: `captain/utils/block_metadata_generator.py::generate_block_data_json()`
@@ -1309,34 +1307,64 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
   3. Calls `importCustomBlocks()` for project blocks
   4. Sets `manifestChanged` flag in store
 
-### Custom Block Creation Flow
+### AtlasVibe Block System Workflow
 
-1. **Manual Creation**: Creating a Python file in block directory
-   - User creates `BLOCK_NAME/BLOCK_NAME.py` file
-   - BlocksWatcher detects the new file
-   - Automatically generates all metadata files:
-     - `block_data.json` from docstring
-     - `app.json` with default workflow
-     - `example.md` with template
-     - `BLOCK_NAME_test_.py` with test template
-   - Broadcasts manifest update via WebSocket
+AtlasVibe uses a sophisticated clone-and-edit workflow where **all blocks are either blueprints or custom blocks**, and **all are saved in a global palette with unique names**.
 
-2. **Create via API**: `/blocks/create-custom/`
-   - Copies blueprint block to project
-   - Renames files and updates function names
-   - Regenerates manifest immediately
+#### Key Concepts:
+1. **Blueprint Blocks**: Read-only original blocks in `/blocks/` directory
+2. **Custom Blocks**: User-created blocks stored in project-specific `atlasvibe_blocks/` directories
+3. **Global Palette**: All blocks (blueprints + custom) are available across all projects
+4. **Unique Naming**: No two blocks can have the same name (function name = block name)
 
-3. **Update via API**: `/blocks/update-code/`
-   - Validates it's a custom block (not blueprint)
-   - Writes new code with backup
-   - Regenerates manifest
-   - Rolls back on failure
-   
-4. **Automatic Regeneration**: When Python file is modified
-   - BlocksWatcher detects file change
-   - Regenerates `block_data.json` from updated docstring
-   - Preserves other metadata files
-   - Broadcasts manifest update
+#### Block Creation Workflow:
+
+1. **Clone/Instance Block** (UI Drag & Drop):
+   - User drags a blueprint block from palette to workflow
+   - System automatically:
+     - Clones the blueprint to project's `atlasvibe_blocks/` folder
+     - Renames it with suffix (_1, _2, etc.) to ensure uniqueness
+     - Adds the custom block to global palette
+     - Places the custom block instance in workflow (not the blueprint)
+   - API: `/blocks/create-custom/`
+
+2. **Edit Block Code** (Integrated UI Editor):
+   - User opens block editor in UI
+   - Modifies Python code directly
+   - Saves changes via `/blocks/update-code/` API
+   - System automatically:
+     - Updates the Python file
+     - Regenerates all metadata (manifest, block_data.json)
+     - Updates workflow in real-time
+     - Triggers visual regeneration indicators
+
+3. **Duplicate Existing Block** (Workflow):
+   - User can duplicate any block already in the workflow
+   - Creates a new custom block with incremented suffix
+   - Adds to global palette
+
+#### Virtual Environment Management (Per Block):
+- Each block runs in its own virtual environment managed by `uv`
+- Environments are automatically created/updated when:
+  - Block is first created
+  - Dependencies change in `@atlasvibe` decorator
+  - Python version requirements change
+- Ensures complete isolation between blocks
+- No dependency conflicts between blocks
+
+#### Automatic Metadata Generation:
+When a custom block is created or modified:
+1. `block_data.json` - Generated from docstring
+2. `app.json` - Copied/updated from original
+3. `example.md` - Copied/updated from original
+4. `manifest` - Regenerated from AST parsing
+5. Virtual environment - Created/updated as needed
+
+#### Important Notes:
+- **No "empty" blocks**: Every custom block starts as a clone of an existing block
+- **No manual file creation**: Everything is done through the UI
+- **Real-time updates**: Changes are reflected immediately in the workflow
+- **Global availability**: Custom blocks from any project appear in all projects' palettes
 
 ### What's NOT Implemented (Visual Feedback)
 

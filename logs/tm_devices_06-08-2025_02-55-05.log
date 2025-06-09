@@ -1,0 +1,4 @@
+[2025-06-08 02:55:05.578219] [tm_devices] [   DEBUG] timezone==Europe/Rome
+[2025-06-08 02:55:05.578670] [tm_devices] [   DEBUG] tm_devices==3.2.0
+[2025-06-08 02:55:05.578757] [tm_devices] [    INFO] Opening DeviceManager
+[2025-06-08 02:55:05.991542] [tm_devices] [ WARNING] The DeviceManager has already been created and is not allowed to be instantiated twice. Previously created instance will be used instead.

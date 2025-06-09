@@ -1,0 +1,3 @@
+[2025-06-06 22:30:45.473482] [tm_devices] [   DEBUG] timezone==Europe/Rome
+[2025-06-06 22:30:45.474083] [tm_devices] [   DEBUG] tm_devices==3.2.0
+[2025-06-06 22:30:45.474153] [tm_devices] [    INFO] Opening DeviceManager
