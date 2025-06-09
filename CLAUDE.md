@@ -1307,41 +1307,60 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
   3. Calls `importCustomBlocks()` for project blocks
   4. Sets `manifestChanged` flag in store
 
-### AtlasVibe Block System Workflow
+### AtlasVibe Block System Architecture
 
-AtlasVibe uses a sophisticated clone-and-edit workflow where **all blocks are either blueprints or custom blocks**, and **all are saved in a global palette with unique names**.
+AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exist in two completely separate layers:
 
 #### Key Concepts:
-1. **Blueprint Blocks**: Read-only original blocks in `/blocks/` directory
-2. **Custom Blocks**: User-created blocks stored in project-specific `atlasvibe_blocks/` directories
-3. **Global Palette**: All blocks (blueprints + custom) are available across all projects
-4. **Unique Naming**: No two blocks can have the same name (function name = block name)
+
+1. **Blueprint Blocks** (Global Palette):
+   - Original blocks in `/blocks/` directory
+   - User-created blueprints (saved via "Save this block as a blueprint")
+   - **Global and shared across all projects/workflows**
+   - **Cannot be directly edited** - must edit an instance and re-save as blueprint
+   - Stored in global blocks folder
+
+2. **Block Instances** (Project-specific):
+   - **Workflows contain only instances, never blueprints directly**
+   - Created when blueprint is dragged from palette to workflow
+   - Stored in project's `atlasvibe_blocks/` directory
+   - Named as `<blueprint_name>_<instance_index>` (e.g., "ADDITION_1", "ADDITION_2")
+   - **Completely decoupled** from blueprint after creation
+   - Can be edited, renamed, deleted without affecting blueprint or other instances
 
 #### Block Creation Workflow:
 
-1. **Clone/Instance Block** (UI Drag & Drop):
-   - User drags a blueprint block from palette to workflow
+1. **Create Instance from Blueprint** (UI Drag & Drop):
+   - User drags blueprint from global palette to workflow
    - System automatically:
-     - Clones the blueprint to project's `atlasvibe_blocks/` folder
-     - Renames it with suffix (_1, _2, etc.) to ensure uniqueness
-     - Adds the custom block to global palette
-     - Places the custom block instance in workflow (not the blueprint)
+     - Clones blueprint to project's `atlasvibe_blocks/` folder
+     - Names it `<blueprint_name>_<index>` (auto-incrementing)
+     - Places the instance in workflow
+     - **Instance is now completely independent**
    - API: `/blocks/create-custom/`
 
-2. **Edit Block Code** (Integrated UI Editor):
-   - User opens block editor in UI
-   - Modifies Python code directly
+2. **Edit Block Instance** (Integrated UI Editor):
+   - User opens instance editor in UI
+   - Modifies Python code directly (only affects this instance)
    - Saves changes via `/blocks/update-code/` API
    - System automatically:
-     - Updates the Python file
-     - Regenerates all metadata (manifest, block_data.json)
+     - Updates the instance's Python file
+     - Regenerates metadata for this instance only
      - Updates workflow in real-time
-     - Triggers visual regeneration indicators
+     - **Blueprint remains unchanged**
 
-3. **Duplicate Existing Block** (Workflow):
-   - User can duplicate any block already in the workflow
-   - Creates a new custom block with incremented suffix
-   - Adds to global palette
+3. **Save Instance as Blueprint**:
+   - User clicks "Save this block as a blueprint" in block options
+   - System prompts for blueprint name
+   - Checks for name collision with existing blueprints
+   - Option to overwrite existing blueprint (with confirmation)
+   - **Creates/updates global blueprint, instance remains unchanged**
+
+#### Independence and Decoupling:
+- **Delete Blueprint**: Instances continue to exist as custom blocks
+- **Edit Instance**: Blueprint and other instances remain unchanged  
+- **Delete Instance**: Blueprint and other instances remain unchanged
+- **Rename Instance**: Only affects that specific instance
 
 #### Virtual Environment Management (Per Block):
 - Each block runs in its own virtual environment managed by `uv`
@@ -1361,10 +1380,37 @@ When a custom block is created or modified:
 5. Virtual environment - Created/updated as needed
 
 #### Important Notes:
-- **No "empty" blocks**: Every custom block starts as a clone of an existing block
+- **No "empty" blocks**: Every instance starts as a clone of a blueprint
 - **No manual file creation**: Everything is done through the UI
 - **Real-time updates**: Changes are reflected immediately in the workflow
-- **Global availability**: Custom blocks from any project appear in all projects' palettes
+- **Complete independence**: Blueprints and instances are fully decoupled after creation
+
+## Future Feature: Matrioskas (Nested Workflows)
+
+**Status**: Planned but not yet implemented
+
+### Concept
+Matrioskas solve the problem of managing multiple similar blocks without manual synchronization. Instead of editing dozens of similar instances individually, users can group blocks into reusable sub-workflows.
+
+### Features:
+- **Group Definition**: Select multiple blocks and their connections to create a Matrioska
+- **Input/Output Mapping**: Define inputs and outputs for the entire group
+- **Loop/Cron Behavior**: Configure the group to repeat until a condition ("Matrioska Yield") is met
+- **Nesting**: Matrioskas can contain other Matrioskas with unlimited depth
+- **Instance Management**: Once defined, Matrioskas can be instanced multiple times like blocks
+
+### Examples:
+1. **Single Block Matrioska**: Wrap a single XOR block, instance it multiple times in a chain
+2. **Complex Workflow Matrioska**: Entire image upscaling workflow becomes a single reusable node
+3. **Nested Matrioskas**: Workflows containing other workflows with no nesting limits
+
+### User Experience:
+- **Creation**: Select blocks → "Create Matrioska" → Define I/O and behavior
+- **Usage**: Drag Matrioska from palette like a regular block
+- **Editing**: Double-click Matrioska → Editor shows internal workflow
+- **Display**: Appears as single block/node in main workflow
+
+This feature will provide the scalability needed for complex workflows while maintaining AtlasVibe's visual programming paradigm.
 
 ### What's NOT Implemented (Visual Feedback)
 
