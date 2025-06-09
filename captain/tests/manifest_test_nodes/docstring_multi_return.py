@@ -6,7 +6,7 @@
 
 from typing import TypedDict
 
-from atlasvibe import OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
 
 
 class DocstringMultiReturnOutput(TypedDict):

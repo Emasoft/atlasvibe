@@ -1,5 +1,5 @@
 from atlasvibe import atlasvibe, Vector
-from atlasvibe.utils import ATLASVIBE_CACHE_DIR
+from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
 
 
 @atlasvibe(

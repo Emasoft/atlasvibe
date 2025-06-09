@@ -11,7 +11,7 @@ import pytest
 
 from captain.utils.manifest.build_manifest import create_manifest
 
-TEST_NODES_PATH = os.path.join(os.getcwd(), "tests", "manifest_test_nodes")
+TEST_NODES_PATH = os.path.join(os.path.dirname(__file__), "manifest_test_nodes")
 
 
 def get_manifest(filename: str):

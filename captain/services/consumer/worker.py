@@ -2,8 +2,8 @@ import uuid
 from queue import Queue
 from typing import Any, cast
 
-from atlasvibe import JobFailure, JobService, JobSuccess
-from atlasvibe.atlasvibe_node_venv import PipInstallThread
+from pkgs.atlasvibe.atlasvibe import JobFailure, JobService, JobSuccess
+from pkgs.atlasvibe.atlasvibe.atlasvibe_node_venv import PipInstallThread
 
 from captain.types.worker import JobInfo, PoisonPill
 from captain.utils.broadcast import Signaler

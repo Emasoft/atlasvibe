@@ -1,6 +1,6 @@
 from typing import Callable, Any
 
-from atlasvibe.parameter_types import format_param_value
+from .parameter_types import format_param_value
 from .dao import Dao
 
 

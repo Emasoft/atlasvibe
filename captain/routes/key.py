@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Response, status, Depends
-from atlasvibe import delete_env_var, get_credentials, get_env_var, set_env_var
+from pkgs.atlasvibe.atlasvibe import delete_env_var, get_credentials, get_env_var, set_env_var
 from captain.middleware.auth_middleware import is_admin
 from captain.types.key import EnvVar
 from captain.utils.logger import logger

@@ -2,7 +2,7 @@ import json
 import logging
 import requests
 from fastapi import APIRouter, Header, Response
-from atlasvibe.env_var import get_env_var, get_atlasvibe_cloud_url
+from pkgs.atlasvibe.atlasvibe.env_var import get_env_var, get_atlasvibe_cloud_url
 # from atlasvibe_cloud import test_sequencer  # Cloud functionality not available
 test_sequencer = None
 from pydantic import BaseModel, Field

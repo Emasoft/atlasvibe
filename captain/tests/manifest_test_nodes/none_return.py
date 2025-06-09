@@ -4,7 +4,7 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-from atlasvibe import atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node # CHANGED
 
 
 @atlasvibe_node(node_type="TEST_TYPE") # CHANGED

@@ -27,7 +27,7 @@ def DEEPLAB_V3(default: Image) -> Image:
     import torch
     import torchvision.transforms.functional as TF
     from atlasvibe import Image
-    from atlasvibe.utils import ATLASVIBE_CACHE_DIR
+    from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
     from torchvision import transforms
 
     # Parse input image

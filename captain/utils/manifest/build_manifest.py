@@ -14,7 +14,7 @@ from typing import (
 )
 
 from docstring_parser.numpydoc import NumpydocParser, ParamSection
-from atlasvibe import (
+from pkgs.atlasvibe.atlasvibe import (
     Array,
     CameraConnection,
     CameraDevice,
@@ -207,8 +207,30 @@ class ManifestBuilder:
 
 def create_manifest(path: str) -> dict[str, Any]:
     node_name, init_func_name, tree, overload = make_manifest_ast(path)
+    
+    # Import atlasvibe at module level to ensure it's available
+    import pkgs.atlasvibe.atlasvibe as atlasvibe_module
+    
     code = compile(tree, filename="<unknown>", mode="exec")
     module = ModuleType("node_module")
+    
+    # Inject atlasvibe module and decorator into the execution namespace
+    module.__dict__['atlasvibe_node'] = atlasvibe_module.atlasvibe_node  # The decorator function
+    module.__dict__['atlasvibe'] = atlasvibe_module.atlasvibe  # The alias
+    # Also inject common atlasvibe exports that might be used
+    for attr in ['OrderedPair', 'Scalar', 'Vector', 'Matrix', 'DataContainer']:
+        if hasattr(atlasvibe_module, attr):
+            module.__dict__[attr] = getattr(atlasvibe_module, attr)
+    
+    # Also inject the atlasvibe module itself for "from atlasvibe import" statements
+    import sys
+    class AtlasvibeImportModule:
+        def __getattr__(self, name):
+            return getattr(atlasvibe_module, name)
+    
+    sys.modules['atlasvibe'] = AtlasvibeImportModule()
+    sys.modules['pkgs.atlasvibe.atlasvibe'] = atlasvibe_module
+    
     exec(code, module.__dict__)
 
     func = getattr(module, node_name)

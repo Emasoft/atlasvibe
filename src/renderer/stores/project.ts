@@ -14,6 +14,8 @@ import {
   EdgeData,
 } from "@/renderer/types/block";
 import { useShallow } from "zustand/react/shallow";
+import { CustomBlockDefinition } from "@/renderer/types/custom-block";
+import { createNodeFromBlock, duplicateNode } from "@/renderer/lib/node-factory";
 
 import * as galleryItems from "@/renderer/data/apps";
 import { ExampleProjects } from "@/renderer/data/docs-example-apps";
@@ -484,6 +486,7 @@ export const useProjectStore = create<State & Actions>()(
 
     saveProject: async () => {
       const project: Project = {
+        version: '2.0.0', // Current format version
         name: get().name,
         rfInstance: {
           nodes: get().nodes,
@@ -617,69 +620,48 @@ export const useAddBlock = () => {
         return;
       }
 
-      let newBlockDefinitionResult: BlockDefinition | undefined; 
+      let customBlockResult: CustomBlockDefinition | undefined; 
       try {
         toast.info(
           `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
         );
         
-        newBlockDefinitionResult = await window.api.createCustomBlockFromBlueprint(
+        const apiResult = await window.api.createCustomBlockFromBlueprint(
           blueprintDefinition.key, 
           newCustomBlockName.trim(),
           projectPath, 
         );
         
-        if (!newBlockDefinitionResult || !newBlockDefinitionResult.key || !(newBlockDefinitionResult as any).path) { 
+        // Validate the response has required custom block fields
+        if (!apiResult || !apiResult.key || !apiResult.path) { 
           throw new Error("Backend failed to create custom block details or path is missing.");
         }
         
+        // Cast to CustomBlockDefinition after validation
+        customBlockResult = {
+          ...apiResult,
+          path: apiResult.path,
+          isCustom: true
+        } as CustomBlockDefinition;
+        
         setManifestChanged(true);
         toast.success(
-          `Custom block "${newBlockDefinitionResult.key}" created successfully.`,
+          `Custom block "${customBlockResult.key}" created successfully.`,
         );
         
         const previousBlockPos = localStorage.getItem("prev_node_pos");
         const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
         const nodePosition = addRandomPositionOffset(pos, 300);
 
-        const {
-          key: funcName, 
-          type,
-          parameters: params,
-          init_parameters: initParams,
-          inputs,
-          outputs,
-          pip_dependencies,
-        } = newBlockDefinitionResult; 
-        const newBlockPath = (newBlockDefinitionResult as any).path; // Access path after check
-
-        const nodeId = createBlockId(funcName); 
-        const nodeLabel =
-          funcName === "CONSTANT" 
-            ? params!["constant"].default?.toString()
-            : createBlockLabel(funcName, getTakenNodeLabels(funcName));
-
-        const nodeCtrls = ctrlsFromParams(params, funcName, hardwareDevices);
-        const initCtrls = ctrlsFromParams(initParams, funcName);
-
-        const newNode: Node<BlockData> = {
-          id: nodeId,
-          type, 
-          data: {
-            id: nodeId,
-            label: nodeLabel ?? newCustomBlockName,
-            func: funcName, 
-            type,
-            ctrls: nodeCtrls,
-            initCtrls: initCtrls,
-            inputs,
-            outputs,
-            pip_dependencies,
-            path: newBlockPath, 
-            isCustom: true, 
-          },
+        const newNode = createNodeFromBlock({
+          blockDefinition: customBlockResult,
           position: nodePosition,
-        };
+          label: newCustomBlockName,
+          hardwareDevices,
+          takenLabels: getTakenNodeLabels(customBlockResult.key),
+          isCustom: true,
+          customPath: customBlockResult.path,
+        });
 
         setNodes((nodes) => {
           nodes.push(newNode);
@@ -691,6 +673,17 @@ export const useAddBlock = () => {
       } catch (e: any) {
         console.error("Failed to create custom block:", e);
         toast.error(`Failed to create custom block: ${e.message}`);
+        
+        // Cleanup: If block directory was created but node creation failed,
+        // we should notify the user to manually clean up
+        if (customBlockResult?.path) {
+          toast.warning(
+            "A custom block directory may have been created. " +
+            "Please check your project's atlasvibe_blocks folder.",
+            { duration: 10000 }
+          );
+        }
+        
         return;
       }
     },
@@ -735,25 +728,9 @@ export const useDuplicateBlock = () => {
   return useCallback(
     (node: Node<BlockData>): Result<void, Error> => {
       const funcName = node.data.func;
-      const id = createBlockId(funcName); 
-
-      const newNode: Node<BlockData> = {
-        ...node, 
-        id, 
-        data: {
-          ...node.data, 
-          id, 
-          label:
-            node.data.func === "CONSTANT"
-              ? node.data.ctrls["constant"].value!.toString()
-              : createBlockLabel(funcName, getTakenNodeLabels(funcName)),
-        },
-        position: {
-          x: node.position.x + 30,
-          y: node.position.y + 30,
-        },
-        selected: true,
-      };
+      const takenLabels = getTakenNodeLabels(funcName);
+      
+      const newNode = duplicateNode(node, takenLabels);
 
       try {
         setNodes((prev) => {

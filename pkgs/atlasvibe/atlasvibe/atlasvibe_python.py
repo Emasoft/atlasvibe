@@ -23,7 +23,7 @@ from .node_init import NodeInitService
 from .parameter_types import format_param_value
 from .utils import get_hf_hub_cache_path
 
-__all__ = ["atlasvibe_node", "DefaultParams", "display"]
+__all__ = ["atlasvibe_node", "atlasvibe", "DefaultParams", "display"]
 
 
 def fetch_inputs(previous_jobs: list[dict[str, str]]):
@@ -289,3 +289,7 @@ def atlasvibe_node(
         return decorator(original_function)
 
     return decorator
+
+
+# Alias for backward compatibility
+atlasvibe = atlasvibe_node

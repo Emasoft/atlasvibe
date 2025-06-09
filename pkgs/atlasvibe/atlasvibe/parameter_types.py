@@ -1,4 +1,4 @@
-from atlasvibe.env_var import get_env_var
+from .env_var import get_env_var
 from typing import Any, NewType, Union, Callable
 from abc import ABC
 

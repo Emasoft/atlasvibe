@@ -53,8 +53,8 @@ dev = [
 ]
 
 [project.scripts]
-atlasvibe = "atlasvibe.cli:main"
-atlasvibe-server = "atlasvibe.server:main"
+atlasvibe = "atlasvibe_cli.cli:main"
+atlasvibe-server = "atlasvibe_cli.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -62,12 +62,28 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-  "atlasvibe",
+  "atlasvibe_cli",
   "atlasvibe_engine",
   "pkgs/atlasvibe_sdk",
   "pkgs/atlasvibe",
   "cli",
   "captain",
+  "blocks",
+  "PYTHON",
+]
+
+[tool.hatch.build]
+include = [
+  "main.py",
+  "atlasvibe_cli/**/*",
+  "atlasvibe_engine/**/*",
+  "pkgs/**/*",
+  "cli/**/*", 
+  "captain/**/*",
+  "blocks/**/*",
+  "PYTHON/**/*",
+  "public/**/*",
+  "components.json",
 ]
 
 [tool.pytest.ini_options]

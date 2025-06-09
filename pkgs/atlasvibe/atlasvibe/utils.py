@@ -14,7 +14,7 @@ import yaml
 from huggingface_hub import hf_hub_download
 from huggingface_hub import snapshot_download
 
-from atlasvibe.connection_manager import DeviceConnectionManager
+from .connection_manager import DeviceConnectionManager
 from .dao import Dao
 from .config import AtlasvibeConfig, logger
 from .node_init import NodeInit, NodeInitService

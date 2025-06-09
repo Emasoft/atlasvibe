@@ -7,7 +7,7 @@
 from typing import Union
 
 import numpy as np
-from atlasvibe import (
+from pkgs.atlasvibe.atlasvibe import (
     DataContainer,
     DataFrame,
     Image,

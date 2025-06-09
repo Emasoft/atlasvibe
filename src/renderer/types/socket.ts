@@ -42,6 +42,7 @@ export const WorkerJobResponse = z.object({
       result: z.custom<BlockResult>(),
     })
     .optional(),
+  blockPaths: z.array(z.string()).optional(), // For manifest_update messages
 });
 
 export type WorkerJobResponse = z.infer<typeof WorkerJobResponse>;

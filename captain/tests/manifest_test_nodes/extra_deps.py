@@ -5,7 +5,7 @@
 # Refer to the LICENSE file for more details.
 
 import numpy as np
-from atlasvibe import DataFrame, Image, Matrix, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import DataFrame, Image, Matrix, atlasvibe_node # CHANGED
 
 
 @atlasvibe_node(deps={"tensorflow": "2.12.0", "torch": "2.0.1"}, node_type="TEST_TYPE") # CHANGED

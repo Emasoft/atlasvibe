@@ -4,7 +4,7 @@ from threading import Lock
 # from tm_devices.drivers.pi.pi_device import PIDevice
 PIDevice = None
 
-from atlasvibe.parameter_types import (
+from .parameter_types import (
     HardwareConnection,
     HardwareDevice,
     CameraDevice,

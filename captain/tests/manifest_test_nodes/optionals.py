@@ -7,7 +7,7 @@
 from typing import Optional
 
 import numpy as np
-from atlasvibe import DataContainer, Matrix, OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import DataContainer, Matrix, OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
 
 
 @atlasvibe_node(node_type="TEST_TYPE") # CHANGED

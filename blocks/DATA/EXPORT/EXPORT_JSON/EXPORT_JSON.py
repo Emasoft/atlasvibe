@@ -5,7 +5,7 @@ from atlasvibe import (
     DataContainer,
     Directory,
 )
-from atlasvibe.utils import PlotlyJSONEncoder
+from pkgs.atlasvibe.atlasvibe.utils import PlotlyJSONEncoder
 from typing import Optional
 
 

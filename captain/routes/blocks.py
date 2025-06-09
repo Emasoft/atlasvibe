@@ -16,7 +16,7 @@ from captain.utils.project_structure import (
     validate_block_name
 )
 from captain.utils.blocks_path import get_blocks_path
-from captain.utils.manifest.build_manifest import process_block_directory
+from captain.utils.manifest.build_manifest import create_manifest
 
 router = APIRouter(tags=["blocks"])
 
@@ -133,10 +133,7 @@ async def create_custom_block(request: CreateCustomBlockRequest):
         )
         
         # Generate manifest for the new block
-        block_manifest = process_block_directory(
-            Path(new_block_path),
-            request.new_block_name
-        )
+        block_manifest = create_manifest(str(Path(new_block_path) / f"{request.new_block_name}.py"))
         
         if not block_manifest:
             raise HTTPException(
@@ -205,10 +202,7 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             block_name = block_file.parent.name
             
             # Regenerate manifest for the updated block
-            block_manifest = process_block_directory(
-                block_file.parent,
-                block_name
-            )
+            block_manifest = create_manifest(str(block_file))
             
             if not block_manifest:
                 # Restore original content if manifest generation fails

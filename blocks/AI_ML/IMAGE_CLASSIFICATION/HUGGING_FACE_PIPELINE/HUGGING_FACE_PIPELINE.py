@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import PIL.Image as PILImage
 from atlasvibe import DataFrame, Image, atlasvibe
-from atlasvibe.utils import ATLASVIBE_CACHE_DIR
+from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
 
 
 @atlasvibe(deps={"transformers": "4.30.2"})

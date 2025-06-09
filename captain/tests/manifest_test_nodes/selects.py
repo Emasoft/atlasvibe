@@ -6,7 +6,7 @@
 
 from typing import Literal, Optional
 
-from atlasvibe import DataContainer, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import DataContainer, atlasvibe_node # CHANGED
 
 
 @atlasvibe_node(node_type="TEST_TYPE") # CHANGED

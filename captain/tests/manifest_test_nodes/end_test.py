@@ -4,7 +4,7 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-from atlasvibe import DataContainer, JobResultBuilder, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import DataContainer, JobResultBuilder, atlasvibe_node # CHANGED
 
 
 @atlasvibe_node # CHANGED

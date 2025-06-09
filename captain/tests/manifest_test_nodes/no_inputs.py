@@ -1,4 +1,4 @@
-from atlasvibe import DataContainer, atlasvibe
+from pkgs.atlasvibe.atlasvibe import DataContainer, atlasvibe
 
 
 @atlasvibe

@@ -7,8 +7,8 @@ from queue import Queue
 from typing import Any, cast
 
 import networkx as nx
-from atlasvibe import JobFailure, JobSuccess, get_next_directions
-from atlasvibe.utils import clear_atlasvibe_memory  # for some reason, can't import from
+from pkgs.atlasvibe.atlasvibe import JobFailure, JobSuccess, get_next_directions
+from pkgs.atlasvibe.atlasvibe.utils import clear_atlasvibe_memory
 
 from captain.types.worker import JobInfo
 from captain.utils.logger import logger

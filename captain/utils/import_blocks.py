@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from atlasvibe import NoInitFunctionError, get_node_init_function
+from pkgs.atlasvibe.atlasvibe import NoInitFunctionError, get_node_init_function
 
 from captain.models.topology import Topology
 from captain.utils.project_blocks_loader import get_module_for_block, get_project_loader

@@ -14,12 +14,13 @@ from pathlib import Path
 import json
 import sys
 import os
+import asyncio
 
 # Add project root to Python path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from captain.routes.blocks import UpdateBlockCodeRequest, update_block_code
-from captain.utils.manifest.build_manifest import process_block_directory
+from captain.utils.manifest.build_manifest import create_manifest
 from fastapi import HTTPException
 
 
@@ -98,7 +99,8 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
                 "block_dir": custom_block_dir
             }
     
-    def test_update_block_code_real_file_operations(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_update_block_code_real_file_operations(self, real_project_setup):
         """Test updating block code with real file operations."""
         block_file_path = real_project_setup["block_file"]
         project_path = real_project_setup["project_file"]
@@ -133,7 +135,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         )
         
         # Call the actual function (no mocks)
-        result = update_block_code(request)
+        result = await update_block_code(request)
         
         # Verify the file was actually updated
         with open(block_file_path, 'r') as f:
@@ -149,7 +151,8 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         assert "path" in result
         assert result["path"] == str(Path(block_file_path).parent)
     
-    def test_update_block_code_validates_custom_block_path(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_update_block_code_validates_custom_block_path(self, real_project_setup):
         """Test that non-custom blocks are rejected."""
         # Try to update a blueprint block (no atlasvibe_blocks in path)
         request = UpdateBlockCodeRequest(
@@ -159,12 +162,13 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         )
         
         with pytest.raises(HTTPException) as exc_info:
-            update_block_code(request)
+            await update_block_code(request)
         
         assert exc_info.value.status_code == 403
         assert "custom project blocks" in str(exc_info.value.detail)
     
-    def test_update_block_code_validates_project_path(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_update_block_code_validates_project_path(self, real_project_setup):
         """Test that invalid project paths are rejected."""
         request = UpdateBlockCodeRequest(
             block_path=real_project_setup["block_file"],
@@ -173,12 +177,13 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         )
         
         with pytest.raises(HTTPException) as exc_info:
-            update_block_code(request)
+            await update_block_code(request)
         
         assert exc_info.value.status_code == 422
         assert "Invalid project path" in str(exc_info.value.detail)
     
-    def test_update_block_code_handles_missing_file(self):
+    @pytest.mark.asyncio
+    async def test_update_block_code_handles_missing_file(self):
         """Test handling of non-existent block files."""
         request = UpdateBlockCodeRequest(
             block_path="/nonexistent/atlasvibe_blocks/BLOCK/BLOCK.py",
@@ -187,12 +192,13 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         )
         
         with pytest.raises(HTTPException) as exc_info:
-            update_block_code(request)
+            await update_block_code(request)
         
         assert exc_info.value.status_code == 404
         assert "Block file not found" in str(exc_info.value.detail)
     
-    def test_update_block_code_with_syntax_error(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_update_block_code_with_syntax_error(self, real_project_setup):
         """Test that files with syntax errors are handled gracefully."""
         block_file_path = real_project_setup["block_file"]
         project_path = real_project_setup["project_file"]
@@ -222,7 +228,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         # The update might succeed (file is written) but manifest generation might fail
         # This depends on how process_block_directory handles syntax errors
         try:
-            update_block_code(request)
+            await update_block_code(request)
             # If it succeeds, the file should still be updated
             with open(block_file_path, 'r') as f:
                 assert f.read() == bad_code
@@ -231,7 +237,8 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
             with open(block_file_path, 'r') as f:
                 assert f.read() == original_content
     
-    def test_manifest_regeneration_with_real_block(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_manifest_regeneration_with_real_block(self, real_project_setup):
         """Test that manifest is properly regenerated after code update."""
         block_file_path = real_project_setup["block_file"]
         block_dir = real_project_setup["block_dir"]
@@ -265,20 +272,23 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
         )
         
         # Update the block
-        update_block_code(request)
+        await update_block_code(request)
         
         # Manually regenerate manifest to verify it would work
-        manifest = process_block_directory(block_dir, "MY_CUSTOM_BLOCK")
+        manifest = create_manifest(block_file_path)
         
         # The manifest should reflect the new parameter
-        if manifest and "parameters" in manifest:
-            [p["name"] for p in manifest["parameters"]]
-            # Note: process_block_directory might need the actual module to be importable
-            # In a real test environment, this would require proper Python path setup
+        assert manifest is not None
+        assert "parameters" in manifest
+        param_names = list(manifest["parameters"].keys())
+        assert "x" in param_names
+        assert "y" in param_names
+        assert "z" in param_names  # New parameter should be present
     
-    def test_concurrent_updates_safety(self, real_project_setup):
+    @pytest.mark.asyncio
+    async def test_concurrent_updates_safety(self, real_project_setup):
         """Test that concurrent updates don't corrupt files."""
-        import threading
+        import asyncio
         
         block_file_path = real_project_setup["block_file"]
         project_path = real_project_setup["project_file"]
@@ -286,7 +296,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
         results = []
         errors = []
         
-        def update_block(content_suffix):
+        async def update_block(content_suffix):
             try:
                 new_code = f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -304,21 +314,19 @@ def MY_CUSTOM_BLOCK(x: int = 1) -> int:
                     project_path=project_path
                 )
                 
-                result = update_block_code(request)
+                result = await update_block_code(request)
                 results.append(result)
             except Exception as e:
                 errors.append(e)
         
-        # Start multiple threads trying to update the same file
-        threads = []
+        # Start multiple coroutines trying to update the same file
+        tasks = []
         for i in range(3):
-            t = threading.Thread(target=update_block, args=(i,))
-            threads.append(t)
-            t.start()
+            task = asyncio.create_task(update_block(i))
+            tasks.append(task)
         
-        # Wait for all threads to complete
-        for t in threads:
-            t.join()
+        # Wait for all tasks to complete
+        await asyncio.gather(*tasks, return_exceptions=True)
         
         # At least one should succeed
         assert len(results) >= 1

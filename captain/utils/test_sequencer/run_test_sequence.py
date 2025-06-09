@@ -4,7 +4,8 @@ import logging
 import subprocess
 import time
 from captain.routes.cloud import utcnow_str
-from atlasvibe_cloud import test_sequencer
+# from atlasvibe_cloud import test_sequencer  # Cloud functionality not available
+test_sequencer = None
 import traceback
 from typing import Callable, List, Union
 import pydantic

@@ -130,10 +130,20 @@ This phase redefines how blocks are created, managed, and used within a project.
         - `run-server-with-uv.sh` - Run server directly without Electron
         - `run-with-uv.sh` - Run either server or app with proper environment
 
-**Task 2.6: Data Persistence and Project Files**
+**Task 2.6: Data Persistence and Project Files** 🚧 IN PROGRESS
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.
 *   **Details:**
     *   The project file should reference custom blocks by their names/paths within the project's `atlasvibe_blocks/` directory.
+*   **Implementation:**
+    *   Added version field to Project type (v2.0.0)
+    *   Custom blocks now have `isCustom` and `path` properties
+    *   Created project migration utilities for backward compatibility
+    *   Updated useLoadApp hook to handle migrations
+    *   Added comprehensive tests for custom block references
+    *   Tests for multiple custom blocks with unique paths
+    *   Tests for project format migration from v1 to v2
+    *   Updated saveProject to include version field
+    *   Created integration tests for full save/load cycle
 
 ## Phase 3: AI Agent Capabilities (Future - Placeholder)
 

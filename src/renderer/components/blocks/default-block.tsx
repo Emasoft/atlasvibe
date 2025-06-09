@@ -10,6 +10,8 @@ import { TVariant } from "@/renderer/types/tailwind";
 import { variantClassMap } from "@/renderer/lib/utils";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useShallow } from "zustand/react/shallow";
+import { RegeneratingIndicator } from "@/renderer/components/common/RegeneratingIndicator";
+import { useManifestStore } from "@/renderer/stores/manifest";
 
 type DefaultBlockProps = BlockProps & {
   width?: CSSProperties["width"];
@@ -39,6 +41,14 @@ const DefaultBlock = ({
   const updateBlockLabel = useProjectStore(
     useShallow((state) => state.updateBlockLabel),
   );
+  const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
+  
+  // Check if this block is regenerating based on its path
+  const isRegenerating = useMemo(() => {
+    if (!data.path) return false;
+    return regeneratingBlocks.has(data.path);
+  }, [data.path, regeneratingBlocks]);
+  
   const maxInputOutput = useMemo(
     () => Math.max(data.inputs?.length ?? 0, data.outputs?.length ?? 0),
     [data.inputs?.length, data.outputs?.length],
@@ -51,14 +61,16 @@ const DefaultBlock = ({
       selected={selected}
       style={wrapperStyle}
     >
+      <RegeneratingIndicator visible={isRegenerating} />
       <div
         className={clsx(
-          `${variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2`,
+          `${isRegenerating ? 'border-yellow-500' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
           {
-            [`shadow-around ${variantClassMap[variant].shadow}`]:
-              blockRunning || selected,
+            [`shadow-around ${isRegenerating ? 'shadow-yellow-500' : variantClassMap[variant].shadow}`]:
+              blockRunning || selected || isRegenerating,
           },
           { "shadow-around shadow-red-700": blockError },
+          { "animate-pulse": isRegenerating },
           className,
         )}
         style={{

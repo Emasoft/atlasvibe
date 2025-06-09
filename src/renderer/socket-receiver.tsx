@@ -23,12 +23,14 @@ export const SocketReceiver = () => {
     );
 
   const hardwareRefetch = useHardwareStore((state) => state.refresh);
-  const { fetchManifest, importCustomBlocks, setManifestChanged } =
+  const { fetchManifest, importCustomBlocks, setManifestChanged, setBlockRegenerating, clearRegeneratingBlocks } =
     useManifestStore(
       useShallow((state) => ({
         fetchManifest: state.fetchManifest,
         importCustomBlocks: state.importCustomBlocks,
         setManifestChanged: state.setManifestChanged,
+        setBlockRegenerating: state.setBlockRegenerating,
+        clearRegeneratingBlocks: state.clearRegeneratingBlocks,
       })),
     );
 
@@ -85,10 +87,33 @@ export const SocketReceiver = () => {
           // });
           break;
         case "manifest_update":
-          doFetch();
-          doImport();
-          setManifestChanged(true);
-          toast("Changes detected, syncing blocks with changes...");
+          // Start regeneration process
+          if (data.blockPaths && Array.isArray(data.blockPaths)) {
+            // Mark specific blocks as regenerating
+            data.blockPaths.forEach((path: string) => {
+              setBlockRegenerating(path, true);
+            });
+          }
+          
+          toast("Changes detected, regenerating block metadata...");
+          
+          // Fetch updated manifest and import custom blocks
+          Promise.all([doFetch(), doImport()]).then(() => {
+            // Clear regenerating state after successful update
+            if (data.blockPaths && Array.isArray(data.blockPaths)) {
+              data.blockPaths.forEach((path: string) => {
+                setBlockRegenerating(path, false);
+              });
+            } else {
+              clearRegeneratingBlocks();
+            }
+            setManifestChanged(true);
+            toast.success("Blocks updated successfully!");
+          }).catch((error) => {
+            clearRegeneratingBlocks();
+            toast.error("Failed to update blocks");
+            console.error("Manifest update error:", error);
+          });
           break;
         default:
           console.log(" default data type: ", data);

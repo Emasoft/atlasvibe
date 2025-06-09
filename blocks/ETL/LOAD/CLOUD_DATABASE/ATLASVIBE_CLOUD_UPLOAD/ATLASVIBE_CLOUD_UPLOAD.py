@@ -1,5 +1,5 @@
 import os
-from atlasvibe.env_var import get_atlasvibe_cloud_url
+from pkgs.atlasvibe.atlasvibe.env_var import get_atlasvibe_cloud_url
 import pandas as pd
 from atlasvibe import (
     DataContainer,
@@ -11,7 +11,7 @@ from atlasvibe import (
     OrderedPair,
     OrderedTriple,
 )
-from atlasvibe.data_container import (
+from pkgs.atlasvibe.atlasvibe.data_container import (
     ParametricOrderedPair,
     ParametricOrderedTriple,
     ParametricSurface,

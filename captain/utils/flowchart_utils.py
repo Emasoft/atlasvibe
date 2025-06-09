@@ -10,7 +10,7 @@ from threading import Thread
 from typing import Any, cast
 
 import networkx as nx
-from atlasvibe.utils import clear_atlasvibe_memory
+from pkgs.atlasvibe.atlasvibe.utils import clear_atlasvibe_memory
 
 from captain.internal.manager import Manager
 from captain.models.topology import Topology

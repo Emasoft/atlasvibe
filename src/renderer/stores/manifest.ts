@@ -15,6 +15,7 @@ type State = {
   standardBlocksMetadata: BlockMetadata | undefined;
   customBlocksMetadata: BlockMetadata | undefined | null;
   manifestChanged: boolean;
+  regeneratingBlocks: Set<string>; // Track which blocks are being regenerated
 };
 
 type Actions = {
@@ -23,6 +24,8 @@ type Actions = {
     startup: boolean,
   ) => Promise<Result<void, HTTPError | ZodError>>;
   setManifestChanged: (val: boolean) => void;
+  setBlockRegenerating: (blockPath: string, isRegenerating: boolean) => void;
+  clearRegeneratingBlocks: () => void;
 };
 
 // TODO: Fix eslint-plugin-neverthrow to allow this
@@ -34,6 +37,7 @@ export const useManifestStore = create<State & Actions>()(
     standardBlocksMetadata: undefined,
     customBlocksMetadata: undefined,
     manifestChanged: true,
+    regeneratingBlocks: new Set(),
 
     fetchManifest: () => {
       return safeTry(async function* () {
@@ -80,6 +84,22 @@ export const useManifestStore = create<State & Actions>()(
 
     setManifestChanged: (val: boolean) => {
       set({ manifestChanged: val });
+    },
+    
+    setBlockRegenerating: (blockPath: string, isRegenerating: boolean) => {
+      set((state) => {
+        const newSet = new Set(state.regeneratingBlocks);
+        if (isRegenerating) {
+          newSet.add(blockPath);
+        } else {
+          newSet.delete(blockPath);
+        }
+        state.regeneratingBlocks = newSet;
+      });
+    },
+    
+    clearRegeneratingBlocks: () => {
+      set({ regeneratingBlocks: new Set() });
     },
   })),
 );

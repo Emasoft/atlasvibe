@@ -16,9 +16,9 @@ import platform
 def get_app_dir() -> Path:
     """Get the installed app directory."""
     # When installed via pip, the app files are in the package directory
-    import atlasvibe
-    # The actual app files are in the parent directory of the atlasvibe package
-    return Path(atlasvibe.__file__).parent.parent
+    import atlasvibe_cli
+    # The actual app files are in the parent directory of the atlasvibe_cli package
+    return Path(atlasvibe_cli.__file__).parent.parent
 
 
 def setup_environment() -> None:
@@ -59,19 +59,29 @@ def cli():
 @click.option('--log-level', default='INFO', help='Logging level')
 def server(port: int, log_level: str):
     """Run the AtlasVibe backend server."""
-    app_dir = get_app_dir()
-    main_py = app_dir / 'main.py'
+    # When installed as a package, we need to run uvicorn directly
+    import site
+    import uvicorn
     
-    if not main_py.exists():
-        click.echo(f"Error: main.py not found at {main_py}", err=True)
-        sys.exit(1)
+    # Get the site-packages directory
+    site_packages = Path(site.getsitepackages()[0])
     
-    # Run the server
-    cmd = [sys.executable, str(main_py), '--port', str(port), '--log-level', log_level]
+    # Set up paths
+    sys.path.insert(0, str(site_packages))
+    sys.path.insert(0, str(site_packages / 'pkgs'))
+    
+    # Change to site-packages directory
+    os.chdir(str(site_packages))
     
     click.echo(f"Starting AtlasVibe server on port {port}...")
     try:
-        subprocess.run(cmd, cwd=str(app_dir))
+        uvicorn.run(
+            "captain.main:app",
+            host="127.0.0.1",
+            port=port,
+            log_level=log_level.lower(),
+            reload=False
+        )
     except KeyboardInterrupt:
         click.echo("\nServer stopped.")
 

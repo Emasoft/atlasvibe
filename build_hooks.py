@@ -5,10 +5,8 @@ Custom build hooks for atlasvibe Python package.
 Handles bundling of Electron app and Node.js dependencies.
 """
 
-import os
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any, Dict
 

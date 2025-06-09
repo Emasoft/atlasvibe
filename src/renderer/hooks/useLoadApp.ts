@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { parseElectronError } from "@/renderer/utils/parse-error";
+import { migrateProjectFormat, validateProjectReferences } from "@/renderer/lib/project-migration";
 
 export const useLoadApp = () => {
   const loadProject = useLoadProject();
@@ -29,8 +30,36 @@ export const useLoadApp = () => {
       return;
     }
     const { fileContent, filePath } = res.value;
-    const loadRes = tryParse(Project)(JSON.parse(fileContent))
-      .andThen((proj) => loadProject(proj, filePath))
+    
+    // Parse and migrate project format if needed
+    let parsedData;
+    try {
+      parsedData = JSON.parse(fileContent);
+    } catch (e) {
+      toast.error("Invalid JSON", { description: "Failed to parse project file" });
+      return;
+    }
+    
+    const { project: migratedProject, migrated } = migrateProjectFormat(parsedData);
+    
+    if (migrated) {
+      toast.info("Project migrated", { 
+        description: "Project file was updated to the latest format" 
+      });
+    }
+    
+    // Validate and load
+    const loadRes = tryParse(Project)(migratedProject)
+      .andThen((proj) => {
+        // Validate custom block references
+        const errors = validateProjectReferences(proj);
+        if (errors.length > 0) {
+          toast.warning("Project validation warnings", {
+            description: errors.join(", ")
+          });
+        }
+        return loadProject(proj, filePath);
+      })
       .map(() => setShowWelcomeScreen(false));
 
     if (loadRes.isOk()) {

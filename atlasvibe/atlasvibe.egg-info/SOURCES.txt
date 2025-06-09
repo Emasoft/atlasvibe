@@ -1,7 +1,0 @@
-README.md
-hello.py
-pyproject.toml
-atlasvibe.egg-info/PKG-INFO
-atlasvibe.egg-info/SOURCES.txt
-atlasvibe.egg-info/dependency_links.txt
-atlasvibe.egg-info/top_level.txt

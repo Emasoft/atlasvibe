@@ -7,7 +7,7 @@
 import ast
 from typing import Any, Callable, Literal, Optional, Tuple, cast
 
-SELECTED_IMPORTS = ["atlasvibe", "typing"] # Assuming 'atlasvibe' is still the package name for DataContainer etc.
+SELECTED_IMPORTS = ["atlasvibe", "typing", "pkgs.atlasvibe.atlasvibe"] # Assuming 'atlasvibe' is still the package name for DataContainer etc.
 NO_OUTPUT_NODES = ["GOTO", "END"]
 
 
@@ -17,10 +17,10 @@ class AtlasvibeNodeTransformer(ast.NodeTransformer): # Consider renaming this cl
             decorator
             for decorator in node.decorator_list
             if isinstance(decorator, ast.Name)
-            and decorator.id == "atlasvibe_node" # CHANGED
+            and (decorator.id == "atlasvibe_node" or decorator.id == "atlasvibe")
             or isinstance(decorator, ast.Call)
             and isinstance(decorator.func, ast.Name)
-            and decorator.func.id == "atlasvibe_node" # CHANGED
+            and (decorator.func.id == "atlasvibe_node" or decorator.func.id == "atlasvibe")
         ]
 
     def get_display_decorator(self, node: ast.FunctionDef):
@@ -35,7 +35,7 @@ class AtlasvibeNodeTransformer(ast.NodeTransformer): # Consider renaming this cl
         ]
 
     def get_decorator(
-        self, node: ast.FunctionDef, decorator_name: Literal["display", "atlasvibe_node"] # CHANGED "atlasvibe" to "atlasvibe_node"
+        self, node: ast.FunctionDef, decorator_name: Literal["display", "atlasvibe_node", "atlasvibe"]
     ):
         return [
             decorator
@@ -70,7 +70,7 @@ class AtlasvibeNodeTransformer(ast.NodeTransformer): # Consider renaming this cl
             node.decorator_list = cast(
                 list[ast.expr], self.get_decorator(node, "display")
             )
-        elif not has_decorator(node, "atlasvibe_node") and not has_decorator( # CHANGED "atlasvibe"
+        elif not has_decorator(node, "atlasvibe_node") and not has_decorator(node, "atlasvibe") and not has_decorator(
             node, "node_initialization"
         ):
             return None
@@ -78,13 +78,18 @@ class AtlasvibeNodeTransformer(ast.NodeTransformer): # Consider renaming this cl
         # TODO: make an error comment when a display decorator have another decorator
         # Keep only the '@atlasvibe_node' if there are multiple decorators.
 
-        if has_decorator(node, "atlasvibe_node") and len(node.decorator_list) > 1: # CHANGED "atlasvibe"
-            # Keep only the '@atlasvibe_node' decorator if there are multiple decorators.
+        if (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")) and len(node.decorator_list) > 1:
+            # Keep only the '@atlasvibe_node' or '@atlasvibe' decorator if there are multiple decorators.
             # Some decorators, like '@run_in_venv', create virtual environments, which we
             # don't want to generate when creating the manifest.
-            node.decorator_list = cast(
-                list[ast.expr], self.get_decorator(node, "atlasvibe_node") # CHANGED "atlasvibe"
-            )
+            if has_decorator(node, "atlasvibe_node"):
+                node.decorator_list = cast(
+                    list[ast.expr], self.get_decorator(node, "atlasvibe_node")
+                )
+            else:
+                node.decorator_list = cast(
+                    list[ast.expr], self.get_decorator(node, "atlasvibe")
+                )
 
         if node.body:
             new_body = (
@@ -127,10 +132,10 @@ def make_manifest_ast(
     if not overload:
         overload = None
 
-    atlasvibe_node = find( # Variable name can remain for now
+    atlasvibe_node = find(
         tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
-        and has_decorator(node, "atlasvibe_node"), # CHANGED "atlasvibe"
+        and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
     )
 
     init_func = find(
@@ -140,7 +145,7 @@ def make_manifest_ast(
     )
 
     if not atlasvibe_node:
-        raise ValueError("No atlasvibe_node node found in file") # CHANGED "atlasvibe"
+        raise ValueError("No @atlasvibe_node or @atlasvibe decorated function found in file")
 
     node_name = atlasvibe_node.name
     init_func_name = init_func.name if init_func else None
@@ -177,20 +182,20 @@ def make_manifest_ast(
 
 
 def get_atlasvibe_decorator(tree: ast.Module) -> Optional[ast.Call]: # Name implies old decorator
-    atlasvibe_node = find( # Variable name can remain for now
+    atlasvibe_node = find(
         tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
-        and has_decorator(node, "atlasvibe_node"), # CHANGED "atlasvibe"
+        and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
     )
     if not atlasvibe_node:
-        raise ValueError("No atlasvibe_node node found in file") # CHANGED "atlasvibe"
+        raise ValueError("No @atlasvibe_node or @atlasvibe decorated function found in file")
 
-    # Differentiates between @atlasvibe_node and @atlasvibe_node(deps={...})
+    # Differentiates between @atlasvibe_node/@atlasvibe and @atlasvibe_node(deps={...})/@atlasvibe(deps={...})
     return find(
         atlasvibe_node.decorator_list,
         lambda d: isinstance(d, ast.Call)
         and isinstance(d.func, ast.Name)
-        and d.func.id == "atlasvibe_node", # CHANGED "atlasvibe"
+        and (d.func.id == "atlasvibe_node" or d.func.id == "atlasvibe"),
     )
 
 

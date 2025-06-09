@@ -1,8 +1,8 @@
 sync:
-  uv run python3 fjblock.py sync
+  uv run python3 avblock.py sync
 
 add args:
-  uv run python3 fjblock.py add {{invocation_directory()}}/{{args}}
+  uv run python3 avblock.py add {{invocation_directory()}}/{{args}}
 
 init:
   just init-docs & just init-blocks

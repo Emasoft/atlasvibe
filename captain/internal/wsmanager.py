@@ -1,7 +1,7 @@
 from captain.types.test_sequence import TestSequenceMessage
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
-from atlasvibe.utils import PlotlyJSONEncoder
+from pkgs.atlasvibe.atlasvibe.utils import PlotlyJSONEncoder
 from queue import Queue
 from typing import Any, Union
 import json

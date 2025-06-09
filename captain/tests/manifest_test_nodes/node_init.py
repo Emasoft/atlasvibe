@@ -5,7 +5,7 @@
 # Refer to the LICENSE file for more details.
 
 import numpy as np
-from atlasvibe import Array, NodeInitContainer, OrderedPair, atlasvibe_node, node_initialization # CHANGED
+from pkgs.atlasvibe.atlasvibe import Array, NodeInitContainer, OrderedPair, atlasvibe_node, node_initialization # CHANGED
 
 
 @atlasvibe_node(node_type="TEST_TYPE") # CHANGED
