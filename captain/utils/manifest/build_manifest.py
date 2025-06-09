@@ -222,6 +222,15 @@ def create_manifest(path: str) -> dict[str, Any]:
         if hasattr(atlasvibe_module, attr):
             module.__dict__[attr] = getattr(atlasvibe_module, attr)
     
+    # Inject parameter types that are commonly used
+    try:
+        from atlasvibe import parameter_types
+        for attr in ['String', 'Number', 'Boolean', 'Select', 'DataFrame']:
+            if hasattr(parameter_types, attr):
+                module.__dict__[attr] = getattr(parameter_types, attr)
+    except ImportError:
+        pass
+    
     # Also inject the atlasvibe module itself for "from atlasvibe import" statements
     import sys
     class AtlasvibeImportModule:
@@ -230,6 +239,13 @@ def create_manifest(path: str) -> dict[str, Any]:
     
     sys.modules['atlasvibe'] = AtlasvibeImportModule()
     sys.modules['pkgs.atlasvibe.atlasvibe'] = atlasvibe_module
+    
+    # Also handle atlasvibe.parameter_types imports
+    try:
+        from atlasvibe import parameter_types
+        sys.modules['atlasvibe.parameter_types'] = parameter_types
+    except ImportError:
+        pass
     
     exec(code, module.__dict__)
 

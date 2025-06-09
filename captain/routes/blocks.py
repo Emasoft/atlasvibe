@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
+# - Integrated automatic block_data.json regeneration when blocks are created/updated
+# - Added import for block_metadata_generator module
+# 
+
 import json
 from pathlib import Path
 from typing import Optional
