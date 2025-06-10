@@ -12,6 +12,8 @@ import { useSettingsStore } from "@/renderer/stores/settings";
 import { runFlowchart, cancelFlowchartRun } from "@/renderer/lib/api";
 import { useSocketStore } from "@/renderer/stores/socket";
 import { useEffect } from "react";
+import { useManifestStore } from "@/renderer/stores/manifest";
+import { ExecutionStatus } from "@/renderer/components/ExecutionStatus";
 
 const FlowControlButtons = () => {
   const { socketId, serverStatus } = useSocketStore((state) => ({
@@ -38,10 +40,13 @@ const FlowControlButtons = () => {
   );
 
   const manifest = useManifest();
+  const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
+  const hasRegeneratingBlocks = regeneratingBlocks.size > 0;
 
   const playBtnDisabled =
     serverStatus === ServerStatus.CONNECTING ||
-    serverStatus === ServerStatus.OFFLINE;
+    serverStatus === ServerStatus.OFFLINE ||
+    hasRegeneratingBlocks;
 
   const onRun = async () => {
     if (nodes.length === 0) {
@@ -88,33 +93,37 @@ const FlowControlButtons = () => {
 
   return (
     <>
-      <div>
-        {playBtnDisabled || serverStatus === ServerStatus.STANDBY ? (
-          <Button
-            data-cy="btn-play"
-            data-testid="btn-play"
-            variant="dotted"
-            id="btn-play"
-            onClick={onRun}
-            disabled={nodes.length === 0 || !manifest}
-            className="w-28 gap-2"
-          >
-            <Play size={18} />
-            Play
-          </Button>
-        ) : (
-          <Button
-            data-testid="btn-cancel"
-            data-cy="btn-cancel"
-            id="btn-cancel"
-            onClick={() => cancelFlowchartRun(socketId)}
-            className="w-28 gap-2"
-            variant="dotted"
-          >
-            <Ban size={18} />
-            Cancel
-          </Button>
-        )}
+      <div className="flex items-center gap-4">
+        <ExecutionStatus />
+        <div>
+          {playBtnDisabled || serverStatus === ServerStatus.STANDBY ? (
+            <Button
+              data-cy="btn-play"
+              data-testid="btn-play"
+              variant="dotted"
+              id="btn-play"
+              onClick={onRun}
+              disabled={nodes.length === 0 || !manifest || hasRegeneratingBlocks}
+              className="w-28 gap-2 play-button"
+              title={hasRegeneratingBlocks ? "Cannot run while blocks are regenerating" : undefined}
+            >
+              <Play size={18} />
+              Play
+            </Button>
+          ) : (
+            <Button
+              data-testid="btn-cancel"
+              data-cy="btn-cancel"
+              id="btn-cancel"
+              onClick={() => cancelFlowchartRun(socketId)}
+              className="w-28 gap-2"
+              variant="dotted"
+            >
+              <Ban size={18} />
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
     </>
   );

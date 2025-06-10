@@ -185,10 +185,12 @@ class TestUpdateBlockCode:
         assert mock_path.read_text.return_value == INITIAL_BLOCK_CODE
     
     @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.process_block_directory')
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
     def test_update_block_code_regenerates_manifest(
         self,
-        mock_process_block,
+        mock_create_manifest,
+        mock_regenerate_block_data_json,
         mock_path_class
     ):
         """Test that block manifest is regenerated after code update."""
@@ -205,7 +207,8 @@ class TestUpdateBlockCode:
             "inputs": [{"name": "x", "type": "int"}],
             "outputs": [{"name": "output", "type": "int"}]
         }
-        mock_process_block.return_value = expected_manifest
+        mock_regenerate_block_data_json.return_value = True
+        mock_create_manifest.return_value = expected_manifest
         
         from captain.routes.blocks import UpdateBlockCodeRequest
         
@@ -215,15 +218,18 @@ class TestUpdateBlockCode:
             project_path="/project/test.atlasvibe"
         )
         
-        # Test expects process_block_directory to be called
+        # Test expects regenerate_block_data_json and create_manifest to be called
         # This will fail until implementation exists
-        assert mock_process_block.call_count == 0  # Will be 1 after implementation
+        assert mock_regenerate_block_data_json.call_count == 0  # Will be 1 after implementation
+        assert mock_create_manifest.call_count == 0  # Will be 1 after implementation
     
     @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.process_block_directory')
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
     def test_update_block_code_rollback_on_manifest_failure(
         self,
-        mock_process_block,
+        mock_create_manifest,
+        mock_regenerate_block_data_json,
         mock_path_class
     ):
         """Test that changes are rolled back if manifest generation fails."""
@@ -235,7 +241,8 @@ class TestUpdateBlockCode:
         mock_path_class.return_value = mock_path
         
         # Simulate manifest generation failure
-        mock_process_block.return_value = None
+        mock_regenerate_block_data_json.return_value = True
+        mock_create_manifest.return_value = None
         
         from captain.routes.blocks import UpdateBlockCodeRequest
         

@@ -20,79 +20,13 @@ Python file is created or modified. It generates:
 - test file (basic test structure)
 """
 
-import ast
 import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from docstring_parser import parse
 from captain.utils.logger import logger
-
-
-def extract_docstring_data(file_path: str) -> Optional[Dict[str, Any]]:
-    """
-    Extract docstring data from a Python file and return structured JSON data.
-
-    Args:
-        file_path: Path to the Python file
-
-    Returns:
-        Dictionary with docstring data or None if extraction fails
-    """
-    try:
-        with open(file_path, "r") as f:
-            code = f.read()
-
-        tree = ast.parse(code)
-        block_name = Path(file_path).stem
-
-        # Find the main function with matching name
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name == block_name:
-                # Extract docstring
-                if (
-                    node.body
-                    and isinstance(node.body[0], ast.Expr)
-                    and isinstance(node.body[0].value, (ast.Str, ast.Constant))
-                ):
-                    if isinstance(node.body[0].value, ast.Str):
-                        docstring = node.body[0].value.s
-                    else:
-                        docstring = node.body[0].value.value
-
-                    # Parse docstring
-                    parsed = parse(docstring)
-
-                    return {
-                        "docstring": {
-                            "short_description": parsed.short_description or "",
-                            "long_description": parsed.long_description or "",
-                            "parameters": [
-                                {
-                                    "name": param.arg_name,
-                                    "type": param.type_name,
-                                    "description": param.description or "",
-                                }
-                                for param in parsed.params
-                            ],
-                            "returns": [
-                                {
-                                    "name": rtn.return_name or "",
-                                    "type": rtn.type_name or "",
-                                    "description": rtn.description or "",
-                                }
-                                for rtn in parsed.many_returns
-                            ]
-                            if parsed.many_returns
-                            else [],
-                        }
-                    }
-
-    except Exception as e:
-        logger.error(f"Failed to extract docstring from {file_path}: {e}")
-
-    return None
+from captain.utils.docstring_utils import extract_docstring_data
 
 
 def generate_block_data_json(block_dir: str, block_name: str) -> bool:

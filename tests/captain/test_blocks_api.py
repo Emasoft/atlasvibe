@@ -71,12 +71,14 @@ def TEST_BLOCK(x: int = 1) -> int:
             if temp_dir.exists():
                 temp_dir.rmdir()
     
-    @patch('captain.routes.blocks.process_block_directory')
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
     @patch('captain.routes.blocks.logger')
-    def test_update_block_code_success(self, mock_logger, mock_process, temp_block_file):
+    def test_update_block_code_success(self, mock_logger, mock_create_manifest, mock_regenerate, temp_block_file):
         """Test successful block code update."""
-        # Setup mock
-        mock_process.return_value = {
+        # Setup mocks
+        mock_regenerate.return_value = True
+        mock_create_manifest.return_value = {
             "name": "TEST_BLOCK",
             "type": "default",
             "func": "TEST_BLOCK",
@@ -101,8 +103,9 @@ def TEST_BLOCK(x: int = 1) -> int:
         with open(temp_block_file, 'r') as f:
             assert f.read() == "# Updated content"
         
-        # Verify process_block_directory was called
-        mock_process.assert_called_once()
+        # Verify regenerate_block_data_json and create_manifest were called
+        mock_regenerate.assert_called_once()
+        mock_create_manifest.assert_called_once()
         
         # Verify logging
         mock_logger.info.assert_called()
@@ -140,15 +143,17 @@ def TEST_BLOCK(x: int = 1) -> int:
         assert response.status_code == 404
         assert "Block file not found" in response.json()["detail"]
     
-    @patch('captain.routes.blocks.process_block_directory')
-    def test_update_block_code_manifest_failure(self, mock_process, temp_block_file):
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
+    def test_update_block_code_manifest_failure(self, mock_create_manifest, mock_regenerate, temp_block_file):
         """Test rollback when manifest generation fails."""
         # Read original content
         with open(temp_block_file, 'r') as f:
             original_content = f.read()
         
-        # Setup mock to fail
-        mock_process.return_value = None
+        # Setup mocks to fail
+        mock_regenerate.return_value = True
+        mock_create_manifest.return_value = None
         
         # Make request
         response = client.post("/blocks/update-code/", json={
@@ -165,15 +170,17 @@ def TEST_BLOCK(x: int = 1) -> int:
         with open(temp_block_file, 'r') as f:
             assert f.read() == original_content
     
-    @patch('captain.routes.blocks.process_block_directory')
-    def test_update_block_code_exception_rollback(self, mock_process, temp_block_file):
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
+    def test_update_block_code_exception_rollback(self, mock_create_manifest, mock_regenerate, temp_block_file):
         """Test rollback on unexpected exceptions."""
         # Read original content
         with open(temp_block_file, 'r') as f:
             original_content = f.read()
         
         # Setup mock to raise exception
-        mock_process.side_effect = Exception("Unexpected error")
+        mock_regenerate.return_value = True
+        mock_create_manifest.side_effect = Exception("Unexpected error")
         
         # Make request
         response = client.post("/blocks/update-code/", json={

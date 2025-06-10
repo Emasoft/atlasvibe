@@ -41,6 +41,47 @@ export const getManifest = (blocksPath?: string, projectPath?: string) => {
   });
 };
 
+export const saveBlueprintFromBlock = (params: {
+  blockPath: string;
+  blueprintName: string;
+  overwrite?: boolean;
+}) => {
+  return fromPromise(
+    captain.post("blocks/save-as-blueprint", {
+      json: {
+        block_path: params.blockPath,
+        blueprint_name: params.blueprintName,
+        overwrite: params.overwrite || false,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+export const renameBlueprint = (params: {
+  oldName: string;
+  newName: string;
+}) => {
+  return fromPromise(
+    captain.put("blocks/rename-blueprint", {
+      json: {
+        old_name: params.oldName,
+        new_name: params.newName,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+export const deleteBlueprint = (params: {
+  blueprintName: string;
+}) => {
+  return fromPromise(
+    captain.delete(`blocks/blueprint/${params.blueprintName}`).json(),
+    (e) => e as HTTPError,
+  );
+};
+
 export const getMetadata = (
   blocksPath?: string,
   customDirChanged: boolean = false,

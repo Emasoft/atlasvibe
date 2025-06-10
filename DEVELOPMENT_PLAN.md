@@ -130,7 +130,7 @@ This phase redefines how blocks are created, managed, and used within a project.
         - `run-server-with-uv.sh` - Run server directly without Electron
         - `run-with-uv.sh` - Run either server or app with proper environment
 
-**Task 2.6: Data Persistence and Project Files** 🚧 IN PROGRESS
+**Task 2.6: Data Persistence and Project Files** ✅ COMPLETED
 *   **Action:** Define how the overall project (the graph of connected nodes, project settings) is saved.
 *   **Details:**
     *   The project file should reference custom blocks by their names/paths within the project's `atlasvibe_blocks/` directory.
@@ -144,6 +144,53 @@ This phase redefines how blocks are created, managed, and used within a project.
     *   Tests for project format migration from v1 to v2
     *   Updated saveProject to include version field
     *   Created integration tests for full save/load cycle
+
+**Task 2.7: Visual Indicators and UI Features** ✅ COMPLETED (TDD Methodology)
+*   **Action:** Implement UI features for better custom block management and project status
+*   **Implementation:**
+    *   **Block Regeneration Visual Feedback:**
+        - Added visual indicators when blocks are being regenerated
+        - Implemented in DefaultBlock component with blinking animation
+        - Shows "Regenerating..." label during metadata regeneration
+        - Orange border animation while processing
+    *   **Blueprint Management:**
+        - Added "Save as blueprint" option in block context menu
+        - Implemented blueprint name dialog with overwrite confirmation
+        - Backend API endpoint for blueprint creation
+        - Frontend integration with success notifications
+    *   **Project Save Status:**
+        - Added status indicator showing save/modified state
+        - Autosave functionality with transaction queue
+        - Visual feedback for pending saves
+        - Error handling with user notifications
+    *   **Comprehensive Testing:**
+        - Created 5 new Playwright E2E test files following TDD methodology
+        - Covers all visual indicators and user interactions
+        - Includes edge cases and error scenarios
+
+**Task 2.8: Code Quality Improvements** ✅ COMPLETED (TDD Methodology)
+*   **Action:** Improve code maintainability and fix technical debt
+*   **Implementation:**
+    *   **Shared Docstring Utilities:**
+        - Extracted common docstring parsing logic into `docstring_utils.py`
+        - Eliminated code duplication across multiple modules
+        - Added comprehensive error handling with specific exceptions
+        - Added UTF-8 encoding specification for all file operations
+        - Improved type hints using specific types instead of Any
+        - Created 24 comprehensive tests covering all functionality
+    *   **Import Namespace Fix:**
+        - Fixed 'atlasvibe' import redirection in build_manifest.py
+        - Added custom import hook for proper package resolution
+        - Fixed __build_class__ missing in custom builtins
+        - Created 9 tests for import redirection scenarios
+    *   **IPC Handler Constants:**
+        - Replaced string literals with API constants in Electron IPC
+        - Improved maintainability and type safety
+        - Created 7 tests for IPC handler registration
+    *   **Manifest Generation Improvements:**
+        - Fixed docstring extraction for custom "Inputs" sections
+        - Improved parameter description handling
+        - Fixed all 14 manifest generation tests
 
 ## Phase 3: AI Agent Capabilities (Future - Placeholder)
 

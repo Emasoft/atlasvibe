@@ -3,6 +3,7 @@ import HeaderTab from "./HeaderTab";
 import ControlBar from "@/renderer/routes/flow_chart/views/ControlBar";
 import { HEADER_HEIGHT } from "./Layout";
 import { TabName } from "@/renderer/stores/app";
+import { ProjectStatusIndicator } from "@/renderer/components/ProjectStatusIndicator";
 
 interface Tab {
   to: string;
@@ -58,6 +59,7 @@ const Header = () => {
         </HeaderTab>
       ))}
       <div className="grow" />
+      <ProjectStatusIndicator />
       <ControlBar />
     </div>
   );

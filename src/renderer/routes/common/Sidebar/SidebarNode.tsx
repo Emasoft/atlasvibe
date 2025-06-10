@@ -111,7 +111,14 @@ const SidebarNode = ({
           leafClickHandler(node);
         }}
       >
-        {node.key ?? node.name}
+        <span className="flex items-center gap-2">
+          {node.key ?? node.name}
+          {node.isBlueprint && (
+            <span className="blueprint-badge rounded bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+              Blueprint
+            </span>
+          )}
+        </span>
         {icon}
       </button>
     );
@@ -220,7 +227,14 @@ const SidebarNode = ({
               leafClickHandler(command);
             }}
           >
-            {command.key ?? command.name}
+            <span className="flex items-center gap-2">
+              {command.key ?? command.name}
+              {command.isBlueprint && (
+                <span className="blueprint-badge rounded bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+                  Blueprint
+                </span>
+              )}
+            </span>
             {icon}
           </button>
         ))}

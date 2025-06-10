@@ -103,6 +103,9 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.isDev, () => {
     return Promise.resolve(!app.isPackaged);
   });
+  ipcMain.handle(API.isPackaged, () => {
+    return Promise.resolve(app.isPackaged);
+  });
   ipcMain.handle(API.getAllLogs, getAllLogs);
   ipcMain.handle(API.writeFile, writeFileSync);
   ipcMain.handle(API.getCustomBlocksDir, getCustomBlocksDir);
@@ -183,8 +186,47 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.getFileContent, readFileSync);
   ipcMain.handle(API.isFileOnDisk, isFileOnDisk);
   
+  // Project save dialog handlers
+  ipcMain.handle(API.selectFolder, async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openDirectory"],
+    });
+    return { filePaths: result.filePaths, canceled: result.canceled };
+  });
+  
+  ipcMain.handle(API.pathExists, async (_, path: string) => {
+    const fs = await import("fs/promises");
+    try {
+      await fs.access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  
+  ipcMain.handle(API.createDirectory, async (_, path: string) => {
+    const fs = await import("fs/promises");
+    await fs.mkdir(path, { recursive: true });
+  });
+  
+  ipcMain.handle(API.showConfirmDialog, async (_, options) => {
+    const result = await dialog.showMessageBox({
+      type: "question",
+      title: options.title,
+      message: options.message,
+      buttons: options.buttons,
+      defaultId: options.defaultId,
+      cancelId: options.cancelId,
+    });
+    return { response: result.response };
+  });
+  
+  ipcMain.on(API.logTransaction, (_, transaction: string) => {
+    sendToStatusBar(`Transaction: ${transaction}`);
+  });
+  
   // Custom block creation handler
-  ipcMain.handle("create-custom-block", async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
+  ipcMain.handle(API.createCustomBlock, async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
     try {
       // Get the backend URL from environment or default
       const backendUrl = process.env.BACKEND_URL || "http://localhost:5392";

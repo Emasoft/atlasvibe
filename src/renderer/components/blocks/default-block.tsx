@@ -12,6 +12,7 @@ import { useProjectStore } from "@/renderer/stores/project";
 import { useShallow } from "zustand/react/shallow";
 import { RegeneratingIndicator } from "@/renderer/components/common/RegeneratingIndicator";
 import { useManifestStore } from "@/renderer/stores/manifest";
+import "../BlockRegenerationStyles.css";
 
 type DefaultBlockProps = BlockProps & {
   width?: CSSProperties["width"];
@@ -64,13 +65,12 @@ const DefaultBlock = ({
       <RegeneratingIndicator visible={isRegenerating} />
       <div
         className={clsx(
-          `${isRegenerating ? 'border-yellow-500' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
+          `${isRegenerating ? 'block-regenerating' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
           {
             [`shadow-around ${isRegenerating ? 'shadow-yellow-500' : variantClassMap[variant].shadow}`]:
               blockRunning || selected || isRegenerating,
           },
           { "shadow-around shadow-red-700": blockError },
-          { "animate-pulse": isRegenerating },
           className,
         )}
         style={{

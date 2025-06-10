@@ -25,6 +25,7 @@ import FeedbackModal from "./FeedbackModal";
 import { SaveSequencesButton } from "@/renderer/routes/test_sequencer_panel/components/control-bar/SaveButton";
 import { ImportSequencesButton } from "@/renderer/routes/test_sequencer_panel/components/control-bar/ImportButton";
 import { ClearSequencerButton } from "@/renderer/routes/test_sequencer_panel/components/control-bar/ClearSequencerButton";
+import { BlueprintManagerDialog } from "@/renderer/components/BlueprintManagerDialog";
 
 const ControlBar = () => {
   const { activeTab } = useAppStore(
@@ -38,6 +39,7 @@ const ControlBar = () => {
   const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
   const [isDeviceSettingsOpen, setIsDeviceSettingsOpen] = useState(false);
   const [isDebugSettingsOpen, setIsDebugSettingsOpen] = useState(false);
+  const [isBlueprintManagerOpen, setIsBlueprintManagerOpen] = useState(false);
 
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
@@ -76,6 +78,11 @@ const ControlBar = () => {
         setIsDebugSettingsOpen={setIsDebugSettingsOpen}
       />
       <DepManagerModal />
+      
+      <BlueprintManagerDialog
+        open={isBlueprintManagerOpen}
+        onOpenChange={setIsBlueprintManagerOpen}
+      />
 
       <FeedbackModal
         open={isFeedbackModalOpen}
@@ -138,6 +145,12 @@ const ControlBar = () => {
                     onClick={() => setIsBlockSettingsOpen(true)}
                   >
                     Block Settings
+                  </MenubarItem>
+                  <MenubarItem
+                    data-testid="blueprint-manager-btn"
+                    onClick={() => setIsBlueprintManagerOpen(true)}
+                  >
+                    Blueprint Manager
                   </MenubarItem>
                   <MenubarItem
                     data-testid="btn-device-settings"

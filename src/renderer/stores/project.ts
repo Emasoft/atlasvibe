@@ -73,6 +73,7 @@ type State = {
   name: string | undefined;
   path: string | undefined;
   hasUnsavedChanges: boolean;
+  isSaving: boolean;
 
   nodes: Node<BlockData>[]; 
   edges: Edge<EdgeData>[];
@@ -164,6 +165,7 @@ export const useProjectStore = create<State & Actions>()(
 
     path: undefined,
     hasUnsavedChanges: false,
+    isSaving: false,
 
     nodes: initialNodes,
     edges: initialEdges,
@@ -485,6 +487,8 @@ export const useProjectStore = create<State & Actions>()(
     },
 
     saveProject: async () => {
+      set({ isSaving: true });
+      
       const project: Project = {
         version: '2.0.0', // Current format version
         name: get().name,
@@ -509,7 +513,11 @@ export const useProjectStore = create<State & Actions>()(
         );
         return save().andThen(() => {
           setHasUnsavedChanges(false);
+          set({ isSaving: false });
           return ok(projectPath);
+        }).mapErr((e) => {
+          set({ isSaving: false });
+          return e;
         });
       }
 
@@ -526,13 +534,17 @@ export const useProjectStore = create<State & Actions>()(
         (e) => e as Error,
       ).map(({ filePath, canceled }) => {
         if (canceled || filePath === undefined) {
+          set({ isSaving: false });
           return undefined;
         }
 
-        set({ path: filePath });
+        set({ path: filePath, isSaving: false });
 
         setHasUnsavedChanges(false);
         return filePath;
+      }).mapErr((e) => {
+        set({ isSaving: false });
+        return e;
       });
     },
   })),

@@ -1,5 +1,5 @@
 import { BlockData } from "@/renderer/types/block";
-import { Code, CopyPlus, Info, Pencil, X } from "lucide-react";
+import { Code, CopyPlus, Info, Pencil, X, Package } from "lucide-react";
 import { useStore, Node } from "reactflow";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { useFlowchartStore } from "@/renderer/stores/flowchart";
@@ -7,6 +7,9 @@ import { useShallow } from "zustand/react/shallow";
 import { MenuInfo } from "@/renderer/types/context-menu";
 import { ContextMenuAction } from "@/renderer/components/common/context-menu-action";
 import { useDeleteBlock } from "@/renderer/stores/project";
+import { useState } from "react";
+import { SaveBlueprintDialog } from "@/renderer/components/SaveBlueprintDialog";
+import { useManifest } from "@/renderer/stores/manifest";
 
 export type BlockContextMenuInfo = MenuInfo<BlockData> & {
   fullPath: string;
@@ -65,8 +68,21 @@ export default function BlockContextMenu({
   };
 
   const deleteBlock = useDeleteBlock();
+  
+  const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
+  const manifest = useManifest();
+  
+  // Get existing blueprint names
+  const existingBlueprints = manifest 
+    ? Object.keys(manifest).filter(key => manifest[key].isBlueprint)
+    : [];
+  
+  const saveAsBlueprint = () => {
+    setBlueprintDialogOpen(true);
+  };
 
   return (
+    <>
     <div
       style={{ top, left, right, bottom }}
       className="absolute z-50 rounded-md border bg-background"
@@ -101,6 +117,15 @@ export default function BlockContextMenu({
       >
         Duplicate Block
       </ContextMenuAction>
+      {node.data.isCustom && (
+        <ContextMenuAction
+          testId="save-as-blueprint-btn"
+          onClick={saveAsBlueprint}
+          icon={Package}
+        >
+          Save as Blueprint
+        </ContextMenuAction>
+      )}
       <hr />
       <ContextMenuAction
         testId="context-block-info"
@@ -118,5 +143,14 @@ export default function BlockContextMenu({
         Delete Block
       </ContextMenuAction>
     </div>
+    <SaveBlueprintDialog
+      open={blueprintDialogOpen}
+      onOpenChange={setBlueprintDialogOpen}
+      blockId={node.id}
+      blockPath={node.data.path}
+      defaultName={node.data.label}
+      existingBlueprints={existingBlueprints}
+    />
+    </>
   );
 }

@@ -1,0 +1,73 @@
+/* Block regeneration visual feedback styles */
+
+/* Blinking indicator animation */
+@keyframes blink {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.3; 
+  }
+}
+
+/* Pulse animation for block border */
+@keyframes pulse {
+  0%, 100% { 
+    border-width: 2px;
+    box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4);
+  }
+  50% { 
+    border-width: 4px;
+    box-shadow: 0 0 0 10px rgba(255, 165, 0, 0);
+  }
+}
+
+/* Blinking regeneration indicator */
+.block-regenerating-indicator {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 165, 0, 0.9);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  animation: blink 1s ease-in-out infinite;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* Block header regenerating state */
+.block-regenerating {
+  border-color: rgb(255, 165, 0) !important;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Execution status styles */
+.execution-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.execution-status.paused {
+  background-color: rgba(255, 165, 0, 0.1);
+  color: rgb(255, 165, 0);
+}
+
+.execution-status.running {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+/* Disabled play button */
+.play-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

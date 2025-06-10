@@ -1,5 +1,6 @@
 import { MenubarItem, MenubarShortcut } from "@/renderer/components/ui/menubar";
 import { useSave } from "@/renderer/hooks/useSave";
+import { useSaveAs } from "@/renderer/hooks/useSaveAs";
 
 export const SaveButton = () => {
   const handleSave = useSave();
@@ -13,11 +14,14 @@ export const SaveButton = () => {
 };
 
 export const SaveAsButton = () => {
-  const handleSave = useSave();
+  const { handleSaveAs, SaveAsDialog } = useSaveAs();
 
   return (
-    <MenubarItem data-testid="btn-saveas" onClick={handleSave}>
-      Save As{" "}
-    </MenubarItem>
+    <>
+      <MenubarItem data-testid="btn-saveas" onClick={handleSaveAs}>
+        Save As <MenubarShortcut>⇧⌘S</MenubarShortcut>
+      </MenubarItem>
+      <SaveAsDialog />
+    </>
   );
 };

@@ -65,6 +65,16 @@ export const API = {
   validatePassword: "VALIDATE_PASSWORD",
   createUserProfile: "CREATE_USER_PROFILE",
   deleteUserProfile: "DELETE_USER_PROFILE",
+  // Project operations
+  selectFolder: "SELECT_FOLDER",
+  pathExists: "PATH_EXISTS",
+  createDirectory: "CREATE_DIRECTORY",
+  showConfirmDialog: "SHOW_CONFIRM_DIALOG",
+  logTransaction: "LOG_TRANSACTION",
+  // Custom block operations
+  createCustomBlock: "CREATE_CUSTOM_BLOCK",
+  // System info
+  isPackaged: "IS_PACKAGED",
 } as const;
 
 export default {
