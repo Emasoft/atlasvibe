@@ -155,9 +155,6 @@ importers:
       lucide-react:
         specifier: ^0.357.0
         version: 0.357.0(react@18.2.0)
-      mixpanel-browser:
-        specifier: ^2.49.0
-        version: 2.49.0
       neverthrow:
         specifier: ^6.1.0
         version: 6.1.0
@@ -267,9 +264,6 @@ importers:
       '@types/lodash':
         specifier: ^4.17.0
         version: 4.17.0
-      '@types/mixpanel-browser':
-        specifier: ^2.49.0
-        version: 2.49.0
       '@types/node':
         specifier: ^20.12.5
         version: 20.12.5
@@ -2161,9 +2155,6 @@ packages:
 
   '@types/mdast@4.0.3':
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
-
-  '@types/mixpanel-browser@2.49.0':
-    resolution: {integrity: sha512-StmgUnS58d44DmIAEX9Kk8qwisAYCl6E2qulIjYyHXUPuJCPOuyUMTTKBp+aU2F2do+kxAzCxiBtsB4fnBT9Fg==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -4700,9 +4691,6 @@ packages:
   minizlib@2.1.2:
     resolution: {integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==}
     engines: {node: '>= 8'}
-
-  mixpanel-browser@2.49.0:
-    resolution: {integrity: sha512-RZJCO7XXuuHBAWG5fd9Mavz994M7v7W3Qiaq8NzmN631pa4BQ0vNZQtRFqKcCCOBn4xqOZbX2GkuC7ZkQoL4cQ==}
 
   mkdirp@0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
@@ -8292,8 +8280,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.2
 
-  '@types/mixpanel-browser@2.49.0': {}
-
   '@types/ms@0.7.34': {}
 
   '@types/node@20.12.5':
@@ -11489,8 +11475,6 @@ snapshots:
     dependencies:
       minipass: 3.3.6
       yallist: 4.0.0
-
-  mixpanel-browser@2.49.0: {}
 
   mkdirp@0.5.6:
     dependencies:

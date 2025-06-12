@@ -6,7 +6,6 @@ import { useSettingsStore } from "@/renderer/stores/settings";
 import { useManifestStore } from "@/renderer/stores/manifest";
 import { useShallow } from "zustand/react/shallow";
 import { ServerStatus, WorkerJobResponse } from "@/renderer/types/socket";
-// import { sendEventToMix } from "@/renderer/services/MixpanelServices";
 import { useSocketStore } from "@/renderer/stores/socket";
 import { useHardwareStore } from "@/renderer/stores/hardware";
 import { toastQueryError } from "@/renderer/utils/report-error";

@@ -189,7 +189,6 @@ const FlowChartTab = () => {
 
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      // sendEventToMix(MixPanelEvents.edgesChanged);
       handleEdgeChanges((es) => applyEdgeChanges(changes, es));
     },
     [handleEdgeChanges],
@@ -207,8 +206,6 @@ const FlowChartTab = () => {
   const clearCanvas = useCallback(() => {
     clearProjectCanvas();
     wipeBlockResults();
-
-    // sendEventToMix(MixPanelEvents.canvasCleared);
   }, [clearProjectCanvas, wipeBlockResults]);
 
   useEffect(() => {

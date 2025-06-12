@@ -24,13 +24,6 @@ export function WelcomeModal() {
     })),
   );
 
-  // useEffect(() => {
-  //   window.api.getSetupExecutionTime().then((t) => {
-  //     sendEventToMix(MixPanelEvents.atlasvibeLoaded, {
-  //       timeTaken: `${t} seconds`,
-  //     });
-  //   });
-  // }, []);
 
   return (
     <AlertDialog open={showWelcomeScreen}>

@@ -23,7 +23,6 @@ dist-electron/*
 
 # testing
 /coverage
-/cypress/screenshots/
 tests/temp/
 .pytest_cache/
 coverage.xml
