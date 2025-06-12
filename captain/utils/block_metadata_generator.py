@@ -22,11 +22,16 @@ Python file is created or modified. It generates:
 
 import json
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 from captain.utils.logger import logger
 from captain.utils.docstring_utils import extract_docstring_data
+from captain.utils.constants import (
+    BLOCK_DATA_FILE,
+    APP_JSON_FILE,
+    EXAMPLE_MD_FILE,
+    PYTHON_EXT,
+)
 
 
 def generate_block_data_json(block_dir: str, block_name: str) -> bool:
@@ -40,8 +45,8 @@ def generate_block_data_json(block_dir: str, block_name: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    py_file = os.path.join(block_dir, f"{block_name}.py")
-    json_file = os.path.join(block_dir, "block_data.json")
+    py_file = os.path.join(block_dir, f"{block_name}{PYTHON_EXT}")
+    json_file = os.path.join(block_dir, BLOCK_DATA_FILE)
 
     if not os.path.exists(py_file):
         return False
@@ -92,7 +97,7 @@ def generate_app_json(block_dir: str, block_name: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    app_file = os.path.join(block_dir, "app.json")
+    app_file = os.path.join(block_dir, APP_JSON_FILE)
 
     # Don't overwrite existing app.json
     if os.path.exists(app_file):
@@ -138,14 +143,14 @@ def generate_example_md(block_dir: str, block_name: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    example_file = os.path.join(block_dir, "example.md")
+    example_file = os.path.join(block_dir, EXAMPLE_MD_FILE)
 
     # Don't overwrite existing example.md
     if os.path.exists(example_file):
         return True
 
     # Extract docstring for description
-    py_file = os.path.join(block_dir, f"{block_name}.py")
+    py_file = os.path.join(block_dir, f"{block_name}{PYTHON_EXT}")
     docstring_data = extract_docstring_data(py_file)
 
     description = "This block provides custom functionality."
@@ -200,7 +205,7 @@ def generate_test_file(block_dir: str, block_name: str) -> bool:
         return True
 
     # Get parameter info from docstring if available
-    py_file = os.path.join(block_dir, f"{block_name}.py")
+    py_file = os.path.join(block_dir, f"{block_name}{PYTHON_EXT}")
     docstring_data = extract_docstring_data(py_file)
     params_info = []
     if docstring_data and docstring_data["docstring"]["parameters"]:
@@ -293,7 +298,7 @@ def generate_all_metadata_files(block_dir: str) -> Tuple[bool, List[str]]:
         Tuple of (success, list of generated files)
     """
     block_name = os.path.basename(block_dir)
-    py_file = os.path.join(block_dir, f"{block_name}.py")
+    py_file = os.path.join(block_dir, f"{block_name}{PYTHON_EXT}")
 
     if not os.path.exists(py_file):
         return False, []
@@ -303,19 +308,19 @@ def generate_all_metadata_files(block_dir: str) -> Tuple[bool, List[str]]:
 
     # Generate block_data.json
     if generate_block_data_json(block_dir, block_name):
-        generated_files.append("block_data.json")
+        generated_files.append(BLOCK_DATA_FILE)
     else:
         success = False
 
     # Generate app.json
     if generate_app_json(block_dir, block_name):
-        generated_files.append("app.json")
+        generated_files.append(APP_JSON_FILE)
     else:
         success = False
 
     # Generate example.md
     if generate_example_md(block_dir, block_name):
-        generated_files.append("example.md")
+        generated_files.append(EXAMPLE_MD_FILE)
     else:
         success = False
 

@@ -21,12 +21,22 @@ parts of the system including manifest generation, metadata generation, and CLI 
 import ast
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from docstring_parser import parse as parse_docstring
 from docstring_parser.common import Docstring
 from docstring_parser.google import GoogleParser
 from docstring_parser.numpydoc import NumpydocParser, ParamSection
+
+from captain.utils.constants import (
+    DOCSTRING_KEY,
+    PARAMETERS_KEY,
+    RETURNS_KEY,
+    SHORT_DESCRIPTION_KEY,
+    LONG_DESCRIPTION_KEY,
+    PARAMETERS_SECTION,
+    RETURNS_SECTION,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -125,16 +135,16 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
     Returns:
         Dictionary with docstring data
     """
-    data = {
-        "short_description": parsed_docstring.short_description or "",
-        "long_description": parsed_docstring.long_description or "",
-        "parameters": [],
-        "returns": []
+    data: Dict[str, Any] = {
+        SHORT_DESCRIPTION_KEY: parsed_docstring.short_description or "",
+        LONG_DESCRIPTION_KEY: parsed_docstring.long_description or "",
+        PARAMETERS_KEY: [],
+        RETURNS_KEY: []
     }
     
     # Extract parameters
     if hasattr(parsed_docstring, 'params'):
-        data["parameters"] = [
+        data[PARAMETERS_KEY] = [
             {
                 "name": param.arg_name,
                 "type": param.type_name or "",
@@ -145,7 +155,7 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
     
     # Extract returns - handle both single return and multiple returns
     if hasattr(parsed_docstring, 'many_returns') and parsed_docstring.many_returns:
-        data["returns"] = [
+        data[RETURNS_KEY] = [
             {
                 "name": rtn.return_name or "",
                 "type": rtn.type_name or "",
@@ -155,7 +165,7 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
         ]
     elif hasattr(parsed_docstring, 'returns') and parsed_docstring.returns:
         # Single return case
-        data["returns"] = [{
+        data[RETURNS_KEY] = [{
             "name": "",
             "type": parsed_docstring.returns.type_name or "",
             "description": parsed_docstring.returns.description or ""
@@ -166,7 +176,7 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
         # Remove empty top-level fields but keep parameters and returns arrays
         cleaned_data = {}
         for k, v in data.items():
-            if k in ["parameters", "returns"]:
+            if k in [PARAMETERS_KEY, RETURNS_KEY]:
                 # Always include these arrays even if empty
                 cleaned_data[k] = v
                 # Clean up empty fields within each item
@@ -252,7 +262,7 @@ def extract_docstring_data(file_path: str, function_name: Optional[str] = None,
         for i, line in enumerate(lines):
             stripped = line.strip()
             # Check for Parameters or Returns section headers
-            if stripped in ["Parameters", "Returns"] and i + 1 < len(lines):
+            if stripped in [PARAMETERS_SECTION, RETURNS_SECTION] and i + 1 < len(lines):
                 # Check if next line contains dashes
                 next_line = lines[i + 1].strip()
                 if next_line.startswith("---"):
@@ -267,14 +277,14 @@ def extract_docstring_data(file_path: str, function_name: Optional[str] = None,
         else:
             parsed = parse_google_style_docstring(docstring)
             
-        return {"docstring": create_docstring_json(parsed)}
+        return {DOCSTRING_KEY: create_docstring_json(parsed)}
         
     except Exception as e:
         logger.warning(f"Failed to parse {style} style docstring: {e}")
         # Fall back to generic parser
         try:
             parsed = parse_docstring(docstring)
-            return {"docstring": create_docstring_json(parsed)}
+            return {DOCSTRING_KEY: create_docstring_json(parsed)}
         except Exception as e2:
             logger.error(f"Failed to parse docstring with generic parser: {e2}")
             return None

@@ -53,7 +53,6 @@ export const BackendMsg = z.object({
   status: StatusType,
   time_taken: z.number(),
   created_at: z.string(),
-  is_saved_to_cloud: z.boolean(),
   error: z.string().nullable(),
   value: z.number().nullable(),
 });
@@ -71,8 +70,6 @@ export const Test = z.object({
   error: z.string().nullable(),
   completionTime: z.number().optional(),
   createdAt: z.string().optional(),
-  isSavedToCloud: z.boolean(),
-  exportToCloud: z.boolean(),
   minValue: z.number().optional(),
   maxValue: z.number().optional(),
   measuredValue: z.number().optional(),

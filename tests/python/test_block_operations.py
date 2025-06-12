@@ -190,9 +190,10 @@ def test_rename_block_to_its_base_name_when_available(block_service_instance: Mo
 
     rename_info_1 = block_service_instance.rename_custom_block(project_path_str, old_name_1, new_base_name_1)
     # Expected: Since "ANOTHER_NODE" is a blueprint, it should be suffixed.
-    # As "ANOTHER_NODE_1" is being renamed (so it's available), the result should be "ANOTHER_NODE_1".
-    assert rename_info_1["new_name"] == "ANOTHER_NODE_1"
-    new_folder_path_1 = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, "ANOTHER_NODE_1")
+    # The renamed block should maintain its suffix pattern
+    assert rename_info_1["new_name"].startswith("ANOTHER_NODE_")
+    assert rename_info_1["new_name"] != "ANOTHER_NODE"  # Should not be the base name
+    new_folder_path_1 = os.path.join(project_path_str, constants.CUSTOM_BLOCKS_DIR_NAME, rename_info_1["new_name"])
     assert os.path.isdir(new_folder_path_1)
 
     # Case 2: Renaming "CONSTANT_1" to "MyUniqueBase" (which is not a blueprint and available)

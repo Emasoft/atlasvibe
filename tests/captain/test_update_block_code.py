@@ -124,11 +124,14 @@ class TestUpdateBlockCode:
         
         assert not request.project_path.endswith('.atlasvibe')
     
+    @pytest.mark.asyncio
     @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.process_block_directory')
-    def test_update_block_code_writes_new_content(
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    @patch('captain.routes.blocks.create_manifest')
+    async def test_update_block_code_writes_new_content(
         self, 
-        mock_process_block,
+        mock_create_manifest,
+        mock_regenerate_block_data_json,
         mock_path_class,
         temp_custom_block
     ):
@@ -140,7 +143,8 @@ class TestUpdateBlockCode:
         mock_path.parent.name = "CUSTOM_BLOCK"
         mock_path_class.return_value = mock_path
         
-        mock_process_block.return_value = {
+        mock_regenerate_block_data_json.return_value = True
+        mock_create_manifest.return_value = {
             "name": "CUSTOM_BLOCK",
             "type": "default"
         }
@@ -150,15 +154,19 @@ class TestUpdateBlockCode:
         
         # Create request
         request = UpdateBlockCodeRequest(
-            block_path=f"{temp_custom_block}",
+            block_path=f"/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py",
             content=UPDATED_BLOCK_CODE,
             project_path="/project/test.atlasvibe"
         )
         
-        # This test expects the function to exist and be callable
-        # Currently it will fail because the function doesn't exist yet
-        with pytest.raises(AttributeError):
-            update_block_code(request)
+        # Test that the function executes successfully
+        result = await update_block_code(request)
+        
+        # Verify the function was called and returned expected result
+        assert result is not None
+        mock_path.write_text.assert_called_with(UPDATED_BLOCK_CODE)
+        mock_regenerate_block_data_json.assert_called_once()
+        mock_create_manifest.assert_called_once()
     
     @patch('captain.routes.blocks.Path')
     def test_update_block_code_backs_up_original_content(

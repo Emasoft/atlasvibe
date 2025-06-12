@@ -35,22 +35,16 @@ def EDGE_DETECTION(default: Image) -> Image:
     else:
         rgba_image = np.stack((r, g, b), axis=2)
 
-    try:
-        image = PILImage.fromarray(rgba_image)
-        image = image.convert("L").filter(ImageFilter.FIND_EDGES).convert("RGB")
-        image = np.array(image)
+    image = PILImage.fromarray(rgba_image)
+    image = image.convert("L").filter(ImageFilter.FIND_EDGES).convert("RGB")
+    image = np.array(image)
 
-        try:
-            r, g, b, a = cv2.split(image)
-        except Exception:
-            r, g, b = cv2.split(image)
-        if a is None:
-            a = None
-        return Image(
-            r=r,
-            g=g,
-            b=b,
-            a=a,
-        )
-    except Exception as e:
-        raise e
+    # Edge detection converts to RGB (3 channels), so no alpha channel
+    r, g, b = cv2.split(image)
+    
+    return Image(
+        r=r,
+        g=g,
+        b=b,
+        a=None,  # Edge detection removes alpha channel
+    )

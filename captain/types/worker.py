@@ -1,5 +1,5 @@
 from queue import Queue
-from typing import Any, Callable, Union
+from typing import Any, Callable, Union, Optional, TypedDict
 
 from pkgs.atlasvibe.atlasvibe import JobFailure, JobSuccess
 
@@ -82,3 +82,13 @@ class WorkerJobResponse(dict):
 ProcessTaskType = Callable[[Union[JobSuccess, JobFailure]], list[str] | None]
 QueueTaskType = Callable[[str, Queue], None]
 InitFuncType = Callable[[Queue], None]
+
+
+class RegenerationMessage(TypedDict):
+    """Message for block regeneration state updates."""
+    type: str  # "regeneration_start", "regeneration_complete", "regeneration_error"
+    block_name: str
+    block_path: str
+    status: str  # "regenerating", "completed", "error"
+    success: Optional[bool]
+    error: Optional[str]

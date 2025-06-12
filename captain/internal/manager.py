@@ -8,11 +8,11 @@ from typing import Any
 from captain.internal.wsmanager import ConnectionManager
 from captain.models.test_sequencer import MsgState, StatusTypes
 from captain.models.topology import Topology
-from captain.routes.cloud import utcnow_str
 from captain.services.consumer.blocks_watcher import BlocksWatcher
 from captain.types.test_sequence import TestSequenceMessage
 from captain.types.worker import PoisonPill
 from captain.utils.logger import logger
+from captain.utils.time_utils import utcnow_str
 
 """ Acts as a bridge between backend components """
 
@@ -53,7 +53,6 @@ class TSManager(WSManager):
                     status=StatusTypes.paused.value,
                     time_taken=-1,
                     created_at=utcnow_str(),
-                    is_saved_to_cloud=False,
                     error=None,
                     value=None,
                 )
@@ -85,7 +84,6 @@ class TSManager(WSManager):
                         StatusTypes.aborted.value,
                         -1,
                         utcnow_str(),
-                        False,
                         "Test sequence was interrupted",
                         None,
                     )

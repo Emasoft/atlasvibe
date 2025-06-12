@@ -164,8 +164,6 @@ def TEST_BLUEPRINT(
         assert block_data["docstring"]["parameters"][0]["name"] == "input_text"
         assert block_data["docstring"]["parameters"][1]["name"] == "scale"
         print("✓ Instance block_data.json regenerated from actual docstring")
-        
-        return instance_path
 
     def test_edit_block_instance_code(self, temp_blueprint, temp_project):
         """Test Step 2: Edit Block Instance workflow."""

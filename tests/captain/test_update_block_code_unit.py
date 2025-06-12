@@ -117,8 +117,9 @@ class TestUpdateBlockCodeUnit:
             temp_path.unlink()
     
     @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.process_block_directory')
-    def test_update_block_code_flow(self, mock_process, mock_path_class):
+    @patch('captain.routes.blocks.create_manifest')
+    @patch('captain.routes.blocks.regenerate_block_data_json')
+    def test_update_block_code_flow(self, mock_regenerate, mock_create_manifest, mock_path_class):
         """Test the complete flow of update_block_code."""
         # Mock setup
         mock_path = MagicMock()
@@ -127,7 +128,8 @@ class TestUpdateBlockCodeUnit:
         mock_path.parent.name = "CUSTOM_BLOCK"
         mock_path_class.return_value = mock_path
         
-        mock_process.return_value = {"name": "CUSTOM_BLOCK", "type": "default"}
+        mock_create_manifest.return_value = {"name": "CUSTOM_BLOCK", "type": "default"}
+        mock_regenerate.return_value = True
         
         # Simulate the update flow
         block_path = "/project/atlasvibe_blocks/CUSTOM/CUSTOM.py"
@@ -150,8 +152,13 @@ class TestUpdateBlockCodeUnit:
         try:
             mock_path.write_text(new_content)
             
+            # Regenerate block data
+            if not mock_regenerate(str(mock_path.parent)):
+                # This would trigger a warning in real code
+                pass
+            
             # Generate manifest
-            manifest = mock_process(mock_path.parent, mock_path.parent.name)
+            manifest = mock_create_manifest(str(mock_path))
             
             if not manifest:
                 # Rollback
@@ -162,7 +169,8 @@ class TestUpdateBlockCodeUnit:
             
             # Verify the flow worked
             assert mock_path.write_text.called
-            assert mock_process.called
+            assert mock_regenerate.called
+            assert mock_create_manifest.called
             assert manifest["path"] is not None
             
         except Exception:

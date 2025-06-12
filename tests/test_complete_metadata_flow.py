@@ -107,8 +107,9 @@ def CONSTANT(x: int = 42) -> int:
                 "outputs": [{"name": "output", "type": "int"}]
             }))
             
-            # Mock the blocks path
-            with patch('captain.utils.blocks_path.get_blocks_path', return_value=str(Path(blueprint_base) / "blocks")):
+            # Mock the blocks path and blueprint finding
+            with patch('captain.utils.blocks_path.get_blocks_path', return_value=str(Path(blueprint_base) / "blocks")), \
+                 patch('captain.routes.blocks.find_blueprint_path', return_value=blueprint_dir):
                 # Step 2: Create custom block via API
                 response = test_client.post("/blocks/create-custom/", json={
                     "blueprint_key": "CONSTANT",
@@ -194,7 +195,10 @@ def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Cus
         mock_ws.active_connections_map = {"test": Mock()}
         mock_ws.broadcast = Mock(side_effect=mock_broadcast)
         
-        with patch('captain.services.consumer.blocks_watcher.ConnectionManager.get_instance', return_value=mock_ws):
+        # Mock get_blocks_path to return the test project's blocks directory
+        with patch('captain.services.consumer.blocks_watcher.ConnectionManager.get_instance', return_value=mock_ws), \
+             patch('captain.services.consumer.blocks_watcher.get_blocks_path', return_value=str(test_project["blocks_dir"])):
+            
             watcher = BlocksWatcher()
             stop_flag = threading.Event()
             

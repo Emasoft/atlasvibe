@@ -14,6 +14,7 @@ from fastapi import APIRouter, Response, HTTPException
 from pydantic import BaseModel
 
 from captain.internal.manager import WatchManager
+from captain.internal.wsmanager import ConnectionManager
 from captain.utils.manifest.generate_manifest import generate_manifest
 from captain.utils.blocks_metadata import generate_metadata
 from captain.utils.import_blocks import create_map
@@ -26,6 +27,7 @@ from captain.utils.project_structure import (
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
 from captain.utils.block_metadata_generator import regenerate_block_data_json
+from captain.types.worker import RegenerationMessage
 
 router = APIRouter(tags=["blocks"])
 
@@ -210,9 +212,55 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             # Extract block name from path
             block_name = block_file.parent.name
             
+            # Get WebSocket manager instance
+            ws_manager = ConnectionManager.get_instance()
+            
+            # Broadcast regeneration start event
+            start_msg = RegenerationMessage(
+                type="regeneration_start",
+                block_name=block_name,
+                block_path=str(block_file.parent),
+                status="regenerating",
+                success=None,
+                error=None
+            )
+            await ws_manager.broadcast(start_msg)
+            
             # Regenerate block_data.json from the updated docstring
-            if not regenerate_block_data_json(str(block_file.parent)):
-                logger.warning(f"Failed to regenerate block_data.json for '{block_name}'")
+            regeneration_success = False
+            regeneration_error = None
+            
+            try:
+                regeneration_success = regenerate_block_data_json(str(block_file.parent))
+                if not regeneration_success:
+                    regeneration_error = "Failed to regenerate block_data.json"
+                    logger.warning(f"Failed to regenerate block_data.json for '{block_name}'")
+            except Exception as e:
+                regeneration_success = False
+                regeneration_error = str(e)
+                logger.error(f"Error regenerating block_data.json for '{block_name}': {e}")
+            
+            # Broadcast regeneration complete/error event
+            if regeneration_success:
+                complete_msg = RegenerationMessage(
+                    type="regeneration_complete",
+                    block_name=block_name,
+                    block_path=str(block_file.parent),
+                    status="completed",
+                    success=True,
+                    error=None
+                )
+                await ws_manager.broadcast(complete_msg)
+            else:
+                error_msg = RegenerationMessage(
+                    type="regeneration_error",
+                    block_name=block_name,
+                    block_path=str(block_file.parent),
+                    status="error",
+                    success=False,
+                    error=regeneration_error
+                )
+                await ws_manager.broadcast(error_msg)
             
             # Regenerate manifest for the updated block
             block_manifest = create_manifest(str(block_file))

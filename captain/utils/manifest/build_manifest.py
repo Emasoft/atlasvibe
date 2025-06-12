@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import inspect
 import logging
 from inspect import Parameter
@@ -279,9 +282,14 @@ def create_manifest(path: str) -> dict[str, Any]:
         for attr in ['OrderedPair', 'Scalar', 'Vector', 'Matrix', 'DataContainer', 
                      'DataFrame', 'Image', 'Surface', 'OrderedTriple', 'Stateful',
                      'DefaultParams', 'NodeInitContainer', 'Array', 'TextArea',
-                     'Secret', 'File', 'Directory']:
+                     'Secret', 'File', 'Directory', 'String', 'ParametricScalar',
+                     'ParametricVector']:
             if hasattr(atlasvibe_module, attr):
                 module.__dict__[attr] = getattr(atlasvibe_module, attr)
+        
+        # Add parameter types aliases for convenience
+        if hasattr(atlasvibe_module, 'Scalar'):
+            module.__dict__['Number'] = getattr(atlasvibe_module, 'Scalar')  # Number alias for Scalar
         
         exec(code, module.__dict__)
     finally:

@@ -47,7 +47,6 @@ class BackendMsg(BaseModel):
     target_id: str = Field(..., alias="targetId")
     status: str = Field(..., alias="status")
     time_taken: float = Field(..., alias="timeTaken")
-    is_saved_to_cloud: bool = Field(..., alias="isSavedToCloud")
     error: Optional[str] = Field(None, alias="error")
 
 
@@ -61,8 +60,6 @@ class Test(BaseModel):
     test_type: TestTypes = Field(..., alias="testType")
     status: StatusTypes = Field(..., alias="status")
     completion_time: Optional[float] = Field(None, alias="completionTime")
-    is_saved_to_cloud: bool = Field(..., alias="isSavedToCloud")
-    export_to_cloud: bool = Field(..., alias="exportToCloud")
     min_value: Optional[float] = Field(None, alias="minValue")
     max_value: Optional[float] = Field(None, alias="maxValue")
     measured_value: Optional[float] = Field(None, alias="measuredValue")

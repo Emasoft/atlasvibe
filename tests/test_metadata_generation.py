@@ -168,7 +168,13 @@ def CHANGING_BLOCK(x: int = 1, multiplier: int = 3, offset: int = 0) -> int:
             pass
         mock_ws.broadcast = Mock(side_effect=mock_broadcast)
         
-        with patch('captain.services.consumer.blocks_watcher.ConnectionManager.get_instance', return_value=mock_ws):
+        # Mock the blocks path to only watch the test project directory
+        custom_blocks_path = str(test_project["blocks_dir"])
+        
+        # Patch both the connection manager and the blocks path
+        with patch('captain.services.consumer.blocks_watcher.ConnectionManager.get_instance', return_value=mock_ws), \
+             patch('captain.services.consumer.blocks_watcher.get_blocks_path', return_value=custom_blocks_path):
+            
             watcher = BlocksWatcher()
             
             # Create a stop flag

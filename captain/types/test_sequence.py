@@ -23,7 +23,6 @@ class TestSequenceMessage(dict):
     status: str
     time_taken: float
     created_at: str
-    is_saved_to_cloud: bool
     error: Optional[str]
     value: Optional[float]
 
@@ -34,7 +33,6 @@ class TestSequenceMessage(dict):
         status,
         time_taken,
         created_at,
-        is_saved_to_cloud,
         error,
         value,
     ):
@@ -43,7 +41,6 @@ class TestSequenceMessage(dict):
         self["status"] = status
         self["time_taken"] = time_taken
         self["created_at"] = created_at
-        self["is_saved_to_cloud"] = is_saved_to_cloud
         self["error"] = error
         self["value"] = value
 

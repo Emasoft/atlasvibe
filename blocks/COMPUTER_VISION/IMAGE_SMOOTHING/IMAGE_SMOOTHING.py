@@ -45,30 +45,31 @@ def IMAGE_SMOOTHING(
     else:
         rgba_image = np.stack((r, g, b), axis=2)
 
-    try:
-        match smoothing_type:
-            case "average":
-                image = cv2.blur(rgba_image, (kernel, kernel))
-            case "gaussian":
-                assert kernel & 1, "Kernel must be odd for 'gaussian' smoothing."
-                image = cv2.GaussianBlur(rgba_image, (kernel, kernel), 0)
-            case "median":
-                assert kernel & 1, "Kernel must be odd for 'median' smoothing."
-                image = cv2.medianBlur(rgba_image, kernel)
-            case "bilateral":
-                rgba_image = cv2.cvtColor(rgba_image, cv2.COLOR_BGRA2BGR)
-                image = cv2.bilateralFilter(rgba_image, kernel, kernel * 5, kernel * 5)
-        try:
-            r, g, b, a = cv2.split(image)
-        except Exception:
-            r, g, b = cv2.split(image)
-        if a is None:
-            a = None
-        return Image(
-            r=r,
-            g=g,
-            b=b,
-            a=a,
-        )
-    except Exception as e:
-        raise e
+    match smoothing_type:
+        case "average":
+            image = cv2.blur(rgba_image, (kernel, kernel))
+        case "gaussian":
+            assert kernel & 1, "Kernel must be odd for 'gaussian' smoothing."
+            image = cv2.GaussianBlur(rgba_image, (kernel, kernel), 0)
+        case "median":
+            assert kernel & 1, "Kernel must be odd for 'median' smoothing."
+            image = cv2.medianBlur(rgba_image, kernel)
+        case "bilateral":
+            rgba_image = cv2.cvtColor(rgba_image, cv2.COLOR_BGRA2BGR)
+            image = cv2.bilateralFilter(rgba_image, kernel, kernel * 5, kernel * 5)
+    
+    # Split the image back into channels
+    # bilateral filter returns 3 channels, others return 4 if input had 4
+    channels = cv2.split(image)
+    if len(channels) == 4:
+        r, g, b, a = channels
+    else:
+        r, g, b = channels
+        a = None
+    
+    return Image(
+        r=r,
+        g=g,
+        b=b,
+        a=a,
+    )

@@ -327,7 +327,7 @@ def EXTREMA_DETERMINATION(
                 tree = spatial.cKDTree(candidates[:, :-1])
                 pairs = np.array(list(tree.query_pairs(distance)))
                 if len(pairs) == 0:
-                    return candidates
+                    peaks = candidates[:, :-1]  # Remove radius column
                 else:
                     for i, j in pairs:
                         blob1, blob2 = candidates[i], candidates[j]

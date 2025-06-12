@@ -22,6 +22,7 @@ from captain.utils.block_metadata_generator import (
     generate_all_metadata_files,
     regenerate_block_data_json
 )
+from captain.types.worker import RegenerationMessage
 from watchfiles import awatch
 from pathlib import Path
 import threading
@@ -31,15 +32,85 @@ import os
 class BlocksWatcher:
     def __init__(self) -> None:
         self.ws = ConnectionManager.get_instance()
+    
+    async def _handle_block_change(self, block_file_path: str):
+        """Handle a block file change and broadcast regeneration events."""
+        path = Path(block_file_path)
+        block_name = path.stem
+        block_dir = str(path.parent)
+        
+        # Broadcast regeneration start event
+        start_msg = RegenerationMessage(
+            type="regeneration_start",
+            block_name=block_name,
+            block_path=block_dir,
+            status="regenerating",
+            success=None,
+            error=None
+        )
+        await self.ws.broadcast(start_msg)
+        
+        try:
+            # Regenerate block_data.json
+            success = regenerate_block_data_json(block_dir)
+            
+            if success:
+                # Broadcast regeneration complete event
+                complete_msg = RegenerationMessage(
+                    type="regeneration_complete",
+                    block_name=block_name,
+                    block_path=block_dir,
+                    status="completed",
+                    success=True,
+                    error=None
+                )
+                await self.ws.broadcast(complete_msg)
+                logger.info(f"Successfully regenerated metadata for {block_name}")
+            else:
+                # Broadcast regeneration error event
+                error_msg = RegenerationMessage(
+                    type="regeneration_error",
+                    block_name=block_name,
+                    block_path=block_dir,
+                    status="error",
+                    success=False,
+                    error="Failed to regenerate block_data.json"
+                )
+                await self.ws.broadcast(error_msg)
+                logger.error(f"Failed to regenerate metadata for {block_name}")
+                
+        except Exception as e:
+            # Broadcast regeneration error event
+            error_msg = RegenerationMessage(
+                type="regeneration_error",
+                block_name=block_name,
+                block_path=block_dir,
+                status="error",
+                success=False,
+                error=str(e)
+            )
+            await self.ws.broadcast(error_msg)
+            logger.error(f"Error regenerating metadata for {block_name}: {e}")
 
     async def run(self, stop_flag: threading.Event):
         paths_to_watch: list[str] = []
         blocks_path = get_blocks_path()
-        paths_to_watch.append(blocks_path)
+        
+        # Only add paths that actually exist
+        if Path(blocks_path).exists():
+            paths_to_watch.append(blocks_path)
+        
         custom_path_file = Path.home() / ".atlasvibe" / "custom_blocks_path.txt" # CHANGED .atlasvibe to .atlasvibe
         if Path.exists(custom_path_file):
             with open(custom_path_file) as f:
-                paths_to_watch.append(f.read())
+                custom_path = f.read().strip()
+                if custom_path and Path(custom_path).exists():
+                    paths_to_watch.append(custom_path)
+        
+        if not paths_to_watch:
+            logger.warning("No valid paths to watch for blocks")
+            return
+            
         logger.info(f"Starting file watcher for blocks dirs {paths_to_watch}")
 
         async for changes in awatch(*paths_to_watch, stop_event=stop_flag):

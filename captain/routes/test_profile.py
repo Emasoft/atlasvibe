@@ -52,7 +52,7 @@ async def install(url: Annotated[str, Header()]):
     except Exception as e:
         logging.error(f"Exception occured while installing {url}: {e}")
         logging.error(traceback.format_exc())
-        Response(status_code=500, content=json.dumps({"error": f"{e}"}))
+        return Response(status_code=500, content=json.dumps({"error": f"{e}"}))
 
 
 @router.post("/test_profile/checkout/{commit_hash}/")
@@ -90,7 +90,7 @@ async def checkout(url: Annotated[str, Header()], commit_hash: str):
     except Exception as e:
         logging.error(f"Exception occured while installing {url}: {e}")
         logging.error(traceback.format_exc())
-        Response(status_code=500, content=json.dumps({"error": f"{e}"}))
+        return Response(status_code=500, content=json.dumps({"error": f"{e}"}))
 
 
 # Helper functions ------------------------------------------------------------
@@ -109,7 +109,7 @@ def verify_git_install():
     cmd = ["git", "--version"]
     res = subprocess.run(cmd, capture_output=True)
     if res.returncode != 0:
-        raise NotImplementedError("Git is not found on you system")
+        raise RuntimeError("Git is not found on your system")
 
 
 def get_profiles_dir():

@@ -29,12 +29,6 @@ class Reconciler:
             return self.reconcile_matrix(lhs, rhs)
         elif types_to_reconcile == set(["DataFrame"]):
             return self.reconcile_dataframe(lhs, rhs)
-        elif types_to_reconcile == set(["OrderedPair"]):
-            return self.reconcile_ordered_pair(lhs, rhs)
-        elif types_to_reconcile == set(["Matrix", "Scalar"]):
-            return self.reconcile_matrix_scalar(lhs, rhs)
-        elif types_to_reconcile == set(["Matrix", "DataFrame"]):
-            return self.reconcile_dataframe_matrix(lhs, rhs)
         elif types_to_reconcile == set(["Scalar", "DataFrame"]):
             return self.reconcile_dataframe_scalar(lhs, rhs)
         else:
@@ -87,18 +81,3 @@ class Reconciler:
         new_m = rhs.m.copy()
         new_m.iloc[:] = lhs.c
         return DataContainer(type="DataFrame", m=new_m), rhs
-
-    def reconcile_ordered_pair(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
-        raise NotImplementedError("TODO")
-
-    def reconcile_matrix_scalar(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
-        raise NotImplementedError("TODO")
-
-    def reconcile_dataframe_matrix(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
-        raise NotImplementedError("TODO")

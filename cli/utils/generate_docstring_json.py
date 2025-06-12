@@ -1,10 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json
 import os
 
 from rich import print
 
 from cli.constants import BLOCKS_SOURCE_FOLDER, ERR_STRING
-from captain.utils.docstring_utils import parse_python_file, extract_docstring_from_node, create_docstring_json, parse_docstring
+from captain.utils.docstring_utils import parse_python_file, create_docstring_json
+from docstring_parser import parse as parse_docstring
 
 
 def generate_docstring_json() -> bool:

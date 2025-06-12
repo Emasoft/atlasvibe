@@ -36,8 +36,6 @@ export enum Selectors {
   contextDeleteBlockBtn = "context-delete-block",
   blockEditMenuCloseBtn = "block-edit-close-button",
   envModalBtn = "env-var-modal-button",
-  atlasvibeCloudApiInput = "atlasvibe-cloud-api-input",
-  atlasvibeCloudApiSubmit = "atlasvibe-cloud-api-submit",
   envVarKeyInput = "env-var-key-input",
   envVarValueInput = "env-var-value-input",
   envVarSubmitBtn = "env-var-submit-btn",
