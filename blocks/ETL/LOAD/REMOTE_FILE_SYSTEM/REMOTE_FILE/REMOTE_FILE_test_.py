@@ -1,19 +1,20 @@
 import pytest
 import requests.exceptions
 
-from atlasvibe import Image, DataFrame, Grayscale
+# Fix imports - use direct imports from data_container
+from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame, Grayscale
 
-ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL = "https://raw.githubusercontent.com/atlasvibe-ai/nodes/22908c9fbee6b923b10d36091be31c05c9b74e03/LOADERS/LOCAL_FILE_SYSTEM/LOCAL_FILE/assets"  # noqa: E501
+# Using public test images instead of removed atlasvibe-ai/nodes repository
+PUBLIC_TEST_IMAGES_BASE_URL = "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images"
 
 
 @pytest.mark.parametrize(
     "file_type, output_type, file_url",
     [
-        ("Image", Image, f"{ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL}/astronaut.png"),
-        ("Grayscale", Grayscale, f"{ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL}/camera.png"),
-        ("CSV", DataFrame, f"{ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL}/iris_test.csv"),
-        ("JSON", DataFrame, f"{ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL}/employees.json"),
-        ("XML", DataFrame, f"{ATLASVIBE_LOCAL_FILE_SYSTEM_ASSETS_URL}/menu.xml"),
+        ("Image", Image, f"{PUBLIC_TEST_IMAGES_BASE_URL}/hopper.png"),
+        ("Grayscale", Grayscale, f"{PUBLIC_TEST_IMAGES_BASE_URL}/hopper.png"),
+        ("CSV", DataFrame, "https://raw.githubusercontent.com/pandas-dev/pandas/main/pandas/tests/io/data/csv/iris.csv"),
+        ("JSON", DataFrame, "https://api.github.com/repos/python/cpython/issues/1"),
     ],
 )
 def test_REMOTE_FILE_valid_usage(
@@ -34,7 +35,7 @@ def test_REMOTE_FILE_valid_usage(
         "htp://misstyped.url",
     ],
 )
-def test_REMOTE_FILE_not_valid(file_url):
+def test_REMOTE_FILE_not_valid(file_url, mock_atlasvibe_decorator):
     import REMOTE_FILE
 
     with pytest.raises(ValueError):
@@ -44,7 +45,7 @@ def test_REMOTE_FILE_not_valid(file_url):
 @pytest.mark.parametrize(
     "file_url", ["gcp://not_yet_supported", "s3://not_yet_supported"]
 )
-def test_REMOTE_FILE_not_yet_supported(file_url):
+def test_REMOTE_FILE_not_yet_supported(file_url, mock_atlasvibe_decorator):
     import REMOTE_FILE
 
     error_msg = f"No connection adapters were found for '{file_url}'"

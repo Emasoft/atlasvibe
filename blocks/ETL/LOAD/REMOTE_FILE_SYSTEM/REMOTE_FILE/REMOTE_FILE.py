@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 
-from atlasvibe import atlasvibe, Image, DataFrame, Grayscale, String
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame, Grayscale, String
 from typing import Literal, Optional
 import numpy as np
 from PIL import Image as PIL_Image
