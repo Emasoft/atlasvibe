@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, Boolean
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
 @atlasvibe
 def NOT(default: Boolean) -> Boolean:

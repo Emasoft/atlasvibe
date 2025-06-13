@@ -1,8 +1,8 @@
 import numpy as np
 import plotly.express as px
-from atlasvibe import Grayscale, Image, Plotly, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Grayscale, Image, Plotly
 from blocks.DATA.VISUALIZATION.template import plot_layout
-
 
 @atlasvibe
 def IMAGE(default: Image | Grayscale) -> Plotly:

@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import Scalar, Vector, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector
 
 @atlasvibe
 def VECTOR_MIN(default: Vector) -> Scalar:

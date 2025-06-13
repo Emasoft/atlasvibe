@@ -1,13 +1,12 @@
 from typing import TypedDict
 from sklearn.feature_extraction.text import CountVectorizer
-from atlasvibe import atlasvibe, DataFrame, Matrix, Vector
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, Vector
 import pandas as pd
-
 
 class CountVectorizerOutput(TypedDict):
     tokens: DataFrame
     word_count_vector: Vector
-
 
 @atlasvibe(deps={"scikit-learn": "1.2.2"})
 def COUNT_VECTORIZER(default: DataFrame | Matrix | Vector) -> CountVectorizerOutput:

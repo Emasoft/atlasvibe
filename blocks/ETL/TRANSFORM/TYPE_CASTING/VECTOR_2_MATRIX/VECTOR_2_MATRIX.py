@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, Vector, Matrix
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector, Matrix
 
 @atlasvibe
 def VECTOR_2_MATRIX(default: Vector, row: int, col: int) -> Matrix:

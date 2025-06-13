@@ -1,6 +1,5 @@
 from numpy import arange, array_equal
-from atlasvibe import Vector
-
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
 def test_VECTOR_MAX(mock_atlasvibe_decorator):
     import VECTOR_MAX

@@ -1,7 +1,7 @@
-from atlasvibe import atlasvibe, Scalar
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Scalar
 from scipy import integrate
 from sympy import parse_expr, lambdify
-
 
 @atlasvibe(deps={"sympy": "1.12"})
 def DOUBLE_DEFINITE_INTEGRAL(

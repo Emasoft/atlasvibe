@@ -1,6 +1,6 @@
 from numpy import transpose
-from atlasvibe import atlasvibe, Matrix
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
 @atlasvibe
 def TRANSPOSE_MATRIX(default: Matrix) -> Matrix:

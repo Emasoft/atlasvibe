@@ -1,13 +1,8 @@
 from typing import Any, Optional
+from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
+from pkgs.atlasvibe.atlasvibe.job_result_builder import JobResultBuilder
 
-from atlasvibe import (
-    DataContainer,
-    JobResultBuilder,
-    NodeReference,
-    atlasvibe,
-    get_job_result,
 )
-
 
 @atlasvibe
 def FEEDBACK(

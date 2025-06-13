@@ -1,6 +1,5 @@
-from atlasvibe import OrderedPair
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 import numpy as np
-
 
 def test_INTEGRATE(mock_atlasvibe_decorator):
     import INTEGRATE

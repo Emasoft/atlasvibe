@@ -1,8 +1,8 @@
-from atlasvibe import atlasvibe, Matrix, Scalar
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, Scalar
 import numpy as np
 
 import numpy.linalg
-
 
 @atlasvibe
 def INV(

@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, Boolean, Scalar
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Boolean, Scalar
 
 @atlasvibe
 def BOOLEAN_2_SCALAR(default: Boolean) -> Scalar:

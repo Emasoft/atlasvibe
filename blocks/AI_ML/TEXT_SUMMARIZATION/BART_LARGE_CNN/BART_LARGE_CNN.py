@@ -1,5 +1,6 @@
-from atlasvibe import atlasvibe, DataFrame
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
+from huggingface_hub import snapshot_download
 
 @atlasvibe(deps={"transformers": "4.30.2", "torch": "2.0.1", "torchvision": "0.15.2"})
 def BART_LARGE_CNN(default: DataFrame) -> DataFrame:

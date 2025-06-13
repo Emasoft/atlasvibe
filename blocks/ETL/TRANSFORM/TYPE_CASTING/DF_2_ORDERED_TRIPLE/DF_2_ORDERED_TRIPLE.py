@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, DataFrame, OrderedTriple
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedTriple
 
 @atlasvibe
 def DF_2_ORDERED_TRIPLE(

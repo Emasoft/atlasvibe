@@ -1,7 +1,7 @@
 from scipy import signal
-from atlasvibe import atlasvibe, OrderedPair
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 from typing import Literal
-
 
 @atlasvibe
 def FIR(

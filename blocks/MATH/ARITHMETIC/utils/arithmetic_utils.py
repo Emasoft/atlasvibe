@@ -1,5 +1,4 @@
-from atlasvibe import OrderedPair, Scalar, Vector, DCNpArrayType
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector, DCNpArrayType
 
 def get_val(
     data_container: OrderedPair | Scalar | Vector,

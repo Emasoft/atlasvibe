@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def test_SCALAR(mock_atlasvibe_decorator):
     import SCALAR
 

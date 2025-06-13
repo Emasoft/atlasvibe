@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import OrderedPair, Scalar, Vector, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 
 @atlasvibe
 def ABS(default: OrderedPair | Vector | Scalar) -> OrderedPair:

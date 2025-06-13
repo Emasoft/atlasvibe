@@ -1,7 +1,6 @@
-from atlasvibe import DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pandas as pd
 import numpy as np
-
 
 def test_DF_2_ORDERED_TRIPLE_column_errorMessage(mock_atlasvibe_decorator):
     import DF_2_ORDERED_TRIPLE
@@ -14,7 +13,6 @@ def test_DF_2_ORDERED_TRIPLE_column_errorMessage(mock_atlasvibe_decorator):
         DF_2_ORDERED_TRIPLE.DF_2_ORDERED_TRIPLE,
         DataFrame(df=df),
     )
-
 
 def test_DF_2_ORDERED_TRIPLE_columns_switch_and_dtype(mock_atlasvibe_decorator):
     import DF_2_ORDERED_TRIPLE

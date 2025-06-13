@@ -1,6 +1,6 @@
 import pprint
-from atlasvibe import atlasvibe, String, Boolean
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import String, Boolean
 
 @atlasvibe
 def TEXT_VIEW(default: String | Boolean, prettify: bool = False) -> String:

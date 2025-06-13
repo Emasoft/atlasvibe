@@ -1,6 +1,6 @@
 from scipy.signal import find_peaks
-from atlasvibe import atlasvibe, OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 
 @atlasvibe
 def PEAK_DETECTION(

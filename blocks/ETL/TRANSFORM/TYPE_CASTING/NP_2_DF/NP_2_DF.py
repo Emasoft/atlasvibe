@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from atlasvibe import (
-    atlasvibe,
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import (
     DataContainer,
     DataFrame,
     OrderedPair,
@@ -12,11 +12,10 @@ from atlasvibe import (
     ParametricDataFrame,
     ParametricOrderedPair,
     ParametricOrderedTriple,
-    ParametricImage,
-    ParametricGrayscale,
     ParametricMatrix,
+    ParametricGrayscale,
+    ParametricImage
 )
-
 
 @atlasvibe
 def NP_2_DF(default: DataContainer) -> DataFrame:

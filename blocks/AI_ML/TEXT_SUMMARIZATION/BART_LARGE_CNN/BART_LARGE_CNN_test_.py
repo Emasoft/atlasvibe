@@ -1,13 +1,12 @@
 import os
 import pytest
 import pandas as pd
-from atlasvibe import DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 try:
     import torch
 except ImportError:
     torch = None
-
 
 @pytest.fixture
 def long_text():
@@ -15,7 +14,6 @@ def long_text():
     with open(_file_path, "r") as f:
         text = f.read()
     return text
-
 
 @pytest.mark.skipif(
     torch is None,

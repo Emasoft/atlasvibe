@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import Image, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 @atlasvibe
 def CHANNEL_MERGE(red: Image, green: Image, blue: Image, alpha: Image) -> Image:

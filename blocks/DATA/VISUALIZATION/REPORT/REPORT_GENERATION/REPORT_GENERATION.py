@@ -6,8 +6,9 @@ import webbrowser
 
 import plotly
 from typing import Optional
-from atlasvibe import Boolean, Plotly, String, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Boolean, Plotly, String
+from IPython.display import display
 
 @atlasvibe
 def REPORT_GENERATION(

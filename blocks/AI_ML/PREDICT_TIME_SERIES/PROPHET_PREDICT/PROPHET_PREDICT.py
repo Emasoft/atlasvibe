@@ -1,5 +1,5 @@
-from atlasvibe import DataFrame, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 @atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_PREDICT(

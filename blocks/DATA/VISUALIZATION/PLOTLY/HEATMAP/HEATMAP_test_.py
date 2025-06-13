@@ -1,7 +1,6 @@
 from plotly.express import data
-from atlasvibe import Plotly, Vector, OrderedPair, DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import Plotly, Vector, OrderedPair, DataFrame
 import numpy as np
-
 
 # Tests that the function returns the expected Plotly object when called with allowed type of data
 def test_default_dataset_key(mock_atlasvibe_decorator):

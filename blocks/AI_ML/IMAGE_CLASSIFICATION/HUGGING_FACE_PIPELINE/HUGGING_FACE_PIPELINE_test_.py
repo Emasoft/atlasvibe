@@ -4,14 +4,13 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from atlasvibe import Image, DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame
 from PIL import Image as PIL_Image
 
 try:
     import transformers
 except ImportError:
     transformers = None
-
 
 @pytest.fixture
 def ada_lovelace_array_rgb():
@@ -22,7 +21,6 @@ def ada_lovelace_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
-
 
 @pytest.mark.skipif(
     transformers is None,
@@ -56,7 +54,6 @@ def test_HUGGING_FACE_PIPELINE_default(
 
     assert first_class_confidence_scores["label"] == "overskirt"
     assert first_class_confidence_scores["score"] > 0.725
-
 
 # Skip this test on Windows
 @pytest.mark.skip(reason="The test does not complete on the CI.")

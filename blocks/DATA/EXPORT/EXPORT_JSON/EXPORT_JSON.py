@@ -1,13 +1,10 @@
 import os
 import json
-from atlasvibe import (
-    atlasvibe,
-    DataContainer,
-    Directory,
+from pkgs.atlasvibe.atlasvibe.parameter_types import Directory
+
 )
 from pkgs.atlasvibe.atlasvibe.utils import PlotlyJSONEncoder
 from typing import Optional
-
 
 @atlasvibe
 def EXPORT_JSON(

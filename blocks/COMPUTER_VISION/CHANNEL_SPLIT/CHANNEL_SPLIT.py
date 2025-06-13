@@ -1,14 +1,13 @@
-from atlasvibe import atlasvibe, Image, Matrix
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image, Matrix
 from typing import TypedDict
 import numpy as np
-
 
 class ChannelSplitOutput(TypedDict):
     r: Image
     g: Image
     b: Image
     a: Image
-
 
 @atlasvibe
 def CHANNEL_SPLIT(default: Image | Matrix) -> ChannelSplitOutput:

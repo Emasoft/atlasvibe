@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, Vector, OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector, OrderedPair
 
 @atlasvibe
 def VECTOR_2_ORDERED_PAIR(default: Vector, y: Vector) -> OrderedPair:

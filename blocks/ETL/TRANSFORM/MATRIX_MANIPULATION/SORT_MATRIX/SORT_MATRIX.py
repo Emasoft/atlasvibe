@@ -1,6 +1,6 @@
 from numpy import sort
-from atlasvibe import atlasvibe, Matrix
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
 @atlasvibe
 def SORT_MATRIX(a: Matrix, axis: int = -1) -> Matrix:

@@ -1,7 +1,7 @@
 from scipy import fft
-from atlasvibe import atlasvibe, OrderedPair, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame
 import pandas as pd
-
 
 @atlasvibe
 def IFFT(default: DataFrame, real_signal: bool = True) -> OrderedPair:

@@ -1,5 +1,4 @@
-from atlasvibe import Boolean
-
+from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
 def test_NOT_OR(mock_atlasvibe_decorator):
     import NOT_OR

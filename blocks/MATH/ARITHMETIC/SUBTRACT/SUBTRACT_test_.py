@@ -1,7 +1,6 @@
 import numpy as np
 
-from atlasvibe import OrderedPair, Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
 
 def test_SUBTRACT_Vector_Vector(mock_atlasvibe_decorator):
     import SUBTRACT
@@ -12,7 +11,6 @@ def test_SUBTRACT_Vector_Vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.v, x.v - y.v)
 
-
 def test_SUBTRACT_Vector_Scalar(mock_atlasvibe_decorator):
     import SUBTRACT
 
@@ -20,7 +18,6 @@ def test_SUBTRACT_Vector_Scalar(mock_atlasvibe_decorator):
     res = SUBTRACT.SUBTRACT(a=x, b=[Scalar(c=2), Scalar(c=3)])
 
     np.testing.assert_allclose(res.v, (x.v - 2) - 3)
-
 
 def test_SUBTRACT_OrderedPair_Vector(mock_atlasvibe_decorator):
     import SUBTRACT

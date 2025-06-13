@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import Vector
-
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
 def test_REMOVE_DUPLICATES_VECTOR(mock_atlasvibe_decorator):
     import REMOVE_DUPLICATES_VECTOR

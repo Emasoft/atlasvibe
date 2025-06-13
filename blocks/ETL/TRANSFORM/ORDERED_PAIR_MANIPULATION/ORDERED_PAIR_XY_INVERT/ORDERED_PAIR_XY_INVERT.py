@@ -1,5 +1,5 @@
-from atlasvibe import atlasvibe, OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 
 @atlasvibe
 def ORDERED_PAIR_XY_INVERT(

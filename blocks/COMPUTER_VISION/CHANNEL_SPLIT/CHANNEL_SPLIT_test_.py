@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import Image
-
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 def test_CHANNEL_SPLIT(mock_atlasvibe_decorator):
     import CHANNEL_SPLIT

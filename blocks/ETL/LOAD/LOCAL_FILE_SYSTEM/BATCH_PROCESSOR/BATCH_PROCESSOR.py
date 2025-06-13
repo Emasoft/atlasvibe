@@ -1,18 +1,18 @@
-from atlasvibe import atlasvibe, Scalar, SmallMemory, DefaultParams, String
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Scalar, String
 import glob
 from typing import Any, TypedDict
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 memory_key = "batch-processor-info"
-
 
 class BATCH_OUTPUT(TypedDict):
     fname: String
     n_files: Scalar
 
-
 def get_fnames(d, p):
     return [file for file in glob.glob(d + "/" + p, recursive=True)]
-
 
 @atlasvibe(inject_node_metadata=True)
 def BATCH_PROCESSOR(

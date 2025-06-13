@@ -4,7 +4,7 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-def test_MATRIX_VIEW(mock_atlasvibe_node_decorator):
+def test_MATRIX_VIEW(mock_atlasvibe_node_decorator, mock_atlasvibe_decorator):
     import MATRIX_VIEW
     from blocks.DATA.GENERATION.SIMULATIONS.MATRIX.MATRIX import MATRIX
 

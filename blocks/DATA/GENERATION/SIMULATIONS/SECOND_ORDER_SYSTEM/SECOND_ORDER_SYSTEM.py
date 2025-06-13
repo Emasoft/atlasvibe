@@ -1,9 +1,10 @@
 from numpy import exp, ndarray, insert, zeros
-from atlasvibe import atlasvibe, OrderedPair, DefaultParams, SmallMemory, Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 memory_key = "SECOND_ORDER_SYSTEM"
-
 
 @atlasvibe(inject_node_metadata=True)
 def SECOND_ORDER_SYSTEM(

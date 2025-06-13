@@ -1,18 +1,12 @@
-from atlasvibe import (
-    atlasvibe,
-    Plotly,
-    OrderedPair,
-    DefaultParams,
-    SmallMemory,
-    Scalar,
-    Vector,
-)
+
 from typing import cast
 import plotly.graph_objects as go
 from blocks.DATA.VISUALIZATION.template import plot_layout
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe, DefaultParams
+from pkgs.atlasvibe.atlasvibe.data_container import Plotly, OrderedPair, Scalar, Vector
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
 
 MEMORY_KEY = "BIG_NUMBER_MEMORY_KEY"
-
 
 @atlasvibe(inject_node_metadata=True)
 def BIG_NUMBER(

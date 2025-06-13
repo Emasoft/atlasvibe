@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 
 def test_BUTTER(mock_atlasvibe_decorator):
     import BUTTER

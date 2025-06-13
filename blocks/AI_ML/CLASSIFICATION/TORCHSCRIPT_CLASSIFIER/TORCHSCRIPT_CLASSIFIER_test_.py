@@ -4,13 +4,13 @@ import tempfile
 import pandas as pd
 import numpy as np
 import PIL
-from atlasvibe import run_in_venv, Image, DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_node_venv import run_in_venv
 
 try:
     import torch  # noqa: F401
 except ImportError:
     torch_import = None
-
 
 @pytest.fixture
 def torchscript_model_path():
@@ -47,14 +47,12 @@ def torchscript_model_path():
         _download_test_model(model_path)
         yield model_path
 
-
 @pytest.fixture
 def class_names():
     csv_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "assets", "class_names.csv"
     )
     return DataFrame(df=pd.read_csv(csv_path))
-
 
 @pytest.fixture
 def obama_image():
@@ -65,7 +63,6 @@ def obama_image():
     )
     image = np.array(PIL.Image.open(_image_path).convert("RGB"))
     return Image(r=image[:, :, 0], g=image[:, :, 1], b=image[:, :, 2], a=None)
-
 
 @pytest.mark.skipif(
     torch_import is None,

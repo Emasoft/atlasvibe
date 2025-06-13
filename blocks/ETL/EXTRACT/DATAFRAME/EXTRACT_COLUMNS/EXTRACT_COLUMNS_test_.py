@@ -2,15 +2,14 @@ import pytest
 import os
 import numpy as np
 import pandas as pd
-from atlasvibe import DataFrame, Matrix, Array
-
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix
+from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 @pytest.fixture
 def student_csv():
     _file_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/student.csv"
     data = pd.read_csv(_file_path)
     return DataFrame(df=data)
-
 
 @pytest.fixture
 def example_matrix():
@@ -24,7 +23,6 @@ def example_matrix():
         ]
     )
     return Matrix(m=m)
-
 
 def test_EXTRACT_COLUMNS_dataframe(mock_atlasvibe_decorator, student_csv):
     import EXTRACT_COLUMNS
@@ -70,7 +68,6 @@ def test_EXTRACT_COLUMNS_dataframe(mock_atlasvibe_decorator, student_csv):
         "Gain Toe",
         "Rows Noump",
     ]
-
 
 def test_EXTRACT_COLUMNS_matrix(mock_atlasvibe_decorator, example_matrix):
     import EXTRACT_COLUMNS

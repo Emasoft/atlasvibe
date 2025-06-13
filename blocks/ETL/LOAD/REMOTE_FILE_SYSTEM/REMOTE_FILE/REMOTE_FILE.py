@@ -10,13 +10,11 @@ import pandas as pd
 import requests
 from io import BytesIO
 
-
 def get_file_url(url: str):
     parse_result = urlparse(url)
     if not all([parse_result.scheme, parse_result.netloc]):
         raise ValueError(f"'{url}' is not a valid URL.")
     return url
-
 
 # TODO: Consolidate remote files (S3, HTTP, etc...) and perhaps even merge REMOTE_FILE AND LOCAL_FILE in a single node.
 @atlasvibe(

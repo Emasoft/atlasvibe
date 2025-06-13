@@ -1,7 +1,7 @@
 from typing import Literal
 
-from atlasvibe import DataFrame, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 @atlasvibe()
 def SCIKIT_LEARN_DATASET(

@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
-from atlasvibe import Image, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 from PIL import Image as PILImage
 from PIL import ImageFilter
-
 
 @atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def EDGE_DETECTION(default: Image) -> Image:

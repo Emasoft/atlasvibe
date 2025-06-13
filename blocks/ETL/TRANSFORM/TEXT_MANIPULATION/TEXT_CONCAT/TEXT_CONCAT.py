@@ -1,6 +1,6 @@
-from atlasvibe import String, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import String
 from typing import Literal
-
 
 @atlasvibe
 def TEXT_CONCAT(

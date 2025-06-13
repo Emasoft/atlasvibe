@@ -1,5 +1,5 @@
-from atlasvibe import DataFrame, Image, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Image
 
 @atlasvibe(
     deps={

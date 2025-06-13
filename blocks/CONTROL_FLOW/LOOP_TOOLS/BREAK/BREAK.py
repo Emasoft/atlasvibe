@@ -1,8 +1,10 @@
-from atlasvibe import atlasvibe, DataContainer, SmallMemory, NodeReference
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataContainer
 from typing import Optional, Any
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
+from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
 
 memory_key = "loop-info"
-
 
 @atlasvibe
 def BREAK(

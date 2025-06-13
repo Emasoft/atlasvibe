@@ -1,6 +1,5 @@
 from skimage import data
-from atlasvibe import Image
-
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 # Tests that the function returns the expected 'astronaut' image in DataContainer Image class when called without the 'img_key' parameter
 def test_default_img_key(mock_atlasvibe_decorator):
@@ -19,7 +18,6 @@ def test_default_img_key(mock_atlasvibe_decorator):
     assert actual_image.g.shape == expected_image.g.shape
     assert actual_image.b.shape == expected_image.b.shape
     assert actual_image.a is None
-
 
 # Tests that the function returns the expected "camera" image when called with the 'camera' image_key parameter
 def test_camera_img_key(mock_atlasvibe_decorator):

@@ -1,9 +1,7 @@
 import numpy as np
-from atlasvibe import Scalar, Vector, OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector, OrderedPair
 
 # Test for Scalar, Vector and OrderedPair
-
 
 def test_ABS_Scalar(mock_atlasvibe_decorator):
     import ABS
@@ -13,7 +11,6 @@ def test_ABS_Scalar(mock_atlasvibe_decorator):
     assert res.x == -1.0
     assert res.y == 1.0
 
-
 def test_ABS_vector(mock_atlasvibe_decorator):
     import ABS
 
@@ -22,7 +19,6 @@ def test_ABS_vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.x, x.v)
     np.testing.assert_allclose(res.y, np.abs(x.v))
-
 
 def test_ABS_OrderedPair(mock_atlasvibe_decorator):
     import ABS

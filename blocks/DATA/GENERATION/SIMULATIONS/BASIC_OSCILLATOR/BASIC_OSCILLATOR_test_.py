@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def test_BASIC_OSCILLATOR(mock_atlasvibe_decorator):
     import BASIC_OSCILLATOR
 

@@ -1,7 +1,7 @@
-from atlasvibe import atlasvibe, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from plotly.express import data
 from typing import Literal
-
 
 @atlasvibe
 def PLOTLY_DATASET(

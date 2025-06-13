@@ -1,10 +1,11 @@
-from atlasvibe import atlasvibe, OrderedPair, DataFrame, Matrix, Plotly, Vector
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame, Matrix, Plotly, Vector
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from typing import Literal
-
+from IPython.display import display
 
 @atlasvibe
 def COMPOSITE(
@@ -44,7 +45,6 @@ def COMPOSITE(
     fig.update_layout(dict(autosize=True, height=None, width=None))
     return Plotly(fig=fig)
 
-
 def match_figure(
     fig: go.Figure,
     figure_type: Literal["bar", "line", "histogram", "scatter"],
@@ -59,7 +59,6 @@ def match_figure(
             add_line_trace(fig, dc)
         case "scatter":
             add_scatter_trace(fig, dc)
-
 
 def add_bar_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -106,7 +105,6 @@ def add_bar_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector)
             x = np.arange(len(y))
             fig.add_trace(go.Bar(x=x, y=y))
 
-
 def add_histogram_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
         case DataFrame():
@@ -124,7 +122,6 @@ def add_histogram_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | V
         case Vector():
             y = dc.v
             fig.add_trace(go.Histogram(x=y))
-
 
 def add_line_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -175,7 +172,6 @@ def add_line_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector
             y = dc.v
             x = np.arange(len(y))
             fig.add_trace(go.Scatter(x=x, y=y, mode="lines"))
-
 
 def add_scatter_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:

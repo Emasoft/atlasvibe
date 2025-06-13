@@ -3,8 +3,8 @@ import sys
 
 import numpy as np
 import pandas as pd
-from atlasvibe import DataFrame, Plotly, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Plotly
 
 @atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_PLOT(default: DataFrame, periods: int = 365) -> Plotly:

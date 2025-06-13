@@ -1,6 +1,6 @@
-from atlasvibe import atlasvibe, Vector
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
-
 
 @atlasvibe(
     deps={

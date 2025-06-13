@@ -1,7 +1,6 @@
-from atlasvibe import (
+from pkgs.atlasvibe.atlasvibe.data_container import (
     Plotly,
     OrderedPair,
-    atlasvibe,
     Matrix,
     Grayscale,
     DataFrame,
@@ -9,6 +8,7 @@ from atlasvibe import (
     OrderedTriple,
     Surface,
 )
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -16,221 +16,94 @@ from plotly.subplots import make_subplots
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
-
 @atlasvibe
 def HEATMAP(
-    default: OrderedPair
-    | Matrix
-    | Grayscale
-    | DataFrame
-    | Vector
-    | OrderedTriple
-    | Surface,
-    show_text: bool = False,
-    histogram: bool = False,
+    default: OrderedPair | Matrix | Grayscale | DataFrame | Vector | OrderedTriple | Surface,
+    x_label: str = "x",
+    y_label: str = "y",
+    z_label: str = "z",
+    title: str = "",
+    show_scale: bool = True,
+    reverse_y: bool = False,
+    reverse_x: bool = False,
+    color_scale: str = "Viridis",
 ) -> Plotly:
-    """Create a Plotly Heatmap visualization for a given input DataContainer.
+    """
+    Make a heatmap from a matrix, dataframe, ordered triple, or 2D arrays.
 
-    Inputs
-    ------
-    default : OrderedPair|OrderedTriple|DataFrame|Vector|Matrix|Grayscale|Surface
-        the DataContainer to be visualized
+    Data can be a Matrix, DataFrame, OrderedTriple, or OrderedPair.
+    X, Y, and Z must all be the same size when OrderedTriple is used
+    as the default input.
+
+    For DataFrames a heatmap will be created for columns that
+    contain continuous data (integers or floats).
 
     Parameters
     ----------
-    show_text : bool
-        whether or not to show the text inside the heatmap color blocks
-    histogram : bool
-        whether or not to render a histogram of the image next to the render
+    default : OrderedPair | Matrix | Grayscale | DataFrame | Vector | OrderedTriple | Surface
+        The input to plot
+    x_label : str
+        x axis label
+    y_label : str
+        y axis label
+    z_label : str
+        z axis label
+    title : str
+        Title of the plot
+    show_scale : bool
+        Whether to show the scale or not
+    reverse_y : bool
+        If true, reverse the y axis
+    reverse_x : bool
+        If true, reverse the x axis
+    color_scale : str
+        Sets the colorscale. The colorscale must be an array containing arrays mapping a normalized value to an rgb, rgba, hex, hsl, hsv, or named color string.
 
     Returns
     -------
     Plotly
-        the DataContainer containing the Plotly heatmap visualization
+        The generated Plotly heatmap
     """
 
-    layout = plot_layout(title="HEATMAP")
-    if histogram:
-        layout.sliders = [
-            {
-                "steps": [
-                    {
-                        "label": str(v),
-                        "method": "restyle",
-                        "args": [{"zmin": 0, "zmax": v}],
-                    }
-                    for v in range(1, 255, 1)
-                ],
-                "name": "zmax",
-            },
-        ]
-    text_template = "%{text}"
+    layout = plot_layout(title=title, showlegend=False, xaxis_title=x_label, yaxis_title=y_label)
 
-    fig = (
-        go.Figure()
-        if not histogram
-        else make_subplots(
-            rows=1,
-            cols=2,
-            column_widths=[0.9, 0.1],
-            specs=[[{}, {}]],
-            horizontal_spacing=0.05,
-        )
-    )
-    match default:
-        case Vector():
-            z = default.v
-            if z.ndim < 2:
-                num_columns = len(z) // 2
-                z = np.reshape(z, (2, num_columns))
-            fig.add_trace(
-                go.Heatmap(
-                    z=z,
-                    text=z if show_text else None,
-                    texttemplate=text_template,
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(z, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    x=x_values, y=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-        case OrderedPair():
-            z = default.y
-            if default.y.ndim < 2:
-                num_columns = len(default.y) // 2
-                z = np.reshape(default.y, (2, num_columns))
-            fig.add_trace(
-                go.Heatmap(
-                    z=z,
-                    x=default.x,
-                    y=default.y,
-                    text=z if show_text else None,
-                    texttemplate=text_template,
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(z, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    x=x_values, y=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-        case OrderedTriple():
-            x = np.unique(default.x)
-            y = np.unique(default.y)
-            z_size = len(x) * len(y)
-            if z_size > len(default.z):
-                z = np.pad(
-                    default.z, (0, z_size - len(default.z)), mode="constant"
-                ).reshape(len(y), len(x))
-            else:
-                z = default.z[:z_size].reshape(len(y), len(x))
-            if z.ndim < 2:
-                num_columns = len(z) // 2
-                z = np.reshape(z, (2, num_columns))
-            fig.add_trace(
-                go.Heatmap(
-                    z=z,
-                    x=x,
-                    y=y,
-                    text=z if show_text else None,
-                    texttemplate=text_template,
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(z, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    x=x_values, y=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-        case Matrix():
-            m = default.m
-            if m.ndim < 2:
-                num_columns = len(m) // 2
-                m = np.reshape(m, (2, num_columns))
-            fig.add_trace(
-                go.Heatmap(
-                    z=m,
-                    text=m if show_text else None,
-                    texttemplate=text_template,
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(m, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    x=x_values, y=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-        case Grayscale():
-            m = default.m
+    if isinstance(default, (Matrix, DataFrame)):
+        if isinstance(default, DataFrame):
+            z = default.m.select_dtypes(include=[np.number])
+        else:
+            z = default.m
+        x = None
+        y = None
+    elif isinstance(default, OrderedPair):
+        x = default.x
+        y = default.y
+        z = default.y
+    elif isinstance(default, OrderedTriple):
+        x = default.x
+        y = default.y
+        z = default.z
+    elif isinstance(default, Grayscale):
+        x = None
+        y = None
+        z = default.m
+    elif isinstance(default, Surface):
+        x = default.x
+        y = default.y
+        z = default.z
+    else:
+        raise ValueError(f"Invalid type: {type(default)}")
 
-            fig.add_trace(
-                go.Heatmap(
-                    z=m,
-                    text=m if show_text else None,
-                    texttemplate=text_template,
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(m, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    y=x_values, x=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-        case DataFrame():
-            df = default.m
-            fig = px.imshow(df, text_auto=show_text)
-        case Surface():
-            x = np.unique(default.x)
-            y = np.unique(default.y)
-            z = default.z
-            fig.add_trace(
-                go.Heatmap(
-                    z=z,
-                    x=x,
-                    y=y,
-                    text=z if show_text else None,
-                    texttemplate=text_template,
-                    colorscale="Electric",
-                ),
-                row=None if not histogram else 1,
-                col=None if not histogram else 1,
-            )
-            if histogram:
-                histogram = np.histogram(z, bins="auto")
-                x_values = histogram[1][:-1] + 0.05  # Center bars on bin edges
-                histogram_trace = go.Bar(
-                    x=x_values, y=histogram[0], orientation="h", showlegend=False
-                )
-                fig.add_trace(histogram_trace, row=1, col=2)
-    if histogram:
-        layout.xaxis2 = dict(
-            tickmode="array",
-            tickvals=[0, histogram[0].max()],
-            ticktext=["0", f"{histogram[0].max():.0f}"],
-        )
-        layout.yaxis2 = dict(
-            tickmode="array",
-            tickvals=[x_values.min(), x_values.max()],
-            ticktext=["", ""],
-        )
-    fig.update_layout(layout)
-    return Plotly(
-        fig=fig,
+    if reverse_y:
+        layout["yaxis"]["autorange"] = "reversed"
+    if reverse_x:
+        layout["xaxis"]["autorange"] = "reversed"
+
+    colorbar = dict(title=z_label, titleside="right") if show_scale else None
+
+    heatmap = go.Heatmap(
+        x=x, y=y, z=z, colorscale=color_scale, colorbar=colorbar, showscale=show_scale
     )
+
+    fig = go.Figure(data=[heatmap], layout=layout)
+
+    return Plotly(fig=fig)

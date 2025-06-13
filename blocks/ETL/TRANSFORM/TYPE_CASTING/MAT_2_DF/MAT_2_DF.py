@@ -1,7 +1,7 @@
 from numpy import asarray
 import pandas as pd
-from atlasvibe import atlasvibe, Matrix, DataFrame
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, DataFrame
 
 @atlasvibe
 def MAT_2_DF(default: Matrix) -> DataFrame:

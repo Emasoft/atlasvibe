@@ -1,6 +1,5 @@
-from atlasvibe import Matrix
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 import numpy as np
-
 
 def test_MAT_2_DF(mock_atlasvibe_decorator):
     import MAT_2_DF

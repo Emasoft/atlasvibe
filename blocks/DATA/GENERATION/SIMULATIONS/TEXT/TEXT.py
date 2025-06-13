@@ -1,6 +1,7 @@
-from atlasvibe import String, atlasvibe, DataContainer, TextArea
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import String, DataContainer
 from typing import Optional
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import TextArea
 
 @atlasvibe
 def TEXT(

@@ -2,9 +2,10 @@ from os import path
 
 import numpy as np
 import pandas as pd
-from atlasvibe import DataFrame, File, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from scipy.io import loadmat
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
 @atlasvibe
 def OPEN_MATLAB(file_path: File | None = None) -> DataFrame:

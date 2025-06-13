@@ -1,6 +1,6 @@
 from numpy import concatenate
-from atlasvibe import atlasvibe, Vector
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
 @atlasvibe
 def VECTOR_INSERT(default: Vector, index: int = 0, value: int = 0) -> Vector:

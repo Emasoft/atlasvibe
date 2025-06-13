@@ -1,6 +1,5 @@
-from atlasvibe import OrderedTriple
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedTriple
 import numpy as np
-
 
 def test_ORDERED_TRIPLE_2_SURFACE_general(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE
@@ -17,7 +16,6 @@ def test_ORDERED_TRIPLE_2_SURFACE_general(mock_atlasvibe_decorator):
     np.testing.assert_array_equal(
         ([[0.0, 3.9, 2.4, 5.0], [1.2, 3.3, 3.4, 3.5], [0.9, 8.7, 5.6, 7.1]]), out.z
     )
-
 
 def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE
@@ -52,7 +50,6 @@ def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_atlasvibe_decorator):
         ],
         out2.z,
     )
-
 
 def test_ORDERED_TRIPLE_2_SURFACE_no_padding(mock_atlasvibe_decorator):
     import ORDERED_TRIPLE_2_SURFACE

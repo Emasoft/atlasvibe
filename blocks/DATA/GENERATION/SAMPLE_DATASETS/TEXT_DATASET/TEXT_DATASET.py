@@ -1,9 +1,10 @@
-from atlasvibe import atlasvibe, DataFrame, Array
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.utils import Bunch
 import pandas as pd
 from typing import cast, Literal, Optional
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 # TODO: Add more datasets to this node.
 @atlasvibe

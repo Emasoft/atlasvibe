@@ -229,7 +229,7 @@
       },
       "type": "TextNode",
       "data": {
-        "text": "Read the [LabJack U3](https://docs.atlasvibe.ai/blocks/hardware/daq-boards/labjack/u3/read-a0-pins/) docs before running the app."
+        "text": "This app demonstrates reading analog values from a LabJack U3 device."
       },
       "width": 288,
       "height": 100,

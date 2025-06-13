@@ -1,12 +1,11 @@
 from typing import TypedDict
-from atlasvibe import atlasvibe, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from sklearn.model_selection import train_test_split
-
 
 class TrainTestSplitOutput(TypedDict):
     train: DataFrame
     test: DataFrame
-
 
 @atlasvibe(deps={"scikit-learn": "1.2.2"})
 def TRAIN_TEST_SPLIT(

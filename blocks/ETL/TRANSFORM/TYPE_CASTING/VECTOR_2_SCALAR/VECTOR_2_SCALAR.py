@@ -1,6 +1,6 @@
 from numpy import bool_, int_
-from atlasvibe import atlasvibe, Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector, Scalar
 
 @atlasvibe
 def VECTOR_2_SCALAR(default: Vector) -> Scalar:

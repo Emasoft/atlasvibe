@@ -1,7 +1,8 @@
-from atlasvibe import atlasvibe, DataContainer, String, File
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataContainer, String
 from typing import Optional
 from huggingsound import SpeechRecognitionModel
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
 @atlasvibe(deps={"huggingsound": "0.1.6"})
 def SPEECH_2_TEXT(

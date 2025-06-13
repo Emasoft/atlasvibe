@@ -1,9 +1,9 @@
 from typing import Literal
 
 import numpy as np
-from atlasvibe import Image, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 from skimage.transform import rotate
-
 
 @atlasvibe(deps={"scikit-image": "0.21.0"})
 def ROTATE_IMAGE(

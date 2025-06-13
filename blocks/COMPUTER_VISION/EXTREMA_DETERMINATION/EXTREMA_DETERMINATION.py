@@ -9,7 +9,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import scipy.fft
 import skimage.filters as filters
-from atlasvibe import DCNpArrayType, Grayscale, Image, Matrix, Plotly, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Grayscale, Image, Matrix, Plotly
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from PIL import Image as PILImage
 from scipy import spatial
@@ -21,12 +22,12 @@ from skimage.measure import label, regionprops
 from skimage.morphology import binary_erosion, disk
 from skimage.registration import phase_cross_correlation
 from skimage.registration._masked_phase_cross_correlation import cross_correlate_masked
-
+from pkgs.atlasvibe.atlasvibe.data_container import DCNpArrayType
+from IPython.display import display
 
 class EXTREMA_OUTPUT(TypedDict):
     fig: Plotly
     blobs: Grayscale
-
 
 @atlasvibe(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
 def EXTREMA_DETERMINATION(
@@ -93,7 +94,6 @@ def EXTREMA_DETERMINATION(
     the peak until the image is essentially binarized around the peaks. Due to the repeated convolutions,
     this algorithm is generally expensive, but specific methods have been implemented using FFT to speed
     up these calculations.
-
 
     Parameters
     ----------
@@ -382,7 +382,6 @@ def EXTREMA_DETERMINATION(
     fig.update_yaxes(range=[image.shape[1], 0])
     return EXTREMA_OUTPUT(fig=Plotly(fig=fig), blobs=Grayscale(img=blob_mask))
 
-
 class UnionFind:
     """Union-find data structure.
 
@@ -446,7 +445,6 @@ class UnionFind:
         for r in roots:
             if r != heaviest:
                 self.parents[r] = heaviest
-
 
 class Persistence:
     def __init__(self, im):
@@ -517,7 +515,6 @@ class Persistence:
                 continue
             yield j, i
 
-
 class customFFTBackend:
     """
     Pocket fft is usually a lot faster for this type of registration.
@@ -535,7 +532,6 @@ class customFFTBackend:
             return NotImplemented
         workers = kwargs.pop("workers", cpu_count())
         return fn(*args, workers=workers, **kwargs)
-
 
 def autocenter(im: DCNpArrayType, mask: Optional[DCNpArrayType] = None):
     im = np.array(im, copy=True, dtype=float)

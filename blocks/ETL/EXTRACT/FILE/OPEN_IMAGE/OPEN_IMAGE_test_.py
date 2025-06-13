@@ -4,15 +4,13 @@ import pytest
 import PIL.Image
 import numpy as np
 
-from atlasvibe import Image
-
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 @pytest.fixture
 def obama_image_array_rgb():
     _image_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/President_Barack_Obama.jpg"
     image = PIL.Image.open(_image_path).convert("RGB")
     return np.array(image)
-
 
 @pytest.mark.slow
 def test_OPEN_IMAGE(mock_atlasvibe_decorator, obama_image_array_rgb):

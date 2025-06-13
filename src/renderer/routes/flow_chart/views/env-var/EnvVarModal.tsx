@@ -173,7 +173,7 @@ const EnvVarModal = () => {
           <div className="text-lg font-bold">Atlasvibe Cloud</div>
           <div className="py-1" />
           <a
-            href={"https://cloud.atlasvibe.ai"} // TODO: repalce this with the ytb video link
+            href={"https://github.com/Emasoft/atlasvibe"} // Link to the repository
             target="_blank"
             className="text-xs underline"
           >
@@ -208,7 +208,7 @@ const EnvVarModal = () => {
               data-testid="atlasvibe-cloud-url"
               onChange={(e) => setAtlasvibeCloudUrl(e.target.value)}
               value={atlasvibeCloudUrl}
-              placeholder="If not provided: https://cloud.atlasvibe.ai"
+              placeholder="Enter your cloud workspace URL"
             />
             <Button
               data-testid="atlasvibe-cloud-url-submit"

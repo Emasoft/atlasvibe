@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import atlasvibe, Matrix, Scalar
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, Scalar
 
 @atlasvibe
 def MATRIX(row: Scalar = 100, column: Scalar = 100) -> Matrix:

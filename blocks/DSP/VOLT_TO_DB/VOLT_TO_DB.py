@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import OrderedPair, Vector, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
 
 @atlasvibe
 def VOLT_TO_DB(

@@ -1,5 +1,4 @@
-from atlasvibe import Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import Vector, Scalar
 
 def test_BINOM_TEST(mock_atlasvibe_decorator):
     import BINOM_TEST

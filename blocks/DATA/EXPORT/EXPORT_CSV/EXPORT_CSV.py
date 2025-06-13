@@ -1,16 +1,9 @@
 import pandas as pd
 import os
-from atlasvibe import (
-    DataFrame,
-    OrderedPair,
-    OrderedTriple,
-    Matrix,
-    atlasvibe,
-    DataContainer,
-    Directory,
+from pkgs.atlasvibe.atlasvibe.parameter_types import Directory
+
 )
 from typing import Optional
-
 
 @atlasvibe
 def EXPORT_CSV(

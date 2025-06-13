@@ -1,8 +1,8 @@
 import pandas as pd
 import plotly.graph_objects as go
-from atlasvibe import DataFrame, OrderedPair, OrderedTriple, Plotly, Scalar, Vector, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedPair, OrderedTriple, Plotly, Scalar, Vector
 from blocks.DATA.VISUALIZATION.template import plot_layout
-
 
 @atlasvibe
 def TABLE(default: OrderedTriple | OrderedPair | DataFrame | Vector) -> Plotly:

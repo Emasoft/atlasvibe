@@ -1,9 +1,9 @@
-from atlasvibe import OrderedPair, atlasvibe, Matrix, Scalar
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 import numpy as np
 from typing import Literal
 
 import scipy.stats
-
 
 @atlasvibe
 def TTEST_1SAMP(

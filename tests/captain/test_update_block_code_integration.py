@@ -239,7 +239,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
     
     @pytest.mark.asyncio
     async def test_manifest_regeneration_with_real_block(self, real_project_setup):
-        """Test that manifest is properly regenerated after code update."""
+        """Test that block code is properly updated and regeneration works."""
         block_file_path = real_project_setup["block_file"]
         block_dir = real_project_setup["block_dir"]
         project_path = real_project_setup["project_file"]
@@ -272,15 +272,34 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
         )
         
         # Update the block
-        await update_block_code(request)
+        result = await update_block_code(request)
         
-        # Manually regenerate manifest to verify it would work
-        manifest = create_manifest(block_file_path)
+        # Verify the response is a manifest
+        assert isinstance(result, dict)
+        assert result["key"] == "MY_CUSTOM_BLOCK"
+        assert result["name"] == "MY_CUSTOM_BLOCK"
+        assert "parameters" in result
         
-        # The manifest should reflect the new parameter
-        assert manifest is not None
-        assert "parameters" in manifest
-        param_names = list(manifest["parameters"].keys())
+        # Verify the file was actually updated
+        with open(block_file_path, 'r') as f:
+            actual_content = f.read()
+        assert actual_content == new_code
+        
+        # Verify block_data.json was regenerated (check it exists and has content)
+        block_data_path = Path(block_file_path).parent / "block_data.json"
+        assert block_data_path.exists()
+        
+        # Load and verify block_data.json content
+        import json
+        with open(block_data_path, 'r') as f:
+            block_data = json.load(f)
+        
+        # Check that docstring was extracted
+        assert "docstring" in block_data
+        assert "parameters" in block_data["docstring"]
+        
+        # Verify the new parameters are in the docstring
+        param_names = [p["name"] for p in block_data["docstring"]["parameters"]]
         assert "x" in param_names
         assert "y" in param_names
         assert "z" in param_names  # New parameter should be present

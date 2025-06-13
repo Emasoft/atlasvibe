@@ -1,7 +1,7 @@
 import numpy as np
-from atlasvibe import atlasvibe, Vector, OrderedPair
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector, OrderedPair
 from typing import Optional
-
 
 @atlasvibe
 def LINSPACE(

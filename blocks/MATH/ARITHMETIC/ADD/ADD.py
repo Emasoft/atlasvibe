@@ -1,10 +1,10 @@
 from functools import reduce
 
 import numpy as np
-from atlasvibe import OrderedPair, Scalar, Vector, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
-
 
 @atlasvibe
 def ADD(

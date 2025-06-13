@@ -1,7 +1,6 @@
 import numpy as np
-from atlasvibe import Vector
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 import pytest
-
 
 def test_VECTOR_INDEXING(mock_atlasvibe_decorator):
     import VECTOR_INDEXING

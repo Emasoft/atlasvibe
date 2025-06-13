@@ -1,9 +1,10 @@
 from os import path
 
-from atlasvibe import File, Image, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 from matplotlib import image
 from numpy import asarray
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
 @atlasvibe
 def OPEN_IMAGE(file_path: File | None = None) -> Image:

@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import fft
-from atlasvibe import OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 
 def test_FIR(mock_atlasvibe_decorator):
     import FIR

@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import OrderedPair, Matrix, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
 def test_MATRIX_POWER(mock_atlasvibe_decorator):
     import MATRIX_POWER

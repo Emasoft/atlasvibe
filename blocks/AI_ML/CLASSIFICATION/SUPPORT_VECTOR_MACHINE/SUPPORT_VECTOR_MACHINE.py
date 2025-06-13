@@ -1,8 +1,8 @@
-from atlasvibe import atlasvibe, DataFrame, Matrix
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix
 import pandas as pd
 from sklearn import svm, preprocessing
 from typing import Literal
-
 
 @atlasvibe(deps={"scikit-learn": "1.2.2"})
 def SUPPORT_VECTOR_MACHINE(

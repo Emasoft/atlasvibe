@@ -1,8 +1,8 @@
 import numpy as np
-from atlasvibe import atlasvibe, OrderedPair, Scalar, Vector
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
 from functools import reduce
-
 
 @atlasvibe
 def FLOOR_DIVIDE(

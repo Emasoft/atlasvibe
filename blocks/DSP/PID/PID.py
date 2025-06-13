@@ -1,8 +1,10 @@
 from numpy import zeros, append, ndarray
-from atlasvibe import atlasvibe, Scalar, DefaultParams, SmallMemory
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Scalar
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 memory_key = "pid-info"
-
 
 @atlasvibe(inject_node_metadata=True)
 def PID(

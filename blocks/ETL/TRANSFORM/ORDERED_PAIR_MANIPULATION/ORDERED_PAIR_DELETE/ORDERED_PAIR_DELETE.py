@@ -1,6 +1,7 @@
 from numpy import any, array, delete, arange
-from atlasvibe import atlasvibe, OrderedPair, Array
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
+from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 @atlasvibe
 def ORDERED_PAIR_DELETE(

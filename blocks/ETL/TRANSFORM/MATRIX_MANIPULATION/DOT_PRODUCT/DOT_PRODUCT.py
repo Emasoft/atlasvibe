@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import Matrix, Scalar, Vector, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, Scalar, Vector
 
 @atlasvibe
 def DOT_PRODUCT(a: Matrix | Vector, b: Matrix | Vector) -> Matrix | Vector | Scalar:

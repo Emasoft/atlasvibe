@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 
 def test_VECTOR_2_ORDERED_PAIR(mock_atlasvibe_decorator):
     import ORDERED_PAIR_XY_INVERT

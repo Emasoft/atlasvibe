@@ -98,15 +98,7 @@ export const ConnectionHelp = () => {
                   <Link href="https://www.startech.com/en-ca/cards-adapters/icusb232v2">
                     StarTech
                   </Link>
-                  . Please see our guides on{" "}
-                  <Link href="https://docs.atlasvibe.ai/prologix/gpib-to-usb/">
-                    GPIB-to-USB
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="https://docs.atlasvibe.ai/startech/rs232-to-usb/">
-                    RS232-to-USB
-                  </Link>{" "}
-                  for more info.
+                  .
                 </div>
               </div>
             </TabsContent>
@@ -161,12 +153,8 @@ export const ConnectionHelp = () => {
                 <div className="text-xs">
                   If your connected device does not show up under the Hardware
                   Devices tab, then click the “Debug” button to troubleshoot.
-                  Please see our{" "}
-                  <Link href="https://docs.atlasvibe.ai/studio/visa-usb/">
-                    troubleshooting FAQ
-                  </Link>{" "}
-                  and join our free support chat where an engineer will help you
-                  through this initial hurdle.
+                  If you encounter any issues, please check the GitHub repository
+                  for troubleshooting tips or open an issue for support.
                 </div>
               </div>
             </TabsContent>

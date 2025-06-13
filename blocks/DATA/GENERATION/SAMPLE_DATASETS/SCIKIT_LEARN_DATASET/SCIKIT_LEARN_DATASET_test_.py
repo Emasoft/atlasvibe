@@ -1,4 +1,4 @@
-from atlasvibe import DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pytest
 
 sklear_imported = True
@@ -6,7 +6,6 @@ try:
     from sklearn.datasets import load_diabetes, load_iris
 except ImportError:
     sklear_imported = None
-
 
 @pytest.mark.skipif(
     sklear_imported is None,
@@ -18,7 +17,6 @@ def test_load_iris(mock_atlasvibe_decorator):
     result = SCIKIT_LEARN_DATASET.SCIKIT_LEARN_DATASET(dataset_name="iris")  # type: ignore
     assert isinstance(result, DataFrame)
     assert result.m.equals(load_iris(as_frame=True, return_X_y=True)[0])
-
 
 @pytest.mark.skipif(
     sklear_imported is None,

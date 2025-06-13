@@ -1,6 +1,6 @@
 import numpy as np
-from atlasvibe import Matrix, OrderedPair, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, OrderedPair
 
 @atlasvibe
 def INVERT(default: OrderedPair | Matrix, rcond: float = 1.0) -> OrderedPair | Matrix:

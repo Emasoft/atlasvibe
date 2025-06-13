@@ -1,8 +1,8 @@
 import numpy as np
-from atlasvibe import atlasvibe, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pandas as pd
 import traceback
-
 
 @atlasvibe
 def TIMESERIES(

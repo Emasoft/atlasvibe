@@ -1,8 +1,8 @@
 from typing import Optional
 
 import pandas as pd
-from atlasvibe import DataFrame, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 @atlasvibe
 def ONE_HOT_ENCODING(

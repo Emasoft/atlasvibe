@@ -1,8 +1,8 @@
 import numpy as np
 import plotly.graph_objects as go  # type:ignore
-from atlasvibe import DataFrame, Matrix, OrderedTriple, Plotly, Surface, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, OrderedTriple, Plotly, Surface
 from blocks.DATA.VISUALIZATION.template import plot_layout
-
 
 @atlasvibe
 def SURFACE3D(default: OrderedTriple | DataFrame | Surface | Matrix) -> Plotly:

@@ -2,13 +2,12 @@ import os
 import pytest
 from PIL import Image as PIL_Image
 import numpy as np
-from atlasvibe import Image
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 try:
     import torch
 except ImportError:
     torch = None
-
 
 @pytest.fixture
 def obama_image_array_rgb():
@@ -17,7 +16,6 @@ def obama_image_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
-
 
 @pytest.fixture
 def obama_segmentation_array_rgb():
@@ -28,7 +26,6 @@ def obama_segmentation_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
-
 
 @pytest.mark.skipif(
     torch is None,

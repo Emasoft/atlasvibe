@@ -1,9 +1,10 @@
 import numpy as np
-from atlasvibe import DataFrame, Directory, Matrix, OrderedPair
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, OrderedPair
 import pandas as pd
 import os
 import scipy
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
+from pkgs.atlasvibe.atlasvibe.parameter_types import Directory
 
 def test_EXPORT_MATLAB_dataframe(mock_atlasvibe_decorator):
     import EXPORT_MATLAB
@@ -40,7 +41,6 @@ def test_EXPORT_MATLAB_dataframe(mock_atlasvibe_decorator):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-
 def test_EXPORT_MATLAB_pair(mock_atlasvibe_decorator):
     import EXPORT_MATLAB
 
@@ -73,7 +73,6 @@ def test_EXPORT_MATLAB_pair(mock_atlasvibe_decorator):
         # Clean up
         if os.path.exists(file_path):
             os.remove(file_path)
-
 
 def test_EXPORT_MATLAB_matrix(mock_atlasvibe_decorator):
     import EXPORT_MATLAB

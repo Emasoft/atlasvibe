@@ -1,6 +1,6 @@
 from numpy import append
-from atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, DataFrame, Vector, Scalar
 
 @atlasvibe
 def APPEND(

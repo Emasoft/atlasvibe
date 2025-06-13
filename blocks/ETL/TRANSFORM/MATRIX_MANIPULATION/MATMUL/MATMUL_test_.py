@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import Matrix
-
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
 def test_MATMUL(mock_atlasvibe_decorator):
     import MATMUL

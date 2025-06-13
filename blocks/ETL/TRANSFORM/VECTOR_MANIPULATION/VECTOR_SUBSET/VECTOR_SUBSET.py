@@ -1,6 +1,7 @@
 from numpy import any, array, arange, take
-from atlasvibe import atlasvibe, Vector, Array
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
+from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 @atlasvibe
 def VECTOR_SUBSET(default: Vector, indices: Array, length: int = 1) -> Vector:

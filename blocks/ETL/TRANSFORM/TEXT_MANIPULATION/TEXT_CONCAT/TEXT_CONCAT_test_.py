@@ -1,5 +1,4 @@
-from atlasvibe import String
-
+from pkgs.atlasvibe.atlasvibe.data_container import String
 
 def test_TEXT_CONCAT(mock_atlasvibe_decorator):
     import TEXT_CONCAT

@@ -1,8 +1,8 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from atlasvibe import DataFrame, OrderedTriple, Plotly, atlasvibe
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedTriple, Plotly
 from blocks.DATA.VISUALIZATION.template import plot_layout
-
 
 @atlasvibe
 def SCATTER3D(default: OrderedTriple | DataFrame) -> Plotly:

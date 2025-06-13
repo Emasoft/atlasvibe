@@ -2,11 +2,10 @@ from functools import wraps
 from unittest.mock import patch
 
 import numpy
-from atlasvibe import DataContainer
+from pkgs.atlasvibe.atlasvibe.data_container import DataContainer
 
 # Python functions are decorated at module-loading time, So we'll need to patch our decorator
 #  with a simple mock ,before loading the module.
-
 
 def mock_atlasvibe_decorator(f):
     @wraps(f)
@@ -15,12 +14,10 @@ def mock_atlasvibe_decorator(f):
 
     return decorated_function
 
-
 # Patch the atlasvibe decorator that handles connecting our node to the App.
 patch("atlasvibe.atlasvibe", mock_atlasvibe_decorator).start()
 
 # After Patching the atlasvibe decorator, let's load the node under test.
-
 
 def test_APPEND():
     # create the two ordered pair datacontainers

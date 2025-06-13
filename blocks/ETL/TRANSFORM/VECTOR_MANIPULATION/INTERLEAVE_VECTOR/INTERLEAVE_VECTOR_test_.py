@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import Vector
-
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
 def test_INTERLEAVE_VECTOR(mock_atlasvibe_decorator):
     import INTERLEAVE_VECTOR

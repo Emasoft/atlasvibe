@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal
-from atlasvibe import Matrix, OrderedPair, Scalar, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, OrderedPair, Scalar
 
 @atlasvibe
 def BSPLINE(

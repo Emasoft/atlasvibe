@@ -1,8 +1,8 @@
 import numpy as np
-from atlasvibe import atlasvibe, OrderedPair, Vector
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
 from scipy import signal
 from typing import Literal
-
 
 @atlasvibe
 def SINE(

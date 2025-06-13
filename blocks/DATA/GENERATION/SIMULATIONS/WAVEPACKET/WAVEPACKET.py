@@ -1,9 +1,11 @@
 import numpy as np
 import scipy.sparse as spa
 from scipy.sparse.linalg import splu
-from atlasvibe import atlasvibe, OrderedPair, SmallMemory, DefaultParams
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 from typing import Optional
-
+from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 def gaussian_wavepacket(x, x0, k, sigma=0.1):
     # One dimensional Gaussian wavepacket.
@@ -11,7 +13,6 @@ def gaussian_wavepacket(x, x0, k, sigma=0.1):
     g = np.sqrt(1 / np.sqrt(np.pi) / sigma) * np.exp(-((x - x0) ** 2) / 2 / sigma**2)
 
     return np.exp(1j * k * (x - x0)) * g
-
 
 def CrankNicolson(psi, V, x, dt):
     # Crank-Nicolson method for the 1D Schrodinger equation.
@@ -38,9 +39,7 @@ def CrankNicolson(psi, V, x, dt):
 
     return PSI_t
 
-
 memory_key = "WAVEPACKET"
-
 
 @atlasvibe(inject_node_metadata=True)
 def WAVEPACKET(

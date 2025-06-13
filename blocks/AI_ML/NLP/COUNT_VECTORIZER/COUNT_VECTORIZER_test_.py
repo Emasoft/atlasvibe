@@ -1,5 +1,5 @@
 import numpy
-from atlasvibe import Matrix, DataFrame, Vector
+from pkgs.atlasvibe.atlasvibe.data_container import Matrix, DataFrame, Vector
 import pytest
 
 sklearn_installed = True
@@ -7,7 +7,6 @@ try:
     import sklearn  # noqa: F401
 except ImportError:
     sklearn_installed = False
-
 
 @pytest.mark.skipif(
     not sklearn_installed, reason="sklearn is not installed | Skipping test in CI"

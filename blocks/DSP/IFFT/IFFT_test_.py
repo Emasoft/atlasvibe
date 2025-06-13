@@ -2,8 +2,7 @@ import numpy as np
 from scipy import fft
 import pandas as pd
 
-from atlasvibe import DataFrame
-
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 def test_IFFT(mock_atlasvibe_decorator):
     import IFFT

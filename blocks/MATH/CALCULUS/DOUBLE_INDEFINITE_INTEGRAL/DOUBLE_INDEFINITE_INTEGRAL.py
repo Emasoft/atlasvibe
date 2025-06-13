@@ -1,6 +1,6 @@
-from atlasvibe import atlasvibe, OrderedTriple, Matrix
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedTriple, Matrix
 import numpy as np
-
 
 def contains_only_numbers(column, colName):
     for i in range(0, len(column)):
@@ -8,7 +8,6 @@ def contains_only_numbers(column, colName):
             raise ValueError(
                 f"The value {column.item(i)} in column {colName} is of type {type(column.item(i))}. The OrderedTriple need to contain only int or float values."
             )
-
 
 @atlasvibe
 def DOUBLE_INDEFINITE_INTEGRAL(

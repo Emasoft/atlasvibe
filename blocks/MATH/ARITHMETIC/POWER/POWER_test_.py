@@ -1,7 +1,6 @@
 import numpy as np
 
-from atlasvibe import OrderedPair, Vector, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
 
 def test_POWER_Vector_Vector(mock_atlasvibe_decorator):
     import POWER
@@ -12,7 +11,6 @@ def test_POWER_Vector_Vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.v, np.power(x.v, y.v))
 
-
 def test_POWER_Vector_Scalar(mock_atlasvibe_decorator):
     import POWER
 
@@ -20,7 +18,6 @@ def test_POWER_Vector_Scalar(mock_atlasvibe_decorator):
     res = POWER.POWER(a=x, b=[Scalar(c=2)])
 
     np.testing.assert_allclose(res.v, np.power(x.v, 2))
-
 
 def test_POWER_OrderedPair_Vector(mock_atlasvibe_decorator):
     import POWER

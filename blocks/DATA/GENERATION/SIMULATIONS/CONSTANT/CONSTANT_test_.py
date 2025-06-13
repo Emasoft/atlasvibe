@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import Vector
-
+from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
 def test_CONSTANT_fills_with_value(mock_atlasvibe_decorator):
     # node under test
@@ -8,7 +7,6 @@ def test_CONSTANT_fills_with_value(mock_atlasvibe_decorator):
 
     res = CONSTANT.CONSTANT(default=None, constant=2.0)
     assert np.all(res.y == 2.0)
-
 
 def test_CONSTANT_takes_x_as_input(mock_atlasvibe_decorator):
     # node under test

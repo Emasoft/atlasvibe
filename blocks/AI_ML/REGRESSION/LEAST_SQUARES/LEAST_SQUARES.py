@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
-from atlasvibe import atlasvibe, OrderedPair, Matrix
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix
 
 @atlasvibe
 def LEAST_SQUARES(

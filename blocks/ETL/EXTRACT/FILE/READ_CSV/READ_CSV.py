@@ -1,6 +1,7 @@
-from atlasvibe import atlasvibe, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pandas as pd
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
 @atlasvibe
 def READ_CSV(

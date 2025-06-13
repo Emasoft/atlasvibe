@@ -3,8 +3,9 @@ import pandas as pd
 import torch
 import torchvision.transforms.functional as TF
 import transformers
-from atlasvibe import DataFrame, Image, atlasvibe, snapshot_download
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Image
+from huggingface_hub import snapshot_download
 
 @atlasvibe(deps={"torch": "2.0.1", "torchvision": "0.15.2", "transformers": "4.30.2"})
 def NLP_CONNECT_VIT_GPT2(default: Image) -> DataFrame:

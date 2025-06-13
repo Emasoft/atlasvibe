@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import OrderedPair, Matrix, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
 def test_JARQUE_BERA(mock_atlasvibe_decorator):
     import JARQUE_BERA

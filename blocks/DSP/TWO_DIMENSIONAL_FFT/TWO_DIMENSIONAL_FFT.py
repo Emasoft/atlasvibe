@@ -1,14 +1,13 @@
 from scipy import fft
-from atlasvibe import atlasvibe, DataFrame, Matrix, Image, Grayscale
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, Image, Grayscale
 from typing import Literal
 from PIL import Image as PillowImage
 import pandas as pd
 import numpy as np
 
-
 def extrapolate(x):
     return (x - x.min()) / (x.max() - x.min())
-
 
 @atlasvibe
 def TWO_DIMENSIONAL_FFT(

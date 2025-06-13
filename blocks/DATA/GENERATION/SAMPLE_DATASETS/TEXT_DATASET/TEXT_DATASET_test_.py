@@ -1,6 +1,6 @@
-from atlasvibe import DataFrame, Array
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pytest
-
+from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 # Tests that the function loads the training set by default
 @pytest.mark.xfail(
@@ -39,7 +39,6 @@ def test_load_training_set_by_default(mock_atlasvibe_decorator):
         ]
     )
 
-
 # Tests that the function loads specific categories
 @pytest.mark.xfail(
     strict=False,
@@ -57,7 +56,6 @@ def test_load_specific_categories(mock_atlasvibe_decorator):
     assert set(result.m["Label"].unique()) == set(
         ["comp.graphics", "comp.os.ms-windows.misc"]
     )
-
 
 # Tests that an error is raised when a non-existent category is passed
 @pytest.mark.xfail(

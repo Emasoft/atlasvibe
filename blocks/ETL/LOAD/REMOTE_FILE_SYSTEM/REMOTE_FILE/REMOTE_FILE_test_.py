@@ -4,9 +4,8 @@ import requests.exceptions
 # Fix imports - use direct imports from data_container
 from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame, Grayscale
 
-# Using public test images instead of removed atlasvibe-ai/nodes repository
+# Using public test images for testing
 PUBLIC_TEST_IMAGES_BASE_URL = "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images"
-
 
 @pytest.mark.parametrize(
     "file_type, output_type, file_url",
@@ -25,7 +24,6 @@ def test_REMOTE_FILE_valid_usage(
     output = REMOTE_FILE.REMOTE_FILE(file_url=file_url, file_type=file_type)
     assert isinstance(output, output_type)
 
-
 @pytest.mark.parametrize(
     "file_url",
     [
@@ -40,7 +38,6 @@ def test_REMOTE_FILE_not_valid(file_url, mock_atlasvibe_decorator):
 
     with pytest.raises(ValueError):
         REMOTE_FILE.REMOTE_FILE(file_url=file_url, file_type="Image")
-
 
 @pytest.mark.parametrize(
     "file_url", ["gcp://not_yet_supported", "s3://not_yet_supported"]

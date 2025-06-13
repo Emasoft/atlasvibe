@@ -1,9 +1,10 @@
 from scipy import signal, fft
 from numpy import abs
-from atlasvibe import atlasvibe, OrderedPair, DataFrame
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame
 from typing import Literal
 from pandas import DataFrame as df
-
+from IPython.display import display
 
 @atlasvibe
 def FFT(

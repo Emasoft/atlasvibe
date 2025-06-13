@@ -1,7 +1,7 @@
-from atlasvibe import atlasvibe, Image
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 from skimage import data
 from typing import Literal
-
 
 @atlasvibe(deps={"scikit-image": "0.21.0"})
 def SKIMAGE(

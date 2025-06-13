@@ -1,4 +1,5 @@
-from atlasvibe import atlasvibe, Plotly, Image, Grayscale, Matrix
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Plotly, Image, Grayscale, Matrix
 import plotly.express as px
 import plotly.graph_objects as go
 from skimage.draw import ellipse
@@ -10,7 +11,6 @@ from typing import Optional
 import math
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from PIL import Image as PILImage
-
 
 @atlasvibe(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
 def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> Plotly:

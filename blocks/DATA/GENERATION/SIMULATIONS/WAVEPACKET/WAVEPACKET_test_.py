@@ -1,10 +1,9 @@
 import numpy as np
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 def test_WAVEPACKET(mock_atlasvibe_decorator):
     import WAVEPACKET
-    from atlasvibe import DefaultParams
-
+    
     default = DefaultParams(
         node_id="WAVEPACKET", job_id="0", jobset_id="0", node_type="default"
     )

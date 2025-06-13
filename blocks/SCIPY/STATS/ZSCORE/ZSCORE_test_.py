@@ -1,6 +1,5 @@
 import numpy as np
-from atlasvibe import OrderedPair, Matrix, Scalar
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
 def test_ZSCORE(mock_atlasvibe_decorator):
     import ZSCORE

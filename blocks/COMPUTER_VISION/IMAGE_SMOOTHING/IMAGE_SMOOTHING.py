@@ -2,8 +2,8 @@ from typing import Literal
 
 import cv2
 import numpy as np
-from atlasvibe import Image, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 @atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def IMAGE_SMOOTHING(

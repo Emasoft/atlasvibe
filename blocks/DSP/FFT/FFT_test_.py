@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import fft
-from atlasvibe import OrderedPair
-
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
+from IPython.display import display
 
 def test_FFT(mock_atlasvibe_decorator):
     import FFT

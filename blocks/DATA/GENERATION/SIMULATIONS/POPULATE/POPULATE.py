@@ -2,8 +2,9 @@ import random
 from typing import Literal
 
 import numpy as np
-from atlasvibe import OrderedPair, Vector, display, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
+from IPython.display import display
 
 @atlasvibe
 def POPULATE(
@@ -70,18 +71,15 @@ def POPULATE(
 
     return OrderedPair(x=x, y=y)
 
-
 @display
 def OVERLOAD(lower_bound, upper_bound, distribution="uniform") -> None:
     return None
-
 
 @display
 def OVERLOAD(  # noqa: F811
     normal_mean, normal_standard_deviation, distribution="normal"
 ) -> None:
     return None
-
 
 @display
 def OVERLOAD(poisson_events, distribution="poisson") -> None:  # noqa: F811

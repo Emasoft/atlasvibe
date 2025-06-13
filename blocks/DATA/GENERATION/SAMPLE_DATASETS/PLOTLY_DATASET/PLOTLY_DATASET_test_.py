@@ -1,6 +1,5 @@
 from plotly.express import data
-from atlasvibe import DataFrame
-
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 # Tests that the function returns the expected DataFrame when called with the default dataset_key parameter
 def test_default_dataset_key(mock_atlasvibe_decorator):
@@ -9,7 +8,6 @@ def test_default_dataset_key(mock_atlasvibe_decorator):
     result = PLOTLY_DATASET.PLOTLY_DATASET()
     assert isinstance(result, DataFrame)
     assert result.m.equals(data.wind())
-
 
 # Tests that the function returns the expected DataFrame when called with the 'iris' dataset_key parameter
 def test_iris_dataset_key(mock_atlasvibe_decorator):

@@ -1,8 +1,9 @@
 from os import path
 
 import pandas as pd
-from atlasvibe import DataFrame, File, atlasvibe
-
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
+from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
 @atlasvibe(deps={"pyarrow": "12.0.1", "fastparquet": "2023.7.0"})
 def OPEN_PARQUET(file_path: File | None = None) -> DataFrame:

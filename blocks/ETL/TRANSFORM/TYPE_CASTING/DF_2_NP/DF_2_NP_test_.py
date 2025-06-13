@@ -1,6 +1,5 @@
-from atlasvibe import DataFrame
+from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pandas as pd
-
 
 def test_DF_2_NP(mock_atlasvibe_decorator):
     import DF_2_NP

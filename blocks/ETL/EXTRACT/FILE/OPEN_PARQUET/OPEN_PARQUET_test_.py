@@ -7,7 +7,6 @@ try:
 except ImportError:
     import_error = True
 
-
 @pytest.mark.skipif(
     import_error,
     reason="OPEN_PARQUET requires pyarrow and fastparquet to be installed | Ignore this test in CI",

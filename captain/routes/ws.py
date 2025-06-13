@@ -29,7 +29,7 @@ async def websocket_endpoint(websocket: WebSocket, socket_id: str):
             )
         )
         print(
-            "Atlasvibe Studio is running! Visit community.atlasvibe.ai or discord.gg/7HEBr7yG8c for help.",
+            "AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help.",
             flush=True,
         )
 

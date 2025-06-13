@@ -184,7 +184,7 @@
       },
       "type": "TextNode",
       "data": {
-        "text": "Read the [Serial Single measurement](https://docs.atlasvibe.ai/blocks/hardware/protocols/serial/serial-single-measurement/) docs before running the app"
+        "text": "This app demonstrates reading analog sensor values from an Arduino device using serial communication."
       },
       "width": 288,
       "height": 100,
