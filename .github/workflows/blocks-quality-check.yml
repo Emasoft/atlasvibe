@@ -12,31 +12,25 @@ jobs:
   block-completeness:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
-      - uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - uses: actions/setup-python@v5
         name: Setup Python 3.11
         with:
           python-version: "3.11"
-          cache: "pip"
-
-      - name: Setup Poetry 1.6
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: "1.6"
-
-      - uses: actions/cache@v3
-        name: Setup Poetry caching
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
 
       - name: Install Python dependencies
-        run: poetry install --with dev
+        run: uv sync --locked --all-extras --dev
 
       - name: Check if there is any missing Block component
-        run: poetry run python3 fjblock.py sync
+        run: uv run python3 fjblock.py sync
 
       - name: Check if everything is in sync
         run: |
@@ -51,7 +45,7 @@ jobs:
   block-code-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - uses: chartboost/ruff-action@v1
@@ -62,7 +56,7 @@ jobs:
   block-code-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - uses: chartboost/ruff-action@v1
@@ -75,22 +69,22 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
-      - uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - uses: actions/setup-python@v5
         name: Setup Python 3.11
         with:
           python-version: "3.11"
-          cache: "pip"
-
-      - name: Setup Poetry 1.6
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: "1.6"
 
       - name: Install dependencies for pytest
-        run: poetry install --with dev
+        run: uv sync --locked --all-extras --dev
 
       - name: Run pytest
-        run: poetry run python -m pytest -vv -m "not slow" .
+        run: uv run python -m pytest -vv -m "not slow" .

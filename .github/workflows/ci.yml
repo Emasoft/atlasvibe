@@ -15,7 +15,7 @@ jobs:
   python-code-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - uses: chartboost/ruff-action@v1
@@ -26,7 +26,7 @@ jobs:
   python-code-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - uses: chartboost/ruff-action@v1
@@ -35,15 +35,15 @@ jobs:
   ts-code-style:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: 9
@@ -52,9 +52,9 @@ jobs:
       - name: Get pnpm store directory
         shell: bash
         run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache pnpm
         with:
           path: ${{ env.STORE_PATH }}
@@ -77,38 +77,28 @@ jobs:
   python-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
-
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: "1.6"
-
-      - uses: actions/cache@v3
-        name: Cache Poetry
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
 
       - name: Install Python Dependencies
-        run: poetry install --with dev
+        run: uv sync --locked --all-extras --dev
 
       - name: pytest
         run: |
-          cd PYTHON
-          poetry run python -m pytest --cov --cov-report=xml --ignore=blocks
-          cd ..
-          cd captain
-          poetry run python -m pytest --cov --cov-report=xml --ignore=blocks
+          uv run python -m pytest --cov --cov-report=xml
 
       - name: Codecov report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           flags: python
