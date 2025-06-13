@@ -1,0 +1,26 @@
+# actionlint configuration file
+# https://github.com/rhysd/actionlint/blob/main/docs/config.md
+
+# Ignore specific errors by rule name
+# ignore:
+#   - "undefined input"
+
+# Enable/disable shellcheck integration
+shellcheck:
+  enable: true
+
+# Enable/disable pyflakes integration
+pyflakes:
+  enable: true
+
+# Self-hosted runner labels configuration
+# self-hosted-runner:
+#   labels:
+#     - self-hosted
+#     - linux
+#     - x64
+
+# Configuration file paths (relative to repository root)
+config-variables:
+  # Example: Define custom variables that can be used in workflows
+  # MY_CUSTOM_VAR: "value"
