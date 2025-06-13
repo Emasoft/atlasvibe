@@ -1,0 +1,29 @@
+# Gitleaks configuration file
+# This file tells gitleaks to ignore certain patterns that are not actual secrets
+
+# Global configuration
+title = "AtlasVibe Gitleaks Config"
+
+# Global allowlist
+[allowlist]
+description = "Global allowlist for public GitHub info"
+# Paths where these patterns are allowed (all files)
+paths = [
+    '''.*'''
+]
+# Regular expressions to allowlist
+regexes = [
+    # GitHub noreply email addresses are public and safe
+    '''713559\+Emasoft@users\.noreply\.github\.com''',
+    
+    # Generic GitHub noreply email pattern (for any GitHub noreply emails)
+    '''[0-9]+\+[a-zA-Z0-9_-]+@users\.noreply\.github\.com''',
+    
+    # Allow the username "Emasoft" when it appears in various contexts
+    '''Emasoft'''
+]
+# Commits to allowlist (by email/author)
+commits = [
+    '''713559\+Emasoft@users\.noreply\.github\.com''',
+    '''Emasoft'''
+]
