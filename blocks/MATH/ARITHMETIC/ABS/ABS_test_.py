@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector, OrderedPair
 # Test for Scalar, Vector and OrderedPair
 
 def test_ABS_Scalar(mock_atlasvibe_decorator):
+    """Test ABS function with Scalar input returns correct absolute value."""
     import ABS
 
     res = ABS.ABS(default=Scalar(c=-1.0))
@@ -12,6 +13,7 @@ def test_ABS_Scalar(mock_atlasvibe_decorator):
     assert res.y == 1.0
 
 def test_ABS_vector(mock_atlasvibe_decorator):
+    """Test ABS function with Vector input computes element-wise absolute values."""
     import ABS
 
     x = Vector(v=np.arange(-10, 10, 1))
@@ -21,6 +23,7 @@ def test_ABS_vector(mock_atlasvibe_decorator):
     np.testing.assert_allclose(res.y, np.abs(x.v))
 
 def test_ABS_OrderedPair(mock_atlasvibe_decorator):
+    """Test ABS function with OrderedPair input applies absolute value to y-coordinates only."""
     import ABS
 
     x = np.arange(-10, 10, 1)
