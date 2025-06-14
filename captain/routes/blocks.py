@@ -46,6 +46,39 @@ class UpdateBlockCodeRequest(BaseModel):
     project_path: str
 
 
+def sanitize_error_message(error: Exception) -> str:
+    """Sanitize error messages to prevent information disclosure.
+    
+    Parameters
+    ----------
+    error : Exception
+        The exception to sanitize
+        
+    Returns
+    -------
+    str
+        A safe error message for client consumption
+    """
+    # Log the full error internally
+    logger.error(f"Error details: {error}", exc_info=True)
+    
+    # Return generic messages for different error types
+    error_type = type(error).__name__
+    
+    # Map specific exceptions to safe messages
+    safe_messages = {
+        "ProjectStructureError": str(error),  # These are user-facing validation errors
+        "FileNotFoundError": "The requested file was not found",
+        "PermissionError": "Permission denied for this operation",
+        "ValueError": "Invalid input provided",
+        "TypeError": "Invalid type provided",
+        "SyntaxError": f"Syntax error in code: {error}",  # Users need to know about syntax errors
+    }
+    
+    # Return specific message if available, otherwise generic
+    return safe_messages.get(error_type, "An internal error occurred. Please check logs for details.")
+
+
 @router.get("/blocks/manifest/")
 async def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
     # Pre-generate the blocks map to synchronize it with the manifest
@@ -165,8 +198,7 @@ async def create_custom_block(request: CreateCustomBlockRequest):
     except HTTPException:
         raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
-        logger.error(f"Error creating custom block: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/update-code/")
@@ -288,5 +320,4 @@ async def update_block_code(request: UpdateBlockCodeRequest):
     except HTTPException:
         raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
-        logger.error(f"Error updating block code: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))

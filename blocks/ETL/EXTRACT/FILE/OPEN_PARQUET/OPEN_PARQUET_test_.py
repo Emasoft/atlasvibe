@@ -4,11 +4,14 @@ import pytest
 try:
     import pyarrow  # noqa: F401
     import fastparquet  # noqa: F401
+    pyarrow = pyarrow
+    fastparquet = fastparquet
 except ImportError:
-    import_error = True
+    pyarrow = None
+    fastparquet = None
 
 @pytest.mark.skipif(
-    import_error,
+    pyarrow is None or fastparquet is None,
     reason="OPEN_PARQUET requires pyarrow and fastparquet to be installed | Ignore this test in CI",
 )
 @pytest.mark.slow

@@ -20,7 +20,6 @@ def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
     """
 
     import torch
-    from atlasvibe import snapshot_download
     from transformers import BartTokenizer, BartForConditionalGeneration
     import pandas as pd
 

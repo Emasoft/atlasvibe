@@ -1,0 +1,396 @@
+🔍 Extracting test descriptions...
+🧪 Running tests...
+
+╔══════════════════════════════════════════════════╦══════════════════════════════════════════════════════════════════════╦═══════════════╗
+║ Test Function                                    ║ Description                                                          ║ Status        ║
+╠══════════════════════════════════════════════════╬══════════════════════════════════════════════════════════════════════╬═══════════════╣
+║ 🐌 test_NLP_CONNECT_VIT_GPT2                     ║ Test NLP CONNECT VIT GPT2 functionality                              ║ [91m❌ FAILED[0m         ║
+║ 🐌 test_ONNX_MODEL_wrong_usages                  ║ Test ONNX MODEL wrong usages functionality                           ║ [91m❌ FAILED[0m         ║
+║ 🐌 test_TORHSCRIPT_CLASSIFIER                    ║ Test TORHSCRIPT CLASSIFIER functionality                             ║ [91m🔥 ERROR[0m          ║
+║ test_2DFFT                                       ║ Test 2DFFT functionality                                             ║ [92m✅ PASSED[0m         ║
+║ test_ABS_OrderedPair                             ║ Test ABS function with OrderedPair input applies absolute value t... ║ [92m✅ PASSED[0m         ║
+║ test_ABS_Scalar                                  ║ Test ABS function with Scalar input returns correct absolute value.  ║ [92m✅ PASSED[0m         ║
+║ test_ABS_vector                                  ║ Test ABS function with Vector input computes element-wise absolut... ║ [92m✅ PASSED[0m         ║
+║ test_ADD_OrderedPair_Vector                      ║ Test ADD function adds vector to y-coordinates of OrderedPair whi... ║ [92m✅ PASSED[0m         ║
+║ test_ADD_Vector_Scalar                           ║ Verify ADD function can add multiple scalar values to a vector.      ║ [92m✅ PASSED[0m         ║
+║ test_ADD_Vector_Vector                           ║ Test ADD function correctly adds two vectors element-wise.           ║ [92m✅ PASSED[0m         ║
+║ test_AND                                         ║ Test AND functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_ANDERSON                                    ║ Test ANDERSON functionality                                          ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_BART_LARGE_CNN                           ║ Test BART LARGE CNN functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_BASIC_OSCILLATOR                            ║ Test BASIC OSCILLATOR functionality                                  ║ [92m✅ PASSED[0m         ║
+║ test_BINOM_TEST                                  ║ Test BINOM TEST functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_BOOLEAN                                     ║ Test BOOLEAN functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_BOOLEAN_2_SCALAR                            ║ Test BOOLEAN 2 SCALAR functionality                                  ║ [92m✅ PASSED[0m         ║
+║ test_BSPLINE                                     ║ Test BSPLINE functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_BUTTER                                      ║ Test BUTTER functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_CHANNEL_MERGE                               ║ Test CHANNEL MERGE functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_CHANNEL_SPLIT                               ║ Test CHANNEL SPLIT functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_CHOLESKY                                    ║ Test CHOLESKY functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_CONSTANT_fills_with_value                   ║ Test CONSTANT fills with value functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_CONSTANT_takes_x_as_input                   ║ Test CONSTANT takes x as input functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_COUNT_VECTORIZER                            ║ Test COUNT VECTORIZER functionality                                  ║ [92m✅ PASSED[0m         ║
+║ test_CUBIC                                       ║ Test CUBIC functionality                                             ║ [92m✅ PASSED[0m         ║
+║ test_DATACONTAINER_TYPE                          ║ Test DATACONTAINER TYPE functionality                                ║ [92m✅ PASSED[0m         ║
+║ test_DC_CONTENT_TYPE                             ║ Test DC CONTENT TYPE functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_DECIMATE                                    ║ Test DECIMATE functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_DECIMATE_VECTOR                             ║ Test DECIMATE VECTOR functionality                                   ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_DEEPLAB_V3                               ║ Test DEEPLAB V3 functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_DESCRIBE                                    ║ Test DESCRIBE functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_DET                                         ║ Test DET functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_DETREND                                     ║ Test DETREND functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_DF_2_NP                                     ║ Test DF 2 NP functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_DF_2_ORDERED_TRIPLE_column_errorMessage     ║ Test DF 2 ORDERED TRIPLE column errorMessage functionality           ║ [92m✅ PASSED[0m         ║
+║ test_DF_2_ORDERED_TRIPLE_columns_switch_and_d... ║ Test DF 2 ORDERED TRIPLE columns switch and dtype functionality      ║ [92m✅ PASSED[0m         ║
+║ test_DIFFERENTIATE                               ║ Test DIFFERENTIATE functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_DIVIDE_OrderedPair_Vector                   ║ Test DIVIDE OrderedPair Vector functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_DIVIDE_Vector_Scalar                        ║ Test DIVIDE Vector Scalar functionality                              ║ [92m✅ PASSED[0m         ║
+║ test_DIVIDE_Vector_Vector                        ║ Test DIVIDE Vector Vector functionality                              ║ [92m✅ PASSED[0m         ║
+║ test_DOT_PRODUCT                                 ║ Test DOT PRODUCT functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_DOUBLE_DEFINITE_INTEGRAL                    ║ Test DOUBLE DEFINITE INTEGRAL functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_DOUBLE_INDEFINITE_INTEGRAL_good_output      ║ Test DOUBLE INDEFINITE INTEGRAL good output functionality            ║ [92m✅ PASSED[0m         ║
+║ test_DOUBLE_INDEFINITE_INTEGRAL_reshape_error... ║ Test DOUBLE INDEFINITE INTEGRAL reshape errorMessage functionality   ║ [92m✅ PASSED[0m         ║
+║ test_DOUBLE_INDEFINITE_INTEGRAL_str_errorMessage ║ Test DOUBLE INDEFINITE INTEGRAL str errorMessage functionality       ║ [92m✅ PASSED[0m         ║
+║ test_EDGE_DETECTION                              ║ Test EDGE DETECTION functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_EIG                                         ║ Test EIG functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_EIGH                                        ║ Test EIGH functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_EIGVALS                                     ║ Test EIGVALS functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_EIGVALSH                                    ║ Test EIGVALSH functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_EXCLUSIVE_OR                                ║ Test EXCLUSIVE OR functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_EXTRACT_COLUMNS_dataframe                   ║ Test EXTRACT COLUMNS dataframe functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_EXTRACT_COLUMNS_matrix                      ║ Test EXTRACT COLUMNS matrix functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_FFT                                         ║ Test FFT functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_FIR                                         ║ Test FIR functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_FLOOR_DIVIDE_OrderedPair_Vector             ║ Test FLOOR DIVIDE OrderedPair Vector functionality                   ║ [92m✅ PASSED[0m         ║
+║ test_FLOOR_DIVIDE_Vector_Scalar                  ║ Test FLOOR DIVIDE Vector Scalar functionality                        ║ [92m✅ PASSED[0m         ║
+║ test_FLOOR_DIVIDE_Vector_Vector                  ║ Test FLOOR DIVIDE Vector Vector functionality                        ║ [92m✅ PASSED[0m         ║
+║ test_GAUSS_SPLINE                                ║ Test GAUSS SPLINE functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_GSTD                                        ║ Test GSTD functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_GZSCORE                                     ║ Test GZSCORE functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_HILBERT                                     ║ Test HILBERT functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_HUGGING_FACE_PIPELINE_default               ║ HUGGING_FACE_PIPELINE functional test for the example application.   ║ [92m✅ PASSED[0m         ║
+║ test_IFFT                                        ║ Test IFFT functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_IMAGE_SMOOTHING                             ║ Test IMAGE SMOOTHING functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_IMPLIES                                     ║ Test IMPLIES functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_INTEGRATE                                   ║ Test INTEGRATE functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_INTERLEAVE_VECTOR                           ║ Test INTERLEAVE VECTOR functionality                                 ║ [92m✅ PASSED[0m         ║
+║ test_INV                                         ║ Test INV functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_INVERT                                      ║ Test INVERT functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_JARQUE_BERA                                 ║ Test JARQUE BERA functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_KAISER_BETA                                 ║ Test KAISER BETA functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_KURTOSIS                                    ║ Test KURTOSIS functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_KURTOSISTEST                                ║ Test KURTOSISTEST functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_LINSPACE                                    ║ Test LINSPACE functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_LOCAL_FILE_csv                              ║ Test LOCAL FILE csv functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_LOCAL_FILE_img                              ║ Test LOCAL FILE img functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_LOCAL_FILE_json                             ║ Test LOCAL FILE json functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_LOG_OrderedPair_Vector                      ║ Test LOG OrderedPair Vector functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_LOG_Vector_Scalar                           ║ Test LOG Vector Scalar functionality                                 ║ [92m✅ PASSED[0m         ║
+║ test_LOG_Vector_Vector                           ║ Test LOG Vector Vector functionality                                 ║ [92m✅ PASSED[0m         ║
+║ test_MATMUL                                      ║ Test MATMUL functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_MATRIX                                      ║ Test MATRIX functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_MATRIX_2_VECTOR                             ║ Test MATRIX 2 VECTOR functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_MATRIX_POWER                                ║ Test MATRIX POWER functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_MATRIX_VIEW                                 ║ Verify MATRIX_VIEW can visualize a 3x4 matrix without errors.        ║ [92m✅ PASSED[0m         ║
+║ test_MAT_2_DF                                    ║ Test MAT 2 DF functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_MOMENT                                      ║ Test MOMENT functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_MULTIPLY_OrderedPair_Vector                 ║ Test MULTIPLY OrderedPair Vector functionality                       ║ [92m✅ PASSED[0m         ║
+║ test_MULTIPLY_Vector_Scalar                      ║ Test MULTIPLY Vector Scalar functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_MULTIPLY_Vector_Vector                      ║ Test MULTIPLY Vector Vector functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_NORMALTEST                                  ║ Test NORMALTEST functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_NOT                                         ║ Test NOT functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_NOT_AND                                     ║ Test NOT AND functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_NOT_OR                                      ║ Test NOT OR functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_dataframe                           ║ Test NP 2 DF dataframe functionality                                 ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_grayscale                           ║ Test NP 2 DF grayscale functionality                                 ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_image                               ║ Test NP 2 DF image functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_matrix                              ║ Test NP 2 DF matrix functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_none                                ║ Test NP 2 DF none functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_orderedpair                         ║ Test NP 2 DF orderedpair functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_NP_2_DF_orderedtriple                       ║ Test NP 2 DF orderedtriple functionality                             ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_ONNX_MODEL_local_file_path               ║ ONNX_MODEL functional test for a local file.                         ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_OPEN_IMAGE                               ║ Test OPEN IMAGE functionality                                        ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_OPEN_MATLAB                              ║ Test OPEN MATLAB functionality                                       ║ [92m✅ PASSED[0m         ║
+║ 🐌 test_OPEN_PARQUET                             ║ Test OPEN PARQUET functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_OR                                          ║ Test OR functionality                                                ║ [92m✅ PASSED[0m         ║
+║ test_ORDERED_TRIPLE_2_SURFACE_general            ║ Test ORDERED TRIPLE 2 SURFACE general functionality                  ║ [92m✅ PASSED[0m         ║
+║ test_ORDERED_TRIPLE_2_SURFACE_no_padding         ║ Test ORDERED TRIPLE 2 SURFACE no padding functionality               ║ [92m✅ PASSED[0m         ║
+║ test_ORDERED_TRIPLE_2_SURFACE_with_padding       ║ Test ORDERED TRIPLE 2 SURFACE with padding functionality             ║ [92m✅ PASSED[0m         ║
+║ test_PERIODOGRAM                                 ║ Test PERIODOGRAM functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_PID                                         ║ Test PID functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_PINV                                        ║ Test PINV functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_POPULATE_array_value_normal                 ║ Test POPULATE array value normal functionality                       ║ [92m✅ PASSED[0m         ║
+║ test_POPULATE_array_value_poisson                ║ Test POPULATE array value poisson functionality                      ║ [92m✅ PASSED[0m         ║
+║ test_POPULATE_array_value_uniform                ║ Test POPULATE array value uniform functionality                      ║ [92m✅ PASSED[0m         ║
+║ test_POWER_OrderedPair_Vector                    ║ Test POWER OrderedPair Vector functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_POWER_Vector_Scalar                         ║ Test POWER Vector Scalar functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_POWER_Vector_Vector                         ║ Test POWER Vector Vector functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_PROPHET_COMPONENTS                          ║ Test PROPHET COMPONENTS functionality                                ║ [92m✅ PASSED[0m         ║
+║ test_PROPHET_PLOT                                ║ Test PROPHET PLOT functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_PROPHET_PREDICT                             ║ Test PROPHET PREDICT functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_QR                                          ║ Test QR functionality                                                ║ [92m✅ PASSED[0m         ║
+║ test_QUADRATIC                                   ║ Test QUADRATIC functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_RAND_array_value_normal                     ║ Test RAND array value normal functionality                           ║ [92m✅ PASSED[0m         ║
+║ test_RAND_array_value_poisson                    ║ Test RAND array value poisson functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_RAND_array_value_uniform                    ║ Test RAND array value uniform functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_RAND_single_value_normal                    ║ Test RAND single value normal functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_RAND_single_value_poisson                   ║ Test RAND single value poisson functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_RAND_single_value_uniform                   ║ Test RAND single value uniform functionality                         ║ [92m✅ PASSED[0m         ║
+║ test_READ_CSV                                    ║ Test READ CSV functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_REMAINDER_OrderedPair_Vector                ║ Test REMAINDER OrderedPair Vector functionality                      ║ [92m✅ PASSED[0m         ║
+║ test_REMAINDER_Vector_Scalar                     ║ Test REMAINDER Vector Scalar functionality                           ║ [92m✅ PASSED[0m         ║
+║ test_REMAINDER_Vector_Vector                     ║ Test REMAINDER Vector Vector functionality                           ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_valid[/not/a/valid/url]     ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_valid[ftp://not_existing... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_valid[htp://misstyped.url]  ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_valid[not_valid]            ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_yet_supported[gcp://not_... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_not_yet_supported[s3://not_y... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_valid_usage[CSV-DataFrame-ht... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_valid_usage[Grayscale-Graysc... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_valid_usage[Image-Image-http... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOTE_FILE_valid_usage[JSON-DataFrame-h... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_REMOVE_DUPLICATES_VECTOR                    ║ Test REMOVE DUPLICATES VECTOR functionality                          ║ [92m✅ PASSED[0m         ║
+║ test_REPLACE_SUBSET                              ║ Test REPLACE SUBSET functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_REVERSE_VECTOR                              ║ Test REVERSE VECTOR functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_SAVGOL                                      ║ Test SAVGOL functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_SAVGOL                                      ║ Test SAVGOL functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_SAVGOL_FILTER                               ║ Test SAVGOL FILTER functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_SCALAR                                      ║ Test SCALAR functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_SECOND_ORDER_SYSTEM                         ║ Test SECOND ORDER SYSTEM functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_SEM                                         ║ Test SEM functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_SHAPIRO                                     ║ Test SHAPIRO functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_SHIFT_VECTOR                                ║ Test SHIFT VECTOR functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_SHUFFLE_MATRIX                              ║ Test SHUFFLE MATRIX functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_SHUFFLE_VECTOR                              ║ Test SHUFFLE VECTOR functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_SIGMACLIP                                   ║ Test SIGMACLIP functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_SINE                                        ║ Test SINE functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_SKEW                                        ║ Test SKEW functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_SKEWTEST                                    ║ Test SKEWTEST functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_SLOGDET                                     ║ Test SLOGDET functionality                                           ║ [92m✅ PASSED[0m         ║
+║ test_SORT_MATRIX                                 ║ Test SORT MATRIX functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_SORT_MATRIX                                 ║ Test SORT MATRIX functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_SPLIT_VECTOR                                ║ Test SPLIT VECTOR functionality                                      ║ [92m✅ PASSED[0m         ║
+║ test_STFT                                        ║ Test STFT functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_SUBTRACT_OrderedPair_Vector                 ║ Test SUBTRACT OrderedPair Vector functionality                       ║ [92m✅ PASSED[0m         ║
+║ test_SUBTRACT_Vector_Scalar                      ║ Test SUBTRACT Vector Scalar functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_SUBTRACT_Vector_Vector                      ║ Test SUBTRACT Vector Vector functionality                            ║ [92m✅ PASSED[0m         ║
+║ test_SVD                                         ║ Test SVD functionality                                               ║ [92m✅ PASSED[0m         ║
+║ test_TENSORINV                                   ║ Test TENSORINV functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_TEXT                                        ║ Test TEXT functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_TEXT_CONCAT                                 ║ Test TEXT CONCAT functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_TIMESERIES                                  ║ Test TIMESERIES functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_TMAX                                        ║ Test TMAX functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_TMIN                                        ║ Test TMIN functionality                                              ║ [92m✅ PASSED[0m         ║
+║ test_TRANSPOSE_MATRIX                            ║ Test TRANSPOSE MATRIX functionality                                  ║ [92m✅ PASSED[0m         ║
+║ test_TRIM1                                       ║ Test TRIM1 functionality                                             ║ [92m✅ PASSED[0m         ║
+║ test_TRIMBOTH                                    ║ Test TRIMBOTH functionality                                          ║ [92m✅ PASSED[0m         ║
+║ test_TRIM_MEAN                                   ║ Test TRIM MEAN functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_TTEST_1SAMP                                 ║ Test TTEST 1SAMP functionality                                       ║ [92m✅ PASSED[0m         ║
+║ test_VARIATION                                   ║ Test VARIATION functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_2_MATRIX                             ║ Test VECTOR 2 MATRIX functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_2_ORDERED_PAIR                       ║ Test VECTOR 2 ORDERED PAIR functionality                             ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_2_ORDERED_PAIR                       ║ Test VECTOR 2 ORDERED PAIR functionality                             ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_2_SCALAR                             ║ Test VECTOR 2 SCALAR functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_DELETE                               ║ Test VECTOR DELETE functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_INDEXING                             ║ Test VECTOR INDEXING functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_INSERT                               ║ Test VECTOR INSERT functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_LENGTH                               ║ Test VECTOR LENGTH functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_MAX                                  ║ Test VECTOR MAX functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_MIN                                  ║ Test VECTOR MIN functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_VECTOR_SUBSET                               ║ Test VECTOR SUBSET functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_WAVEPACKET                                  ║ Test WAVEPACKET functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_WELCH                                       ║ Test WELCH functionality                                             ║ [92m✅ PASSED[0m         ║
+║ test_YEOJOHNSON                                  ║ Test YEOJOHNSON functionality                                        ║ [92m✅ PASSED[0m         ║
+║ test_ZSCORE                                      ║ Test ZSCORE functionality                                            ║ [92m✅ PASSED[0m         ║
+║ test_add_block_creates_custom_block_folder_an... ║ Test Requirement 2: adding a new block to the flow will effective... ║ [92m✅ PASSED[0m         ║
+║ test_add_block_with_target_name_collision        ║ Test add_block_to_project with target_custom_block_name that alre... ║ [92m✅ PASSED[0m         ║
+║ test_api_constants_exist                         ║ Test that all required API constants are defined.                    ║ [92m✅ PASSED[0m         ║
+║ test_api_endpoint_broadcasts_regeneration_events ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_append_block_metadata_generation_exact_m... ║ Test that generated metadata for APPEND block matches existing fi... ║ [92m✅ PASSED[0m         ║
+║ test_atlasvibe_decorator_import                  ║ Test that @atlasvibe decorator works (not just @atlasvibe_node).     ║ [92m✅ PASSED[0m         ║
+║ test_atlasvibe_import_redirection                ║ Test that 'import atlasvibe' is redirected correctly.                ║ [92m✅ PASSED[0m         ║
+║ test_atlasvibe_submodule_import                  ║ Test that 'from atlasvibe.data_container import ...' works.          ║ [92m✅ PASSED[0m         ║
+║ test_automatic_metadata_generation_demo          ║ Demonstrate the automatic metadata generation feature.               ║ [92m✅ PASSED[0m         ║
+║ test_block_file_update                           ║ Test that block files can be updated and rolled back.                ║ [92m✅ PASSED[0m         ║
+║ test_blocks_watcher_broadcasts_regeneration_e... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_blocks_watcher_generates_metadata           ║ Test that BlocksWatcher generates metadata for new blocks.           ║ [92m✅ PASSED[0m         ║
+║ test_blueprint_to_custom_block_copy              ║ Test copying a blueprint block to create a custom block.             ║ [92m✅ PASSED[0m         ║
+║ test_camera_img_key                              ║ Test camera img key functionality                                    ║ [92m✅ PASSED[0m         ║
+║ test_clone_blueprint_to_instance                 ║ Test Step 1: Create Instance from Blueprint workflow.                ║ [92m✅ PASSED[0m         ║
+║ test_complete_atlasvibe_workflow                 ║ Test the complete AtlasVibe workflow end-to-end.                     ║ [92m✅ PASSED[0m         ║
+║ test_complete_flow_with_api                      ║ Test the complete flow using the API endpoints.                      ║ [92m✅ PASSED[0m         ║
+║ test_complete_metadata_flow                      ║ Document the complete metadata generation flow.                      ║ [92m✅ PASSED[0m         ║
+║ test_complete_workflow_blueprint_to_instance_... ║ Test the complete workflow from blueprint to instance to edited i... ║ [92m✅ PASSED[0m         ║
+║ test_concurrent_file_access                      ║ Test handling of concurrent file access.                             ║ [92m✅ PASSED[0m         ║
+║ test_concurrent_updates_safety                   ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_consistency_between_files                   ║ Test that API constants are used consistently across files.          ║ [92m✅ PASSED[0m         ║
+║ test_constants_are_strings                       ║ Test that all constants are strings (where appropriate).             ║ [92m✅ PASSED[0m         ║
+║ test_create_custom_block_endpoint                ║ Test creating a new custom block from blueprint.                     ║ [92m✅ PASSED[0m         ║
+║ test_create_docstring_json_basic                 ║ Test basic JSON creation from parsed docstring.                      ║ [92m✅ PASSED[0m         ║
+║ test_create_docstring_json_empty_fields          ║ Test JSON creation with empty field handling.                        ║ [92m✅ PASSED[0m         ║
+║ test_create_docstring_json_multiple_returns      ║ Test JSON creation with multiple return values.                      ║ [92m✅ PASSED[0m         ║
+║ test_create_new_project_creates_folder_structure ║ Test Requirement 1: creating a new project will also create a new... ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_deletion_handling              ║ Test handling when custom block is deleted from project.             ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_execution_after_load           ║ Test that custom blocks can be executed after loading from project.  ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_metadata_generation_at_runtime ║ Test that all metadata files are generated when importing a custo... ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_parameter_update_in_project    ║ Test that adding parameters to custom block updates project corre... ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_path_validation                ║ Test validation of custom block path references.                     ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_reference_in_saved_project     ║ Test that custom blocks maintain their path references when saved.   ║ [92m✅ PASSED[0m         ║
+║ test_custom_block_update_preserves_path          ║ Test that updating custom block code preserves path reference.       ║ [92m✅ PASSED[0m         ║
+║ test_data_container_types_comprehensive          ║ Test all DataContainer subclasses can be imported.                   ║ [92m✅ PASSED[0m         ║
+║ test_default_dataset_key                         ║ Test default dataset key functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_default_dataset_key                         ║ Test default dataset key functionality                               ║ [92m✅ PASSED[0m         ║
+║ test_default_img_key                             ║ Test default img key functionality                                   ║ [92m✅ PASSED[0m         ║
+║ test_directory_constants                         ║ Test that directory name constants are defined.                      ║ [92m✅ PASSED[0m         ║
+║ test_docstring_key_consistency                   ║ Test that constants are used instead of hardcoded strings.           ║ [92m✅ PASSED[0m         ║
+║ test_docstring_section_constants                 ║ Test that docstring section name constants are defined.              ║ [92m✅ PASSED[0m         ║
+║ test_docstring_utils_type_annotations            ║ Test that docstring_utils.py has proper type annotations.            ║ [92m✅ PASSED[0m         ║
+║ test_duplicate_block_workflow                    ║ Test Step 3: Duplicate Existing Block workflow.                      ║ [92m✅ PASSED[0m         ║
+║ test_edit_block_instance_code                    ║ Test Step 2: Edit Block Instance workflow.                           ║ [92m✅ PASSED[0m         ║
+║ test_end_to_end_update                           ║ Test end-to-end block update process.                                ║ [92m✅ PASSED[0m         ║
+║ test_error_handling_blueprint_not_found          ║ Test error handling when blueprint doesn't exist.                    ║ [92m✅ PASSED[0m         ║
+║ test_error_handling_consistency                  ║ Test that error handling follows consistent patterns.                ║ [92m✅ PASSED[0m         ║
+║ test_error_handling_invalid_block_name           ║ Test error handling for invalid block names.                         ║ [92m✅ PASSED[0m         ║
+║ test_error_handling_invalid_project              ║ Test error handling for invalid project paths.                       ║ [92m✅ PASSED[0m         ║
+║ test_expected_workflow_for_custom_blocks         ║ Document the expected workflow when user creates a custom block.     ║ [92m✅ PASSED[0m         ║
+║ test_extract_docstring_data                      ║ Test the high-level extraction function.                             ║ [92m✅ PASSED[0m         ║
+║ test_extract_docstring_data_google_style         ║ Test extraction with Google-style docstring.                         ║ [92m✅ PASSED[0m         ║
+║ test_extract_docstring_data_logs_parsing_errors  ║ Test that parsing errors are logged, not silently ignored.           ║ [92m✅ PASSED[0m         ║
+║ test_extract_docstring_from_node                 ║ Test extracting docstring from AST node.                             ║ [92m✅ PASSED[0m         ║
+║ test_file_backup_logic                           ║ Test the logic for backing up file content.                          ║ [92m✅ PASSED[0m         ║
+║ test_file_extension_constants                    ║ Test that file extension constants are defined.                      ║ [92m✅ PASSED[0m         ║
+║ test_file_operations_use_utf8                    ║ Test that file operations explicitly use UTF-8.                      ║ [92m✅ PASSED[0m         ║
+║ test_file_watcher_detects_changes                ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_file_watcher_triggers_generation            ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_file_watcher_websocket_flow                 ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_find_function_node                          ║ Test finding a function node in AST.                                 ║ [92m✅ PASSED[0m         ║
+║ test_fromlist_handling                           ║ Test that fromlist parameter is handled correctly in imports.        ║ [92m✅ PASSED[0m         ║
+║ test_generate_all_metadata_files                 ║ Test generation of all metadata files at once.                       ║ [92m✅ PASSED[0m         ║
+║ test_generate_app_json                           ║ Test generation of default app.json.                                 ║ [92m✅ PASSED[0m         ║
+║ test_generate_block_data_json                    ║ Test generation of block_data.json from docstring.                   ║ [92m✅ PASSED[0m         ║
+║ test_generate_example_md                         ║ Test generation of example.md.                                       ║ [92m✅ PASSED[0m         ║
+║ test_generate_test_file                          ║ Test generation of test file.                                        ║ [92m✅ PASSED[0m         ║
+║ test_get_param_descriptions                      ║ Test extracting parameter descriptions.                              ║ [92m✅ PASSED[0m         ║
+║ test_get_param_descriptions_with_none_input      ║ Test that None docstring is handled properly.                        ║ [92m✅ PASSED[0m         ║
+║ test_get_return_descriptions                     ║ Test extracting return descriptions.                                 ║ [92m✅ PASSED[0m         ║
+║ test_get_return_descriptions_with_malformed_d... ║ Test handling of malformed docstrings.                               ║ [92m✅ PASSED[0m         ║
+║ test_gui_distinction_and_default_naming_backe... ║ Test Requirement 4 (backend part): The name of blocks added from ... ║ [92m✅ PASSED[0m         ║
+║ test_handler_implementations_exist               ║ Test that all registered handlers have implementations.              ║ [92m✅ PASSED[0m         ║
+║ test_hardware_types_import                       ║ Test importing hardware-related types.                               ║ [92m✅ PASSED[0m         ║
+║ test_import_error_handling                       ║ Test that invalid imports still raise appropriate errors.            ║ [92m✅ PASSED[0m         ║
+║ test_import_organization                         ║ Test that imports are properly organized.                            ║ [92m✅ PASSED[0m         ║
+║ test_ipc_main_handlers_use_constants             ║ Test that ipc-main-handlers.ts uses API constants.                   ║ [92m✅ PASSED[0m         ║
+║ test_iris_dataset_key                            ║ Test iris dataset key functionality                                  ║ [92m✅ PASSED[0m         ║
+║ test_is_custom_block_check                       ║ Test logic for checking if a path is a custom block.                 ║ [92m✅ PASSED[0m         ║
+║ test_is_valid_project_path                       ║ Test logic for validating project paths.                             ║ [92m✅ PASSED[0m         ║
+║ test_json_key_constants                          ║ Test that JSON key constants are defined.                            ║ [92m✅ PASSED[0m         ║
+║ test_load_diabetes                               ║ Test load diabetes functionality                                     ║ [92m✅ PASSED[0m         ║
+║ test_load_iris                                   ║ Test load iris functionality                                         ║ [92m✅ PASSED[0m         ║
+║ test_load_specific_categories                    ║ Test loading TEXT_DATASET with specific newsgroup categories (com... ║ [92m✅ PASSED[0m         ║
+║ test_load_training_set_by_default                ║ Verify TEXT_DATASET loads the default 20 newsgroups training set ... ║ [92m✅ PASSED[0m         ║
+║ test_manifest_generation_with_rollback           ║ Test manifest generation with rollback on failure.                   ║ [92m✅ PASSED[0m         ║
+║ test_manifest_regeneration_with_real_block       ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_metadata_file_constants                     ║ Test that metadata file name constants are defined.                  ║ [92m✅ PASSED[0m         ║
+║ test_metadata_file_constants_exist               ║ Test that constants are used instead of hardcoded strings.           ║ [92m✅ PASSED[0m         ║
+║ test_metadata_files                              ║ Test metadata file handling.                                         ║ [92m✅ PASSED[0m         ║
+║ test_metadata_generated_on_new_block_creation    ║ Test that metadata files are generated when a new custom block is... ║ [92m✅ PASSED[0m         ║
+║ test_metadata_generation_completeness            ║ Test that all required metadata can be generated or identified as... ║ [92m✅ PASSED[0m         ║
+║ test_metadata_generation_workflow                ║ Test the complete workflow of metadata generation.                   ║ [92m✅ PASSED[0m         ║
+║ test_metadata_regenerated_on_code_change         ║ Test that metadata is regenerated when block code changes.           ║ [92m✅ PASSED[0m         ║
+║ test_metadata_regeneration_on_change             ║ Test that metadata is regenerated when the Python file changes.      ║ [92m✅ PASSED[0m         ║
+║ test_missing_implementation                      ║ Identify what needs to be implemented.                               ║ [92m✅ PASSED[0m         ║
+║ test_multiple_custom_blocks_with_unique_paths    ║ Test that multiple custom blocks maintain unique path references.    ║ [92m✅ PASSED[0m         ║
+║ test_multiple_projects_with_same_custom_block... ║ Test that multiple projects can have custom blocks with same name.   ║ [92m✅ PASSED[0m         ║
+║ test_no_bare_any_types                           ║ Test that we don't use bare Any types where specific types are po... ║ [92m✅ PASSED[0m         ║
+║ test_no_duplicate_handlers                       ║ Test that there are no duplicate handler registrations.              ║ [92m✅ PASSED[0m         ║
+║ test_non_atlasvibe_imports_unchanged             ║ Test that non-atlasvibe imports are not affected.                    ║ [92m✅ PASSED[0m         ║
+║ test_non_existent_category                       ║ Verify TEXT_DATASET raises ValueError when given non-existent cat... ║ [92m✅ PASSED[0m         ║
+║ test_numpy_style_detection_performance           ║ Test that NumPy style detection is efficient.                        ║ [92m✅ PASSED[0m         ║
+║ test_parameter_types_import                      ║ Test importing parameter types from atlasvibe.                       ║ [92m✅ PASSED[0m         ║
+║ test_parse_google_style_docstring                ║ Test parsing Google-style docstrings.                                ║ [92m✅ PASSED[0m         ║
+║ test_parse_numpy_style_docstring                 ║ Test parsing NumPy-style docstrings.                                 ║ [92m✅ PASSED[0m         ║
+║ test_parse_numpy_with_extra_sections             ║ Test parsing NumPy docstring with extra sections.                    ║ [92m✅ PASSED[0m         ║
+║ test_parse_python_file                           ║ Test parsing Python file and extracting function.                    ║ [92m✅ PASSED[0m         ║
+║ test_parse_python_file_with_encoding_error       ║ Test handling of encoding errors.                                    ║ [92m✅ PASSED[0m         ║
+║ test_parse_python_file_with_explicit_encoding    ║ Test that file is opened with explicit UTF-8 encoding.               ║ [92m✅ PASSED[0m         ║
+║ test_parse_python_file_with_file_not_found       ║ Test that FileNotFoundError is properly handled.                     ║ [92m✅ PASSED[0m         ║
+║ test_parse_python_file_with_syntax_error         ║ Test handling of Python syntax errors.                               ║ [92m✅ PASSED[0m         ║
+║ test_parsed_docstring_type_hints                 ║ Test that parsed docstring objects have proper type hints.           ║ [92m✅ PASSED[0m         ║
+║ test_preload_uses_api_constants                  ║ Test that preload/index.ts uses API constants for IPC calls.         ║ [92m✅ PASSED[0m         ║
+║ test_preserve_existing_files                     ║ Test that existing metadata files are not overwritten.               ║ [92m✅ PASSED[0m         ║
+║ test_project_migration_adds_custom_block_info    ║ Test that old project format is migrated to include custom block ... ║ [92m✅ PASSED[0m         ║
+║ test_project_structure_validation                ║ Test project structure validation.                                   ║ [92m✅ PASSED[0m         ║
+║ test_project_template_creates_custom_blocks      ║ Test Requirement 3: when selecting a new project template to star... ║ [92m✅ PASSED[0m         ║
+║ test_proposed_implementation                     ║ Propose how to implement the missing features.                       ║ [92m✅ PASSED[0m         ║
+║ test_python_file_triggers_metadata_generation    ║ Test that creating a Python file triggers generation of all metad... ║ [92m✅ PASSED[0m         ║
+║ test_python_files_have_encoding                  ║ Test that Python files have UTF-8 encoding specification.            ║ [92m✅ PASSED[0m         ║
+║ test_python_files_have_shebang                   ║ Test that Python files have proper shebang lines.                    ║ [92m✅ PASSED[0m         ║
+║ test_regenerate_block_data_on_modification       ║ Test that block_data.json is regenerated when Python file is modi... ║ [92m✅ PASSED[0m         ║
+║ test_regeneration_complete_event                 ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_regeneration_error_event                    ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_regeneration_start_event                    ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_handles_collision_with_blue... ║ Test Req 5: Collision check - new name is a blueprint name.          ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_handles_collision_with_exis... ║ Test Req 5: Collision check - new name matches another custom block. ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_handles_python_symbol_colli... ║ Test Req 5: Collision check - new name is a Python keyword/proble... ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_to_its_base_name_when_avail... ║ Test renaming 'BLOCK_1' to 'BLOCK' when 'BLOCK' is available or a... ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_to_its_current_name            ║ Test renaming a block to its current name results in no change.      ║ [92m✅ PASSED[0m         ║
+║ test_rename_block_updates_folder_file_and_fun... ║ Test Requirement 5: renaming a block will be always possible, and... ║ [92m✅ PASSED[0m         ║
+║ test_rename_custom_block_updates_references      ║ Test that renaming a custom block updates all references.            ║ [92m✅ PASSED[0m         ║
+║ test_reproduce_append_block_structure            ║ Test reproducing the APPEND block metadata structure.                ║ [92m✅ PASSED[0m         ║
+║ test_request_model_validation                    ║ Test that the UpdateBlockCodeRequest model validates inputs.         ║ [92m✅ PASSED[0m         ║
+║ test_return_type_annotations                     ║ Test that function return types are properly annotated.              ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_backs_up_original_content ║ Test that original content is backed up before writing new content.  ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_endpoint                  ║ Test the /blocks/update-code/ endpoint.                              ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_exception_rollback        ║ Test rollback on unexpected exceptions.                              ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_flow                      ║ Test the complete flow of update_block_code.                         ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_handles_missing_file      ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_invalid_project_path      ║ Test that invalid project paths are rejected.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_invalid_project_path      ║ Test that invalid project paths are rejected.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_manifest_failure          ║ Test rollback when manifest generation fails.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_manifest_failure          ║ Test rollback when manifest generation fails.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_missing_file              ║ Test handling of missing block files.                                ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_missing_file              ║ Test handling of missing block files.                                ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_not_custom_block          ║ Test that updating non-custom blocks is forbidden.                   ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_not_custom_block          ║ Test that updating non-custom blocks is forbidden.                   ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_real_file_operations      ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_regenerates_manifest      ║ Test that block manifest is regenerated after code update.           ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_rollback_on_manifest_f... ║ Test that changes are rolled back if manifest generation fails.      ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_success                   ║ Test successful block code update.                                   ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_success                   ║ Test successful block code update.                                   ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_validates_custom_block... ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_validates_project_path    ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_validates_request         ║ Test request validation.                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_with_dependencies         ║ Test updating block with pip dependencies.                           ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_with_syntax_error         ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_block_code_writes_new_content        ║ No description available                                             ║ [92m✅ PASSED[0m         ║
+║ test_update_custom_block_via_api                 ║ Test updating custom block through the API endpoint.                 ║ [92m✅ PASSED[0m         ║
+║ test_update_invalid_project_path                 ║ Test that invalid project paths are rejected.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_non_custom_block_rejected            ║ Test that blueprint blocks cannot be updated.                        ║ [92m✅ PASSED[0m         ║
+║ test_update_nonexistent_block                    ║ Test handling of non-existent block files.                           ║ [92m✅ PASSED[0m         ║
+║ test_validate_custom_block_path_accepts_valid... ║ Test that paths containing 'atlasvibe_blocks' are accepted.          ║ [92m✅ PASSED[0m         ║
+║ test_validate_custom_block_path_rejects_bluep... ║ Test that paths without 'atlasvibe_blocks' are rejected.             ║ [92m✅ PASSED[0m         ║
+║ test_validate_project_path_accepts_valid_atla... ║ Test that project paths ending with .atlasvibe are accepted.         ║ [92m✅ PASSED[0m         ║
+║ test_validate_project_path_rejects_invalid_paths ║ Test that project paths not ending with .atlasvibe are invalid.      ║ [92m✅ PASSED[0m         ║
+║ test_verify_generation_process                   ║ Document and verify the complete generation process.                 ║ [92m✅ PASSED[0m         ║
+║ test_visual_feedback_not_implemented             ║ Document what visual feedback is NOT implemented.                    ║ [92m✅ PASSED[0m         ║
+║ test_visual_feedback_requirements                ║ Document the visual feedback requirements for regeneration.          ║ [92m✅ PASSED[0m         ║
+║ test_what_actually_happens_currently             ║ Document what actually happens in the current implementation.        ║ [92m✅ PASSED[0m         ║
+║ test_what_should_happen                          ║ Document the expected user experience with visual feedback.          ║ [92m✅ PASSED[0m         ║
+║ test_window_api_matches_handlers                 ║ Test that window.api exposed methods match registered handlers.      ║ [92m✅ PASSED[0m         ║
+║ test_HUGGING_FACE_PIPELINE_common_model_and_r... ║ No description available                                             ║ [93m⏭️ SKIPPED[0m       ║
+║ test_HUGGING_FACE_PIPELINE_common_model_and_r... ║ No description available                                             ║ [93m⏭️ SKIPPED[0m       ║
+║ test_HUGGING_FACE_PIPELINE_common_model_and_r... ║ No description available                                             ║ [93m⏭️ SKIPPED[0m       ║
+║ test_ONE_HOT_ENCODING                            ║ Test ONE HOT ENCODING functionality                                  ║ [93m⏭️ SKIPPED[0m       ║
+║ 🐌 test_ONNX_MODEL_remote_file_path              ║ ONNX_MODEL functional test for a remote file path.                   ║ [93m⏭️ SKIPPED[0m       ║
+╚══════════════════════════════════════════════════╩══════════════════════════════════════════════════════════════════════╩═══════════════╝
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+                                                                TEST SUMMARY                                                                
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+✅ PASSED    :  370 ( 97.9%)
+❌ FAILED    :    2 (  0.5%)
+⏭️ SKIPPED   :    5 (  1.3%)
+🔥 ERROR     :    1 (  0.3%)
+--------------------------------------------------------------------------------------------------------------------------------------------
+   TOTAL     :  378 (100.0%)
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

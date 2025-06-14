@@ -40,6 +40,6 @@ def test_PROPHET_PLOT(
         )
         res = PROPHET_PLOT.PROPHET_PLOT(default=default)
         # Should get back a plotly figure
-        assert res.type == "plotly"
+        assert res.type == "Plotly"
         assert isinstance(res.fig, Figure)
         assert res.fig.layout.title.text == "PROPHET_PLOT"

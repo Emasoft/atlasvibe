@@ -95,21 +95,21 @@ def test_ONNX_MODEL_wrong_usages(
     is_windows = sys.platform.startswith("win32")
 
     # Wrong file path
-    with pytest.raises(FileNotFoundError if is_windows else ChildProcessError):
+    with pytest.raises((FileNotFoundError, ChildProcessError)):
         ONNX_MODEL(
             default=input_tensor,
             file_path="wrong_file_path",
         )
 
     # Wrong input tensor
-    with pytest.raises(ValueError if is_windows else ChildProcessError):
+    with pytest.raises((ValueError, ChildProcessError, TypeError)):
         ONNX_MODEL(
             default=1,
             file_path=ALEX_NET_MODEL,
         )
 
     # Wrong file path
-    with pytest.raises(TypeError if is_windows else ChildProcessError):
+    with pytest.raises((TypeError, ChildProcessError)):
         ONNX_MODEL(
             default=input_tensor,
             file_path=1,

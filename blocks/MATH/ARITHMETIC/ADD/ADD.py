@@ -1,10 +1,8 @@
-from functools import reduce
-
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 
-from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
+from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_operation
 
 @atlasvibe
 def ADD(
@@ -36,15 +34,4 @@ def ADD(
         Vector if a is a Vector.
         v: the sum of input a and input b.
     """
-
-    initial = get_val(a)
-    seq = map(lambda dc: get_val(dc), b)
-    y = reduce(lambda u, v: np.add(u, v), seq, initial)
-
-    match a:
-        case OrderedPair():
-            return OrderedPair(x=a.x, y=y)
-        case Vector():
-            return Vector(v=y)
-        case Scalar():
-            return Scalar(c=y)
+    return perform_arithmetic_operation(a, b, np.add)

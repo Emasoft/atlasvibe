@@ -61,6 +61,10 @@ def ONNX_MODEL(
     import numpy as np
     import onnxruntime as rt
 
+    # Validate file_path is a string
+    if not isinstance(file_path, str):
+        raise TypeError(f"Expected string for file_path, got {type(file_path).__name__}")
+
     model_name = os.path.basename(file_path)
 
     if file_path.startswith("http://") or file_path.startswith("https://"):
@@ -95,6 +99,11 @@ def ONNX_MODEL(
     # TODO(jjerphan): For now NumPy is assumed to be the main backend for Atlasvibe.
     # We might adapt it in the future so that we can use other backends
     # for tensor libraries for application using Deep Learning libraries.
+    
+    # Validate input is a Vector
+    if not isinstance(default, Vector):
+        raise TypeError(f"Expected Vector input, got {type(default).__name__}")
+    
     input_tensor = np.asarray(default.v, dtype=np.float32)
     predictions = sess.run([label_name], {input_name: input_tensor})[0]
 

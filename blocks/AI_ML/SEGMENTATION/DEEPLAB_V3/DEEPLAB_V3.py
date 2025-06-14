@@ -26,7 +26,6 @@ def DEEPLAB_V3(default: Image) -> Image:
     import PIL.Image
     import torch
     import torchvision.transforms.functional as TF
-    from atlasvibe import Image
     from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
     from torchvision import transforms
 

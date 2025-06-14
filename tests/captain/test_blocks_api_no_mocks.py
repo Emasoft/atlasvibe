@@ -58,7 +58,7 @@ class TestBlocksAPINoMocks:
             block_file.write_text("""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
@@ -99,7 +99,7 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
         new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1, multiplier: int = 3) -> int:
@@ -180,7 +180,7 @@ def CUSTOM_BLOCK(x: int = 1, multiplier: int = 3) -> int:
         bad_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
@@ -214,7 +214,7 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
         new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(deps={"numpy": ">=1.20.0", "pandas": ">=1.3.0"})
 def CUSTOM_BLOCK(x: int = 1) -> int:
