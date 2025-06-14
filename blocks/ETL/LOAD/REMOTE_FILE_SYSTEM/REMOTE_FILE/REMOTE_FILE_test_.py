@@ -13,7 +13,7 @@ PUBLIC_TEST_IMAGES_BASE_URL = "https://raw.githubusercontent.com/python-pillow/P
         ("Image", Image, f"{PUBLIC_TEST_IMAGES_BASE_URL}/hopper.png"),
         ("Grayscale", Grayscale, f"{PUBLIC_TEST_IMAGES_BASE_URL}/hopper.png"),
         ("CSV", DataFrame, "https://raw.githubusercontent.com/pandas-dev/pandas/main/pandas/tests/io/data/csv/iris.csv"),
-        ("JSON", DataFrame, "https://api.github.com/repos/python/cpython/issues/1"),
+        ("JSON", DataFrame, "https://jsonplaceholder.typicode.com/users"),
     ],
 )
 def test_REMOTE_FILE_valid_usage(

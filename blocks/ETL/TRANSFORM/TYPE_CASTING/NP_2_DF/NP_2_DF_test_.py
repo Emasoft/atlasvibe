@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
-from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedPair, OrderedTriple, Matrix, Grayscale, Image, Vector
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    DataFrame, OrderedPair, OrderedTriple, Matrix, Grayscale, Image, Vector,
+    ParametricDataFrame, ParametricOrderedPair, ParametricOrderedTriple,
+    ParametricMatrix, ParametricGrayscale, ParametricImage
+)
 
 # Test case DataFrame and ParametricDataFrame
 def test_NP_2_DF_dataframe(mock_atlasvibe_decorator):

@@ -65,7 +65,10 @@ def HEATMAP(
         The generated Plotly heatmap
     """
 
-    layout = plot_layout(title=title, showlegend=False, xaxis_title=x_label, yaxis_title=y_label)
+    layout = plot_layout(title=title)
+    layout.showlegend = False
+    layout.xaxis.title = x_label
+    layout.yaxis.title = y_label
 
     if isinstance(default, (Matrix, DataFrame)):
         if isinstance(default, DataFrame):
@@ -90,6 +93,10 @@ def HEATMAP(
         x = default.x
         y = default.y
         z = default.z
+    elif isinstance(default, Vector):
+        x = None
+        y = None
+        z = default.v.reshape(1, -1)  # Convert 1D vector to 2D array for heatmap
     else:
         raise ValueError(f"Invalid type: {type(default)}")
 

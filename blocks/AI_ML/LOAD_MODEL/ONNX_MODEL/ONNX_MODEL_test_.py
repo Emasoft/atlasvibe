@@ -73,6 +73,10 @@ def test_ONNX_MODEL_remote_file_path(
 
     assert isinstance(image_vector, Vector)
 
+@pytest.mark.skipif(
+    onnx is None,
+    reason="ONNX_MODEL requires onnx to be installed | Ignore this test in CI",
+)
 @pytest.mark.slow
 @pytest.mark.skipif(
     sys.platform.startswith("win32"),
