@@ -11,43 +11,96 @@ try:
 except ImportError:
     torch = None
 
+try:
+    from huggingface_hub import hf_hub_download
+except ImportError:
+    hf_hub_download = None
+
 @pytest.fixture
 def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory):
-    """Create a model path for testing."""
+    """Create or download a TorchScript model for testing."""
     with tempfile.TemporaryDirectory() as tempdir:
-        model_path = os.path.join(tempdir, "mbnet_v3_small.torchscript")
+        model_path = os.path.join(tempdir, "model.torchscript")
         
-        # Try to create a minimal valid torchscript file
-        try:
-            import torch
-            # Create a minimal model that outputs classification results
-            class MinimalClassifier(torch.nn.Module):
-                def __init__(self):
-                    super().__init__()
-                    self.features = torch.nn.Sequential(
-                        torch.nn.Flatten(),
-                        torch.nn.Linear(224*224*3, 128),
-                        torch.nn.ReLU(),
-                        torch.nn.Linear(128, 1000)
-                    )
+        # Try multiple approaches to get a valid TorchScript model
+        model_created = False
+        
+        # Approach 1: Try to download a real TorchScript model from HuggingFace
+        if hf_hub_download and not model_created:
+            try:
+                # Try to download one of the Facebook Sapiens models (they have actual TorchScript files)
+                # However, these are very large (1B+ parameters), so skip for testing
+                # Instead, we'll create our own model
+                model_created = False
+            except Exception as e:
+                print(f"Skipping HuggingFace download: {e}")
+        
+        # Approach 2: Create a minimal valid TorchScript model
+        if not model_created:
+            try:
+                import torch
+                import torch.nn as nn
                 
-                def forward(self, x):
-                    # Ensure input is properly shaped
-                    if x.dim() == 3:
-                        x = x.unsqueeze(0)
-                    return self.features(x)
-            
-            model = MinimalClassifier()
-            model.eval()
-            
-            # Script the model
-            example_input = torch.randn(1, 224, 224, 3)
-            scripted = torch.jit.trace(model, example_input)
-            torch.jit.save(scripted, model_path)
-        except Exception:
-            # If torch is not available or scripting fails, create dummy file
+                # Create a more realistic classifier that matches expected input/output
+                class ImageClassifier(nn.Module):
+                    def __init__(self, num_classes=1000):
+                        super().__init__()
+                        # Simplified MobileNet-like architecture
+                        self.features = nn.Sequential(
+                            # Initial conv
+                            nn.Conv2d(3, 16, kernel_size=3, stride=2, padding=1),
+                            nn.BatchNorm2d(16),
+                            nn.ReLU(inplace=True),
+                            
+                            # Depthwise separable convolutions
+                            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1, groups=16),
+                            nn.BatchNorm2d(16),
+                            nn.ReLU(inplace=True),
+                            nn.Conv2d(16, 32, kernel_size=1, stride=1),
+                            nn.BatchNorm2d(32),
+                            nn.ReLU(inplace=True),
+                            
+                            # Global average pooling
+                            nn.AdaptiveAvgPool2d(1)
+                        )
+                        self.classifier = nn.Sequential(
+                            nn.Dropout(0.2),
+                            nn.Linear(32, num_classes)
+                        )
+                    
+                    def forward(self, x):
+                        # Handle both CHW and HWC input formats
+                        if x.dim() == 3:
+                            x = x.unsqueeze(0)
+                        if x.shape[-1] == 3 and x.shape[1] != 3:
+                            # Convert HWC to CHW
+                            x = x.permute(0, 3, 1, 2)
+                        
+                        x = self.features(x)
+                        x = x.view(x.size(0), -1)
+                        x = self.classifier(x)
+                        return x
+                
+                model = ImageClassifier()
+                model.eval()
+                
+                # Trace the model with correct input shape
+                example_input = torch.randn(1, 3, 224, 224)
+                scripted = torch.jit.trace(model, example_input)
+                torch.jit.save(scripted, model_path)
+                model_created = True
+            except Exception as e:
+                print(f"Could not create TorchScript model: {e}")
+        
+        # Approach 3: Fallback - create dummy file for testing without torch
+        if not model_created:
             with open(model_path, "wb") as f:
-                f.write(b"dummy torchscript model")
+                # Create a more realistic dummy file with TorchScript header
+                f.write(b"PK\x03\x04"  # ZIP header (TorchScript files are ZIP archives)
+                       b"\x00\x00\x00\x00"  # More ZIP header bytes
+                       b"\x00\x00\x00\x00"
+                       b"\x00\x00\x00\x00"
+                       b"dummy torchscript model content")
         
         yield model_path
 
