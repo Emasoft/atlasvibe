@@ -101,5 +101,9 @@ python_classes = "Test*"
 python_functions = "test_*"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "skip: marks tests to skip", 
+    "xfail: marks tests as expected to fail",
 ]
+# To run all tests including slow ones: pytest --runslow
+# To run xfail tests: pytest --runxfail
 pythonpath = ["."]
