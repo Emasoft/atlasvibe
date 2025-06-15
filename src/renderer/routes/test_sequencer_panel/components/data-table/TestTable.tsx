@@ -76,21 +76,7 @@ export function TestTable() {
     useShallow((state) => state.testSequenceDisplayed),
   );
 
-  function toggleExportToCloud(id: string) {
-    setElems((elems) => {
-      return elems.map((elem) => {
-        if (elem.id === id) {
-          if (elem.type === "test") {
-            return {
-              ...elem,
-              exportToCloud: !elem.exportToCloud,
-            };
-          }
-        }
-        return elem;
-      });
-    });
-  }
+  // Export functionality has been removed
 
   const columns: ColumnDef<TestSequenceElement>[] = [
     {
@@ -222,27 +208,6 @@ export function TestTable() {
       },
     },
 
-    {
-      id: "Export",
-      accessorFn: (elem) => {
-        return elem.type === "test" ? "exportToCloud" : null;
-      },
-      header: () => <div className="pl-4 text-center">Export</div>,
-      cell: ({ row }) => {
-        if (row.original.type === "test") {
-          return (
-            <div className="flex justify-center">
-              <Checkbox
-                className="relative z-10 my-2"
-                checked={row.original.exportToCloud}
-                onCheckedChange={() => toggleExportToCloud(row.original.id)}
-              />
-            </div>
-          );
-        }
-        return null;
-      },
-    },
 
     {
       id: "Completion Time",
@@ -328,7 +293,6 @@ export function TestTable() {
     "Completion Time": false,
     "Test Type": isAdmin(),
     Status: isAdmin(),
-    Export: isAdmin(),
     selected: isAdmin(),
   });
   const [rowSelection, setRowSelection] = useState({});
@@ -652,15 +616,6 @@ export function TestTable() {
                           }}
                         >
                           Rename Test
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => {
-                            toggleExportToCloud(row.original.id);
-                          }}
-                        >
-                          {row.original.exportToCloud
-                            ? "Disable export"
-                            : "Enable export"}
                         </ContextMenuItem>
                         <ContextMenuItem
                           onClick={() => {

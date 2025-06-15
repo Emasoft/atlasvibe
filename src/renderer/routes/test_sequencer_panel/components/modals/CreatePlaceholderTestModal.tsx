@@ -49,7 +49,6 @@ export const CreatePlaceholderTestModal = ({
         name: values.name,
         path: "",
         type: "placeholder",
-        exportToCloud: false,
         minValue: values.min,
         maxValue: values.max,
         unit: values.unit,
