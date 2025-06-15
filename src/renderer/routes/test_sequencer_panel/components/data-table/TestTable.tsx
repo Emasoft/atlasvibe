@@ -225,7 +225,7 @@ export function TestTable() {
     {
       id: "Export",
       accessorFn: (elem) => {
-        return elem.type === "test" ? "isSavedToCloud" : null;
+        return elem.type === "test" ? "exportToCloud" : null;
       },
       header: () => <div className="pl-4 text-center">Export</div>,
       cell: ({ row }) => {
@@ -659,8 +659,8 @@ export function TestTable() {
                           }}
                         >
                           {row.original.exportToCloud
-                            ? "Disable export to Cloud"
-                            : "Enable export to Cloud"}
+                            ? "Disable export"
+                            : "Enable export"}
                         </ContextMenuItem>
                         <ContextMenuItem
                           onClick={() => {
@@ -701,7 +701,7 @@ export function TestTable() {
                       setIsImportTestModalOpen(true);
                     } else {
                       toast.info(
-                        "Connect to Atlasvibe Cloud and select a Test Profile",
+                        "You need admin permissions to add tests",
                       );
                     }
                   }}

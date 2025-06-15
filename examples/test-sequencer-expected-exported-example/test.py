@@ -1,48 +1,42 @@
-from atlasvibe_cloud import test_sequencer
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Example test file for AtlasVibe test sequencer
+# Note: Cloud functionality has been removed from AtlasVibe
+# These tests demonstrate basic pytest functionality without cloud exports
+
 import pandas as pd
 
 
 def test_min_max():
     value = 6.15
-    test_sequencer.export(value)
-    assert test_sequencer.is_in_range(value)
+    # Basic range check
+    assert 5.0 <= value <= 10.0
 
 
 def test_min():
     value = 6.15
-    # If not Max value is defined, the value will be checked against the Min value.
-    test_sequencer.export(value)
-    assert test_sequencer.is_in_range(value)
+    # Check against minimum value
+    assert value >= 5.0
 
 
 def test_max():
     value = 6.15
-    test_sequencer.export(value)
-
-    assert test_sequencer.is_in_range(value)
-    # If multiple assert statements are defined and one of them fails:
-    # - the rest of the assert statements will not be executed, and the result will
-    #   be reported to the sequencer.
-    # - the sequencer will report the error, and the test will be marked as failed.
+    # Check against maximum value
+    assert value <= 10.0
+    # Multiple assertions
     assert 0 < value
 
 
-def test_export_dataframe():
+def test_dataframe():
     df = pd.DataFrame({"value": [6.15, 6.15, 6.15]})
-    # Boolean and DataFrame values will be exported to the Cloud.
-    test_sequencer.export(df)
-
+    # Check DataFrame is valid
     assert df is not None
+    assert len(df) == 3
+    assert df['value'].mean() == 6.15
 
 
-def test_export():
+def test_failing_example():
     value = 6.15
-    # Always export as early as possible to avoid missing data.
-    test_sequencer.export(value)
+    # This test will fail as an example
     assert 12 < value  # <-- FAIL
-
-    # Only the last executed export statement will be exported to the Cloud and
-    # reported to the sequencer.
-    test_sequencer.export(20)
-
-    assert 0 < value

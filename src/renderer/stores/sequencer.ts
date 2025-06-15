@@ -486,7 +486,6 @@ function resetSequencesStateToPending(stateSetter: State & Actions): void {
             ...elem,
             status: "pending",
             completionTime: undefined,
-            isSavedToCloud: false,
           }
         : { ...elem };
     });
@@ -505,7 +504,6 @@ function resetSequencesStateToPending(stateSetter: State & Actions): void {
           ...elem,
           status: StatusType.parse("pending"),
           completionTime: undefined,
-          isSavedToCloud: false,
         }
       : { ...elem };
   });

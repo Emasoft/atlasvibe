@@ -1,4 +1,8 @@
-from atlasvibe_cloud import test_sequencer
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Test file for AtlasVibe test sequencer
+# Note: Cloud functionality has been removed from AtlasVibe
 
 
 def test_one():
@@ -18,5 +22,5 @@ def test_three():
 
 def test_four_will_fail():
     x = 5
-    test_sequencer.export(x)
+    # This test is expected to fail
     assert x == 20
