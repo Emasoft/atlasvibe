@@ -21,7 +21,7 @@ import { Err, Result, err, ok } from "neverthrow";
 import { verifyElementCompatibleWithSequence } from "@/renderer/routes/test_sequencer_panel/utils/SequenceHandler";
 import { toast } from "sonner";
 import { SendJsonMessage } from "react-use-websocket/dist/lib/types";
-import { postSession } from "@/renderer/lib/api";
+// Cloud service removed - postSession no longer available
 import {
   testSequencePauseRequest,
   testSequenceResumeRequest,
@@ -362,45 +362,13 @@ export function useSequencerState() {
   }
 
   function handleUpload(aborted: boolean, forceUpload: boolean = false) {
-    if (uploadAfterRun || forceUpload) {
-      if (project === null) {
-        toast.warning("No sequence to upload, please create one.");
-        return;
-      }
-      const upload = async () => {
-        await postSession(
-          serialNumber,
-          stationId,
-          integrity,
-          aborted,
-          commitHash,
-          [...useSequencerStore.getState().cycleRuns],
-        );
-      };
-      toast.promise(upload, {
-        loading: "Uploading result...",
-        success: () => {
-          setIsUploaded(true);
-          return "Uploaded result to cloud";
-        },
-        error: (err) => {
-          return `Failed to upload result: ${err}`;
-        },
-      });
-    }
+    // Cloud upload functionality has been removed
+    // This function is kept for backward compatibility but does nothing
+    console.log("Upload requested but cloud service has been removed", { aborted, forceUpload });
   }
 
   function isValidCloudExport(): boolean {
-    if (uploadAfterRun) {
-      if (serialNumber === "") {
-        toast.error("Please fill in the serial number.");
-        return false;
-      }
-      if (stationId === "") {
-        toast.error("Please select a station.");
-        return false;
-      }
-    }
+    // Cloud export validation no longer needed
     return true;
   }
 

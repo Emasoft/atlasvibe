@@ -1,6 +1,6 @@
 import { TestTable } from "./data-table/TestTable";
 import { SequenceTable } from "./data-table/SequenceTable";
-import { CloudPanel } from "./CloudPanel";
+// CloudPanel removed - cloud functionality deprecated
 import { LockedContextProvider } from "@/renderer/context/lock.context";
 import {
   LAYOUT_TOP_HEIGHT,
@@ -58,7 +58,7 @@ const TestSequencerView = () => {
                       Sequencer
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Execute and report to Atlasvibe Cloud
+                      Execute test sequences
                     </p>
                   </div>
                 )}
@@ -66,7 +66,7 @@ const TestSequencerView = () => {
               <div className="flex flex-col">
                 <hr className="my-3" />
                 <div className="grid grid-cols-1 place-items-center gap-4 pb-2">
-                  <CloudPanel />
+                  {/* Cloud functionality removed */}
                 </div>
               </div>
             </div>
