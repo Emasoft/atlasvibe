@@ -79,7 +79,6 @@ export const Index = (): JSX.Element => {
           message: "No Python 3.11 interpreter found!",
         });
       } catch (err) {
-        console.log("err: ", err);
         updateSetupStatus({
           stage: "check-python-installation",
           status: "error",
@@ -156,7 +155,6 @@ export const Index = (): JSX.Element => {
     }
   };
   const refreshPyList = async () => {
-    console.log("Refreshing python interpreter list...");
     await checkPythonInstallation(true);
   };
 

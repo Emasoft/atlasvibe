@@ -1,11 +1,17 @@
 import os
 import pandas as pd
 from pkgs.atlasvibe.atlasvibe.parameter_types import Directory
-
-)
-from typing import Optional
+from typing import Optional, Literal
 from scipy.io import savemat
-from typing import Literal
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    Scalar,
+    Vector,
+    Matrix,
+    DataFrame,
+    OrderedPair,
+    OrderedTriple,
+)
 
 @atlasvibe
 def EXPORT_MATLAB(

@@ -2,8 +2,7 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 from typing import Literal
-from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
-from functools import reduce
+from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val, perform_arithmetic_operation
 
 @atlasvibe
 def LOG(
@@ -39,24 +38,25 @@ def LOG(
         Vector if a is a Vector.
         v: the result of the logarithm.
     """
-
-    initial = get_val(a)
-    seq = map(lambda dc: get_val(dc), b)
-
-    match log_base:
-        case "e":
-            y = reduce(lambda u, v: np.log(u), seq, initial)
-        case "10":
-            y = reduce(lambda u, v: np.log10(u), seq, initial)
-        case "2":
-            y = reduce(lambda u, v: np.log2(u), seq, initial)
-        case "input":
-            y = reduce(lambda u, v: np.log(u) / np.log(v), seq, initial)
-
-    match a:
-        case OrderedPair():
-            return OrderedPair(x=a.x, y=y)
-        case Vector():
-            return Vector(v=y)
-        case Scalar():
-            return Scalar(c=y)
+    
+    # For standard log bases, just compute log of input a
+    if log_base != "input":
+        value = get_val(a)
+        match log_base:
+            case "e":
+                y = np.log(value)
+            case "10":
+                y = np.log10(value)
+            case "2":
+                y = np.log2(value)
+        
+        match a:
+            case OrderedPair():
+                return OrderedPair(x=a.x, y=y)
+            case Vector():
+                return Vector(v=y)
+            case Scalar():
+                return Scalar(c=y)
+    else:
+        # For input base, use the change of base formula: log_b(a) = log(a) / log(b)
+        return perform_arithmetic_operation(a, b, lambda u, v: np.log(u) / np.log(v))

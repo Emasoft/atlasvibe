@@ -1,8 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
-from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val
-from functools import reduce
+from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_operation
 
 @atlasvibe
 def FLOOR_DIVIDE(
@@ -34,16 +33,4 @@ def FLOOR_DIVIDE(
         Vector if a is a Vector.
         v: the result of the floor division of input a by input b.
     """
-
-    initial = get_val(a)
-
-    seq = map(lambda dc: get_val(dc), b)
-    y1 = reduce(lambda u, v: np.floor_divide(u, v), seq, initial)
-
-    match a:
-        case OrderedPair():
-            return OrderedPair(x=a.x, y=y1)
-        case Vector():
-            return Vector(v=y1)
-        case Scalar():
-            return Scalar(c=y1)
+    return perform_arithmetic_operation(a, b, np.floor_divide)

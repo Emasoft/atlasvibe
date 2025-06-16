@@ -2,7 +2,6 @@
 """Add docstrings to test functions that lack them."""
 
 import ast
-import os
 from pathlib import Path
 
 class DocstringAdder(ast.NodeTransformer):
@@ -45,8 +44,14 @@ def add_docstrings_to_file(filepath):
                 f.write(new_content)
             
             return True
-    except:
-        pass
+    except (IOError, OSError) as e:
+        print(f"Error reading/writing file {filepath}: {e}")
+    except SyntaxError as e:
+        print(f"Syntax error in file {filepath}: {e}")
+    except ImportError:
+        print("astor module not available - cannot convert AST back to source")
+    except Exception as e:
+        print(f"Unexpected error processing {filepath}: {e}")
     
     return False
 

@@ -1,9 +1,7 @@
 import pytest
-import tempfile
 import shutil
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from functools import wraps
-from pathlib import Path
 
 @pytest.fixture
 def mock_atlasvibe_decorator():

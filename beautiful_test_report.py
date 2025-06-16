@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 from collections import defaultdict
 import os
-import re
 
 class TestDocstringExtractor(ast.NodeVisitor):
     """Extract test functions and their docstrings from Python files."""

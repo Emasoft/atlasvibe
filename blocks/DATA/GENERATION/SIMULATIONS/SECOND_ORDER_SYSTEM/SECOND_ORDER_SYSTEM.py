@@ -50,7 +50,7 @@ def SECOND_ORDER_SYSTEM(
     data = SmallMemory().read_memory(node_id, memory_key)
     if data is None:
         initialize = True
-    elif type(data) == ndarray:
+    elif isinstance(data, ndarray):
         initialize = False
     else:
         raise TypeError(f"Error loading object from REDIS. Type: {type(data)}")

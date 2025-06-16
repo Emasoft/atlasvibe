@@ -37,9 +37,9 @@ def INTEGRATE(default: OrderedPair | Vector) -> OrderedPair:
             input_x = np.arange(len(default.v))
             input_y = default.v
 
-    if type(input_x) != np.ndarray:
+    if not isinstance(input_x, np.ndarray):
         raise ValueError(f"Invalid type for x:{type(input_x)}")
-    elif type(input_y) != np.ndarray:
+    elif not isinstance(input_y, np.ndarray):
         raise ValueError(f"Invalid type for y:{type(input_y)}")
     elif len(input_x) != len(input_y):
         raise ValueError(

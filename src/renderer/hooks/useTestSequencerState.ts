@@ -404,7 +404,6 @@ export function useSequencerState() {
   function pauseSequencer(sender: SendJsonMessage) {
     if (backendGlobalState === "test_set_start") {
       toast.warning("Pausing sequencer after this test.");
-      console.log("Pause test");
       sender(testSequencePauseRequest(tree));
     }
   }
@@ -412,7 +411,6 @@ export function useSequencerState() {
   function resumeSequencer(sender: SendJsonMessage) {
     if (backendGlobalState === "test_set_start") {
       toast.info("Resuming sequencer.");
-      console.log("Resume test");
       sender(testSequenceResumeRequest(tree));
     }
   }
