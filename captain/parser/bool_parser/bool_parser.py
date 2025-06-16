@@ -115,11 +115,11 @@ class TrieNode:
     def __init__(
         self,
         value: Union[ReturnTypes, Operator, None] = None,
-        children: dict[Union[ReturnTypes, Operator], "TrieNode"] = {},
+        children: dict[Union[ReturnTypes, Operator], "TrieNode"] | None = None,
         is_end: bool = False,
     ):
         self.value = value
-        self.children = children
+        self.children = children if children is not None else {}
         self.is_end = is_end
 
 

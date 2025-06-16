@@ -8,6 +8,7 @@ import json
 from captain.types.worker import WorkerJobResponse
 import threading
 import traceback
+from captain.utils.logger import logger
 
 socket_connection_lock = threading.Lock()
 
@@ -32,14 +33,14 @@ class ConnectionManager:
         with socket_connection_lock:
             self.active_connections_map[socket_id] = websocket
 
-        # logger.debug(
-        #     f"Connected! Amt of active connections: {len(self.active_connections_map.keys())}"
-        # )
+        logger.debug(
+            f"Connected! Amt of active connections: {len(self.active_connections_map.keys())}"
+        )
 
     async def disconnect(self, socket_id: str):
         with socket_connection_lock:
             if socket_id not in self.active_connections_map:
-                # logger.debug(f"Client {socket_id} was already disconnected, skipping")
+                logger.debug(f"Client {socket_id} was already disconnected, skipping")
                 return
 
             del self.active_connections_map[socket_id]
@@ -60,14 +61,11 @@ class ConnectionManager:
                         json.dumps(message, cls=PlotlyJSONEncoder)
                     )
                 except Exception as e:
-                    print(
-                        f"Error in broadcast to {id}",
-                        e,
-                        traceback.format_exc(),
-                        flush=True,
+                    logger.error(
+                        f"Error in broadcast to {id}: {e}\n{traceback.format_exc()}"
                     )
                     if connection.client_state == WebSocketState.DISCONNECTED:
-                        print(
+                        logger.debug(
                             f"Connection state for {id} is Disconnected, adding to dead_connection..."
                         )
                         dead_connections.add(id)

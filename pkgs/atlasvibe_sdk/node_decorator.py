@@ -202,9 +202,11 @@ def atlasvibe_node(
             job_id: str,
             jobset_id: str,
             observe_blocks: list[str], 
-            previous_jobs: list[dict[str, str]] = [],
+            previous_jobs: list[dict[str, str]] | None = None,
             ctrls: dict[str, Any] | None = None,
         ):
+            if previous_jobs is None:
+                previous_jobs = []
             try:
                 logger.debug(f"Executing node: {func.__name__} (ID: {node_id})")
                 logger.debug(f"Previous jobs: {previous_jobs}")

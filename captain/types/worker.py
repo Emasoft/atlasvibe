@@ -58,11 +58,13 @@ class WorkerJobResponse(dict):
         sys_status: str | None = None,
         failed_nodes: dict[str, str] | None = None,
         running_node: str = "",
-        dict_item: dict[str, Any] = {},
+        dict_item: dict[str, Any] | None = None,
         result: dict[str, Any] | None = None,
         cmd: str | None = None,
         node_id: str | None = None,
     ):
+        if dict_item is None:
+            dict_item = {}
         self["jobsetId"] = jobset_id
         if sys_status:
             self["SYSTEM_STATUS"] = sys_status

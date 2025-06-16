@@ -175,9 +175,11 @@ def atlasvibe_node(
             job_id: str,
             jobset_id: str,
             observe_blocks: list[str],
-            previous_jobs: list[dict[str, str]] = [],
+            previous_jobs: list[dict[str, str]] | None = None,
             ctrls: dict[str, Any] | None = None,
         ):
+            if previous_jobs is None:
+                previous_jobs = []
             try:
                 logger.debug(f"previous jobs: {previous_jobs}")
                 # Get command parameters set by the user through the control panel
