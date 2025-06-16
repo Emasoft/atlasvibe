@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
 from pkgs.atlasvibe.atlasvibe.job_result_builder import JobResultBuilder
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataContainer
+from pkgs.atlasvibe.atlasvibe.job_service import JobService
 
 @atlasvibe
 def FEEDBACK(
@@ -24,7 +25,7 @@ def FEEDBACK(
         The result of the specified node ID, or the result of the parent node if it was not found.
     """
 
-    result = get_job_result(referred_node.ref)
+    result = JobService().get_job_result(referred_node.ref)
     if result:
         return result
     else:

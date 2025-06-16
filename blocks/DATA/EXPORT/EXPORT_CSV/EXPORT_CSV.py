@@ -8,6 +8,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import (
     Matrix,
     OrderedPair,
     OrderedTriple,
+    DataContainer,
 )
 
 @atlasvibe

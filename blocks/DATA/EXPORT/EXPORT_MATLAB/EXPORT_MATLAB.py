@@ -9,6 +9,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import (
     DataFrame,
     OrderedPair,
     OrderedTriple,
+    DataContainer,
 )
 
 @atlasvibe

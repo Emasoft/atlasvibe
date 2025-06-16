@@ -154,7 +154,7 @@ class TestUpdateBlockCode:
         
         # Create request
         request = UpdateBlockCodeRequest(
-            block_path=f"/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py",
+            block_path="/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py",
             content=UPDATED_BLOCK_CODE,
             project_path="/project/test.atlasvibe"
         )
