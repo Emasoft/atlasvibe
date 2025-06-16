@@ -99,10 +99,7 @@ def PEAK_DETECTION(
     else:
         plateau_size = float(plateau_size)
 
-    print(type(height), type(plateau_size), flush=True)
-
     signal = default.y
-    print(default)
     peaks, _ = find_peaks(
         signal,
         height=height,
