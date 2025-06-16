@@ -1,44 +1,64 @@
 import { Diagnostic } from "@codemirror/lint";
 import { EditorView } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { Text } from "@codemirror/state";
+
+/**
+ * Check if a docstring has the required NumPy-style format
+ */
+export function hasValidDocstringFormat(docstring: string): boolean {
+  const hasParameters = /Parameters\s*\n\s*-+/.test(docstring);
+  const hasReturns = /Returns\s*\n\s*-+/.test(docstring);
+  return hasParameters && hasReturns;
+}
 
 /**
  * Validates NumPy-style docstrings in Python code
  */
-export function validateDocstring(docstring: string, startLine: number): Diagnostic[] {
+export function validateDocstring(docstring: string, docstringStart: number): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-  const lines = docstring.split('\n');
   
   // Check for required sections
   const hasParameters = /^\s*Parameters\s*$/m.test(docstring);
   const hasReturns = /^\s*Returns\s*$/m.test(docstring);
   
-  // Check for proper formatting
-  const parameterSection = docstring.match(/Parameters\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*\n|Returns|$)/);
-  const returnsSection = docstring.match(/Returns\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*\n|$)/);
+  // Check for proper formatting with dashes
+  const hasParametersDashes = /Parameters\s*\n\s*-+/m.test(docstring);
+  const hasReturnsDashes = /Returns\s*\n\s*-+/m.test(docstring);
   
-  if (!hasParameters && !hasReturns) {
+  if (!hasParameters || !hasReturns) {
     diagnostics.push({
-      from: 0,
-      to: 0,
+      from: docstringStart,
+      to: docstringStart + docstring.length,
       severity: "warning",
       message: "AtlasVibe blocks require NumPy-style docstrings with Parameters and Returns sections",
+    });
+  } else if (!hasParametersDashes || !hasReturnsDashes) {
+    diagnostics.push({
+      from: docstringStart,
+      to: docstringStart + docstring.length,
+      severity: "warning",
+      message: "Parameters and Returns sections must be followed by dashes (------)",
     });
   }
   
   // Check parameter format (name : type)
+  const parameterSection = docstring.match(/Parameters\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*Returns|$)/);
   if (parameterSection) {
-    const paramLines = parameterSection[1].split('\n');
-    paramLines.forEach((line, idx) => {
-      if (line.trim() && !line.match(/^\s*\w+\s*:\s*[\w\[\]\|]+/)) {
+    const paramContent = parameterSection[1];
+    const paramStartOffset = docstring.indexOf(paramContent);
+    const paramLines = paramContent.split('\n');
+    
+    let currentOffset = paramStartOffset;
+    paramLines.forEach((line) => {
+      if (line.trim() && !line.match(/^\s*\w+\s*:\s*[\w[\]|\s,]+/) && !line.match(/^\s*Description/)) {
         diagnostics.push({
-          from: 0,
-          to: 0,
+          from: docstringStart + currentOffset,
+          to: docstringStart + currentOffset + line.length,
           severity: "error",
-          message: `Invalid parameter format. Expected: "name : type". Got: "${line.trim()}"`,
+          message: `Invalid parameter format. Expected: "name : type" format`,
         });
       }
+      currentOffset += line.length + 1; // +1 for newline
     });
   }
   
@@ -67,7 +87,7 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
           let usesSpaces = false;
           let usesTabs = false;
           
-          lines.forEach((line, idx) => {
+          lines.forEach((line) => {
             if (line.match(/^ +/)) usesSpaces = true;
             if (line.match(/^\t+/)) usesTabs = true;
           });
@@ -104,20 +124,13 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
           if (docstringMatch) {
             const docstring = docstringMatch[1];
             const docstringStart = node.from + functionText.indexOf('"""');
-            const startLine = doc.lineAt(docstringStart).number;
             
             // Check if this is an AtlasVibe block function
             const hasAtlasVibeDecorator = functionText.includes("@atlasvibe");
             
             if (hasAtlasVibeDecorator) {
-              const docstringDiagnostics = validateDocstring(docstring, startLine);
-              docstringDiagnostics.forEach(diag => {
-                diagnostics.push({
-                  ...diag,
-                  from: docstringStart + diag.from,
-                  to: docstringStart + diag.to || docstringStart + docstring.length,
-                });
-              });
+              const docstringDiagnostics = validateDocstring(docstring, docstringStart);
+              diagnostics.push(...docstringDiagnostics);
             }
           } else if (functionText.includes("@atlasvibe")) {
             // AtlasVibe function without docstring
@@ -133,48 +146,8 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
     });
     
   } catch (error) {
-    console.error("Error in Python linter:", error);
+    // Silently ignore parsing errors and return diagnostics collected so far
   }
-  
-  return diagnostics;
-}
-
-/**
- * Check for Python syntax errors using a simple regex-based approach
- */
-export function checkPythonSyntax(code: string): Diagnostic[] {
-  const diagnostics: Diagnostic[] = [];
-  const lines = code.split('\n');
-  
-  lines.forEach((line, idx) => {
-    // Check for unclosed brackets
-    const openBrackets = (line.match(/[\[\({]/g) || []).length;
-    const closeBrackets = (line.match(/[\]\)}]/g) || []).length;
-    
-    if (openBrackets !== closeBrackets && !line.trim().endsWith('\\')) {
-      diagnostics.push({
-        from: idx * 100, // Rough estimate
-        to: (idx + 1) * 100,
-        severity: "error",
-        message: "Unclosed bracket",
-      });
-    }
-    
-    // Check for invalid indentation increase
-    if (idx > 0) {
-      const prevIndent = lines[idx - 1].match(/^[\s]*/)?.[0].length || 0;
-      const currIndent = line.match(/^[\s]*/)?.[0].length || 0;
-      
-      if (currIndent > prevIndent && currIndent - prevIndent > 4 && line.trim()) {
-        diagnostics.push({
-          from: idx * 100,
-          to: (idx + 1) * 100,
-          severity: "warning",
-          message: "Unusual indentation increase",
-        });
-      }
-    }
-  });
   
   return diagnostics;
 }

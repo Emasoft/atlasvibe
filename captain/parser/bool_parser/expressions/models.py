@@ -128,7 +128,7 @@ class NumericLiteral(Literal):
     def __init__(self, target: str):
         self.target = target
         if not NumericLiteral.allows(target):
-            raise TypeError('boolean literal expects "True" or "False"')
+            raise TypeError('numeric literal expects a valid number')
 
     def operation(self) -> float:
         return float(self.target)

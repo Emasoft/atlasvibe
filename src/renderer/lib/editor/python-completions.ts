@@ -1,5 +1,4 @@
 import { CompletionContext, CompletionResult, Completion } from "@codemirror/autocomplete";
-import { syntaxTree } from "@codemirror/language";
 
 // Common AtlasVibe imports and patterns
 const ATLASVIBE_IMPORTS = [
@@ -54,7 +53,7 @@ function generateDocstringTemplate(context: CompletionContext): Completion | nul
   if (beforeCursor.trim().endsWith(':')) {
     const match = beforeCursor.match(/def\s+(\w+)\s*\((.*?)\)/);
     if (match) {
-      const [, funcName, params] = match;
+      const [, , params] = match;
       const paramList = params.split(',').map(p => p.trim().split(':')[0].trim()).filter(p => p && p !== 'self');
       
       let docstring = '"""\n    Brief description.\n    \n';

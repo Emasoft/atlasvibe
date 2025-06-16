@@ -6,7 +6,7 @@ import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap } from "@codemirror/commands";
 import { keymap } from "@codemirror/view";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/renderer/components/ui/button";
 import { Badge } from "@/renderer/components/ui/badge";
 import { AlertCircle, CheckCircle2, Info } from "lucide-react";
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { updateBlockCode } from "@/renderer/lib/api";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useManifestStore } from "@/renderer/stores/manifest";
-import { pythonLinter } from "@/renderer/lib/editor/python-linting";
+import { pythonLinter, hasValidDocstringFormat } from "@/renderer/lib/editor/python-linting";
 import { pythonCompletions } from "@/renderer/lib/editor/python-completions";
 import { Alert, AlertDescription, AlertTitle } from "@/renderer/components/ui/alert";
 
@@ -94,10 +94,7 @@ const EditorView = () => {
     if (!functionMatch) return false;
     
     const docstring = functionMatch[1];
-    const hasParameters = /Parameters\s*\n\s*-+/.test(docstring);
-    const hasReturns = /Returns\s*\n\s*-+/.test(docstring);
-    
-    return hasParameters && hasReturns;
+    return hasValidDocstringFormat(docstring);
   };
 
   useEffect(() => {
@@ -108,8 +105,8 @@ const EditorView = () => {
   useKeyboardShortcut("ctrl", "s", () => saveFile());
   useKeyboardShortcut("meta", "s", () => saveFile());
 
-  // Configure extensions
-  const extensions = [
+  // Configure extensions - memoized to avoid recreating on every render
+  const extensions = useMemo(() => [
     python(),
     lintGutter(),
     linter(pythonLinter),
@@ -121,7 +118,7 @@ const EditorView = () => {
       ...defaultKeymap,
       ...completionKeymap,
     ]),
-  ];
+  ], []);
 
   return (
     <div className="flex flex-col h-screen">
