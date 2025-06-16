@@ -81,6 +81,7 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
     label: nodeLabel ?? funcName,
     func: funcName,
     type,
+    path: "", // Path will be set later if needed
     ctrls: nodeCtrls,
     initCtrls: initCtrls,
     inputs,

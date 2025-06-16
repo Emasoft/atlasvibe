@@ -13,6 +13,7 @@ type State = {
   serverStatus: ServerStatusEnum;
   failedBlocks: Record<string, string>;
   socketId: string;
+  isRunning: boolean;
 };
 
 type Actions = {
@@ -32,8 +33,11 @@ export const useSocketStore = create<State & Actions>()((set) => ({
 
   processWorkerResponse: (res) => {
     if (res.SYSTEM_STATUS) {
+      const isJobRunning = res.SYSTEM_STATUS === ServerStatus.RUNNING_PYTHON_JOB || 
+                          res.SYSTEM_STATUS === ServerStatus.RUN_IN_PROCESS;
       set({
         serverStatus: res.SYSTEM_STATUS,
+        isRunning: isJobRunning,
       });
     }
     if (res.NODE_RESULTS) {
@@ -49,7 +53,7 @@ export const useSocketStore = create<State & Actions>()((set) => ({
       });
     }
     if (res.RUNNING_NODE) {
-      set({ runningBlock: res.RUNNING_NODE });
+      set({ runningBlock: res.RUNNING_NODE, isRunning: true });
     }
     if (res.FAILED_NODES) {
       set({ failedBlocks: res.FAILED_NODES });
@@ -63,6 +67,7 @@ export const useSocketStore = create<State & Actions>()((set) => ({
 
   runningBlock: "",
   failedBlocks: {},
+  isRunning: false,
 
   socketId: "",
   setSocketId: (val) => {

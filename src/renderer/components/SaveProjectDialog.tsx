@@ -183,7 +183,8 @@ export function SaveProjectDialog({
       toast.success(`Project saved to ${projectPath}`);
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(`Failed to save project: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to save project: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }

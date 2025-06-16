@@ -50,21 +50,32 @@ export function BlueprintManagerDialog({
   
   const manifest = useManifest();
 
+  // Helper function to extract blueprints from manifest tree
+  const extractBlueprints = (node: any, category: string = ""): BlueprintItem[] => {
+    const items: BlueprintItem[] = [];
+    
+    if (node.children) {
+      // This is a section node
+      node.children.forEach((child: any) => {
+        const childCategory = category ? `${category}/${child.name}` : child.name;
+        items.push(...extractBlueprints(child, childCategory));
+      });
+    } else if (node.key && node.isBlueprint) {
+      // This is a leaf node (block definition)
+      items.push({
+        key: node.key,
+        name: node.name,
+        category: category,
+      });
+    }
+    
+    return items;
+  };
+
   // Load blueprints from manifest
   useEffect(() => {
     if (manifest && open) {
-      const blueprintList: BlueprintItem[] = [];
-      
-      Object.entries(manifest).forEach(([key, blockDef]) => {
-        if (blockDef.isBlueprint) {
-          blueprintList.push({
-            key,
-            name: blockDef.name,
-            category: blockDef.category,
-          });
-        }
-      });
-      
+      const blueprintList = extractBlueprints(manifest);
       setBlueprints(blueprintList.sort((a, b) => a.name.localeCompare(b.name)));
     }
   }, [manifest, open]);

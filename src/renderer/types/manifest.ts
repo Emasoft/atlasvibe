@@ -46,6 +46,9 @@ const blockDefinitionSchema = z.object({
   init_parameters: z.record(z.string(), blockParameterSchema).optional(),
   pip_dependencies: z.array(pipDependencySchema).optional(),
   children: z.null(),
+  isBlueprint: z.boolean().optional(),
+  category: z.string().optional(),
+  path: z.string().optional(),
 });
 
 export type BlockDefinition = z.infer<typeof blockDefinitionSchema>;

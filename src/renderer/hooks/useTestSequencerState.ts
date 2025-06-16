@@ -253,13 +253,7 @@ export function useSequencerState() {
     setIsLocked,
     tree,
     project,
-    uploadAfterRun,
     backendGlobalState,
-    serialNumber,
-    stationId,
-    integrity,
-    commitHash,
-    setIsUploaded,
     sequences,
     setSequences,
     runRunnableSequencesFromCurrentOne,
@@ -281,13 +275,7 @@ export function useSequencerState() {
         setIsLocked: state.setIsLocked,
         tree: state.testSequenceStepTree,
         project: state.testSequenceDisplayed,
-        uploadAfterRun: state.uploadAfterRun,
         backendGlobalState: state.backendGlobalState,
-        serialNumber: state.serialNumber,
-        stationId: state.stationId,
-        integrity: state.integrity,
-        commitHash: state.commitHash,
-        setIsUploaded: state.setIsUploaded,
         sequences: state.sequences,
         setSequences: state.setSequences,
         runRunnableSequencesFromCurrentOne:
@@ -364,7 +352,9 @@ export function useSequencerState() {
   function handleUpload(aborted: boolean, forceUpload: boolean = false) {
     // Cloud upload functionality has been removed
     // This function is kept for backward compatibility but does nothing
-    console.log("Upload requested but cloud service has been removed", { aborted, forceUpload });
+    // Parameters are intentionally unused to maintain function signature
+    void aborted;
+    void forceUpload;
   }
 
   function isValidCloudExport(): boolean {
@@ -376,7 +366,7 @@ export function useSequencerState() {
     if (!isValidCloudExport()) {
       return;
     }
-    setIsUploaded(false);
+    // Cloud upload state no longer tracked
     if (sequences.length === 0) {
       // No sequence ? Run the loaded test step.
       setIsLocked(true);

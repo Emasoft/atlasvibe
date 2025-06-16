@@ -1,7 +1,5 @@
 import { memo, ClipboardEvent, useState, useEffect, useCallback } from "react";
 import {
-  getCloudHealth,
-  getCloudUser,
   getEnvironmentVariables,
   postEnvironmentVariable,
 } from "@/renderer/lib/api";
@@ -106,11 +104,7 @@ const EnvVarModal = () => {
       toast("Please enter your Atlasvibe Cloud workspace secret");
       return;
     }
-    const user = await getCloudUser(atlasvibeCloudKey);
-    if (user.isErr()) {
-      toast.error("Invalid Atlasvibe Cloud workspace secret");
-      return;
-    }
+    // Cloud validation removed - storing locally only
     const res = await postEnvironmentVariable({
       key: "ATLASVIBE_CLOUD_WORKSPACE_SECRET",
       value: atlasvibeCloudKey,
@@ -137,11 +131,7 @@ const EnvVarModal = () => {
     if (!atlasvibeCloudUrl.endsWith("/")) {
       setAtlasvibeCloudUrl(atlasvibeCloudUrl + "/");
     }
-    const serverHealth = await getCloudHealth(atlasvibeCloudUrl);
-    if (serverHealth.isErr()) {
-      toast.error("Invalid Atlasvibe Cloud URL");
-      return;
-    }
+    // Cloud validation removed - storing locally only
     const res = await postEnvironmentVariable({
       key: "ATLASVIBE_CLOUD_URL",
       value: atlasvibeCloudUrl,

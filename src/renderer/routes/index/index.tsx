@@ -178,7 +178,8 @@ export const Index = (): JSX.Element => {
         break;
       }
       case "check-blocks-resource": {
-        if (window.api.isPackaged()) {
+        const isPackaged = await window.api.isPackaged();
+        if (isPackaged) {
           window.api.restartAtlasVibe(); 
         } else {
           alert(

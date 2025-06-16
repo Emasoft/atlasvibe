@@ -92,7 +92,7 @@ const extendedApi: ExtendedWindowApi = {
   saveFileToFullPath: (filepath: string, content: string) => ipcRenderer.invoke(API.saveFileToFullPath, filepath, content),
   saveFileToDisk: (filepath: string, content: string) => ipcRenderer.invoke(API.writeFileSync, filepath, content),
   getFileContent: (filePath: string) => ipcRenderer.invoke(API.getFileContent, filePath),
-  saveFile: (filePath: string, content: string) => ipcRenderer.send(API.writeFileSync, filePath, content),
+  saveFile: (filePath: string, content: string) => ipcRenderer.invoke(API.writeFileSync, filePath, content),
   saveFileAs: async (defaultFilename: string, content: string, allowedExtensions?: string[]) => {
     const result = await ipcRenderer.invoke(API.showSaveDialog, defaultFilename, allowedExtensions);
     if (result.filePath) {

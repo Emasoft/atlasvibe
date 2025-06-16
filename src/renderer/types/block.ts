@@ -34,6 +34,7 @@ export type BlockData = {
     v: Nullish<string>;
   }[];
   invalid?: boolean;
+  isCustom?: boolean;
 };
 
 export type TextData = {
