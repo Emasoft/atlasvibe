@@ -20,14 +20,12 @@ project's atlasvibe_blocks directory, the system automatically generates:
 import pytest
 import tempfile
 import json
-import time
 import asyncio
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from captain.services.consumer.blocks_watcher import BlocksWatcher
 from captain.utils.project_structure import initialize_project_structure, get_project_blocks_dir
-from cli.utils.generate_docstring_json import generate_docstring_json
 
 
 class TestCustomBlockAutoGeneration:

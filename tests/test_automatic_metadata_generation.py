@@ -8,18 +8,12 @@ This test verifies that when a new Python file is created in a block directory,
 all the necessary metadata files are automatically generated.
 """
 
-import asyncio
 import json
-import os
-import shutil
 import tempfile
-import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from captain.services.consumer.blocks_watcher import BlocksWatcher
 from captain.utils.block_metadata_generator import (
     generate_all_metadata_files,
     generate_app_json,

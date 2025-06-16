@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Test arithmetic utilities for edge cases and proper error handling."""
 
-import pytest
 import numpy as np
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val, perform_arithmetic_operation
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector

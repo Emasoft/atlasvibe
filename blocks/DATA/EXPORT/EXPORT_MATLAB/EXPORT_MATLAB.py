@@ -5,8 +5,6 @@ from typing import Optional, Literal
 from scipy.io import savemat
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import (
-    Scalar,
-    Vector,
     Matrix,
     DataFrame,
     OrderedPair,

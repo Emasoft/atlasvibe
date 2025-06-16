@@ -16,9 +16,8 @@ the system automatically generates all the necessary metadata files at runtime.
 import pytest
 import tempfile
 import json
-import shutil
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from captain.utils.manifest.generate_manifest import generate_manifest
 from captain.utils.project_structure import (
@@ -196,7 +195,6 @@ def WORKFLOW_BLOCK(input_data: str = "hello") -> str:
         mock_docstring_gen.return_value = True
         
         # Simulate block discovery/import
-        from captain.routes.blocks import update_block_code
         from captain.routes.blocks import UpdateBlockCodeRequest
         
         # This simulates editing a block which triggers regeneration

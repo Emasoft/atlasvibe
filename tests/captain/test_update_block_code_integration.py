@@ -14,13 +14,11 @@ from pathlib import Path
 import json
 import sys
 import os
-import asyncio
 
 # Add project root to Python path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from captain.routes.blocks import UpdateBlockCodeRequest, update_block_code
-from captain.utils.manifest.build_manifest import create_manifest
 from fastapi import HTTPException
 
 

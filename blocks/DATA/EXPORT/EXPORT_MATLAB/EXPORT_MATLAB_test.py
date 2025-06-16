@@ -3,7 +3,6 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, OrderedPa
 import pandas as pd
 import os
 import scipy
-from pkgs.atlasvibe.atlasvibe.parameter_types import File
 from pkgs.atlasvibe.atlasvibe.parameter_types import Directory
 
 def test_EXPORT_MATLAB_dataframe(mock_atlasvibe_decorator):

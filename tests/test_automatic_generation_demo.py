@@ -9,12 +9,9 @@ are automatically generated.
 """
 
 import json
-import os
 import tempfile
-import time
 from pathlib import Path
 
-import pytest
 
 from captain.utils.block_metadata_generator import generate_all_metadata_files
 

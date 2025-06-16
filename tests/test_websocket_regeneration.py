@@ -9,13 +9,11 @@
 """Test WebSocket integration for block regeneration state management."""
 
 import pytest
-import asyncio
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 import tempfile
 
-from captain.internal.wsmanager import ConnectionManager
 from captain.types.worker import RegenerationMessage
 from captain.services.consumer.blocks_watcher import BlocksWatcher
 

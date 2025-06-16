@@ -13,11 +13,6 @@ This test documents the expected behavior when a user creates a custom block
 by placing only a Python file in their atlasvibe_blocks directory.
 """
 
-import pytest
-import tempfile
-import json
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 
 class TestExpectedAutoGenerationBehavior:

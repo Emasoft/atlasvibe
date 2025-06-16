@@ -4,7 +4,6 @@ import numpy as np
 from typing import Literal
 
 import scipy.stats
-from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 @atlasvibe
 def SHAPIRO(

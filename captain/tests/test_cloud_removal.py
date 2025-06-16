@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Test to verify cloud functionality has been properly removed from AtlasVibe."""
 
-import pytest
 from fastapi.testclient import TestClient
 from captain.main import app
 

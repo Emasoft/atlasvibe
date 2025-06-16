@@ -17,7 +17,6 @@ the improvements to ensure proper error handling and type safety.
 
 import tempfile
 from pathlib import Path
-from typing import Optional
 from unittest.mock import patch, mock_open
 
 import pytest

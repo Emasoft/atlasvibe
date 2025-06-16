@@ -23,7 +23,6 @@ from skimage.morphology import binary_erosion, disk
 from skimage.registration import phase_cross_correlation
 from skimage.registration._masked_phase_cross_correlation import cross_correlate_masked
 from pkgs.atlasvibe.atlasvibe.data_container import DCNpArrayType
-from IPython.display import display
 
 class EXTREMA_OUTPUT(TypedDict):
     fig: Plotly

@@ -14,7 +14,6 @@ This module tests that IPC handlers use API constants instead of string
 literals for better maintainability and type safety.
 """
 
-import os
 import re
 from pathlib import Path
 

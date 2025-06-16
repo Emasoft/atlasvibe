@@ -19,19 +19,16 @@ This test demonstrates:
 import pytest
 import tempfile
 import json
-import time
 import asyncio
 import threading
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 from captain.main import app
 from captain.utils.project_structure import (
     initialize_project_structure,
-    copy_blueprint_to_project,
 )
-from captain.utils.manifest.build_manifest import create_manifest
 from captain.services.consumer.blocks_watcher import BlocksWatcher
 from captain.internal.wsmanager import ConnectionManager
 

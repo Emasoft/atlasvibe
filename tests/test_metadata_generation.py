@@ -19,7 +19,6 @@ This module tests:
 import pytest
 import tempfile
 import json
-import time
 import asyncio
 import threading
 from pathlib import Path

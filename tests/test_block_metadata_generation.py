@@ -21,12 +21,10 @@ import pytest
 import tempfile
 import json
 import ast
-import os
 from pathlib import Path
 from docstring_parser import parse
 
 from captain.utils.manifest.build_manifest import create_manifest
-from cli.utils.generate_docstring_json import generate_docstring_json
 
 
 class TestBlockMetadataGeneration:

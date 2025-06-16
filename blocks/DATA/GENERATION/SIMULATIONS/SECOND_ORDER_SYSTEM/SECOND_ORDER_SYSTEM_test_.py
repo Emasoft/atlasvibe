@@ -1,6 +1,5 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar
-from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 def test_SECOND_ORDER_SYSTEM(mock_atlasvibe_decorator):

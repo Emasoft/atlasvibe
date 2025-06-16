@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Test to verify test sequencer works properly after cloud cleanup."""
 
-import pytest
 from unittest.mock import Mock, patch
 import json
 

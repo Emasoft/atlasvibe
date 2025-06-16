@@ -1,6 +1,5 @@
 from functools import reduce
 from typing import Callable
-import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector, DCNpArrayType
 
 def get_val(

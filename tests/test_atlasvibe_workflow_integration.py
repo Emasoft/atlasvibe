@@ -10,14 +10,12 @@ with AtlasVibe's clone-and-edit workflow.
 
 import json
 import tempfile
-import shutil
 from pathlib import Path
 
 import pytest
 
 from captain.utils.project_structure import (
     copy_blueprint_to_project,
-    initialize_project_structure,
     get_project_blocks_dir
 )
 from captain.utils.block_metadata_generator import regenerate_block_data_json

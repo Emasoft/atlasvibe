@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import (
     DataFrame, OrderedPair, OrderedTriple, Matrix, Grayscale, Image, Vector,
-    ParametricDataFrame, ParametricOrderedPair, ParametricOrderedTriple,
-    ParametricMatrix, ParametricGrayscale, ParametricImage
+    ParametricDataFrame, ParametricOrderedPair, ParametricGrayscale
 )
 
 # Test case DataFrame and ParametricDataFrame

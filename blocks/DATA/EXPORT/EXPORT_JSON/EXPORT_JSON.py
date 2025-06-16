@@ -5,12 +5,6 @@ from pkgs.atlasvibe.atlasvibe.utils import PlotlyJSONEncoder
 from typing import Optional
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import (
-    DataFrame,
-    Matrix,
-    OrderedPair,
-    OrderedTriple,
-    Scalar,
-    Vector,
     DataContainer,
 )
 

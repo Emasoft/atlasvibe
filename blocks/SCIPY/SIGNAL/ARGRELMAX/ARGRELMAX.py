@@ -2,7 +2,6 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
 import scipy.signal
-from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 @atlasvibe
 def ARGRELMAX(

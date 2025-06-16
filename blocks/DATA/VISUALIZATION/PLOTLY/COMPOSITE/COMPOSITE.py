@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from typing import Literal
-from IPython.display import display
 
 @atlasvibe
 def COMPOSITE(

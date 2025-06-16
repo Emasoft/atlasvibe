@@ -10,8 +10,6 @@ from pkgs.atlasvibe.atlasvibe.data_container import (
 )
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout

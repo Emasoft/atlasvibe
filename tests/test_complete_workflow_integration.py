@@ -13,9 +13,8 @@ This test verifies the entire system working together:
 
 import json
 import tempfile
-import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,7 +27,6 @@ from captain.utils.project_structure import (
     validate_project_structure
 )
 from captain.utils.block_metadata_generator import (
-    generate_all_metadata_files,
     regenerate_block_data_json
 )
 
