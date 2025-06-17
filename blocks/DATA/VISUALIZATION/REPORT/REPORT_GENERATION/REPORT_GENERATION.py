@@ -110,9 +110,8 @@ def REPORT_GENERATION(
         full_dir = os.path.join(desktop_dir, fn)
 
         # Write the HTML app
-        f_write = open(full_dir, "x")
-        f_write.write(html)
-        f.close()
+        with open(full_dir, "x") as f_write:
+            f_write.write(html)
 
     webbrowser.open_new_tab(full_dir)
 
