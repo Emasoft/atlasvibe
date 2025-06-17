@@ -51,7 +51,7 @@ describe('Node Factory', () => {
       expect(node.position).toEqual({ x: 100, y: 200 });
       expect(node.data.func).toBe('TEST_BLOCK');
       expect(node.data.isCustom).toBeUndefined();
-      expect(node.data.path).toBeUndefined();
+      expect(node.data.path).toBe('');
     });
 
     it('should create a custom block node with path', () => {
