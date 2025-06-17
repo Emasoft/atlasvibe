@@ -17,7 +17,7 @@ class HardwareDevice(ABC):
             )
         self._id = id
 
-    def get_id(self):
+    def get_id(self) -> str | int:
         return self._id
 
 
@@ -29,7 +29,7 @@ class HardwareConnection(ABC):
         self._handle = handle
         self._cleanup = cleanup
 
-    def get_handle(self):
+    def get_handle(self) -> Any:
         return self._handle
 
     def __del__(self):
@@ -41,22 +41,22 @@ class CameraDevice(HardwareDevice):
 
 
 class SerialDevice(HardwareDevice):
-    def get_port(self):
+    def get_port(self) -> str:
         return str(self.get_id())
 
 
 class VisaDevice(HardwareDevice):
-    def get_address(self):
+    def get_address(self) -> str:
         return str(self.get_id())
 
 
 class NIDAQmxDevice(HardwareDevice):
-    def get_addresses(self):
+    def get_addresses(self) -> str:
         return str(self.get_id())
 
 
 class NIDMMDevice(HardwareDevice):
-    def get_address(self):
+    def get_address(self) -> str:
         return str(self.get_id())
 
 
@@ -73,7 +73,7 @@ class CameraConnection(HardwareConnection):
         )
 
     def __del__(self):
-        super().__del__()
+        self._cleanup(self._handle)
 
 
 class SerialConnection(HardwareConnection):
@@ -85,7 +85,7 @@ class SerialConnection(HardwareConnection):
         )
 
     def __del__(self):
-        super().__del__()
+        self._cleanup(self._handle)
 
 
 class VisaConnection(HardwareConnection):
@@ -97,7 +97,7 @@ class VisaConnection(HardwareConnection):
         )
 
     def __del__(self):
-        super().__del__()
+        self._cleanup(self._handle)
 
 
 class NIConnection(HardwareConnection):
@@ -109,7 +109,7 @@ class NIConnection(HardwareConnection):
         )
 
     def __del__(self):
-        super().__del__()
+        self._cleanup(self._handle)
 
 
 class NodeReference:
@@ -120,7 +120,7 @@ class NodeReference:
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
-    def unwrap(self):
+    def unwrap(self) -> str:
         return self.ref
 
 
@@ -132,7 +132,7 @@ class Array:
     def __init__(self, ref: list[str | float | int]) -> None:
         self.ref = ref
 
-    def unwrap(self):
+    def unwrap(self) -> list[str | float | int]:
         return self.ref
 
 
@@ -144,7 +144,7 @@ class File:
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
-    def unwrap(self):
+    def unwrap(self) -> str:
         return self.ref
 
 
@@ -156,7 +156,7 @@ class Directory:
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
-    def unwrap(self):
+    def unwrap(self) -> str:
         return self.ref
 
 
@@ -168,7 +168,7 @@ class Secret:
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
-    def unwrap(self):
+    def unwrap(self) -> str | None:
         return get_env_var(self.ref)
 
 
@@ -223,7 +223,7 @@ def format_param_value(value: Any, value_type: str):
         case "Directory":
             return Directory(str(value))
         case _:
-            print("hit default case", flush=True)
+            # Default case - return value as-is
             return value
 
 

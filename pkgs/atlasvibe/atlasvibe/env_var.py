@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-def get_keyring():
+def get_keyring() -> keyring.backend.KeyringBackend:
     if sys.platform.lower() == "linux":
         kr = CryptFileKeyring()
         kr.keyring_key = KEYRING_KEY
@@ -28,11 +28,11 @@ def get_env_var(key: str) -> Optional[str]:
 
 
 
-def set_env_var(key: str, value: str):
+def set_env_var(key: str, value: str) -> None:
     kr = get_keyring()
     kr.set_password("atlasvibe", key, value)
     home = str(Path.home())
-    file_path = os.path.join(home, os.path.join(ATLASVIBE_DIR, CREDENTIAL_FILE))
+    file_path = os.path.join(home, ATLASVIBE_DIR, CREDENTIAL_FILE)
 
     if not os.path.exists(file_path):
         logger.info(f"{file_path} does not exist")
@@ -51,9 +51,9 @@ def set_env_var(key: str, value: str):
         f.write(",".join(keys))
 
 
-def delete_env_var(key: str):
+def delete_env_var(key: str) -> None:
     home = str(Path.home())
-    file_path = os.path.join(home, os.path.join(ATLASVIBE_DIR, CREDENTIAL_FILE))
+    file_path = os.path.join(home, ATLASVIBE_DIR, CREDENTIAL_FILE)
 
     if not os.path.exists(file_path):
         return
