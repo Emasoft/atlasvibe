@@ -185,7 +185,7 @@ def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Cus
         
         async def mock_broadcast(data):
             broadcast_calls.append(data)
-            print(f"\n=== WebSocket Broadcast ===")
+            print("\n=== WebSocket Broadcast ===")
             print(f"Message: {data}")
         
         mock_ws = Mock(spec=ConnectionManager)
@@ -227,7 +227,7 @@ def DETECTED_BLOCK(value: int = 100) -> int:
             await asyncio.sleep(1.5)
             
             # Modify the file
-            print(f"\n=== Modifying Block Code ===")
+            print("\n=== Modifying Block Code ===")
             py_file.write_text("""#!/usr/bin/env python3
 from atlasvibe import atlasvibe
 

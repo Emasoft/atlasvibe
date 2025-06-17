@@ -28,7 +28,7 @@ def test_automatic_metadata_generation_demo():
     
     # Create a temporary directory to simulate custom blocks folder
     with tempfile.TemporaryDirectory() as tmpdir:
-        print(f"\n=== Automatic Metadata Generation Demo ===")
+        print("\n=== Automatic Metadata Generation Demo ===")
         print(f"Working directory: {tmpdir}")
         
         # Step 1: User creates a block directory

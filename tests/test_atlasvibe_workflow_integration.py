@@ -124,8 +124,8 @@ def TEST_BLUEPRINT(
         )
         
         print(f"✓ Created block instance at: {instance_path}")
-        print(f"✓ Blueprint remains unchanged in global palette")
-        print(f"✓ Instance is completely independent from blueprint")
+        print("✓ Blueprint remains unchanged in global palette")
+        print("✓ Instance is completely independent from blueprint")
         
         # Verify the instance was created correctly
         instance_dir = Path(instance_path)

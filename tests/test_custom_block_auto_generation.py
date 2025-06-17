@@ -160,7 +160,7 @@ def {block_name}(data: Vector, threshold: float = 0.5) -> Scalar:
                     with open(output_file, 'w') as f:
                         json.dump(block_data, f, indent=2)
                     
-                    print(f"✓ Generated block_data.json")
+                    print("✓ Generated block_data.json")
                     return True
         
         return False
