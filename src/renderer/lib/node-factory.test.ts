@@ -24,17 +24,19 @@ vi.mock('@/renderer/lib/block', () => ({
 describe('Node Factory', () => {
   describe('createNodeFromBlock', () => {
     const mockBlockDefinition: BlockDefinition = {
+      name: 'Test Block',
       key: 'TEST_BLOCK',
       type: 'TestBlock',
+      children: null,
       parameters: {
-        value: { type: 'float', default: 1.0 }
+        value: { type: 'float', default: 1.0, desc: null, overload: null }
       },
       init_parameters: {
-        mode: { type: 'string', default: 'test' }
+        mode: { type: 'string', default: 'test', desc: null, overload: null }
       },
-      inputs: [{ name: 'in', id: 'in', type: 'float' }],
-      outputs: [{ name: 'out', id: 'out', type: 'float' }],
-      pip_dependencies: ['numpy'],
+      inputs: [{ name: 'in', id: 'in', type: 'float', desc: null, multiple: false }],
+      outputs: [{ name: 'out', id: 'out', type: 'float', desc: null }],
+      pip_dependencies: [{ name: 'numpy', v: null }],
     };
 
     it('should create a standard block node', () => {
@@ -81,13 +83,15 @@ describe('Node Factory', () => {
 
     it('should handle CONSTANT block with default value', () => {
       const constantBlock: BlockDefinition = {
+        name: 'Constant',
         key: 'CONSTANT',
         type: 'Constant',
+        children: null,
         parameters: {
-          constant: { type: 'float', default: 42.0 }
+          constant: { type: 'float', default: 42.0, desc: null, overload: null }
         },
         inputs: [],
-        outputs: [{ name: 'output', id: 'output', type: 'float' }],
+        outputs: [{ name: 'output', id: 'output', type: 'float', desc: null }],
       };
 
       const options: CreateNodeOptions = {
@@ -112,9 +116,10 @@ describe('Node Factory', () => {
         label: 'Test Block 1',
         func: 'TEST_BLOCK',
         type: 'TestBlock',
-        ctrls: { value: { type: 'float', value: 5.0 } },
+        ctrls: { value: { type: 'float', default: 5.0, desc: null, overload: null, functionName: 'TEST_BLOCK', param: 'value', value: 5.0 } },
         inputs: [],
         outputs: [],
+        path: ''
       },
       selected: false,
     };
@@ -153,7 +158,7 @@ describe('Node Factory', () => {
           ...mockNode.data,
           func: 'CONSTANT',
           ctrls: {
-            constant: { type: 'float', value: 99 }
+            constant: { type: 'float', default: 99, desc: null, overload: null, functionName: 'CONSTANT', param: 'constant', value: 99 }
           },
         },
       };

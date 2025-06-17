@@ -55,8 +55,8 @@ describe('Project Store - Custom Block References', () => {
           func: 'MY_CUSTOM_BLOCK',
           type: 'CustomBlock',
           ctrls: {},
-          inputs: [{ name: 'in', id: 'in', type: 'number' }],
-          outputs: [{ name: 'out', id: 'out', type: 'number' }],
+          inputs: [{ name: 'in', id: 'in', type: 'number', desc: null, multiple: false }],
+          outputs: [{ name: 'out', id: 'out', type: 'number', desc: null }],
           path: 'atlasvibe_blocks/MY_CUSTOM_BLOCK',
           isCustom: true,
         },
@@ -73,10 +73,11 @@ describe('Project Store - Custom Block References', () => {
           type: 'StandardBlock',
           ctrls: {},
           inputs: [
-            { name: 'a', id: 'a', type: 'number' },
-            { name: 'b', id: 'b', type: 'number' },
+            { name: 'a', id: 'a', type: 'number', desc: null, multiple: false },
+            { name: 'b', id: 'b', type: 'number', desc: null, multiple: false },
           ],
-          outputs: [{ name: 'sum', id: 'sum', type: 'number' }],
+          outputs: [{ name: 'sum', id: 'sum', type: 'number', desc: null }],
+          path: '',
           isCustom: false,
         },
       };
@@ -110,7 +111,7 @@ describe('Project Store - Custom Block References', () => {
         expect.any(String)
       );
 
-      const savedProject: Project = JSON.parse(savedContent);
+      const savedProject = JSON.parse(savedContent) as any;
       
       // Check that custom block has path reference
       const savedCustomBlock = savedProject.rfInstance.nodes.find(n => n.id === 'custom-1');
@@ -120,7 +121,7 @@ describe('Project Store - Custom Block References', () => {
       // Check that standard block doesn't have path
       const savedStandardBlock = savedProject.rfInstance.nodes.find(n => n.id === 'standard-1');
       expect(savedStandardBlock?.data.isCustom).toBe(false);
-      expect(savedStandardBlock?.data.path).toBeUndefined();
+      expect(savedStandardBlock?.data.path).toBe('');
     });
 
     it('should handle multiple custom blocks with unique paths', async () => {
@@ -137,7 +138,7 @@ describe('Project Store - Custom Block References', () => {
             type: 'CustomBlock',
             ctrls: {},
             inputs: [],
-            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix' }],
+            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix', desc: null }],
             path: 'atlasvibe_blocks/CUSTOM_MATRIX_1',
             isCustom: true,
           },
@@ -153,7 +154,7 @@ describe('Project Store - Custom Block References', () => {
             type: 'CustomBlock',
             ctrls: {},
             inputs: [],
-            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix' }],
+            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix', desc: null }],
             path: 'atlasvibe_blocks/CUSTOM_MATRIX_2',
             isCustom: true,
           },
@@ -180,7 +181,7 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject: Project = JSON.parse(savedContent);
+      const savedProject = JSON.parse(savedContent) as any;
       
       // Each custom block should have its unique path
       savedProject.rfInstance.nodes.forEach((node, index) => {
@@ -192,6 +193,7 @@ describe('Project Store - Custom Block References', () => {
     it('should preserve custom block paths when loading project', () => {
       // Arrange
       const projectToLoad: Project = {
+        version: '2.0.0',
         name: 'LoadedProject',
         rfInstance: {
           nodes: [
@@ -263,10 +265,11 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject: Project = JSON.parse(savedContent);
+      const savedProject = JSON.parse(savedContent) as any;
       expect(savedProject.name).toBe(projectName);
       
       // Check structure
+      expect((savedProject as any).version).toBeDefined();
       expect(savedProject).toHaveProperty('rfInstance');
       expect(savedProject.rfInstance).toHaveProperty('nodes');
       expect(savedProject.rfInstance).toHaveProperty('edges');
@@ -291,6 +294,7 @@ describe('Project Store - Custom Block References', () => {
             ctrls: {},
             inputs: [],
             outputs: [],
+            path: '',
           },
         },
       ];
@@ -312,12 +316,12 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject: Project = JSON.parse(savedContent);
+      const savedProject = JSON.parse(savedContent) as any;
       
       // No custom blocks should have path or isCustom
       savedProject.rfInstance.nodes.forEach(node => {
         expect(node.data.isCustom).toBeFalsy();
-        expect(node.data.path).toBeUndefined();
+        expect(node.data.path).toBe('');
       });
     });
   });
