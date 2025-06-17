@@ -74,21 +74,7 @@ def test_api_module_has_no_post_session():
 
 def test_export_to_cloud_field_removed():
     """Verify exportToCloud field is not expected in test objects."""
-    # Create a test with exportToCloud field - should be ignored
-    test_data = {
-        "type": "test",
-        "id": "test123",
-        "groupId": "group123",
-        "path": "test.py",
-        "testName": "test_example",
-        "runInParallel": False,
-        "testType": "pytest",
-        "status": "pending",
-        "error": None,
-        "exportToCloud": True  # This field should be ignored
-    }
-    
-    # The API should accept this but ignore exportToCloud
+    # The API should accept objects but ignore any exportToCloud field
     # Since we don't have a direct endpoint to test this, we verify the field
     # is not in the type definition by checking the discover endpoint
     response = client.get("/discover/pytest", params={"path": ".", "oneFile": False})
