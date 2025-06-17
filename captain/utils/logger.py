@@ -12,7 +12,7 @@ from atlasvibe_engine.utils.blocks_path import get_atlasvibe_dir # CHANGED: Assu
 logger = logging.getLogger("atlasvibe") 
 
 
-def load_log_level_from_config():
+def load_log_level_from_config() -> str:
     atlasvibe_config_path = os.path.join(get_atlasvibe_dir(), "atlasvibe.yaml") 
     if os.path.exists(atlasvibe_config_path):
         with open(atlasvibe_config_path) as f:
