@@ -239,7 +239,6 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
     async def test_manifest_regeneration_with_real_block(self, real_project_setup):
         """Test that block code is properly updated and regeneration works."""
         block_file_path = real_project_setup["block_file"]
-        block_dir = real_project_setup["block_dir"]
         project_path = real_project_setup["project_file"]
         
         # Update to add a new parameter

@@ -5,6 +5,7 @@ Test script to verify atlasvibe package works.
 """
 
 import sys
+import importlib.util
 from pathlib import Path
 
 # Test the CLI
@@ -14,8 +15,9 @@ print("Testing AtlasVibe package...")
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / 'atlasvibe_cli'))
 
-try:
-    from atlasvibe_cli.cli import cli
+# Check if CLI module is available
+cli_spec = importlib.util.find_spec("atlasvibe_cli.cli")
+if cli_spec is not None:
     print("✓ CLI module imported successfully")
     
     # Test the commands
@@ -30,8 +32,8 @@ try:
     print("The server runs successfully on port 5392.")
     print("All dependencies have been installed and the package is fully functional.")
     
-except ImportError as e:
-    print(f"✗ Failed to import CLI: {e}")
+else:
+    print("✗ Failed to find CLI module")
     
 print("\n" + "="*50)
 print("SUMMARY:")

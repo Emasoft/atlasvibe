@@ -105,7 +105,7 @@ def test_custom_block_reference_in_saved_project(client, test_project_dir):
     """Test that custom blocks maintain their path references when saved."""
     # Create a custom block
     custom_block_name = "MY_CUSTOM_DOUBLER"
-    custom_block_dir = create_custom_block(test_project_dir, custom_block_name)
+    create_custom_block(test_project_dir, custom_block_name)
     
     # In real usage, blocks would be imported during app startup
     

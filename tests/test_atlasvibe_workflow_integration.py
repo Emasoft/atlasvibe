@@ -297,7 +297,7 @@ def TEST_EDITABLE_INSTANCE(
         print("\n=== Testing Complete AtlasVibe Workflow ===")
         
         # Step 1: User drags blueprint to create instance
-        instance_path = self.test_clone_blueprint_to_instance(temp_blueprint, temp_project)
+        self.test_clone_blueprint_to_instance(temp_blueprint, temp_project)
         
         # Step 2: User edits the instance code (blueprint unchanged)
         self.test_edit_block_instance_code(temp_blueprint, temp_project)

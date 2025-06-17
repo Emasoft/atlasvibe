@@ -92,7 +92,6 @@ def test_ONNX_MODEL_wrong_usages(
     input_tensor = Vector(v=np.random.random((1, 3, 224, 224)))
 
     # TODO(jjerphan): assert the type of the `Exception` being wrapped by `ChildProcessError`.
-    is_windows = sys.platform.startswith("win32")
 
     # Wrong file path
     with pytest.raises((FileNotFoundError, ChildProcessError)):

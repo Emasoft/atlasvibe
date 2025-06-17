@@ -35,7 +35,7 @@ def test_test_sequencer_no_cloud_dependencies():
         # This should not raise any errors related to cloud services
         try:
             # The function signature should not require cloud parameters
-            result = run_test_sequence.run_test_sequence(
+            run_test_sequence.run_test_sequence(
                 test_sequence_dict=mock_sequence,
                 run_name="test_run",
                 socketId="socket123"

@@ -221,7 +221,7 @@ def CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
                 MockWS.get_instance.return_value = mock_ws
                 
                 # Call the API
-                result = await update_block_code(request)
+                await update_block_code(request)
                 
                 # Verify regeneration events were broadcast
                 calls = mock_ws.broadcast.call_args_list

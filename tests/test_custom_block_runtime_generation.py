@@ -91,7 +91,7 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
         # This is where the system should generate the metadata files
         
         # The manifest generation happens when blocks are discovered
-        manifest = generate_manifest(blocks_path=str(blocks_dir))
+        generate_manifest(blocks_path=str(blocks_dir))
         
         print("\n=== After manifest generation ===")
         self._list_block_files(custom_block_dir)
@@ -198,7 +198,7 @@ def WORKFLOW_BLOCK(input_data: str = "hello") -> str:
         from captain.routes.blocks import UpdateBlockCodeRequest
         
         # This simulates editing a block which triggers regeneration
-        request = UpdateBlockCodeRequest(
+        UpdateBlockCodeRequest(
             block_path=str(py_file),
             content=py_file.read_text(),
             project_path=temp_project

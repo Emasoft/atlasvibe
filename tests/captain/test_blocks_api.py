@@ -8,6 +8,7 @@
 
 """API integration tests for blocks endpoints."""
 
+import sys
 import pytest
 from pathlib import Path
 import tempfile
@@ -17,7 +18,6 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
 # Mock modules before imports
-import sys
 sys.modules['atlasvibe'] = MagicMock()
 sys.modules['atlasvibe.utils'] = MagicMock()
 sys.modules['captain.internal.manager'] = MagicMock()
