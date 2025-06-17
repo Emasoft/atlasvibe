@@ -287,8 +287,8 @@ def dump_str(result: Any, limit: int | None = None):
 def get_atlasvibe_root_dir() -> str:
     home = str(Path.home())
     path = os.path.join(home, ".atlasvibe/atlasvibe.yaml")
-    stream = open(path, "r")
-    yaml_dict = yaml.load(stream, Loader=yaml.FullLoader)
+    with open(path, "r") as stream:
+        yaml_dict = yaml.safe_load(stream)
     root_dir = ""
 
     if isinstance(yaml_dict, str):
