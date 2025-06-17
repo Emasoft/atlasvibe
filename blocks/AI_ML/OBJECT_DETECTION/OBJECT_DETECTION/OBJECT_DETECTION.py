@@ -35,7 +35,8 @@ def OBJECT_DETECTION(default: Image) -> Image:
         print("Download may take up to a minute.")
         url = "https://pjreddie.com/media/files/yolov3.weights"
         r = requests.get(url, allow_redirects=True)
-        open(path, "wb").write(r.content)
+        with open(path, "wb") as f:
+            f.write(r.content)
 
     if a is not None:
         nparr = np.stack((r, g, b, a), axis=2)
