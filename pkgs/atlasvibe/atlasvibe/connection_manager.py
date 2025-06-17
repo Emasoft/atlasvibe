@@ -1,9 +1,10 @@
 from threading import Lock
+from typing import Any, Callable
 
-# Temporarily disabled - tm_devices API changed
-# from tm_devices.drivers.pi.pi_device import PIDevice
-PIDevice = None
+from tm_devices import DeviceManager
+from tm_devices.helpers import PYVISA_PY_BACKEND
 
+from .config import logger
 from .parameter_types import (
     HardwareConnection,
     HardwareDevice,
@@ -16,10 +17,10 @@ from .parameter_types import (
     NIConnection,
     NIDMMDevice,
 )
-from tm_devices import DeviceManager
-from tm_devices.helpers import PYVISA_PY_BACKEND
-from typing import Any, Callable
-from .config import logger
+
+# Temporarily disabled - tm_devices API changed
+# from tm_devices.drivers.pi.pi_device import PIDevice
+PIDevice = None
 
 _connection_lock = Lock()
 
