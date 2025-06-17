@@ -23,6 +23,7 @@ def TORCH_NODE(default: Matrix) -> Matrix:
 import hashlib
 import importlib.metadata
 import inspect
+import json
 import logging
 import multiprocessing
 import multiprocessing.connection
@@ -54,9 +55,9 @@ def _get_venv_cache_dir():
 
 def _get_venv_syspath(venv_executable: os.PathLike[Any]) -> list[str]:
     """Get the sys.path of the virtual environment."""
-    command = [venv_executable, "-c", "import sys\nprint(sys.path)"]
+    command = [venv_executable, "-c", "import sys\nimport json\nprint(json.dumps(sys.path))"]
     cmd_output = subprocess.run(command, check=True, capture_output=True, text=True)
-    return eval(cmd_output.stdout)
+    return json.loads(cmd_output.stdout)
 
 
 @contextmanager
