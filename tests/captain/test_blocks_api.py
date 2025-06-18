@@ -30,7 +30,7 @@ sys.modules['captain.utils.manifest.build_manifest'] = MagicMock()
 sys.modules['captain.utils.project_structure'] = MagicMock()
 
 # Import after mocking
-from captain.routes import blocks
+from captain.routes import blocks  # noqa: E402
 
 # Create test client
 app = FastAPI()
