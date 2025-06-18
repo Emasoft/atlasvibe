@@ -93,7 +93,7 @@ class Conditional(BaseModel):
 
 
 class IfNode(Conditional):
-    conditional_type: str = Field("if", alias="conditionalType")
+    conditional_type: ConditionalComponent = Field(ConditionalComponent.if_, alias="conditionalType")
     condition: str = Field(..., alias="condition")
     main: List["TestSequenceElementNode"] = Field(..., alias="main")
     else_: List["TestSequenceElementNode"] = Field(..., alias="else")

@@ -1,6 +1,7 @@
 import difflib
 import typing
 import numpy as np
+from numpy.typing import NDArray
 from pandas import DataFrame as PandasDataFrame
 from box import Box, box_list
 import plotly.graph_objects as go  # type:ignore
@@ -42,7 +43,7 @@ DCType = Literal[
     "ParametricVector",
 ]
 
-DCNpArrayType = np.ndarray[Union[int, float], np.dtype[Any]]
+DCNpArrayType = NDArray[Union[np.int_, np.float_]]
 
 DCKwargsValue = Union[
     list[Union[int, float]],
@@ -164,10 +165,10 @@ class DataContainer(Box):
                 arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
             return arrayified_value
         elif isinstance(value, box_list.BoxList):
-            arrayified_value: dict[str, DCNpArrayType] = {}
+            boxlist_arrayified_value: dict[str, DCNpArrayType] = {}
             for k, v in value.__dict__.items():
-                arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
-            return arrayified_value
+                boxlist_arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
+            return boxlist_arrayified_value
         elif isinstance(value, list):
             return np.array(value)
         elif value is None:
