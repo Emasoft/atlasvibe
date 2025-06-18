@@ -1,5 +1,5 @@
 import { BlockData } from "@/renderer/types/block";
-import { Code, CopyPlus, Info, Pencil, X, Package } from "lucide-react";
+import { Code, CopyPlus, Info, Pencil, X, Package, FileText } from "lucide-react";
 import { useStore, Node } from "reactflow";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { useFlowchartStore } from "@/renderer/stores/flowchart";
@@ -10,6 +10,7 @@ import { useDeleteBlock } from "@/renderer/stores/project";
 import { useState } from "react";
 import { SaveBlueprintDialog } from "@/renderer/components/SaveBlueprintDialog";
 import { useManifest } from "@/renderer/stores/manifest";
+import { VenvStatusDialog } from "@/renderer/components/blocks/VenvStatusDialog";
 
 export type BlockContextMenuInfo = MenuInfo<BlockData> & {
   fullPath: string;
@@ -70,6 +71,7 @@ export default function BlockContextMenu({
   const deleteBlock = useDeleteBlock();
   
   const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
+  const [venvDialogOpen, setVenvDialogOpen] = useState(false);
   const manifest = useManifest();
   
   // Get existing blueprint names
@@ -79,6 +81,10 @@ export default function BlockContextMenu({
   
   const saveAsBlueprint = () => {
     setBlueprintDialogOpen(true);
+  };
+
+  const viewEnvironment = () => {
+    setVenvDialogOpen(true);
   };
 
   return (
@@ -118,13 +124,22 @@ export default function BlockContextMenu({
         Duplicate Block
       </ContextMenuAction>
       {node.data.isCustom && (
-        <ContextMenuAction
-          testId="save-as-blueprint-btn"
-          onClick={saveAsBlueprint}
-          icon={Package}
-        >
-          Save as Blueprint
-        </ContextMenuAction>
+        <>
+          <ContextMenuAction
+            testId="save-as-blueprint-btn"
+            onClick={saveAsBlueprint}
+            icon={Package}
+          >
+            Save as Blueprint
+          </ContextMenuAction>
+          <ContextMenuAction
+            testId="view-environment-btn"
+            onClick={viewEnvironment}
+            icon={FileText}
+          >
+            View Environment
+          </ContextMenuAction>
+        </>
       )}
       <hr />
       <ContextMenuAction
@@ -151,6 +166,14 @@ export default function BlockContextMenu({
       defaultName={node.data.label}
       existingBlueprints={existingBlueprints}
     />
+    {node.data.isCustom && node.data.path && (
+      <VenvStatusDialog
+        open={venvDialogOpen}
+        onOpenChange={setVenvDialogOpen}
+        blockPath={node.data.path}
+        blockName={node.data.label}
+      />
+    )}
     </>
   );
 }

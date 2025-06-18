@@ -41,6 +41,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - do not use mockup tests or mocked behaviours unless it is absolutely impossible to do otherwise. If you need to use a service, local or remote, do not mock it, just ask the user to activate it for the duration of the tests. Results of mocked tests are completely useless. Only real tests can discover issues with the codebase.
 - always use a **Test-Driven Development (TDD)** methodology (write tests first, the implementation later) when implementing new features or change the existing ones. But first check that the existing tests are written correctly.
 - always plan in advance your actions, and break down your plan into very small tasks. Save a file named `DEVELOPMENT_PLAN.md` and write all tasks inside it. Update it with the status of each tasks after any changes.
+- Plan all the changes in detail first. Identify potential issues before starting, and revise the plan until it will not create issues before starting.
+- When making changes, identify all files that would need import updates first
+- After each change, check all type annotations for consistency
+- Make all changes in a single, well-planned operation with surgical edits
+- Always lint the file after making all the changes to it, but not before
+- Always run the tests relevant to the changed files after making all the changes planned, but not before
+- Do one comprehensive commit at the end of each operation if the code passes the tests
+- If you make errors while implementing the changes, examine you errors, ultrathink about them and write the lessons learned from them into CLAUDE.md for future references, so you won't repeat the same errors in the future.
 - do not create prototypes or sketched/abridged versions of the features you need to develop. That is only a waste of time. Instead break down the new features in its elemental components and functions, subdivide it in small autonomous modules with a specific function, and develop one module at time. When each module will be completed (passing the test for the module), then you will be able to implement the original feature easily just combining the modules. The modules can be helper functions, data structures, external librries, anything that is focused and reusable. Prefer functions at classes, but you can create small classes as specialized handlers for certain data and tasks, then also classes can be used as pieces for building the final feature.
 - When commit, never mention Claude as the author of the commits or as a Co-author.
 - when refactoring, enter thinking mode first, examine the program flow, be attentive to what you're changing, and how it subsequently affects the rest of the codebase as a matter of its blast radius, the codebase landscape, and possible regressions. Also bear in mind the existing type structures and interfaces that compose the makeup of the specific code you're changing.
@@ -1668,4 +1676,125 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 - **NLP_CONNECT_VIT_GPT2**: Removed beam search to fix transformers compatibility
 - **ONNX_MODEL**: Improving error handling for invalid inputs
 - **TORCHSCRIPT_CLASSIFIER**: Fixing virtual environment creation in tests
+
+## Virtual Environment Management with uv for AtlasVibe Blocks
+
+### Overview
+Each AtlasVibe block runs in its own isolated virtual environment managed by `uv`. This ensures complete dependency isolation and prevents conflicts between blocks.
+
+### Sequence of Operations for Virtual Environment Setup
+
+#### 1. **Create Virtual Environment**
+```bash
+# Basic creation
+uv venv /path/to/block/.venv
+
+# With specific Python version
+uv venv /path/to/block/.venv --python 3.11
+
+# With automatic Python download if needed
+uv venv /path/to/block/.venv --python 3.11 --managed-python
+```
+
+#### 2. **Install Dependencies**
+```bash
+# Set VIRTUAL_ENV to tell uv which environment to use
+export VIRTUAL_ENV=/path/to/block/.venv
+
+# Install from requirements.txt
+uv pip install -r requirements.txt
+
+# Install individual packages
+uv pip install numpy pandas scikit-learn
+
+# Install with version constraints
+uv pip install "numpy>=1.20,<2.0"
+```
+
+#### 3. **Run Commands in Virtual Environment**
+```bash
+# Using uv run (recommended)
+uv run --python /path/to/block/.venv/bin/python python script.py
+
+# Or set VIRTUAL_ENV and use uv pip directly
+export VIRTUAL_ENV=/path/to/block/.venv
+uv pip list
+```
+
+#### 4. **Check Virtual Environment Status**
+```bash
+# List installed packages
+export VIRTUAL_ENV=/path/to/block/.venv
+uv pip list --format json
+
+# Check Python version
+uv run --python /path/to/block/.venv/bin/python python --version
+```
+
+### Key Differences from Standard venv/pip
+
+1. **No activation needed**: Instead of `source .venv/bin/activate`, use:
+   - `export VIRTUAL_ENV=/path/to/.venv` for uv pip commands
+   - `uv run --python /path/to/.venv/bin/python` for running scripts
+
+2. **Faster operations**: uv caches packages globally and uses hard links
+
+3. **Automatic Python management**: uv can download and install Python versions
+
+4. **Better dependency resolution**: uv uses a more robust resolver than pip
+
+### AtlasVibe-Specific Implementation
+
+The `VenvManager` class in `/captain/utils/venv_manager.py` handles all virtual environment operations:
+
+1. **Pre-checks**:
+   - Python version compatibility
+   - Disk space availability
+   - Write permissions
+   - uv tool availability
+
+2. **Creation**:
+   ```python
+   cmd = ["uv", "venv", str(venv_path)]
+   if python_version:
+       cmd.extend(["--python", python_version])
+   ```
+
+3. **Dependency Installation**:
+   ```python
+   # Write requirements.txt
+   with open(requirements_file, 'w') as f:
+       f.write('\n'.join(dependencies))
+   
+   # Install with uv
+   subprocess.run(
+       ["uv", "pip", "install", "-r", str(requirements_file)],
+       env={**os.environ, "VIRTUAL_ENV": str(venv_path)}
+   )
+   ```
+
+4. **Verification**:
+   ```python
+   # Run import test
+   subprocess.run(
+       ["uv", "run", "--python", python_path, "python", "-c", f"import {package}"],
+       cwd=block_path
+   )
+   ```
+
+### Best Practices
+
+1. **Always use uv commands**: Never use pip directly
+2. **Set cwd for block operations**: Always run commands with `cwd=block_path`
+3. **Use VIRTUAL_ENV environment variable**: Required for uv pip commands
+4. **Check uv availability first**: Ensure uv is installed before operations
+5. **Handle timeouts**: Set appropriate timeouts for long-running operations
+6. **Log all operations**: Keep detailed logs for debugging
+
+### Common Issues and Solutions
+
+1. **uv not found**: Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. **Python version not available**: Use `uv python install 3.11` to install
+3. **Permission errors**: Ensure write access to block directory
+4. **Import failures**: Check package name vs import name mappings
 

@@ -28,6 +28,9 @@ from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
 from captain.utils.block_metadata_generator import regenerate_block_data_json
 from captain.types.worker import RegenerationMessage
+from captain.utils.python_validator import validate_python_code
+from captain.utils.code_intelligence import get_completions, get_hover_info
+from captain.utils.venv_manager import regenerate_venv, get_venv_status, get_venv_logs
 
 router = APIRouter(tags=["blocks"])
 
@@ -44,6 +47,49 @@ class UpdateBlockCodeRequest(BaseModel):
     block_path: str
     content: str
     project_path: str
+
+
+class ValidateCodeRequest(BaseModel):
+    """Request model for validating Python code."""
+    code: str
+    filename: str = "<unknown>"
+    project_path: Optional[str] = None
+
+
+class GetCompletionsRequest(BaseModel):
+    """Request model for getting code completions."""
+    code: str
+    line: int
+    column: int
+    trigger_char: Optional[str] = None
+    project_path: Optional[str] = None
+
+
+class GetHoverRequest(BaseModel):
+    """Request model for getting hover information."""
+    code: str
+    line: int
+    column: int
+    project_path: Optional[str] = None
+
+
+class FormatCodeRequest(BaseModel):
+    """Request model for formatting Python code."""
+    code: str
+    line_length: int = 88
+
+
+class RegenerateVenvRequest(BaseModel):
+    """Request model for regenerating virtual environment."""
+    block_path: str
+    dependencies: Optional[list[str]] = None
+    python_version: Optional[str] = None
+
+
+class GetVenvLogsRequest(BaseModel):
+    """Request model for getting venv logs."""
+    block_path: str
+    limit: int = 10
 
 
 def sanitize_error_message(error: Exception) -> str:
@@ -320,4 +366,194 @@ async def update_block_code(request: UpdateBlockCodeRequest):
     except HTTPException:
         raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/validate-code/")
+async def validate_code(request: ValidateCodeRequest):
+    """Validate Python code and return errors/warnings.
+    
+    Args:
+        request: Request containing code to validate
+        
+    Returns:
+        Validation results with errors, warnings, and suggestions
+    """
+    try:
+        result = validate_python_code(
+            request.code,
+            request.filename,
+            request.project_path
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error validating code: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/get-completions/")
+async def get_code_completions(request: GetCompletionsRequest):
+    """Get context-aware code completions.
+    
+    Args:
+        request: Request containing code context
+        
+    Returns:
+        List of completion suggestions
+    """
+    try:
+        completions = get_completions(
+            request.code,
+            request.line,
+            request.column,
+            request.trigger_char,
+            request.project_path
+        )
+        return {"completions": completions}
+    except Exception as e:
+        logger.error(f"Error getting completions: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/get-hover/")
+async def get_hover_information(request: GetHoverRequest):
+    """Get hover information for symbol at position.
+    
+    Args:
+        request: Request containing code and position
+        
+    Returns:
+        Hover information or null
+    """
+    try:
+        info = get_hover_info(
+            request.code,
+            request.line,
+            request.column,
+            request.project_path
+        )
+        return {"hover": info}
+    except Exception as e:
+        logger.error(f"Error getting hover info: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/format-code/")
+async def format_code(request: FormatCodeRequest):
+    """Format Python code using Black.
+    
+    Args:
+        request: Request containing code to format
+        
+    Returns:
+        Formatted code
+    """
+    try:
+        import black
+        
+        # Format the code
+        formatted = black.format_str(
+            request.code,
+            mode=black.Mode(line_length=request.line_length)
+        )
+        
+        return {"formatted": formatted, "changed": formatted != request.code}
+    except black.InvalidInput as e:
+        # Return original code if it can't be formatted
+        logger.warning(f"Code formatting failed: {e}")
+        return {"formatted": request.code, "changed": False, "error": str(e)}
+    except Exception as e:
+        logger.error(f"Error formatting code: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/regenerate-venv/")
+async def regenerate_block_venv(request: RegenerateVenvRequest):
+    """Regenerate virtual environment for a block.
+    
+    Args:
+        request: Request containing block path and options
+        
+    Returns:
+        Regeneration results and log path
+    """
+    try:
+        # Get WebSocket manager instance
+        ws_manager = ConnectionManager.get_instance()
+        
+        # Extract block name from path
+        block_name = Path(request.block_path).name
+        
+        # Broadcast venv regeneration start
+        start_msg = {
+            "type": "venv_regeneration_start",
+            "block_name": block_name,
+            "block_path": request.block_path
+        }
+        await ws_manager.broadcast(start_msg)
+        
+        # Regenerate venv
+        result = regenerate_venv(
+            request.block_path,
+            request.dependencies,
+            request.python_version
+        )
+        
+        # Broadcast completion or error
+        if result["success"]:
+            complete_msg = {
+                "type": "venv_regeneration_complete",
+                "block_name": block_name,
+                "block_path": request.block_path,
+                "log_path": result["log_path"]
+            }
+            await ws_manager.broadcast(complete_msg)
+        else:
+            error_msg = {
+                "type": "venv_regeneration_error",
+                "block_name": block_name,
+                "block_path": request.block_path,
+                "error": result.get("error")
+            }
+            await ws_manager.broadcast(error_msg)
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error regenerating venv: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.get("/blocks/venv-status/")
+async def get_block_venv_status(block_path: str):
+    """Get virtual environment status for a block.
+    
+    Args:
+        block_path: Path to the block directory
+        
+    Returns:
+        Virtual environment status
+    """
+    try:
+        status = get_venv_status(block_path)
+        return status
+    except Exception as e:
+        logger.error(f"Error getting venv status: {e}")
+        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+
+
+@router.post("/blocks/venv-logs/")
+async def get_block_venv_logs(request: GetVenvLogsRequest):
+    """Get virtual environment regeneration logs.
+    
+    Args:
+        request: Request containing block path and limit
+        
+    Returns:
+        List of log entries
+    """
+    try:
+        logs = get_venv_logs(request.block_path, request.limit)
+        return {"logs": logs}
+    except Exception as e:
+        logger.error(f"Error getting venv logs: {e}")
         raise HTTPException(status_code=500, detail=sanitize_error_message(e))

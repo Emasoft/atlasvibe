@@ -246,3 +246,125 @@ export const installTestProfile = (url: string) => {
   const options: Options = { headers: { url: url }, timeout: 60000 };
   return get("test_profile/install", TestProfile, options);
 };
+
+// Code validation API
+export const validateCode = async (
+  code: string,
+  filename: string = "<unknown>",
+  projectPath?: string | null,
+) => {
+  return fromPromise(
+    captain.post("blocks/validate-code", {
+      json: {
+        code,
+        filename,
+        project_path: projectPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Code completions API
+export const getCompletions = async (
+  code: string,
+  line: number,
+  column: number,
+  triggerChar?: string | null,
+  projectPath?: string | null,
+) => {
+  return fromPromise(
+    captain.post("blocks/get-completions", {
+      json: {
+        code,
+        line,
+        column,
+        trigger_char: triggerChar,
+        project_path: projectPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Code hover information API
+export const getHoverInfo = async (
+  code: string,
+  line: number,
+  column: number,
+  projectPath?: string | null,
+) => {
+  return fromPromise(
+    captain.post("blocks/get-hover", {
+      json: {
+        code,
+        line,
+        column,
+        project_path: projectPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Code formatting API
+export const formatCode = async (
+  code: string,
+  lineLength: number = 88,
+) => {
+  return fromPromise(
+    captain.post("blocks/format-code", {
+      json: {
+        code,
+        line_length: lineLength,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Virtual environment regeneration API
+export const regenerateVenv = async (
+  blockPath: string,
+  dependencies?: string[] | null,
+  pythonVersion?: string | null,
+) => {
+  return fromPromise(
+    captain.post("blocks/regenerate-venv", {
+      json: {
+        block_path: blockPath,
+        dependencies,
+        python_version: pythonVersion,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Virtual environment status API
+export const getVenvStatus = async (blockPath: string) => {
+  return fromPromise(
+    captain.get("blocks/venv-status", {
+      searchParams: {
+        block_path: blockPath,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};
+
+// Virtual environment logs API
+export const getVenvLogs = async (
+  blockPath: string,
+  limit: number = 10,
+) => {
+  return fromPromise(
+    captain.post("blocks/venv-logs", {
+      json: {
+        block_path: blockPath,
+        limit,
+      },
+    }).json(),
+    (e) => e as HTTPError,
+  );
+};

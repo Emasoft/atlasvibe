@@ -14,7 +14,7 @@ import ControlPanelTab from "./routes/control_panel/control-panel-view";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Layout } from "./routes/common/Layout";
 import { Index } from "./routes/index";
-import EditorView from "./routes/editor/EditorView";
+import EditorView from "./routes/editor/EnhancedEditorView";
 import AuthPage from "./routes/auth/Auth";
 import { Toaster } from "sonner";
 import { SocketReceiver } from "./socket-receiver";

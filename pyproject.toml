@@ -35,6 +35,9 @@ dependencies = [
     "python-multipart>=0.0.9",
     "pathspec>=0.12.1",
     "pytest>=7.4.4",
+    "docstring-parser>=0.15",
+    "psutil>=5.9.0",
+    "black>=23.0.0",
 ]
 
 [project.optional-dependencies]
