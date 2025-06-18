@@ -1,6 +1,7 @@
 import { exec } from "child_process";
 import { app } from "electron";
 import log from "electron-log/main";
+import path from "path";
 import { Command } from "./command";
 import { sendToStatusBar } from "./logging";
 // import { openLogFolder } from './logging';
@@ -24,7 +25,7 @@ export function execCommand(
 
     // Get the app root directory
     const appRoot = app.isPackaged 
-      ? require('path').join(app.getAppPath(), '..')  // Go up from app directory
+      ? path.join(app.getAppPath(), '..')  // Go up from app directory
       : process.cwd();
 
     const child = exec(cmd, {
