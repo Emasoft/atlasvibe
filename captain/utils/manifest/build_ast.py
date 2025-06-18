@@ -96,19 +96,27 @@ class AtlasvibeNodeTransformer(ast.NodeTransformer): # Consider renaming this cl
                 [node.body[0]]
                 if isinstance(node.body[0], ast.Expr)
                 else [
-                    ast.Pass(
-                        lineno=node.body[0].lineno, col_offset=node.body[0].col_offset
+                    ast.Expr(
+                        value=ast.Constant(value=None, lineno=node.body[0].lineno, col_offset=node.body[0].col_offset),
+                        lineno=node.body[0].lineno, 
+                        col_offset=node.body[0].col_offset
                     )
                 ]
             )
         else:
-            new_body = [ast.Pass(lineno=node.lineno, col_offset=node.col_offset)]
+            new_body = [
+                ast.Expr(
+                    value=ast.Constant(value=None, lineno=node.lineno, col_offset=node.col_offset),
+                    lineno=node.lineno,
+                    col_offset=node.col_offset
+                )
+            ]
 
         node.body = cast(list[ast.stmt], new_body)
 
         return node
 
-    def generic_visit(self, node: ast.Module):
+    def generic_visit(self, node: ast.AST):
         return None
 
 
@@ -121,11 +129,11 @@ def make_manifest_ast(
     # Do an initial pass to remove everything that isn't an
     # import, dataclass or atlasvibe_node node
     transformer = AtlasvibeNodeTransformer() # Name of class can remain for now, or be changed too
-    tree: ast.Module = transformer.visit(tree)
+    transformed_tree: ast.Module = transformer.visit(tree)
 
-    overload: dict[Any] | None = dict()
+    overload: dict[Any, Any] | None = dict()
     # This generates a dict with parameter: {display value: parameters to be displayed}
-    for node in tree.body:
+    for node in transformed_tree.body:
         if isinstance(node, ast.FunctionDef) and has_decorator(node, "display"):
             param, value, display = extract_overload_arguments(node)
             overload.setdefault(param, {}).update({value: display})
@@ -133,13 +141,13 @@ def make_manifest_ast(
         overload = None
 
     atlasvibe_node = find(
-        tree.body,
+        transformed_tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
         and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
     )
 
     init_func = find(
-        tree.body,
+        transformed_tree.body,
         lambda node: isinstance(node, ast.FunctionDef)
         and has_decorator(node, "node_initialization"),
     )
@@ -172,13 +180,13 @@ def make_manifest_ast(
     # that aren't the return type of the atlasvibe_node node
     # This also filters out all of the None values
 
-    tree.body = [
+    transformed_tree.body = [
         node
-        for node in tree.body
+        for node in transformed_tree.body
         if node and (not isinstance(node, ast.ClassDef) or node.name == return_type)
     ]
 
-    return (node_name, init_func_name, tree, overload)
+    return (node_name, init_func_name, transformed_tree, overload)
 
 
 def get_atlasvibe_decorator(tree: ast.Module) -> Optional[ast.Call]: # Name implies old decorator
