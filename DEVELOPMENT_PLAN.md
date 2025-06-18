@@ -192,15 +192,156 @@ This phase redefines how blocks are created, managed, and used within a project.
         - Improved parameter description handling
         - Fixed all 14 manifest generation tests
 
-## Phase 3: AI Agent Capabilities (Future - Placeholder)
+## Phase 3: Enhanced Code Editor and Virtual Environment Management (IN PROGRESS)
+
+This phase focuses on improving the code editor with advanced linting, code completion, error display, and robust virtual environment management.
+
+### Task 3.1: Backend Infrastructure for Code Intelligence
+*   **Action:** Create backend services for code validation and intelligence
+*   **Details:**
+    *   [ ] Create `/captain/utils/python_validator.py` for AST-based syntax validation
+        - Python AST parsing for accurate syntax checking
+        - Type annotation validation
+        - Import resolution and validation
+        - Variable usage analysis
+        - AtlasVibe-specific validation rules (decorator usage, docstring format)
+    *   [ ] Create `/captain/utils/code_intelligence.py` for code analysis
+        - Extract symbols (functions, classes, variables, imports)
+        - Analyze type hints and function signatures
+        - Generate context-aware completions
+        - Parse and validate NumPy-style docstrings
+    *   [ ] Create API endpoints:
+        - `/blocks/validate-code/` - Real-time code validation
+        - `/blocks/get-completions/` - Context-aware code completions
+        - `/blocks/format-code/` - Code formatting with Black
+
+### Task 3.2: Virtual Environment Management System
+*   **Action:** Implement comprehensive venv management with detailed logging
+*   **Details:**
+    *   [ ] Create `/captain/utils/venv_manager.py` with comprehensive checks:
+        - **Pre-regeneration checks:**
+            - Python version compatibility (3.8-3.11 support)
+            - Dependency conflict detection before installation
+            - Disk space availability (min 500MB)
+            - Write permissions in project directory
+            - Network connectivity for PyPI access
+            - UV tool availability and version
+        - **During regeneration:**
+            - Package download verification with checksums
+            - Dependency resolution progress tracking
+            - Installation success validation for each package
+            - Post-install script execution monitoring
+            - Environment activation test
+        - **Post-regeneration:**
+            - Import test for all dependencies
+            - Version compatibility verification
+            - Runtime detection (GPU/CPU, memory requirements)
+            - Block execution dry-run test
+    *   [ ] Create structured logging system:
+        - JSON-formatted logs with timestamps
+        - Step-by-step regeneration progress
+        - Error categorization and recovery suggestions
+        - Log rotation (keep last 10 regenerations)
+    *   [ ] Add API endpoints:
+        - `/blocks/regenerate-venv/` - Trigger venv regeneration
+        - `/blocks/venv-logs/` - Retrieve regeneration logs
+        - `/blocks/venv-status/` - Get current venv status
+
+### Task 3.3: Frontend Editor Enhancements
+*   **Action:** Improve the code editor UI with advanced features
+*   **Details:**
+    *   [ ] **Error Display Panel:**
+        - Add collapsible error panel at editor bottom
+        - Scrollable area for multiple errors
+        - Error categorization (Syntax, Import, Type, Docstring, Runtime)
+        - Click-to-navigate to error line
+        - Detailed error explanations with fix suggestions
+    *   [ ] **Enhanced Linting Integration:**
+        - WebSocket connection for real-time validation
+        - Display Python AST errors inline
+        - Show import resolution errors
+        - Type checking with mypy integration
+        - Quick-fix suggestions via CodeMirror
+    *   [ ] **Intelligent Code Completion:**
+        - Dynamic completions from backend analysis
+        - Import auto-completion with installed packages
+        - Method/attribute completions for classes
+        - Parameter hints with type information
+        - Docstring template generation
+    *   [ ] **UI Status Indicators:**
+        - Virtual environment health status
+        - Regeneration progress bar
+        - "View Logs" button in block menu
+        - Dependency list viewer
+        - Code formatting button
+
+### Task 3.4: Docstring Validation System
+*   **Action:** Implement comprehensive docstring validation for AtlasVibe blocks
+*   **Details:**
+    *   [ ] Validate NumPy-style format requirements:
+        - Short description on first line
+        - Parameters section with proper formatting
+        - Returns section with type information
+        - Proper indentation and spacing
+    *   [ ] Generate helpful error messages:
+        - "Missing Parameters section in docstring"
+        - "Parameter 'x' in function signature not documented"
+        - "Invalid parameter format, expected 'name : type'"
+        - "Returns section missing type information"
+    *   [ ] Provide auto-fix suggestions and templates
+
+### Task 3.5: Comprehensive Testing Suite
+*   **Action:** Create extensive Playwright tests for all editor features
+*   **Test Scenarios:**
+    *   [ ] **Basic Editor Functionality:**
+        - Code editing and saving
+        - Syntax highlighting
+        - Undo/redo operations
+    *   [ ] **Linting and Validation:**
+        - Syntax error detection
+        - Import error handling
+        - Docstring validation
+        - Real-time error updates
+    *   [ ] **Code Completion:**
+        - Keyword completion
+        - Import suggestions
+        - Method completions
+        - Parameter hints
+    *   [ ] **Error Panel:**
+        - Error display and navigation
+        - Multiple error handling
+        - Error filtering
+    *   [ ] **Venv Management:**
+        - Regeneration workflow
+        - Progress indication
+        - Error recovery
+        - Log viewing
+    *   [ ] **Edge Cases:**
+        - Large files (>10k lines)
+        - Malformed Python code
+        - Network failures during package installation
+        - Disk space exhaustion
+        - Permission errors
+        - Unicode and special characters
+
+### Task 3.6: Error Message Guidelines
+*   **Action:** Create user-friendly error messages
+*   **Categories:**
+    *   **Syntax Errors:** Clear indication of what's wrong and how to fix
+    *   **Import Errors:** Suggest package installation or correct import path
+    *   **Type Errors:** Explain type mismatches with examples
+    *   **Docstring Errors:** Show correct format with templates
+    *   **Venv Errors:** Actionable steps for resolution
+
+## Phase 4: AI Agent Capabilities (Future - Placeholder)
 
 This phase will focus on the long-term goal of transforming nodes into AI agents capable of generating their own Python code.
 
-*   **Task 3.1: Research and Prototyping**
+*   **Task 4.1: Research and Prototyping**
     *   Investigate suitable LLMs or code generation models.
     *   Define interaction protocols for agents.
     *   Develop UI/UX for managing AI-driven code generation (prompts, suggestions, versioning).
-*   **Detailed planning for this phase will occur after Phases 1 and 2 are substantially complete.**
+*   **Detailed planning for this phase will occur after Phases 1, 2, and 3 are substantially complete.**
 
 ## Phase 4: Simplified Packaging and Distribution ✅ COMPLETED
 
