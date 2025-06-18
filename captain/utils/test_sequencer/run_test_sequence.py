@@ -5,6 +5,7 @@ import time
 import traceback
 from typing import Callable, List, Union
 import pydantic
+from pathlib import Path
 from captain.internal.manager import TSManager
 from captain.models.test_sequencer import (
     IfNode,
@@ -24,6 +25,47 @@ from captain.utils.time_utils import utcnow_str
 
 # Cloud functionality removed
 test_sequencer = None
+
+
+def validate_test_path(path: str) -> str:
+    """Validate and sanitize test file path to prevent security issues.
+
+    Args:
+        path: The file path to validate
+
+    Returns:
+        The validated absolute path
+
+    Raises:
+        ValueError: If the path is invalid or potentially dangerous
+    """
+    # Convert to Path object for better handling
+    try:
+        test_path = Path(path).resolve()
+    except Exception as e:
+        raise ValueError(f"Invalid path format: {e}")
+
+    # Check if path exists
+    if not test_path.exists():
+        raise ValueError(f"Path does not exist: {test_path}")
+
+    # Check if it's a file (not a directory)
+    if not test_path.is_file():
+        raise ValueError(f"Path is not a file: {test_path}")
+
+    # Check for suspicious patterns
+    path_str = str(test_path)
+    if any(
+        dangerous in path_str for dangerous in ["/etc/", "/root/", "/proc/", "/sys/"]
+    ):
+        raise ValueError(f"Path contains potentially dangerous location: {test_path}")
+
+    # Ensure the file has a valid extension for tests
+    valid_extensions = {".py", ".robot"}
+    if test_path.suffix not in valid_extensions:
+        raise ValueError(f"Invalid file extension. Must be one of {valid_extensions}")
+
+    return str(test_path)
 
 
 class TestResult:
@@ -106,29 +148,45 @@ def _run_python(node: TestNode) -> Extract:
         str: error message if any
     """
     start_time = time.time()
-    logger.info(f"[Python Runner] Running {node.path}")
-    result = subprocess.run(
-        ["python", node.path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    logger.info(f"[Python Runner] Running {result}")
-    end_time = time.time()
-    if result.returncode == 0:
-        is_pass = True
-    else:
-        logger.info(
-            f"TEST {node.path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+    try:
+        # Validate the path before running
+        validated_path = validate_test_path(node.path)
+        logger.info(f"[Python Runner] Running {validated_path}")
+        result = subprocess.run(
+            ["python", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        is_pass = False
-    return (
-        lambda _: None,
-        TestResult(
-            node,
-            is_pass,
-            end_time - start_time,
-            result.stderr.decode() if not is_pass else None,
-            utcnow_str(),
-        ),
-    )
+        logger.info(f"[Python Runner] Running {result}")
+        end_time = time.time()
+        if result.returncode == 0:
+            is_pass = True
+        else:
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
+            is_pass = False
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                is_pass,
+                end_time - start_time,
+                result.stderr.decode() if not is_pass else None,
+                utcnow_str(),
+            ),
+        )
+    except ValueError as e:
+        end_time = time.time()
+        logger.error(f"Path validation failed for {node.path}: {e}")
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                False,
+                end_time - start_time,
+                f"Path validation error: {e}",
+                utcnow_str(),
+            ),
+        )
 
 
 @_with_stream_test_result
@@ -141,28 +199,44 @@ def _run_pytest(node: TestNode) -> Extract:
         str: error message if any
     """
     start_time = time.time()
-    result = subprocess.run(
-        ["pytest", node.path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    end_time = time.time()
-
-    if result.returncode == 0:
-        is_pass = True
-    else:
-        logger.info(
-            f"TEST {node.path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+    try:
+        # Validate the path before running
+        validated_path = validate_test_path(node.path)
+        result = subprocess.run(
+            ["pytest", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        is_pass = False
-    return (
-        lambda _: None,
-        TestResult(
-            node,
-            is_pass,
-            end_time - start_time,
-            result.stdout.decode() if not is_pass else None,
-            utcnow_str(),
-        ),
-    )
+        end_time = time.time()
+
+        if result.returncode == 0:
+            is_pass = True
+        else:
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
+            is_pass = False
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                is_pass,
+                end_time - start_time,
+                result.stdout.decode() if not is_pass else None,
+                utcnow_str(),
+            ),
+        )
+    except ValueError as e:
+        end_time = time.time()
+        logger.error(f"Path validation failed for {node.path}: {e}")
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                False,
+                end_time - start_time,
+                f"Path validation error: {e}",
+                utcnow_str(),
+            ),
+        )
 
 
 @_with_stream_test_result
@@ -197,31 +271,61 @@ def _run_robotframework(node: TestNode) -> Extract:
         str: error message if any
     """
     start_time = time.time()
-    logger.info(f"[Robot Framework Runner] Running {node.path}")
-    if node.args is not None:
-        cmd = ["robot", "--test", *node.args, node.path]
-    else:
-        cmd = ["robot", node.path]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    logger.info(f"[Robot Framework Runner] Running {result}")
-    end_time = time.time()
-    if result.returncode == 0:
-        is_pass = True
-    else:
-        logger.info(
-            f"TEST {node.path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+    try:
+        # Validate the path before running
+        validated_path = validate_test_path(node.path)
+        logger.info(f"[Robot Framework Runner] Running {validated_path}")
+
+        # Validate args if present
+        if node.args is not None:
+            # Filter out any potentially dangerous args
+            safe_args = []
+            for arg in node.args:
+                # Skip args that could be dangerous
+                if not any(
+                    danger in str(arg)
+                    for danger in ["..", ";", "|", "&", ">", "<", "`", "$"]
+                ):
+                    safe_args.append(arg)
+                else:
+                    logger.warning(f"Skipping potentially dangerous argument: {arg}")
+            cmd = ["robot", "--test", *safe_args, validated_path]
+        else:
+            cmd = ["robot", validated_path]
+
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.info(f"[Robot Framework Runner] Running {result}")
+        end_time = time.time()
+        if result.returncode == 0:
+            is_pass = True
+        else:
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
+            is_pass = False
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                is_pass,
+                end_time - start_time,
+                result.stderr.decode() if not is_pass else None,
+                utcnow_str(),
+            ),
         )
-        is_pass = False
-    return (
-        lambda _: None,
-        TestResult(
-            node,
-            is_pass,
-            end_time - start_time,
-            result.stderr.decode() if not is_pass else None,
-            utcnow_str(),
-        ),
-    )
+    except ValueError as e:
+        end_time = time.time()
+        logger.error(f"Path validation failed for {node.path}: {e}")
+        return (
+            lambda _: None,
+            TestResult(
+                node,
+                False,
+                end_time - start_time,
+                f"Path validation error: {e}",
+                utcnow_str(),
+            ),
+        )
 
 
 def _eval_condition(

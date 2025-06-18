@@ -31,11 +31,13 @@ class DefaultDeviceFinder:
 
         while True:
             camera = cv2.VideoCapture(i)
-            if not camera.read()[0]:
-                break
-            else:
-                cameras.append(i)
-            camera.release()
+            try:
+                if not camera.read()[0]:
+                    break
+                else:
+                    cameras.append(i)
+            finally:
+                camera.release()
             i += 1
 
         return [CameraDevice(name=f"Camera {i}", id=i) for i in cameras]
@@ -63,6 +65,7 @@ class DefaultDeviceFinder:
         for addr in rm.list_resources():
             if addr in used_addrs:
                 continue
+            device = None
             try:
                 device = rm.open_resource(addr)
                 devices.append(
@@ -72,10 +75,12 @@ class DefaultDeviceFinder:
                         description=device.query("*IDN?"),
                     )
                 )
-                device.close()
                 used_addrs.add(addr)
             except (pyvisa.VisaIOError, serial.serialutil.SerialException):
                 pass
+            finally:
+                if device is not None:
+                    device.close()
 
         return devices
 
@@ -151,15 +156,19 @@ class MacDeviceFinder(DefaultDeviceFinder):
         rm = pyvisa.ResourceManager("@py")
         devices = []
 
-        result = subprocess.run(["arp", "-a"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["arp", "-a"], capture_output=True, text=True, check=False
+        )
         if result.returncode != 0:
             return devices
-        
+
         for device in result.stdout.splitlines():
             try:
                 ip = device.split(maxsplit=4)[1].strip("()").split(".")
                 valid_addr = (
-                    ip[0] == "169" and ip[1] == "254" and f"{ip[2]}.{ip[3]}" != "255.255"
+                    ip[0] == "169"
+                    and ip[1] == "254"
+                    and f"{ip[2]}.{ip[3]}" != "255.255"
                 )
                 if not valid_addr:
                     continue
@@ -167,6 +176,7 @@ class MacDeviceFinder(DefaultDeviceFinder):
                 continue
 
             addr = f"TCPIP::169.254.{ip[2]}.{ip[3]}::INSTR"
+            inst = None
             try:
                 inst = rm.open_resource(addr)
                 devices.append(
@@ -176,10 +186,11 @@ class MacDeviceFinder(DefaultDeviceFinder):
                         description=inst.query("*IDN?"),
                     )
                 )
-
-                inst.close()
             except pyvisa.VisaIOError:
                 pass
+            finally:
+                if inst is not None:
+                    inst.close()
 
         return devices
 

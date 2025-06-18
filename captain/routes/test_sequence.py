@@ -41,6 +41,28 @@ class DiscoverParams(BaseModel):
     path: str
     one_file: bool = Field(..., alias="oneFile")
 
+    @pydantic.field_validator("path")
+    @classmethod
+    def validate_path(cls, v: str) -> str:
+        """Validate path to prevent directory traversal attacks."""
+        # Convert to absolute path and resolve any .. or . components
+        import os
+
+        abs_path = os.path.abspath(v)
+
+        # Check if path contains suspicious patterns
+        if ".." in v or v.startswith("/etc") or v.startswith("/root"):
+            raise ValueError("Invalid path: potential security risk")
+
+        # Ensure file exists and is readable
+        if not os.path.exists(abs_path):
+            raise ValueError(f"Path does not exist: {abs_path}")
+
+        if not os.access(abs_path, os.R_OK):
+            raise ValueError(f"Path is not readable: {abs_path}")
+
+        return abs_path
+
 
 @router.get("/discover/pytest/")
 async def discover_pytest(params: DiscoverParams = Depends()):
