@@ -33,7 +33,6 @@ import subprocess
 import sys
 import threading
 import traceback
-import venv
 from collections.abc import Iterable, Mapping
 from contextlib import ExitStack, contextmanager
 from functools import wraps
@@ -118,12 +117,18 @@ def _bootstrap_venv(
                 f"For some reason, the virtual environment at {venv_path} was found to be incomplete. Deleting the virtual environment and creating a new one..."
             )
             shutil.rmtree(venv_path, ignore_errors=True)
-            logger.info(f"Creating new virtual environment at {venv_path}...")
-            venv.create(venv_path, with_pip=True)
+            logger.info(f"Creating new virtual environment at {venv_path} using uv...")
+            # Use uv to create virtual environment
+            cmd = ["uv", "venv", str(venv_path)]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.error(f"Failed to create virtual environment with uv: {result.stderr}")
+                raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
         # At this point, the venv should be created and
         # _get_venv_executable_path should return a valid path (with symlinks resolved)
         venv_executable = _get_venv_executable_path(venv_path)
-        command = [venv_executable, "-m", "pip", "install"]
+        # Use uv pip to install dependencies
+        command = ["uv", "pip", "install", "--python", str(venv_executable)]
         if not verbose:
             command += ["-q", "-q"]
         command += list(pip_dependencies)

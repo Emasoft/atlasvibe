@@ -1983,124 +1983,481 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 - **ONNX_MODEL**: Improving error handling for invalid inputs
 - **TORCHSCRIPT_CLASSIFIER**: Fixing virtual environment creation in tests
 
-## Virtual Environment Management with uv for AtlasVibe Blocks
+## Comprehensive uv Guide for AtlasVibe Development
 
 ### Overview
-Each AtlasVibe block runs in its own isolated virtual environment managed by `uv`. This ensures complete dependency isolation and prevents conflicts between blocks.
+uv is a fast Python package and project manager that replaces pip, pip-tools, pipx, poetry, pyenv, virtualenv, and more. AtlasVibe uses uv exclusively for all Python environment management, dependency resolution, and package building.
 
-### Sequence of Operations for Virtual Environment Setup
+### Core Concepts
 
-#### 1. **Create Virtual Environment**
+#### 1. **Virtual Environment Management**
+
+##### Environment Discovery Order
+uv searches for environments in this sequence:
+1. Active `VIRTUAL_ENV` environment variable
+2. Active Conda environment
+3. `.venv` in current or parent directory
+4. Prompts to create environment if none found
+
+##### Creating Environments
 ```bash
-# Basic creation
-uv venv /path/to/block/.venv
+# Create in default .venv directory
+uv venv
 
-# With specific Python version
-uv venv /path/to/block/.venv --python 3.11
+# Specify custom path
+uv venv /path/to/env
 
-# With automatic Python download if needed
-uv venv /path/to/block/.venv --python 3.11 --managed-python
+# With specific Python version (downloads if needed)
+uv venv --python 3.11
+
+# With exact Python version
+uv venv --python 3.11.6
+
+# With Python version constraints
+uv venv --python ">=3.11,<3.12"
+
+# From specific Python executable
+uv venv --python /opt/homebrew/bin/python3
 ```
 
-#### 2. **Install Dependencies**
+##### Key Differences from Traditional venv
+- **No activation script needed** - Use `export VIRTUAL_ENV=.venv` or `uv run`
+- **Faster operations** - Global cache with hard links
+- **Automatic Python management** - Downloads Python versions as needed
+- **Better dependency resolution** - More robust resolver than pip
+
+#### 2. **Package Management with uv pip**
+
+##### Installing Packages
 ```bash
-# Set VIRTUAL_ENV to tell uv which environment to use
-export VIRTUAL_ENV=/path/to/block/.venv
+# Single package
+uv pip install flask
 
-# Install from requirements.txt
-uv pip install -r requirements.txt
+# Multiple packages
+uv pip install flask ruff pytest
 
-# Install individual packages
-uv pip install numpy pandas scikit-learn
+# With version constraints
+uv pip install 'ruff>=0.2.0' 'flask==2.3.0'
 
-# Install with version constraints
-uv pip install "numpy>=1.20,<2.0"
+# From different sources
+uv pip install git+https://github.com/astral-sh/ruff
+uv pip install "ruff @ ./projects/ruff"
+uv pip install git+https://github.com/astral-sh/ruff@main
+
+# With extras/optional dependencies
+uv pip install "flask[dotenv]"
+uv pip install -r pyproject.toml --extra dev
+uv pip install -r pyproject.toml --all-extras
+
+# Editable installs
+uv pip install -e .
+uv pip install -e "ruff @ ./project/ruff"
 ```
 
-#### 3. **Run Commands in Virtual Environment**
+##### Uninstalling Packages
 ```bash
-# Using uv run (recommended)
-uv run --python /path/to/block/.venv/bin/python python script.py
-
-# Or set VIRTUAL_ENV and use uv pip directly
-export VIRTUAL_ENV=/path/to/block/.venv
-uv pip list
+uv pip uninstall flask
+uv pip uninstall flask ruff pytest
 ```
 
-#### 4. **Check Virtual Environment Status**
+##### Inspecting Environments
 ```bash
 # List installed packages
-export VIRTUAL_ENV=/path/to/block/.venv
+uv pip list
 uv pip list --format json
 
-# Check Python version
-uv run --python /path/to/block/.venv/bin/python python --version
+# Generate requirements file
+uv pip freeze > requirements.txt
+
+# Show package details
+uv pip show numpy pandas
+
+# Display dependency tree
+uv pip tree
+
+# Check for conflicts
+uv pip check
 ```
 
-### Key Differences from Standard venv/pip
+#### 3. **Project Management**
 
-1. **No activation needed**: Instead of `source .venv/bin/activate`, use:
-   - `export VIRTUAL_ENV=/path/to/.venv` for uv pip commands
-   - `uv run --python /path/to/.venv/bin/python` for running scripts
+##### Creating Projects
+```bash
+# Create application project
+uv init --app
 
-2. **Faster operations**: uv caches packages globally and uses hard links
+# Create library project
+uv init --lib
 
-3. **Automatic Python management**: uv can download and install Python versions
+# With specific Python version
+uv init --python 3.11
 
-4. **Better dependency resolution**: uv uses a more robust resolver than pip
+# With specific build backend
+uv init --build-backend setuptools  # or hatch, flit, pdm, poetry, maturin
+```
 
-### AtlasVibe-Specific Implementation
+##### Project Structure
+```
+.
+├── .venv/              # Virtual environment (auto-created)
+├── .python-version     # Python version pin
+├── README.md          # Project readme
+├── pyproject.toml     # Project metadata and dependencies
+├── uv.lock            # Lockfile for reproducible installs
+└── src/               # Source code (for libraries)
+    └── my_package/
+        └── __init__.py
+```
 
-The `VenvManager` class in `/captain/utils/venv_manager.py` handles all virtual environment operations:
+##### Configuration Files
 
-1. **Pre-checks**:
-   - Python version compatibility
-   - Disk space availability
-   - Write permissions
-   - uv tool availability
+###### pyproject.toml Structure
+```toml
+[project]
+name = "atlasvibe"
+version = "0.1.0"
+description = "Visual programming IDE for Python"
+requires-python = ">=3.8"
+dependencies = [
+    "fastapi>=0.100.0",
+    "pydantic>=2.0",
+    "numpy>=1.24.0",
+]
 
-2. **Creation**:
-   ```python
-   cmd = ["uv", "venv", str(venv_path)]
-   if python_version:
-       cmd.extend(["--python", python_version])
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.1.0"]
+plot = ["matplotlib", "seaborn"]
+
+[dependency-groups]
+test = ["pytest>=7.0", "pytest-cov"]
+lint = ["ruff>=0.5.0", "mypy>=1.0"]
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+# uv-specific configuration
+dev-dependencies = ["pytest>=7.0.0", "mypy>=1.0.0"]
+managed = true  # Let uv manage the environment
+
+[tool.uv.sources]
+my-package = { workspace = true }
+custom-lib = { path = "./libs/custom" }
+```
+
+###### uv.toml (Optional, takes precedence over pyproject.toml)
+```toml
+# Index configuration
+[[index]]
+url = "https://test.pypi.org/simple"
+default = true
+
+# Resolution preferences
+resolution = "lowest-direct"  # or "highest", "lowest"
+prerelease = "if-necessary"   # or "allow", "disallow"
+
+# Environment constraints
+constraint-dependencies = ["numpy<2.0"]
+```
+
+#### 4. **Dependency Management**
+
+##### Adding Dependencies
+```bash
+# Add to project
+uv add numpy pandas
+
+# Add development dependencies
+uv add --dev pytest ruff
+
+# Add to optional dependencies
+uv add --optional plot matplotlib seaborn
+
+# Add with version constraints
+uv add "fastapi>=0.100.0,<1.0.0"
+
+# Add from git
+uv add git+https://github.com/user/repo
+```
+
+##### Syncing Environment
+```bash
+# Sync all dependencies
+uv sync
+
+# Sync with extras
+uv sync --extra dev
+uv sync --all-extras
+
+# Sync specific groups
+uv sync --group test
+uv sync --only-group lint
+
+# Frozen sync (exact versions from lock)
+uv sync --frozen
+
+# Keep extra packages
+uv sync --inexact
+```
+
+##### Compilation and Locking
+```bash
+# Compile requirements
+uv pip compile pyproject.toml -o requirements.txt
+uv pip compile requirements.in -o requirements.txt
+
+# Compile with extras
+uv pip compile pyproject.toml --extra dev -o requirements-dev.txt
+
+# Update specific packages
+uv pip compile --upgrade-package numpy
+
+# Lock all dependencies
+uv lock
+uv lock --upgrade  # Upgrade all
+uv lock --upgrade-package numpy  # Upgrade specific
+```
+
+#### 5. **Running Commands with uv run**
+
+```bash
+# Run in project environment
+uv run python script.py
+uv run pytest
+
+# Run with specific Python
+uv run --python 3.11 python script.py
+
+# Run with additional dependencies
+uv run --with httpx python -c "import httpx"
+
+# Run module
+uv run -m pytest
+
+# Run script with inline dependencies
+uv run --with 'numpy>=1.20' --with pandas script.py
+
+# Run in specific package (workspace)
+uv run --package my-package pytest
+```
+
+#### 6. **Building Packages**
+
+```bash
+# Build wheel and sdist
+uv build
+
+# Build only wheel
+uv build --wheel
+
+# Build only source distribution
+uv build --sdist
+
+# Build with constraints
+uv build --build-constraint constraints.txt
+
+# Build specific package in workspace
+uv build --package my-package
+```
+
+#### 7. **Workspace Management**
+
+##### Workspace Configuration
+```toml
+# In root pyproject.toml
+[tool.uv.workspace]
+members = ["packages/*", "apps/*"]
+exclude = ["packages/experimental"]
+```
+
+##### Workspace Commands
+```bash
+# Sync entire workspace
+uv sync --all-packages
+
+# Build all packages
+uv build --all-packages
+
+# Run in specific package context
+uv run --package backend pytest
+```
+
+#### 8. **Dependency Resolution**
+
+##### Resolution Strategies
+- `highest` (default): Latest compatible versions
+- `lowest`: Minimum compatible versions
+- `lowest-direct`: Lowest for direct deps, latest for transitive
+
+##### Platform-Specific Resolution
+```bash
+# Resolve for specific platform
+uv pip compile --python-platform windows
+
+# Resolve for specific Python version
+uv pip compile --python-version 3.9
+```
+
+##### Prerelease Handling
+- Default: Only if no stable version exists
+- `--prerelease allow`: Consider all prereleases
+- `--prerelease disallow`: Never use prereleases
+
+### AtlasVibe-Specific Patterns
+
+#### Block Virtual Environment Management
+Each AtlasVibe block runs in its own isolated environment:
+
+```python
+# VenvManager implementation pattern
+class VenvManager:
+    def create_venv(self, block_path: Path, python_version: str = None):
+        venv_path = block_path / ".venv"
+        cmd = ["uv", "venv", str(venv_path)]
+        if python_version:
+            cmd.extend(["--python", python_version])
+        subprocess.run(cmd, check=True)
+        
+    def install_dependencies(self, venv_path: Path, deps: List[str]):
+        env = {**os.environ, "VIRTUAL_ENV": str(venv_path)}
+        subprocess.run(
+            ["uv", "pip", "install"] + deps,
+            env=env,
+            check=True
+        )
+```
+
+#### Project Development Workflow
+```bash
+# Initial setup
+uv python install 3.11
+uv venv
+uv sync --all-extras --dev
+
+# Development
+uv run python main.py          # Backend
+uv run pnpm run dev          # Frontend
+
+# Testing
+uv run pytest
+uv run mypy .
+
+# Building
+uv build
+```
+
+### Configuration Best Practices
+
+#### 1. **Configuration Hierarchy**
+- Command-line arguments (highest priority)
+- Environment variables
+- Project-level config (pyproject.toml, uv.toml)
+- User-level config (~/.config/uv/uv.toml)
+- System-level config (/etc/uv/uv.toml)
+
+#### 2. **Essential Settings**
+```toml
+# In pyproject.toml
+[tool.uv]
+# Resolution preferences
+resolution = "highest"
+prerelease = "if-necessary-or-explicit"
+
+# Performance
+link-mode = "hardlink"  # or "copy", "clone", "symlink"
+cache-dir = "/custom/cache/path"
+
+# Index configuration
+index-url = "https://pypi.org/simple"
+extra-index-url = ["https://custom.index/simple"]
+
+# Build settings
+no-build-isolation = false
+no-binary = ["package-name"]  # Force building from source
+```
+
+### GitHub Actions Integration
+
+```yaml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.13"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: Install dependencies
+        run: uv sync --locked --all-extras --dev
+      - name: Run tests
+        run: uv run pytest
+```
+
+### Pre-commit Integration
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.13
+    hooks:
+      - id: uv-lock
+      - id: uv-export
+        args: ["--format", "requirements.txt"]
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **uv not found**
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   # Or via pip
+   pip install uv
    ```
 
-3. **Dependency Installation**:
-   ```python
-   # Write requirements.txt
-   with open(requirements_file, 'w') as f:
-       f.write('\n'.join(dependencies))
+2. **Python version not available**
+   ```bash
+   uv python install 3.11
+   uv python list --all-versions
+   ```
+
+3. **Dependency conflicts**
+   ```bash
+   # Show resolution details
+   uv pip compile --verbose
    
-   # Install with uv
-   subprocess.run(
-       ["uv", "pip", "install", "-r", str(requirements_file)],
-       env={**os.environ, "VIRTUAL_ENV": str(venv_path)}
-   )
+   # Use constraints
+   echo "numpy<2.0" > constraints.txt
+   uv pip install -c constraints.txt
    ```
 
-4. **Verification**:
-   ```python
-   # Run import test
-   subprocess.run(
-       ["uv", "run", "--python", python_path, "python", "-c", f"import {package}"],
-       cwd=block_path
-   )
+4. **Cache issues**
+   ```bash
+   uv cache clean
+   uv cache prune  # Remove unused entries
    ```
 
-### Best Practices
+5. **Platform-specific issues**
+   ```bash
+   # Force specific platform
+   uv pip install --python-platform macos --python-version 3.11
+   ```
 
-1. **Always use uv commands**: Never use pip directly
-2. **Set cwd for block operations**: Always run commands with `cwd=block_path`
-3. **Use VIRTUAL_ENV environment variable**: Required for uv pip commands
-4. **Check uv availability first**: Ensure uv is installed before operations
-5. **Handle timeouts**: Set appropriate timeouts for long-running operations
-6. **Log all operations**: Keep detailed logs for debugging
+### Key Advantages of uv
 
-### Common Issues and Solutions
-
-1. **uv not found**: Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
-2. **Python version not available**: Use `uv python install 3.11` to install
-3. **Permission errors**: Ensure write access to block directory
-4. **Import failures**: Check package name vs import name mappings
+1. **Speed**: 10-100x faster than pip
+2. **Correctness**: Better dependency resolver
+3. **Reproducibility**: Lockfiles ensure consistent installs
+4. **Simplicity**: Single tool replaces many
+5. **Cross-platform**: Universal lockfiles work everywhere
+6. **Python management**: Automatic Python installation
+7. **Space efficient**: Global cache with hard links
 
