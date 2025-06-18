@@ -85,6 +85,13 @@ test.describe("Enhanced Editor Features", () => {
   let page: Page;
 
   test.beforeAll(async () => {
+    // Clean up any existing test directory
+    try {
+      rmSync(TEST_PROJECT_PATH.replace('.atlasvibe', ''), { recursive: true, force: true });
+    } catch (e) {
+      // Ignore if doesn't exist
+    }
+    
     // Create test project structure
     const projectData = {
       version: "2.0.0",
