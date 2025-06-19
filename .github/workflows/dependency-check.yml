@@ -1,0 +1,156 @@
+name: Dependency Analysis
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'pyproject.toml'
+      - 'requirements*.txt'
+      - '**.py'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'pyproject.toml'
+      - 'requirements*.txt'
+      - '**.py'
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deptry:
+    name: Check Python Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --locked --all-extras --dev
+
+      - name: Run deptry
+        id: deptry
+        continue-on-error: true
+        run: |
+          uv run deptry . \
+            --extend-exclude "tests" \
+            --extend-exclude ".*_test.*\.py" \
+            --extend-exclude "node_modules" \
+            --extend-exclude "playwright-test" \
+            --extend-exclude "examples" \
+            --extend-exclude "public" \
+            --extend-exclude "out" \
+            --extend-exclude "dist" \
+            --extend-exclude "PYTHON/tests" \
+            --known-first-party atlasvibe \
+            --known-first-party atlasvibe_sdk \
+            --known-first-party atlasvibe_engine \
+            --known-first-party atlasvibe_cli \
+            --known-first-party captain \
+            --known-first-party cli \
+            --ignore DEP003 \
+            --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
+            --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> $GITHUB_ENV
+
+      - name: Upload deptry report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deptry-report
+          path: deptry-report.json
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && env.DEPTRY_FAILED == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let report = {};
+            try {
+              const reportContent = fs.readFileSync('deptry-report.json', 'utf8');
+              report = JSON.parse(reportContent);
+            } catch (e) {
+              console.log('Could not read deptry report:', e);
+            }
+            
+            const output = `
+            ### 📦 Dependency Analysis Results
+            
+            deptry found some potential dependency issues. Please review:
+            
+            **Summary:**
+            - Missing dependencies (DEP001): ${report.DEP001?.length || 0} issues
+            - Unused dependencies (DEP002): ${report.DEP002?.length || 0} issues
+            - Transitive dependencies (DEP003): ${report.DEP003?.length || 0} issues
+            - Misplaced dev dependencies (DEP004): ${report.DEP004?.length || 0} issues
+            
+            **Note:** Many of these might be false positives due to:
+            - Dynamic imports in blocks
+            - Optional dependencies for specific features
+            - Development tools that are used indirectly
+            
+            To see the full report, check the workflow artifacts or run locally:
+            \`\`\`bash
+            uv run deptry .
+            \`\`\`
+            
+            If these are false positives, you can update the ignore lists in:
+            - \`.github/workflows/dependency-check.yml\`
+            - \`.git/hooks/pre-commit\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Create issue on scheduled run failure
+        if: github.event_name == 'schedule' && env.DEPTRY_FAILED == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = '📦 Weekly Dependency Check Found Issues';
+            const body = `
+            ## Dependency Analysis Report
+            
+            The weekly dependency check found potential issues that need review.
+            
+            **Action Required:**
+            1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            2. Check if dependencies need to be added or removed
+            3. Update ignore lists if these are false positives
+            
+            Run locally to see details:
+            \`\`\`bash
+            uv run deptry .
+            \`\`\`
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['dependencies', 'maintenance']
+            });
