@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/renderer/components/ui/table";
 import { useCallback, useEffect, useState } from "react";
-import { PoetryGroupInfo, PythonDependency } from "src/types/poetry";
+import { DependencyGroupInfo, PythonDependency } from "src/types/dependencies";
 import { Input } from "@/renderer/components/ui/input";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
@@ -31,7 +31,7 @@ const DepManagerModal = () => {
     [],
   );
   const [installDependency, setInstallDependency] = useState<string>("");
-  const [depGroups, setDepGroups] = useState<PoetryGroupInfo[]>([]);
+  const [depGroups, setDepGroups] = useState<DependencyGroupInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFetching, setIsFetching] = useState<boolean>(true);
   const [msg, setMsg] = useState<string>("");
@@ -48,9 +48,9 @@ const DepManagerModal = () => {
   const handleUpdate = useCallback(async () => {
     setIsFetching(true);
     setMsg("Fetching dependencies...");
-    const deps = await window.api.poetryShowTopLevel();
-    const userDeps = await window.api.poetryShowUserGroup();
-    const groups = await window.api.poetryGetGroupInfo();
+    const deps = await window.api.uvShowTopLevel();
+    const userDeps = await window.api.uvShowUserGroup();
+    const groups = await window.api.uvGetGroupInfo();
     setAllDependencies(deps);
     setUserDependencies(userDeps);
     setDepGroups(groups);
@@ -60,7 +60,7 @@ const DepManagerModal = () => {
   const handleGroupInstall = useCallback(async (groupName: string) => {
     setMsg(`Installing ${groupName} ...`);
     setIsLoading(true);
-    await window.api.poetryInstallDepGroup(groupName);
+    await window.api.uvInstallDepGroup(groupName);
     await handleUpdate();
     setIsLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,7 +70,7 @@ const DepManagerModal = () => {
     setMsg(`Installing ${depName} ...`);
     setIsLoading(true);
     try {
-      await window.api.poetryInstallDepUserGroup(depName);
+      await window.api.uvInstallDepUserGroup(depName);
     } catch (e) {
       toast.error(`Error installing ${depName}.`);
     }
@@ -82,7 +82,7 @@ const DepManagerModal = () => {
   const handleGroupUninstall = useCallback(async (groupName: string) => {
     setMsg(`Removing ${groupName} ...`);
     setIsLoading(true);
-    await window.api.poetryUninstallDepGroup(groupName);
+    await window.api.uvUninstallDepGroup(groupName);
     await handleUpdate();
     setIsLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,7 +92,7 @@ const DepManagerModal = () => {
     setMsg(`Removing ${depName} ...`);
     setIsLoading(true);
     try {
-      await window.api.poetryUninstallDepUserGroup(depName);
+      await window.api.uvUninstallDepUserGroup(depName);
     } catch (e) {
       toast.error(`Error uninstalling ${depName}.`);
     }
@@ -101,7 +101,7 @@ const DepManagerModal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getButtonLabel = useCallback((status: PoetryGroupInfo["status"]) => {
+  const getButtonLabel = useCallback((status: DependencyGroupInfo["status"]) => {
     switch (status) {
       case "installed":
         return "Uninstall";

@@ -115,7 +115,7 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.checkPythonInstallation, checkPythonInstallation);
   ipcMain.handle(API.installPipx, installUv); // Keep API name for compatibility
   ipcMain.handle(API.pipxEnsurepath, uvEnsurepath); // Keep API name for compatibility
-  ipcMain.handle(API.installPoetry, ensureUvEnvironment); // Keep API name for compatibility
+  ipcMain.handle(API.installUv, ensureUvEnvironment);
   ipcMain.handle(API.installDependencies, installDependencies);
   ipcMain.handle(API.writeFileSync, writeFileSync);
   ipcMain.handle(API.spawnCaptain, spawnCaptain);
@@ -133,23 +133,23 @@ export const registerIpcMainHandlers = () => {
     app.exit();
   });
 
-  // Keep Poetry API names for compatibility but use uv functions
-  ipcMain.handle(API.poetryShowTopLevel, uvShowTopLevel);
-  ipcMain.handle(API.poetryShowUserGroup, uvShowUserGroup);
-  ipcMain.handle(API.poetryGetGroupInfo, uvGetGroupInfo);
-  ipcMain.handle(API.poetryInstallDepGroup, (_, group) => {
+  // UV package management handlers
+  ipcMain.handle(API.uvShowTopLevel, uvShowTopLevel);
+  ipcMain.handle(API.uvShowUserGroup, uvShowUserGroup);
+  ipcMain.handle(API.uvGetGroupInfo, uvGetGroupInfo);
+  ipcMain.handle(API.uvInstallDepGroup, (_, group) => {
     return uvInstallDepGroup(group);
   });
-  ipcMain.handle(API.poetryUninstallDepGroup, (_, group) => {
+  ipcMain.handle(API.uvUninstallDepGroup, (_, group) => {
     return uvUninstallDepGroup(group);
   });
-  ipcMain.handle(API.poetryUninstallDepUserGroup, (_, dep) => {
+  ipcMain.handle(API.uvUninstallDepUserGroup, (_, dep) => {
     return uvUninstallDepUserGroup(dep);
   });
-  ipcMain.handle(API.poetryInstallDepUserGroup, (_, dep) => {
+  ipcMain.handle(API.uvInstallDepUserGroup, (_, dep) => {
     return uvInstallDepUserGroup(dep);
   });
-  ipcMain.handle(API.poetryInstallRequirementsUserGroup, (_, filePath) => {
+  ipcMain.handle(API.uvInstallRequirementsUserGroup, (_, filePath) => {
     return uvInstallRequirementsUserGroup(filePath);
   });
   ipcMain.handle(API.openFilePicker, openFilePicker);

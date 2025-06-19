@@ -1,7 +1,7 @@
 import { app, ipcRenderer } from "electron";
 import * as fileSave from "./fileSave";
 import { InterpretersList } from "@/main/python/interpreter";
-import { PoetryGroupInfo, PythonDependency } from "src/types/poetry";
+import { DependencyGroupInfo, PythonDependency } from "src/types/dependencies";
 import { ResultAsync, fromPromise } from "neverthrow";
 import type { User } from "@/types/auth";
 import path from "path";
@@ -10,9 +10,9 @@ export const API = {
   checkPythonInstallation: "CHECK_PYTHON_INSTALLATION",
   installPipx: "INSTALL_PIPX",
   pipxEnsurepath: "PIPX_ENSUREPATH",
-  installPoetry: "INSTALL_POETRY",
+  installUv: "INSTALL_UV",
   installDependencies: "INSTALL_DEPENDENCIES",
-  getPoetryVenvExecutable: "GET_POETRY_EXECUTABLE",
+  getUvVenvExecutable: "GET_UV_EXECUTABLE",
   spawnCaptain: "SPAWN_CAPTAIN",
   killCaptain: "KILL_CAPTAIN",
   openLogFolder: "OPEN_LOG_FOLDER",
@@ -36,14 +36,14 @@ export const API = {
   pickDirectory: "PICK_DIRECTORY",
   getCustomBlocksDir: "GET_CUSTOM_BLOCKS_DIR",
   cacheCustomBlocksDir: "CACHE_CUSTOM_BLOCKS_DIR",
-  poetryShowTopLevel: "POETRY_SHOW_TOP_LEVEL",
-  poetryShowUserGroup: "POETRY_SHOW_USER_GROUP",
-  poetryGetGroupInfo: "POETRY_GET_GROUP_INFO",
-  poetryInstallDepGroup: "POETRY_INSTALL_DEP_GROUP",
-  poetryInstallDepUserGroup: "POETRY_INSTALL_DEP_USER_GROUP",
-  poetryUninstallDepUserGroup: "POETRY_UNINSTALL_DEP_USER_GROUP",
-  poetryUninstallDepGroup: "POETRY_UNINSTALL_DEP_GROUP",
-  poetryInstallRequirementsUserGroup: "POETRY_INSTALL_REQUIREMENTS_USER_GROUP",
+  uvShowTopLevel: "UV_SHOW_TOP_LEVEL",
+  uvShowUserGroup: "UV_SHOW_USER_GROUP",
+  uvGetGroupInfo: "UV_GET_GROUP_INFO",
+  uvInstallDepGroup: "UV_INSTALL_DEP_GROUP",
+  uvInstallDepUserGroup: "UV_INSTALL_DEP_USER_GROUP",
+  uvUninstallDepUserGroup: "UV_UNINSTALL_DEP_USER_GROUP",
+  uvUninstallDepGroup: "UV_UNINSTALL_DEP_GROUP",
+  uvInstallRequirementsUserGroup: "UV_INSTALL_REQUIREMENTS_USER_GROUP",
   openFilePicker: "OPEN_FILE_PICKER",
   openFilesPicker: "OPEN_FILES_PICKER",
   openAllFilesInFolderPicker: "OPEN_ALL_FILES_IN_FOLDER_PICKER",
@@ -88,11 +88,11 @@ export default {
     ipcRenderer.invoke(API.checkPythonInstallation, force),
   installPipx: (): Promise<string> => ipcRenderer.invoke(API.installPipx),
   pipxEnsurepath: (): Promise<void> => ipcRenderer.invoke(API.pipxEnsurepath),
-  installPoetry: (): Promise<string> => ipcRenderer.invoke(API.installPoetry),
+  installUv: (): Promise<string> => ipcRenderer.invoke(API.installUv),
   installDependencies: (): Promise<string> =>
     ipcRenderer.invoke(API.installDependencies),
-  getPoetryVenvExecutable: (): Promise<string> =>
-    ipcRenderer.invoke(API.getPoetryVenvExecutable),
+  getUvVenvExecutable: (): Promise<string> =>
+    ipcRenderer.invoke(API.getUvVenvExecutable),
   spawnCaptain: (): Promise<void> => ipcRenderer.invoke(API.spawnCaptain),
   killCaptain: (): Promise<string> => ipcRenderer.invoke(API.killCaptain),
   openLogFolder: (): Promise<void> => ipcRenderer.invoke(API.openLogFolder),
@@ -121,22 +121,22 @@ export default {
   cacheCustomBlocksDir: (dirPath: string): void =>
     ipcRenderer.send(API.cacheCustomBlocksDir, dirPath),
 
-  poetryShowTopLevel: (): Promise<PythonDependency[]> =>
-    ipcRenderer.invoke(API.poetryShowTopLevel),
-  poetryShowUserGroup: (): Promise<PythonDependency[]> =>
-    ipcRenderer.invoke(API.poetryShowUserGroup),
-  poetryGetGroupInfo: (): Promise<PoetryGroupInfo[]> =>
-    ipcRenderer.invoke(API.poetryGetGroupInfo),
-  poetryInstallDepGroup: (group: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.poetryInstallDepGroup, group),
-  poetryUninstallDepGroup: (group: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.poetryUninstallDepGroup, group),
-  poetryInstallDepUserGroup: (dep: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.poetryInstallDepUserGroup, dep),
-  poetryInstallRequirementsUserGroup: (filePath: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.poetryInstallRequirementsUserGroup, filePath),
-  poetryUninstallDepUserGroup: (dep: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.poetryUninstallDepUserGroup, dep),
+  uvShowTopLevel: (): Promise<PythonDependency[]> =>
+    ipcRenderer.invoke(API.uvShowTopLevel),
+  uvShowUserGroup: (): Promise<PythonDependency[]> =>
+    ipcRenderer.invoke(API.uvShowUserGroup),
+  uvGetGroupInfo: (): Promise<DependencyGroupInfo[]> =>
+    ipcRenderer.invoke(API.uvGetGroupInfo),
+  uvInstallDepGroup: (group: string): Promise<boolean> =>
+    ipcRenderer.invoke(API.uvInstallDepGroup, group),
+  uvUninstallDepGroup: (group: string): Promise<boolean> =>
+    ipcRenderer.invoke(API.uvUninstallDepGroup, group),
+  uvInstallDepUserGroup: (dep: string): Promise<boolean> =>
+    ipcRenderer.invoke(API.uvInstallDepUserGroup, dep),
+  uvInstallRequirementsUserGroup: (filePath: string): Promise<boolean> =>
+    ipcRenderer.invoke(API.uvInstallRequirementsUserGroup, filePath),
+  uvUninstallDepUserGroup: (dep: string): Promise<boolean> =>
+    ipcRenderer.invoke(API.uvUninstallDepUserGroup, dep),
 
   openTestPicker: (): Promise<{ filePath: string; fileContent: string }> =>
     ipcRenderer.invoke(API.openTestPicker),

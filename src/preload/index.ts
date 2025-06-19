@@ -33,22 +33,22 @@ export interface ExtendedWindowApi {
   }) => Promise<{ response: number }>;
   logTransaction: (transaction: string) => void;
 
-  // Python/Poetry operations
+  // Python/UV operations
   checkPythonInstallation: (force?: boolean) => Promise<InterpretersList>;
   setPythonInterpreter: (path: string) => Promise<void>;
   browsePyInterpreter: () => Promise<string | undefined>;
   installPipx: () => Promise<void>;
   pipxEnsurepath: () => Promise<void>;
-  installPoetry: () => Promise<void>;
+  installUv: () => Promise<void>;
   installDependencies: () => Promise<void>;
-  poetryShowTopLevel: () => Promise<any[]>;
-  poetryShowUserGroup: () => Promise<any[]>;
-  poetryGetGroupInfo: () => Promise<any[]>;
-  poetryInstallDepGroup: (group: string) => Promise<boolean>;
-  poetryUninstallDepGroup: (group: string) => Promise<boolean>;
-  poetryInstallDepUserGroup: (dep: string) => Promise<boolean>;
-  poetryUninstallDepUserGroup: (dep: string) => Promise<boolean>;
-  poetryInstallRequirementsUserGroup: (filePath: string) => Promise<boolean>;
+  uvShowTopLevel: () => Promise<any[]>;
+  uvShowUserGroup: () => Promise<any[]>;
+  uvGetGroupInfo: () => Promise<any[]>;
+  uvInstallDepGroup: (group: string) => Promise<boolean>;
+  uvUninstallDepGroup: (group: string) => Promise<boolean>;
+  uvInstallDepUserGroup: (dep: string) => Promise<boolean>;
+  uvUninstallDepUserGroup: (dep: string) => Promise<boolean>;
+  uvInstallRequirementsUserGroup: (filePath: string) => Promise<boolean>;
 
   // System operations
   spawnCaptain: () => Promise<void>;
@@ -114,22 +114,22 @@ const extendedApi: ExtendedWindowApi = {
   showConfirmDialog: (options) => ipcRenderer.invoke(API.showConfirmDialog, options),
   logTransaction: (transaction: string) => ipcRenderer.send(API.logTransaction, transaction),
 
-  // Python/Poetry operations
+  // Python/UV operations
   checkPythonInstallation: (force?: boolean) => ipcRenderer.invoke(API.checkPythonInstallation, force),
   setPythonInterpreter: (path: string) => ipcRenderer.invoke(API.setPythonInterpreter, path),
   browsePyInterpreter: () => ipcRenderer.invoke(API.browsePythonInterpreter),
   installPipx: () => ipcRenderer.invoke(API.installPipx),
   pipxEnsurepath: () => ipcRenderer.invoke(API.pipxEnsurepath),
-  installPoetry: () => ipcRenderer.invoke(API.installPoetry),
+  installUv: () => ipcRenderer.invoke(API.installUv),
   installDependencies: () => ipcRenderer.invoke(API.installDependencies),
-  poetryShowTopLevel: () => ipcRenderer.invoke(API.poetryShowTopLevel),
-  poetryShowUserGroup: () => ipcRenderer.invoke(API.poetryShowUserGroup),
-  poetryGetGroupInfo: () => ipcRenderer.invoke(API.poetryGetGroupInfo),
-  poetryInstallDepGroup: (group: string) => ipcRenderer.invoke(API.poetryInstallDepGroup, group),
-  poetryUninstallDepGroup: (group: string) => ipcRenderer.invoke(API.poetryUninstallDepGroup, group),
-  poetryInstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.poetryInstallDepUserGroup, dep),
-  poetryUninstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.poetryUninstallDepUserGroup, dep),
-  poetryInstallRequirementsUserGroup: (filePath: string) => ipcRenderer.invoke(API.poetryInstallRequirementsUserGroup, filePath),
+  uvShowTopLevel: () => ipcRenderer.invoke(API.uvShowTopLevel),
+  uvShowUserGroup: () => ipcRenderer.invoke(API.uvShowUserGroup),
+  uvGetGroupInfo: () => ipcRenderer.invoke(API.uvGetGroupInfo),
+  uvInstallDepGroup: (group: string) => ipcRenderer.invoke(API.uvInstallDepGroup, group),
+  uvUninstallDepGroup: (group: string) => ipcRenderer.invoke(API.uvUninstallDepGroup, group),
+  uvInstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.uvInstallDepUserGroup, dep),
+  uvUninstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.uvUninstallDepUserGroup, dep),
+  uvInstallRequirementsUserGroup: (filePath: string) => ipcRenderer.invoke(API.uvInstallRequirementsUserGroup, filePath),
 
   // System operations
   spawnCaptain: () => ipcRenderer.invoke(API.spawnCaptain),

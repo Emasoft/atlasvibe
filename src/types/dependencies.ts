@@ -1,4 +1,7 @@
-export type PoetryGroupInfo = {
+// Dependency management types
+// These are generic types for managing Python dependencies
+
+export type DependencyGroupInfo = {
   name: string;
   description: string;
   dependencies: PythonDependency[];
@@ -11,3 +14,6 @@ export type PythonDependency = {
   description?: string;
   installed: boolean;
 };
+
+// Re-export for backward compatibility
+export type PoetryGroupInfo = DependencyGroupInfo;
