@@ -10,12 +10,12 @@ import { PoetryGroupInfo, PythonDependency } from "src/types/poetry";
 import { Command } from "../command";
 import { execCommand } from "../executor";
 import pyproject from "../../../pyproject.toml?raw";
-import toml from "toml";
+import * as TOML from "@iarna/toml";
 import { store } from "../store";
 import * as fs from "fs";
 import log from "electron-log/main";
 
-// UV dependency groups (same as Poetry groups for compatibility)
+// UV dependency groups
 export const UV_DEP_GROUPS: Pick<
   PoetryGroupInfo,
   "name" | "description"
@@ -76,7 +76,7 @@ export async function uvShowTopLevel(): Promise<PythonDependency[]> {
 export async function uvShowUserGroup(): Promise<PythonDependency[]> {
   // For user group, we'll read from pyproject.toml and check what's installed
   const installed = await uvShowTopLevel();
-  const parsed = toml.parse(pyproject);
+  const parsed = TOML.parse(pyproject);
 
   if (parsed?.project?.["optional-dependencies"]?.user) {
     const userDeps = parsed.project["optional-dependencies"].user;
@@ -98,7 +98,7 @@ export async function uvShowUserGroup(): Promise<PythonDependency[]> {
 
 export async function uvGetGroupInfo(): Promise<PoetryGroupInfo[]> {
   const installed = await uvShowTopLevel();
-  const parsed = toml.parse(pyproject);
+  const parsed = TOML.parse(pyproject);
 
   const result: PoetryGroupInfo[] = [];
 
@@ -186,7 +186,7 @@ export async function uvInstallDepUserGroup(
   const pyprojectPath = "pyproject.toml";
   try {
     const pyprojectContent = fs.readFileSync(pyprojectPath, 'utf8');
-    const parsed = toml.parse(pyprojectContent);
+    const parsed = TOML.parse(pyprojectContent) as any;
 
     // Ensure optional-dependencies exists
     if (!parsed.project) {
@@ -205,9 +205,9 @@ export async function uvInstallDepUserGroup(
       userDeps.push(name);
 
       // Write back to file
-      // Note: This is a simplified approach - in production, you might want to use
-      // a proper TOML writer that preserves formatting
-      log.info(`Adding ${name} to user dependencies in pyproject.toml`);
+      const tomlContent = TOML.stringify(parsed);
+      fs.writeFileSync(pyprojectPath, tomlContent, 'utf8');
+      log.info(`Added ${name} to user dependencies in pyproject.toml`);
     }
   } catch (e) {
     log.error("Failed to update pyproject.toml:", e);
