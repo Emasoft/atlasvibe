@@ -96,255 +96,338 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Force Run All Tests**: Use `./install_all_test_deps.sh` then `./run_all_tests.sh` to run ALL tests including slow ones
 - **Test Discovery**: Tests ending with `_test_.py` are automatically discovered
 
-## Project Setup and Build with uv
+## Comprehensive UV Package Management for AtlasVibe
 
-### Creating a New Project
+### Core UV Concepts
 
-#### 1. **Initialize Project**
+1. **Environment Management Philosophy**
+   - Always use virtual environments (UV enforces this by default)
+   - Never modify system Python (requires explicit `--system` flag)
+   - Environments are disposable - recreate rather than repair
+
+2. **Environment Discovery Order**
+   - Active `VIRTUAL_ENV` environment variable
+   - Active Conda environment
+   - `.venv` in current or parent directories
+   - Prompts to create if none found
+
+3. **Project vs Standalone Mode**
+   - **Project mode**: Has `pyproject.toml`, uses `uv sync` and `uv run`
+   - **Standalone mode**: No project file, uses `uv pip` commands directly
+
+### Complete UV Workflow for AtlasVibe
+
+#### Step 1: Initial Project Setup
+
 ```bash
-# Create application project
-uv init --app
+# Create new project (if starting fresh)
+uv init --app                    # For applications
+uv init --lib                    # For libraries
+uv init --build-backend uv       # With uv build backend (preview)
 
-# Create library project
-uv init --lib
+# For existing project, ensure Python version
+uv python install 3.11           # Download Python if needed
+uv python pin 3.11               # Create .python-version file
 
-# With specific Python version
-uv init --python 3.11
-
-# With specific build backend
-uv init --build-backend setuptools
+# Create virtual environment
+uv venv                          # Creates .venv in current directory
+uv venv --python 3.11            # With specific Python version
 ```
 
-#### 2. **Project Structure Created by uv init**
-```
-.
-├── .venv/              # Virtual environment
-├── .python-version     # Python version pin
-├── README.md          # Project readme
-├── main.py            # Entry point (for apps)
-├── pyproject.toml     # Project configuration
-└── uv.lock            # Lockfile
-```
+#### Step 2: Project Configuration (pyproject.toml)
 
-#### 3. **pyproject.toml Configuration**
 ```toml
 [project]
 name = "atlasvibe"
 version = "0.1.0"
-description = "Visual programming IDE for Python"
-readme = "README.md"
-requires-python = ">=3.8"
+description = "Visual programming IDE"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "fastapi>=0.100.0",
-    "pydantic>=2.0",
-    "numpy>=1.24.0",
+    "fastapi>=0.104.1",
+    "pydantic>=2.11.4",
+    "numpy>=1.23.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "ruff>=0.1.0",
-]
+# Published extras (for users)
+plotting = ["matplotlib>=3.5", "seaborn>=0.12"]
+hardware = ["pyserial>=3.5", "pyvisa>=1.13"]
 
-[build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+[dependency-groups]
+# Development dependencies (not published)
+dev = ["pytest>=7.4.0", "ruff>=0.4.0", "mypy>=1.0.0"]
+test = ["pytest-cov>=5.0.0", "pytest-mock>=3.11.0"]
+docs = ["mkdocs>=1.5.0", "mkdocs-material>=9.0"]
 
 [tool.uv]
-dev-dependencies = [
-    "pytest>=7.0.0",
-    "mypy>=1.0.0",
-]
+default-groups = ["dev"]  # Groups to install by default
+managed = true           # Let uv manage the environment
+
+[tool.uv.sources]
+# Alternative dependency sources
+my-package = { workspace = true }
+custom-lib = { path = "./libs/custom" }
+private-pkg = { git = "https://github.com/org/private.git", branch = "main" }
 ```
 
-### Dependency Management
+#### Step 3: Dependency Management
 
-#### 1. **Add Dependencies**
 ```bash
-# Add to project dependencies
-uv add numpy pandas
-
-# Add development dependencies
-uv add --dev pytest ruff mypy
-
-# Add from requirements.txt
-uv add -r requirements.txt
+# Add to main dependencies
+uv add numpy pandas scikit-learn
 
 # Add with version constraints
 uv add "fastapi>=0.100.0,<1.0.0"
+
+# Add to optional dependencies (extras)
+uv add --optional plotting matplotlib seaborn
+
+# Add to dependency groups (dev dependencies)
+uv add --group dev pytest ruff
+uv add --group test pytest-cov
+
+# Add from various sources
+uv add git+https://github.com/user/repo
+uv add --editable ./local/package
+uv add package@https://files.example.com/package.whl
 ```
 
-#### 2. **Sync Environment**
+#### Step 4: Installing and Syncing Dependencies
+
 ```bash
-# Install all dependencies
-uv sync
+# Sync project environment (recommended)
+uv sync                          # Install default deps + default groups
+uv sync --frozen                 # Use exact versions from lockfile
+uv sync --inexact                # Keep extra packages installed
 
-# Include all extras
-uv sync --all-extras
+# Install with extras
+uv sync --extra plotting         # Include plotting extra
+uv sync --all-extras            # Include all extras
 
-# Include dev dependencies
-uv sync --dev
+# Install specific groups
+uv sync --group test            # Include test group
+uv sync --no-group dev          # Exclude dev group
+uv sync --only-group docs       # Only docs group
+uv sync --all-groups           # All groups
 
-# Frozen install (exact versions from lock)
-uv sync --frozen
+# Lock file management
+uv lock                         # Lock all dependencies
+uv lock --upgrade              # Upgrade all packages
+uv lock --upgrade-package numpy # Upgrade specific package
 ```
 
-#### 3. **Lock Dependencies**
+#### Step 5: Running Code with UV
+
 ```bash
-# Update lock file
-uv lock
+# Run in project environment
+uv run python main.py           # Syncs deps first
+uv run --no-sync python main.py # Skip sync
+uv run -m pytest               # Run module
 
-# Upgrade specific package
-uv lock --upgrade-package numpy
+# Run with temporary dependencies
+uv run --with httpx python script.py
+uv run --with "httpx>=0.25" python script.py
 
-# Upgrade all packages
-uv lock --upgrade
+# Run scripts with inline metadata
+uv run script.py               # Script can declare its own deps
+
+# Run in specific package (workspace)
+uv run --package backend pytest
 ```
 
-### Building Packages
+#### Step 6: Building Distributions
 
-#### 1. **Build Distribution**
 ```bash
-# Build both wheel and sdist
-uv build
+# Build project distributions
+uv build                        # Build wheel and sdist
+uv build --wheel               # Build only wheel
+uv build --sdist               # Build only source dist
 
-# Build wheel only
-uv build --wheel
+# Build with constraints
+uv build --build-constraint constraints.txt
+uv build --require-hashes
 
-# Build source distribution only
-uv build --sdist
-
-# Build with custom output directory
-uv build --out-dir dist/
+# Build specific package (workspace)
+uv build --package my-lib
 ```
 
-#### 2. **Build Configuration**
+#### Step 7: Package Inspection
+
 ```bash
-# Pass config to build backend
-uv build -C--global-option=--quiet
+# List installed packages
+uv pip list                     # All packages
+uv pip list --format json      # JSON output
 
-# Build without isolation
-uv build --no-build-isolation
+# Show package details
+uv pip show numpy pandas       # Multiple packages
+
+# Export to requirements format
+uv pip freeze > requirements.txt
+uv pip freeze --exclude-editable
+
+# Check for conflicts
+uv pip check
+
+# Show dependency tree
+uv pip tree                    # Full tree
+uv pip tree --package numpy    # Specific package
 ```
 
-### Running Code with uv
+### UV Configuration
 
-#### 1. **Run Scripts**
-```bash
-# Run Python script
-uv run python main.py
+#### Settings in pyproject.toml or uv.toml
 
-# Run with specific Python version
-uv run --python 3.11 python script.py
-
-# Run module
-uv run -m pytest
-
-# Run with extra dependencies
-uv run --with numpy,pandas python analyze.py
-```
-
-#### 2. **Run in Project Context**
-```bash
-# Automatically syncs dependencies before running
-uv run python main.py
-
-# Skip dependency sync
-uv run --no-sync python main.py
-
-# Run with all extras
-uv run --all-extras python main.py
-```
-
-### Workspace Management
-
-#### 1. **Workspace Configuration**
 ```toml
-# In root pyproject.toml
-[tool.uv.workspace]
-members = ["packages/*", "apps/*"]
+[tool.uv]
+# Dependency resolution
+resolution = "highest"          # or "lowest", "lowest-direct"
+prerelease = "if-necessary"     # or "allow", "disallow"
+exclude-newer = "2024-01-01"    # Reproducible resolution
+
+# Index configuration
+index = ["https://pypi.org/simple"]
+extra-index-url = ["https://custom.index/simple"]
+find-links = ["https://files.example.com/wheels"]
+
+# Build configuration
+no-build = false               # Allow building from source
+no-binary = ["package-name"]   # Force source builds
+compile-bytecode = true        # Compile .pyc files
+
+# Installation
+link-mode = "hardlink"         # or "copy", "clone", "symlink"
+reinstall = false
+upgrade = false
+
+# Python management
+managed = true                 # Use uv-managed Python
+python-preference = "managed"  # Prefer uv Python
 ```
 
-#### 2. **Workspace Commands**
-```bash
-# Sync all workspace members
-uv sync --all-packages
+### Workspace Configuration
 
-# Build specific package
-uv build --package my-package
+```toml
+# Root pyproject.toml
+[tool.uv.workspace]
+members = ["packages/*", "apps/*", "libs/*"]
+exclude = ["packages/experimental"]
 
-# Run in specific package context
-uv run --package my-package python -m my_package
+[tool.uv.sources]
+# Workspace member dependencies
+backend = { workspace = true }
+frontend = { workspace = true }
+shared = { workspace = true }
 ```
 
 ### Python Version Management
 
-#### 1. **Install Python Versions**
 ```bash
-# Install specific version
-uv python install 3.11.7
+# Install Python versions
+uv python install 3.11.7        # Specific version
+uv python install 3.11          # Latest patch
+uv python install 3.9 3.10 3.11 # Multiple versions
 
-# Install latest patch
+# Pin Python version
+uv python pin 3.11              # Creates .python-version
+
+# List available Pythons
+uv python list                  # Installed and available
+uv python list --all-versions   # All versions
+```
+
+### AtlasVibe-Specific UV Patterns
+
+#### 1. Block Virtual Environment Management
+
+Each AtlasVibe block has its own environment:
+
+```python
+# In block's @atlasvibe decorator
+@atlasvibe(
+    deps=["numpy>=1.20", "pandas>=2.0"],
+    pip_install_args=["--index-url", "https://pypi.org/simple"]
+)
+def MY_BLOCK(...):
+    pass
+```
+
+UV creates: `blocks/CATEGORY/MY_BLOCK/.venv/`
+
+#### 2. Development Workflow
+
+```bash
+# Initial setup
 uv python install 3.11
+uv venv
+uv sync --all-extras --dev
 
-# Install multiple versions
-uv python install 3.9 3.10 3.11
+# Daily development
+uv run python main.py          # Run backend
+uv run pnpm run dev           # Run frontend
+
+# Testing
+uv run pytest                  # Run tests
+uv run --group test pytest -v  # With test group deps
+
+# Building
+uv build                       # Build distributions
 ```
 
-#### 2. **Pin Python Version**
+#### 3. Essential UV Commands Summary
+
 ```bash
-# Pin project to specific version
-uv python pin 3.11
+# Setup
+uv init --app                  # Create project
+uv python install 3.11         # Install Python
+uv venv                        # Create environment
+uv sync                        # Install dependencies
 
-# Creates/updates .python-version file
+# Development
+uv add package                 # Add dependency
+uv run python main.py          # Run code
+uv run pytest                  # Run tests
+uv lock --upgrade             # Update deps
+
+# Production
+uv sync --frozen              # Install exact versions
+uv build                      # Build distributions
+uv pip install dist/*.whl     # Install built package
 ```
 
-#### 3. **List Available Pythons**
+### UV Compilation and Resolution
+
+#### 1. **Compile Dependencies**
 ```bash
-# Show installed and available
-uv python list
+# Compile from pyproject.toml
+uv pip compile pyproject.toml -o requirements.txt
+uv pip compile --extra plotting -o requirements-plotting.txt
+uv pip compile --all-extras -o requirements-all.txt
 
-# Show all versions
-uv python list --all-versions
+# Compile with specific groups
+uv pip compile --group test -o requirements-test.txt
+
+# Compile with upgrades
+uv pip compile --upgrade-package numpy
+uv pip compile --upgrade  # Upgrade all
+
+# Platform-specific compilation
+uv pip compile --python-platform linux --python-version 3.11
 ```
 
-### Electron Frontend Configuration with uv Build Backend
-
-For the AtlasVibe Electron frontend, we can leverage uv's build system:
-
-#### 1. **Frontend Build Configuration**
-```toml
-# In pyproject.toml
-[tool.uv]
-pre-build = [
-    "pnpm install",
-    "pnpm run build",
-]
-
-[project.scripts]
-atlasvibe = "atlasvibe.main:main"
-atlasvibe-ui = "atlasvibe.electron:launch"
-```
-
-#### 2. **Build Process Integration**
+#### 2. **Resolution Strategies**
 ```bash
-# Full build (Python + Electron)
-uv build
+# Different resolution modes
+uv lock --resolution highest        # Latest versions (default)
+uv lock --resolution lowest         # Minimum versions
+uv lock --resolution lowest-direct  # Lowest for direct deps
 
-# The build process will:
-# 1. Run pre-build commands (pnpm install, pnpm build)
-# 2. Build Python wheel with Electron app included
-# 3. Create distributable package
-```
+# Prerelease handling
+uv lock --prerelease allow         # Allow all prereleases
+uv lock --prerelease disallow      # Never use prereleases
+uv lock --prerelease if-necessary  # Only if no stable version
 
-#### 3. **Development Workflow**
-```bash
-# Install in editable mode with frontend
-uv pip install -e .
-
-# Run development servers
-uv run python main.py          # Backend
-uv run pnpm run dev           # Frontend (separate terminal)
+# Reproducible resolution
+uv lock --exclude-newer 2024-01-01  # Only packages before date
 ```
 
 ### Publishing Packages
@@ -378,6 +461,35 @@ uv publish
 5. **Use uv run** - Ensures correct environment activation
 6. **Specify Python version** - When creating environments for blocks
 
+### CI/CD Integration
+
+#### GitHub Actions
+```yaml
+# .github/workflows/ci.yml
+- uses: astral-sh/setup-uv@v5
+  with:
+    enable-cache: true
+    cache-dependency-glob: "uv.lock"
+
+- name: Install dependencies
+  run: uv sync --locked --all-extras --dev
+
+- name: Run tests
+  run: uv run pytest
+```
+
+#### Pre-commit Hooks
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.13
+    hooks:
+      - id: uv-lock
+      - id: uv-export
+        args: ["--format", "requirements.txt"]
+```
+
 ### Troubleshooting
 
 #### Common Issues and Solutions
@@ -385,21 +497,50 @@ uv publish
 1. **uv not found**
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
+   # Or via pip
+   pip install uv
    ```
 
 2. **Python version not available**
    ```bash
    uv python install 3.11
+   uv python list --all-versions
    ```
 
 3. **Dependency conflicts**
    ```bash
-   uv pip install --upgrade-strategy eager
+   # Show resolution details
+   uv pip compile --verbose pyproject.toml
+   # Try different resolution strategy
+   uv lock --resolution lowest-direct
    ```
 
-4. **Cache issues**
+4. **Module not found errors**
+   ```bash
+   # Ensure environment is synced
+   uv sync
+   # Check if in right environment
+   which python  # Should show .venv/bin/python
+   ```
+
+5. **Build failures**
+   ```bash
+   # Build with verbose output
+   uv build -v
+   # Skip build isolation
+   uv build --no-build-isolation
+   ```
+
+6. **Platform-specific problems**
+   ```bash
+   # Resolve for specific platform
+   uv lock --python-platform linux --python-version 3.11
+   ```
+
+7. **Cache issues**
    ```bash
    uv cache clean
+   uv cache prune  # Remove unused entries
    ```
 
 ## Examples Of Development Commands
