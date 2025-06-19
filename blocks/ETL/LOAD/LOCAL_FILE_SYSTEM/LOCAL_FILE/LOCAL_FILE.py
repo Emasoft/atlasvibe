@@ -73,8 +73,8 @@ def LOCAL_FILE(
     match file_type:
         case "Image":
             file_path = get_file_path(file_path, default_image_path)
-            f = PIL_Image.open(file_path)
-            img_array = np.array(f.convert("RGBA"))
+            with PIL_Image.open(file_path) as f:
+                img_array = np.array(f.convert("RGBA"))
             red_channel = img_array[:, :, 0]
             green_channel = img_array[:, :, 1]
             blue_channel = img_array[:, :, 2]

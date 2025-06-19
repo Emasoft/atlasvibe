@@ -108,27 +108,32 @@ export function update(cleanupFunc: () => Promise<void>) {
 
 export const checkForUpdates = () => {
   sendToStatusBar("Checking for updates...");
-  autoUpdater.checkForUpdates().then((res) => {
-    if (res?.updateInfo.version) {
-      const removeV = res.updateInfo.version.replace("v", "").replace("V", "");
-      const [remoteMajor, remoteMinor, remotePatch] = removeV.split(".");
+  autoUpdater.checkForUpdates()
+    .then((res) => {
+      if (res?.updateInfo.version) {
+        const removeV = res.updateInfo.version.replace("v", "").replace("V", "");
+        const [remoteMajor, remoteMinor, remotePatch] = removeV.split(".");
 
-      const appVersion = app.getVersion().replace("v", "").replace("V", "");
-      const [appVersionMajor, appVersionMinor, appVersionPatch] =
-        appVersion.split(".");
+        const appVersion = app.getVersion().replace("v", "").replace("V", "");
+        const [appVersionMajor, appVersionMinor, appVersionPatch] =
+          appVersion.split(".");
 
-      // Compare versions
-      if (
-        parseInt(remoteMajor) <= parseInt(appVersionMajor) &&
-        parseInt(remoteMinor) <= parseInt(appVersionMinor) &&
-        parseInt(remotePatch) <= parseInt(appVersionPatch)
-      ) {
-        dialog.showMessageBox(global.mainWindow, {
-          type: "info",
-          message: "Already updated to latest version",
-          detail: `Current version ${appVersion} is up to date.`,
-        });
+        // Compare versions
+        if (
+          parseInt(remoteMajor) <= parseInt(appVersionMajor) &&
+          parseInt(remoteMinor) <= parseInt(appVersionMinor) &&
+          parseInt(remotePatch) <= parseInt(appVersionPatch)
+        ) {
+          dialog.showMessageBox(global.mainWindow, {
+            type: "info",
+            message: "Already updated to latest version",
+            detail: `Current version ${appVersion} is up to date.`,
+          });
+        }
       }
-    }
-  });
+    })
+    .catch((err) => {
+      log.error("Error checking for updates:", err);
+      sendToStatusBar("Error checking for updates");
+    });
 };

@@ -76,8 +76,8 @@ class DefaultDeviceFinder:
                     )
                 )
                 used_addrs.add(addr)
-            except (pyvisa.VisaIOError, serial.serialutil.SerialException):
-                pass
+            except (pyvisa.VisaIOError, serial.serialutil.SerialException) as e:
+                logging.debug(f"Could not open VISA device at {addr}: {e}")
             finally:
                 if device is not None:
                     device.close()
@@ -186,8 +186,8 @@ class MacDeviceFinder(DefaultDeviceFinder):
                         description=inst.query("*IDN?"),
                     )
                 )
-            except pyvisa.VisaIOError:
-                pass
+            except pyvisa.VisaIOError as e:
+                logging.debug(f"Could not open VISA device at {addr}: {e}")
             finally:
                 if inst is not None:
                     inst.close()

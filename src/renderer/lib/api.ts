@@ -32,7 +32,7 @@ const get = <Z extends z.ZodTypeAny>(
 };
 
 export const getManifest = (blocksPath?: string, projectPath?: string) => {
-  const searchParams: any = {};
+  const searchParams: Record<string, string> = {};
   if (blocksPath) searchParams.blocks_path = blocksPath;
   if (projectPath) searchParams.project_path = projectPath;
 

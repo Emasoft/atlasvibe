@@ -11,6 +11,7 @@ import traceback
 from captain.utils.logger import logger
 
 socket_connection_lock = threading.Lock()
+_instance_lock = threading.Lock()
 
 
 class ConnectionManager:
@@ -18,9 +19,11 @@ class ConnectionManager:
 
     @classmethod
     def get_instance(cls):
-        if not cls._instance:
-            cls._instance = ConnectionManager()
-            return cls._instance
+        # Double-checked locking pattern for thread-safe singleton
+        if cls._instance is None:
+            with _instance_lock:
+                if cls._instance is None:
+                    cls._instance = ConnectionManager()
         return cls._instance
 
     def __init__(self):
