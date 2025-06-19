@@ -20,7 +20,6 @@ Python file is created or modified. It generates:
 - test file (basic test structure)
 """
 
-import json
 import os
 from typing import List, Tuple
 
@@ -31,6 +30,13 @@ from captain.utils.constants import (
     APP_JSON_FILE,
     EXAMPLE_MD_FILE,
     PYTHON_EXT,
+)
+import json
+from captain.utils.shared import (
+    load_json_file,
+    save_json_file,
+    get_block_python_file,
+    get_block_metadata_file,
 )
 
 
@@ -45,14 +51,14 @@ def generate_block_data_json(block_dir: str, block_name: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    py_file = os.path.join(block_dir, f"{block_name}{PYTHON_EXT}")
-    json_file = os.path.join(block_dir, BLOCK_DATA_FILE)
+    py_file = get_block_python_file(block_dir)
+    json_file = get_block_metadata_file(block_dir)
 
-    if not os.path.exists(py_file):
+    if not py_file.exists():
         return False
 
     # Extract docstring data
-    docstring_data = extract_docstring_data(py_file)
+    docstring_data = extract_docstring_data(str(py_file))
     if not docstring_data:
         # Create minimal block_data.json
         docstring_data = {
@@ -65,25 +71,13 @@ def generate_block_data_json(block_dir: str, block_name: str) -> bool:
         }
 
     # Load existing data if present
-    existing_data = {}
-    if os.path.exists(json_file):
-        try:
-            with open(json_file, "r") as f:
-                existing_data = json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Could not load existing block_data.json: {e}")
+    existing_data = load_json_file(json_file, default={})
 
     # Merge with existing data
     existing_data.update(docstring_data)
 
     # Write block_data.json
-    try:
-        with open(json_file, "w") as f:
-            json.dump(existing_data, f, indent=2)
-        return True
-    except Exception as e:
-        logger.error(f"Failed to write block_data.json: {e}")
-        return False
+    return save_json_file(json_file, existing_data)
 
 
 def generate_app_json(block_dir: str, block_name: str) -> bool:

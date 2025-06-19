@@ -33,8 +33,29 @@ export const killProcess = async (port: number) => {
 };
 
 export const ping = async (addr: string) => {
-  if (isIP(addr) === 0) {
+  // Validate IP address format (both IPv4 and IPv6)
+  const ipVersion = isIP(addr);
+  if (ipVersion === 0) {
     throw new Error(`Invalid IP address: ${addr}`);
+  }
+
+  // Additional sanitization: ensure no shell metacharacters
+  // Only allow valid IP address characters (digits, dots for IPv4, colons and hex for IPv6)
+  const ipv4Pattern = /^[0-9.]+$/;
+  const ipv6Pattern = /^[0-9a-fA-F:]+$/;
+
+  if (ipVersion === 4 && !ipv4Pattern.test(addr)) {
+    throw new Error(`Invalid IPv4 address format: ${addr}`);
+  }
+
+  if (ipVersion === 6 && !ipv6Pattern.test(addr)) {
+    throw new Error(`Invalid IPv6 address format: ${addr}`);
+  }
+
+  // Double-check: ensure the address doesn't contain any shell metacharacters
+  const dangerousChars = /[;&|`$()<>{}[\]\\'"]/;
+  if (dangerousChars.test(addr)) {
+    throw new Error(`IP address contains invalid characters: ${addr}`);
   }
 
   return await execCommand(

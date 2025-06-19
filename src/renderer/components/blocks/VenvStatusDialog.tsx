@@ -22,6 +22,7 @@ import { getVenvStatus, getVenvLogs, regenerateVenv } from "@/renderer/lib/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/renderer/lib/utils";
+import { VenvStatus, VenvLog, CheckStatus, CheckResult } from "@/renderer/types/venv";
 
 interface VenvStatusDialogProps {
   open: boolean;
@@ -30,29 +31,13 @@ interface VenvStatusDialogProps {
   blockName: string;
 }
 
-interface VenvLog {
-  block_name: string;
-  start_time: string;
-  duration?: number;
-  success: boolean;
-  error?: string;
-  checks: Array<{
-    name: string;
-    status: string;
-    message: string;
-    duration?: number;
-    recovery_action?: string;
-  }>;
-  log_file?: string;
-}
-
 export const VenvStatusDialog = ({
   open,
   onOpenChange,
   blockPath,
   blockName
 }: VenvStatusDialogProps) => {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<VenvStatus | null>(null);
   const [logs, setLogs] = useState<VenvLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -98,7 +83,7 @@ export const VenvStatusDialog = ({
         await loadData(); // Reload data
       } else {
         toast.error("Failed to regenerate virtual environment", {
-          description: res.value?.error || "Unknown error"
+          description: res.error.message || "Unknown error"
         });
       }
     } catch (error) {
@@ -109,14 +94,20 @@ export const VenvStatusDialog = ({
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: CheckStatus) => {
     switch (status) {
-      case "success":
+      case CheckStatus.SUCCESS:
         return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "error":
+      case CheckStatus.ERROR:
         return <XCircle className="w-4 h-4 text-destructive" />;
-      case "warning":
+      case CheckStatus.WARNING:
         return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case CheckStatus.PENDING:
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case CheckStatus.RUNNING:
+        return <Loader2 className="w-4 h-4 text-primary animate-spin" />;
+      case CheckStatus.SKIPPED:
+        return <Info className="w-4 h-4 text-muted-foreground" />;
       default:
         return <Info className="w-4 h-4 text-muted-foreground" />;
     }
@@ -212,7 +203,7 @@ export const VenvStatusDialog = ({
                   <h4 className="text-sm font-medium">Installed Packages ({status.installed_packages.length})</h4>
                   <ScrollArea className="h-[200px] border rounded-lg p-4">
                     <div className="space-y-1">
-                      {status.installed_packages.map((pkg: any, idx: number) => (
+                      {status.installed_packages.map((pkg, idx) => (
                         <div key={idx} className="flex justify-between text-sm">
                           <span className="font-mono">{pkg.name}</span>
                           <span className="text-muted-foreground">{pkg.version}</span>
@@ -228,7 +219,7 @@ export const VenvStatusDialog = ({
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Health Checks</h4>
                   <div className="space-y-2">
-                    {status.health_checks.map((check: any, idx: number) => (
+                    {status.health_checks.map((check, idx) => (
                       <div key={idx} className="flex items-start gap-2 p-2 border rounded">
                         {getStatusIcon(check.status)}
                         <div className="flex-1">

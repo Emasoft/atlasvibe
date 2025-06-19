@@ -682,9 +682,10 @@ export const useAddBlock = () => {
         localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
         setHasUnsavedChanges(true);
 
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error("Failed to create custom block:", e);
-        toast.error(`Failed to create custom block: ${e.message}`);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        toast.error(`Failed to create custom block: ${errorMessage}`);
 
         // Cleanup: If block directory was created but node creation failed,
         // we should notify the user to manually clean up

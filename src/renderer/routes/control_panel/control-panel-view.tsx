@@ -160,23 +160,33 @@ const ControlPanelView = () => {
 
   const onWidgetConfigSubmit = (data: WidgetConfig) => {
     if (!widgetBlockInfo.current) {
-      return; // TODO: Error handling
+      toast.error("Widget configuration error: No block information available");
+      return;
     }
-    const { blockId, blockParameter } = widgetBlockInfo.current;
-    addControl(blockId, blockParameter, data.type, data);
-    setWidgetConfigOpen(false);
+    try {
+      const { blockId, blockParameter } = widgetBlockInfo.current;
+      addControl(blockId, blockParameter, data.type, data);
+      setWidgetConfigOpen(false);
+    } catch (error) {
+      toast.error(`Failed to add control: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const onWidgetConfigEditSubmit = (data: WidgetConfig) => {
     if (!widgetBlockInfo.current) {
-      return; // TODO: Error handling
-    }
-    const res = editConfig(widgetBlockInfo.current.blockId, data);
-    if (res.isErr()) {
-      toast.error(res.error.message);
+      toast.error("Widget configuration error: No block information available");
       return;
     }
-    setWidgetConfigOpen(false);
+    try {
+      const res = editConfig(widgetBlockInfo.current.blockId, data);
+      if (res.isErr()) {
+        toast.error(res.error.message);
+        return;
+      }
+      setWidgetConfigOpen(false);
+    } catch (error) {
+      toast.error(`Failed to edit control: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const menuNodeType = menu?.node.type;

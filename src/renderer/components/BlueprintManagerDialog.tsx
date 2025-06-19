@@ -23,6 +23,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useManifest } from "@/renderer/stores/manifest";
 import { renameBlueprint, deleteBlueprint } from "@/renderer/lib/api";
+import { TreeNode, BlockDefinition } from "@/renderer/types/manifest";
 
 interface BlueprintManagerDialogProps {
   open: boolean;
@@ -51,16 +52,16 @@ export function BlueprintManagerDialog({
   const manifest = useManifest();
 
   // Helper function to extract blueprints from manifest tree
-  const extractBlueprints = (node: any, category: string = ""): BlueprintItem[] => {
+  const extractBlueprints = (node: TreeNode, category: string = ""): BlueprintItem[] => {
     const items: BlueprintItem[] = [];
 
-    if (node.children) {
+    if ('children' in node && node.children) {
       // This is a section node
-      node.children.forEach((child: any) => {
+      node.children.forEach((child) => {
         const childCategory = category ? `${category}/${child.name}` : child.name;
         items.push(...extractBlueprints(child, childCategory));
       });
-    } else if (node.key && node.isBlueprint) {
+    } else if ('key' in node && node.key && (node as BlockDefinition).isBlueprint) {
       // This is a leaf node (block definition)
       items.push({
         key: node.key,
@@ -180,8 +181,9 @@ export function BlueprintManagerDialog({
         // Trigger manifest reload
         window.location.reload();
       }
-    } catch (error: any) {
-      toast.error(`Failed to rename blueprint: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to rename blueprint: ${errorMessage}`);
     }
   };
 
@@ -204,8 +206,9 @@ export function BlueprintManagerDialog({
 
       // Reload blueprints
       window.location.reload();
-    } catch (error: any) {
-      toast.error(`Failed to delete blueprint: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to delete blueprint: ${errorMessage}`);
     }
   };
 

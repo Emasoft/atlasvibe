@@ -79,7 +79,7 @@ def remove_handle(ip_address: str):
 def destruct_handle_map():
     """
     Disconnects all robot handles and deletes the robot handle map.
-    TODO: Warning! This destruct must ALWAYS be called on closing or crashing of the program.
+    This is automatically called on program shutdown via atexit and signal handlers.
     """
     robot_handle_map = get_robot_handle_map()
     for ip_address in robot_handle_map:

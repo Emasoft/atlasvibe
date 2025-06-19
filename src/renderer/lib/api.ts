@@ -19,6 +19,11 @@ import {
   TestSequenceContainer,
 } from "@/renderer/types/test-sequencer";
 import { useProjectStore } from "@/renderer/stores/project";
+import {
+  VenvStatus,
+  GetVenvLogsResponse,
+  RegenerateVenvResult
+} from "@/renderer/types/venv";
 
 const get = <Z extends z.ZodTypeAny>(
   url: string,
@@ -87,7 +92,7 @@ export const getMetadata = (
   customDirChanged: boolean = false,
   projectPath?: string,
 ) => {
-  const searchParams: any = {};
+  const searchParams: Record<string, string | boolean> = {};
   if (blocksPath) searchParams.blocks_path = blocksPath;
   if (projectPath) searchParams.project_path = projectPath;
   searchParams.custom_dir_changed = customDirChanged;
@@ -324,11 +329,11 @@ export const formatCode = async (
 };
 
 // Virtual environment regeneration API
-export const regenerateVenv = async (
+export const regenerateVenv = (
   blockPath: string,
   dependencies?: string[] | null,
   pythonVersion?: string | null,
-) => {
+): ResultAsync<RegenerateVenvResult, HTTPError> => {
   return fromPromise(
     captain.post("blocks/regenerate-venv", {
       json: {
@@ -336,35 +341,35 @@ export const regenerateVenv = async (
         dependencies,
         python_version: pythonVersion,
       },
-    }).json(),
+    }).json<RegenerateVenvResult>(),
     (e) => e as HTTPError,
   );
 };
 
 // Virtual environment status API
-export const getVenvStatus = async (blockPath: string) => {
+export const getVenvStatus = (blockPath: string): ResultAsync<VenvStatus, HTTPError> => {
   return fromPromise(
     captain.get("blocks/venv-status", {
       searchParams: {
         block_path: blockPath,
       },
-    }).json(),
+    }).json<VenvStatus>(),
     (e) => e as HTTPError,
   );
 };
 
 // Virtual environment logs API
-export const getVenvLogs = async (
+export const getVenvLogs = (
   blockPath: string,
   limit: number = 10,
-) => {
+): ResultAsync<GetVenvLogsResponse, HTTPError> => {
   return fromPromise(
     captain.post("blocks/venv-logs", {
       json: {
         block_path: blockPath,
         limit,
       },
-    }).json(),
+    }).json<GetVenvLogsResponse>(),
     (e) => e as HTTPError,
   );
 };
