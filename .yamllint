@@ -1,0 +1,68 @@
+# yamllint configuration for AtlasVibe project
+
+extends: default
+
+# Specific overrides for GitHub Actions files
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+  - '.yamllint'
+
+rules:
+  line-length:
+    max: 800  # Very lenient for GitHub Actions workflows
+    level: warning
+    allow-non-breakable-inline-mappings: true
+    allow-non-breakable-words: true
+
+  # Allow both quoted and unquoted truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: true
+
+  # Indentation rules
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Allow comments without space for directives
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+  # Brackets and braces
+  brackets:
+    max-spaces-inside: 1
+  braces:
+    max-spaces-inside: 1
+
+  # Document structure
+  document-start:
+    present: false
+  document-end:
+    present: false
+
+  # Empty lines
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+# Ignore certain paths
+ignore: |
+  node_modules/
+  .venv/
+  venv/
+  dist/
+  out/
+  build/
+  *.egg-info/
+  .git/
+  .mypy_cache/
+  .pytest_cache/
+  __pycache__/
+  pnpm-lock.yaml
+  package-lock.json
+  yarn.lock
+  uv.lock

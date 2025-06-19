@@ -21,6 +21,6 @@ pyflakes:
 #     - x64
 
 # Configuration file paths (relative to repository root)
-config-variables:
-  # Example: Define custom variables that can be used in workflows
-  # MY_CUSTOM_VAR: "value"
+# config-variables:
+#   # Example: Define custom variables that can be used in workflows
+#   # MY_CUSTOM_VAR: "value"

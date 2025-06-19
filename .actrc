@@ -1,0 +1,28 @@
+# act configuration for AtlasVibe project
+# https://github.com/nektos/act
+
+# Use larger runner images that have more tools pre-installed
+# This helps with uv and Python compatibility
+--platform ubuntu-latest=catthehacker/ubuntu:act-latest
+--platform ubuntu-22.04=catthehacker/ubuntu:act-22.04
+--platform ubuntu-20.04=catthehacker/ubuntu:act-20.04
+
+# Set default runner
+--platform-default ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Use Docker to ensure consistency
+--container-architecture linux/amd64
+
+# Enable verbose output for debugging
+# --verbose
+
+# Reuse containers for faster subsequent runs
+--reuse
+
+# Set environment variables for uv
+--env UV_SYSTEM_PYTHON=1
+--env UV_NO_CACHE=1
+--env PYTHONUNBUFFERED=1
+
+# Pull images if not present
+--pull=true

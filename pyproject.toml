@@ -113,4 +113,9 @@ markers = [
 pythonpath = ["."]
 
 [tool.deptry]
+
+[dependency-groups]
+dev = [
+    "yamllint>=1.37.1",
+]
 # For now, keep configuration minimal until we understand the correct format
