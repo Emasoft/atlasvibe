@@ -1,12 +1,17 @@
-# Gitleaks configuration file
-# This file tells gitleaks to ignore certain patterns that are not actual secrets
+# Gitleaks configuration file for AtlasVibe
+# This file configures gitleaks to detect and prevent secrets from being committed
+# while allowing specific safe patterns like GitHub noreply emails
 
 # Global configuration
 title = "AtlasVibe Gitleaks Config"
 
+# Use default gitleaks rules as base
+[extend]
+useDefault = true
+
 # Global allowlist
 [allowlist]
-description = "Global allowlist for public GitHub info"
+description = "Global allowlist for AtlasVibe project"
 # Paths where these patterns are allowed (all files)
 paths = [
     '''.*'''
@@ -20,10 +25,68 @@ regexes = [
     '''[0-9]+\+[a-zA-Z0-9_-]+@users\.noreply\.github\.com''',
     
     # Allow the username "Emasoft" when it appears in various contexts
-    '''Emasoft'''
+    '''Emasoft''',
+    
+    # Allow common test/example/placeholder patterns
+    '''(test|example|demo|sample|placeholder|dummy)[-_]?(api)?[-_]?(key|token|secret)''',
+    '''YOUR[-_]?API[-_]?KEY[-_]?HERE''',
+    '''<your[-_]?api[-_]?key>''',
+    '''REPLACE[-_]?WITH[-_]?YOUR[-_]?(KEY|TOKEN|SECRET)''',
+    '''xxx+''',
+    '''abc123''',
+    '''placeholder''',
+    '''your-key-here'''
 ]
 # Commits to allowlist (by email/author)
 commits = [
     '''713559\+Emasoft@users\.noreply\.github\.com''',
     '''Emasoft'''
+]
+
+# Additional custom rules for extra security
+[[rules]]
+id = "hardcoded-password"
+description = "Hardcoded password string"
+regex = '''(?i)(password|passwd|pwd)\s*[=:]\s*["\'][^"\']+["\']'''
+tags = ["password", "security"]
+allowlist.regexes = [
+    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
+]
+
+[[rules]]
+id = "connection-string-password"
+description = "Connection string with password"
+regex = '''(?i)(mysql|postgres|postgresql|mongodb|redis|amqp|jdbc):\/\/[^:]+:[^@]+@[^\/]+'''
+tags = ["password", "database"]
+allowlist.regexes = [
+    '''(test|example|localhost|127\.0\.0\.1)'''
+]
+
+[[rules]]
+id = "env-var-secret"
+description = "Environment variable with secret value"
+regex = '''(?i)(api_key|api_secret|access_token|auth_token|private_key|secret_key|encryption_key)\s*=\s*["\']?[a-zA-Z0-9+\/]{20,}["\']?'''
+tags = ["key", "environment"]
+allowlist.regexes = [
+    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
+]
+
+# File-specific configurations
+[[rules]]
+id = "config-file-secrets"
+description = "Secrets in configuration files"
+path = '''(.*\.env|.*\.ini|.*\.conf|.*\.config|.*\.properties)$'''
+regex = '''(?i)(api[_\-]?key|secret|token|password|auth|private[_\-]?key)\s*[=:]\s*["\']?[^\s"\']+["\']?'''
+allowlist.regexes = [
+    '''713559\+Emasoft@users\.noreply\.github\.com''',
+    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
+]
+
+# Allowlist for documentation and example files
+[[rules]]
+id = "documentation-examples"
+description = "Allow examples in documentation"
+path = '''(.*\.md|.*\.rst|.*\.txt|.*example.*|.*demo.*|.*test.*)$'''
+allowlist.regexes = [
+    '''.*'''  # Allow everything in documentation and example files
 ]
