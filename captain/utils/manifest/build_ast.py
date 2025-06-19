@@ -7,6 +7,8 @@
 import ast
 from typing import Any, Callable, Literal, Optional, Tuple, cast
 
+from captain.utils.logger import logger
+
 SELECTED_IMPORTS = [
     "atlasvibe",
     "typing",
@@ -187,7 +189,7 @@ def make_manifest_ast(
     return_type = None
 
     if not atlasvibe_node.returns and node_name not in NO_OUTPUT_NODES:
-        print(f"[Warning]: {node_name} has no return type hint, will have no output!")
+        logger.warning(f"{node_name} has no return type hint, will have no output!")
     elif (
         isinstance(atlasvibe_node.returns, ast.Constant)
         and atlasvibe_node.returns.value is None

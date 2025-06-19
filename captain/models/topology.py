@@ -20,8 +20,6 @@ class Topology:
     Used for running the flowchart and handles the logic.
     """
 
-    # TODO: Properly type all the variables and maybe get rid of deepcopy?
-    # TODO: Remove unnecessary logger.debug statements
     def __init__(
         self,
         graph: nx.MultiDiGraph,
@@ -30,15 +28,15 @@ class Topology:
     ):
         self.working_graph: nx.MultiDiGraph = deepcopy(graph)
         self.original_graph: nx.MultiDiGraph = deepcopy(graph)
-        self.jobset_id = jobset_id
-        self.node_delay = node_delay
+        self.jobset_id: str = jobset_id
+        self.node_delay: float = node_delay
         self.finished_jobs: set[str] = set()
         self.queued_jobs: set[str] = set()
-        self.is_ci = os.getenv(key="CI", default=False)
-        self.cancelled = False
-        self.time_start = 0.0
-        self.finished = False
-        self.loop_nodes = (
+        self.is_ci: bool | str = os.getenv(key="CI", default=False)
+        self.cancelled: bool = False
+        self.time_start: float = 0.0
+        self.finished: bool = False
+        self.loop_nodes: list[str] = (
             list()
         )  # using list instead of set as we need to maintain order
 

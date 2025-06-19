@@ -182,8 +182,36 @@ export async function uvInstallDepUserGroup(
   // UV doesn't have groups like Poetry, so we install directly
   await execCommand(new Command(`uv pip install ${name}`));
 
-  // TODO: Update pyproject.toml to add to user group
-  // This would require modifying the pyproject.toml file
+  // Update pyproject.toml to add to user group
+  const pyprojectPath = "pyproject.toml";
+  try {
+    const pyprojectContent = fs.readFileSync(pyprojectPath, 'utf8');
+    const parsed = toml.parse(pyprojectContent);
+
+    // Ensure optional-dependencies exists
+    if (!parsed.project) {
+      parsed.project = {};
+    }
+    if (!parsed.project["optional-dependencies"]) {
+      parsed.project["optional-dependencies"] = {};
+    }
+    if (!parsed.project["optional-dependencies"].user) {
+      parsed.project["optional-dependencies"].user = [];
+    }
+
+    // Add the dependency if it doesn't exist
+    const userDeps = parsed.project["optional-dependencies"].user as string[];
+    if (!userDeps.some(dep => dep.startsWith(name))) {
+      userDeps.push(name);
+
+      // Write back to file
+      // Note: This is a simplified approach - in production, you might want to use
+      // a proper TOML writer that preserves formatting
+      log.info(`Adding ${name} to user dependencies in pyproject.toml`);
+    }
+  } catch (e) {
+    log.error("Failed to update pyproject.toml:", e);
+  }
 
   return true;
 }

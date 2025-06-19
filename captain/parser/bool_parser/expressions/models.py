@@ -78,13 +78,14 @@ class Identifier(Expression):
             raise TestNotRan("could not find test name in symbol table")
 
 
-class Literal(Expression):
+class Literal(Expression, ABC):
     expects: ExpectAlias
     returns: ReturnTypes
 
     @staticmethod
+    @abstractmethod
     def allows(candidate: str) -> bool:
-        raise NotImplementedError
+        pass
 
     def __init__(self, target: str):
         self.target = target
@@ -92,8 +93,9 @@ class Literal(Expression):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.target})"
 
+    @abstractmethod
     def operation(self) -> Any:
-        raise NotImplementedError
+        pass
 
 
 class BooleanLiteral(Literal):

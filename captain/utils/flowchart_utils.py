@@ -39,13 +39,9 @@ def run_worker(
     signaler: Signaler,
 ):
     try:
-        # TODO: Figure out a way to make this work with python threads (previously this was a Python Process)
-        # if (
-        #     os.environ.get("DEBUG", None) is None
-        #     or os.environ.get("DEBUG", None) == "False"
-        # ):
-        #     text_trap = io.StringIO()
-        #     sys.stdout = text_trap
+        # For thread-safe output handling, we rely on the logger instead of stdout redirection
+        # Threads share the same process memory space, so stdout redirection would affect all threads
+        # The Worker class should use logger for all output instead of print statements
         worker = Worker(
             task_queue=task_queue,
             finish_queue=finish_queue,
