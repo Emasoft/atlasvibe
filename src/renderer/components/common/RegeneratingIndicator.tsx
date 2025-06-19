@@ -5,7 +5,7 @@
 // - Created new component for showing regenerating status on blocks
 // - Shows blinking "Regenerating..." label above blocks
 // - Animates with pulse effect using CSS animations
-// 
+//
 
 import React from "react";
 import clsx from "clsx";

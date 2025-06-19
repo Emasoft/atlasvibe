@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
 import numpy as np
 
+
 @atlasvibe
 def DIFFERENTIATE(default: OrderedPair | Vector) -> OrderedPair:
     """Compute the derivative of the input with respect to x.

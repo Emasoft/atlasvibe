@@ -185,7 +185,7 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.deleteUserProfile, deleteUserProfile);
   ipcMain.handle(API.getFileContent, readFileSync);
   ipcMain.handle(API.isFileOnDisk, isFileOnDisk);
-  
+
   // Project save dialog handlers
   ipcMain.handle(API.selectFolder, async () => {
     const result = await dialog.showOpenDialog({
@@ -193,7 +193,7 @@ export const registerIpcMainHandlers = () => {
     });
     return { filePaths: result.filePaths, canceled: result.canceled };
   });
-  
+
   ipcMain.handle(API.pathExists, async (_, path: string) => {
     const fs = await import("fs/promises");
     try {
@@ -203,12 +203,12 @@ export const registerIpcMainHandlers = () => {
       return false;
     }
   });
-  
+
   ipcMain.handle(API.createDirectory, async (_, path: string) => {
     const fs = await import("fs/promises");
     await fs.mkdir(path, { recursive: true });
   });
-  
+
   ipcMain.handle(API.showConfirmDialog, async (_, options) => {
     const result = await dialog.showMessageBox({
       type: "question",
@@ -220,17 +220,17 @@ export const registerIpcMainHandlers = () => {
     });
     return { response: result.response };
   });
-  
+
   ipcMain.on(API.logTransaction, (_, transaction: string) => {
     sendToStatusBar(`Transaction: ${transaction}`);
   });
-  
+
   // Custom block creation handler
   ipcMain.handle(API.createCustomBlock, async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
     try {
       // Get the backend URL from environment or default
       const backendUrl = process.env.BACKEND_URL || "http://localhost:5392";
-      
+
       // Call the backend API to create the custom block
       const response = await fetch(`${backendUrl}/blocks/create-custom/`, {
         method: "POST",
@@ -243,14 +243,14 @@ export const registerIpcMainHandlers = () => {
           project_path: projectPath,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         const errorMessage = (error as any).detail || `Failed to create custom block (${response.status})`;
         console.error("Custom block creation failed:", errorMessage);
         throw new Error(errorMessage);
       }
-      
+
       const blockDefinition = await response.json();
       return blockDefinition;
     } catch (error) {

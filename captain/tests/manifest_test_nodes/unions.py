@@ -14,11 +14,11 @@ from pkgs.atlasvibe.atlasvibe import (
     Matrix,
     OrderedPair,
     OrderedTriple,
-    atlasvibe_node, # CHANGED
+    atlasvibe_node,  # CHANGED
 )
 
 
-@atlasvibe_node(node_type="TEST_TYPE") # CHANGED
+@atlasvibe_node(node_type="TEST_TYPE")  # CHANGED
 def UNIONS(
     a: Matrix | DataFrame | Image,
     b: OrderedPair | OrderedTriple | DataContainer,

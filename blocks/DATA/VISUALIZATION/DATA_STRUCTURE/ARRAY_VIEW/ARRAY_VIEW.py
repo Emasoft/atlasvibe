@@ -1,12 +1,19 @@
 import numpy as np
 import plotly.graph_objects as go
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
-from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Image, Matrix, OrderedPair, Plotly
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    DataFrame,
+    Image,
+    Matrix,
+    OrderedPair,
+    Plotly,
+)
 
 CELL_SIZE = 50
 FONT_SIZE = 10
 MAX_ALLOWED_SHAPE = 10
 l_dot = "$\\ldots$"
+
 
 def numpy_array_as_table(arr: np.ndarray):
     if arr.size > MAX_ALLOWED_SHAPE:
@@ -16,6 +23,7 @@ def numpy_array_as_table(arr: np.ndarray):
     else:
         new_arr = arr
     return new_arr.reshape(-1, 1)
+
 
 @atlasvibe
 def ARRAY_VIEW(default: OrderedPair | Matrix | DataFrame | Image) -> Plotly:

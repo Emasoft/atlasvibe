@@ -3,6 +3,7 @@ from typing import Optional
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix
 
+
 @atlasvibe
 def LEAST_SQUARES(
     a: OrderedPair | Matrix, b: Optional[OrderedPair | Matrix] = None

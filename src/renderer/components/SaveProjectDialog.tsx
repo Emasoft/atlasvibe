@@ -7,7 +7,7 @@
 // - Validates project names with same rules as blocks
 // - Implements space replacement with two-step confirmation
 // - Detects name collisions
-// 
+//
 
 import { useState, useEffect } from "react";
 import {
@@ -82,18 +82,18 @@ export function SaveProjectDialog({
   const cleanName = (name: string): string => {
     // Trim leading/trailing spaces
     let cleaned = name.trim();
-    
+
     // Replace multiple spaces with single underscore
     cleaned = cleaned.replace(/\s+/g, "_");
-    
+
     // Remove any non-alphanumeric characters except underscore
     cleaned = cleaned.replace(/[^A-Za-z0-9_]/g, "");
-    
+
     // Ensure it starts with a letter
     if (/^\d/.test(cleaned)) {
       cleaned = "Project_" + cleaned;
     }
-    
+
     return cleaned || "Untitled_Project";
   };
 
@@ -102,7 +102,7 @@ export function SaveProjectDialog({
     setProjectName(value);
     setShowPreview(false);
     setPreviewName("");
-    
+
     const error = validateName(value);
     setNameError(error);
   };
@@ -112,7 +112,7 @@ export function SaveProjectDialog({
     const result = await window.api.selectFolder();
     if (!result.canceled && result.filePaths[0]) {
       setFolderPath(result.filePaths[0]);
-      
+
       // Check for name collision
       if (projectName) {
         checkNameCollision(result.filePaths[0], projectName);
@@ -135,11 +135,11 @@ export function SaveProjectDialog({
       setPreviewName(cleaned);
       setShowPreview(true);
       setProjectName(cleaned);
-      
+
       // Validate cleaned name
       const error = validateName(cleaned);
       setNameError(error);
-      
+
       // Check collision with cleaned name
       if (folderPath && !error) {
         checkNameCollision(folderPath, cleaned);
@@ -235,19 +235,19 @@ export function SaveProjectDialog({
               onChange={(e) => handleNameChange(e.target.value)}
               className={cn(nameError && "border-red-500")}
             />
-            
+
             {/* Error message */}
             {nameError && (
               <p className="error-message text-sm text-red-500">{nameError}</p>
             )}
-            
+
             {/* Preview message */}
             {showPreview && (
               <p className="preview-message text-sm text-yellow-600">
                 Project will be saved as: {projectName}
               </p>
             )}
-            
+
             {/* Collision warning */}
             {nameCollision && !nameError && (
               <p className="warning-message text-sm text-yellow-600">
@@ -265,7 +265,7 @@ export function SaveProjectDialog({
           >
             Cancel
           </Button>
-          
+
           {nameCollision && !nameError && (
             <Button
               variant="destructive"
@@ -275,7 +275,7 @@ export function SaveProjectDialog({
               {isSaving ? "Saving..." : "Overwrite"}
             </Button>
           )}
-          
+
           {!nameCollision && (
             <Button
               onClick={handleSave}

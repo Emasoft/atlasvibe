@@ -14,8 +14,9 @@ from pkgs.atlasvibe.atlasvibe.data_container import (
     ParametricOrderedTriple,
     ParametricMatrix,
     ParametricGrayscale,
-    ParametricImage
+    ParametricImage,
 )
+
 
 @atlasvibe
 def NP_2_DF(default: DataContainer) -> DataFrame:

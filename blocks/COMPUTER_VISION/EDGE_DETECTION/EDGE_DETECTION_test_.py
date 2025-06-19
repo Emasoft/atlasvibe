@@ -3,6 +3,7 @@ import cv2
 from PIL import ImageFilter, Image as PILImage
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
+
 def test_EDGE_DETECTION(mock_atlasvibe_decorator):
     import EDGE_DETECTION
 

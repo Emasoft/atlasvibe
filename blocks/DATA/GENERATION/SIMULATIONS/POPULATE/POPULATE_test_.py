@@ -2,6 +2,7 @@ import numpy as np
 
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_POPULATE_array_value_uniform(mock_atlasvibe_decorator):
     import POPULATE
 
@@ -12,6 +13,7 @@ def test_POPULATE_array_value_uniform(mock_atlasvibe_decorator):
     assert np.all(res.x == x.v)
     assert np.all(res.y < 1)
     assert np.all(res.y > 0)
+
 
 def test_POPULATE_array_value_normal(mock_atlasvibe_decorator):
     import POPULATE
@@ -26,6 +28,7 @@ def test_POPULATE_array_value_normal(mock_atlasvibe_decorator):
     # Test for mean and std
     assert abs(np.mean(res.y)) < 0.01
     assert abs(np.std(res.y) - 1) < 0.01
+
 
 def test_POPULATE_array_value_poisson(mock_atlasvibe_decorator):
     import POPULATE

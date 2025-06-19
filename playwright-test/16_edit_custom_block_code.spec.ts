@@ -1,13 +1,13 @@
 /**
  * Playwright E2E tests for custom block code editing functionality.
- * 
+ *
  * These tests verify that:
  * 1. Users can create custom blocks from blueprints
  * 2. Custom blocks show "Edit Python Code" in context menu
  * 3. The editor window opens and shows custom block indicator
  * 4. Changes can be saved and metadata is regenerated
  * 5. Error handling works correctly
- * 
+ *
  * NOTE: These tests require the application to be built first.
  * Run: pnpm run build
  * Then: npx playwright test 16_edit_custom_block_code.spec.ts
@@ -58,7 +58,7 @@ test.describe("Edit custom block code", () => {
     // Create a custom block
     const customBlockDir = join(blocksDir, "CUSTOM_TEST_BLOCK");
     fs.mkdirSync(customBlockDir, { recursive: true });
-    
+
     customBlockPath = join(customBlockDir, "CUSTOM_TEST_BLOCK.py");
     fs.writeFileSync(customBlockPath, `#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -68,10 +68,10 @@ from atlasvibe import atlasvibe
 @atlasvibe
 def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
     '''A custom test block for editing.
-    
+
     Parameters:
         x: Input value
-        
+
     Returns:
         int: The input multiplied by 2
     '''
@@ -96,12 +96,12 @@ def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
 
   test.afterAll(async () => {
     await writeLogFile(app, "edit-custom-block-code");
-    
+
     // Cleanup temporary files
     if (fs.existsSync(tempProjectPath)) {
       fs.rmSync(tempProjectPath, { recursive: true, force: true });
     }
-    
+
     await app.close();
   });
 
@@ -121,7 +121,7 @@ def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
     // Enter a custom name
     const customNameInput = window.locator('input[placeholder="Enter block name"]');
     await customNameInput.fill("MY_CUSTOM_CONSTANT");
-    
+
     // Click create button
     await window.getByRole("button", { name: "Create" }).click();
 
@@ -160,7 +160,7 @@ def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
 
     // Verify editor window opened
     expect(editorWindow).toBeTruthy();
-    
+
     // Wait for editor to load
     await editorWindow.waitForLoadState();
 
@@ -188,7 +188,7 @@ def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
     // Modify the code
     const editorContent = await editorWindow!.locator('[data-testid="code-editor"]');
     const originalContent = await editorContent.inputValue();
-    
+
     // Change the return value from x * 2 to x * 3
     const modifiedContent = originalContent.replace("return x * 2", "return x * 3");
     await editorContent.fill(modifiedContent);
@@ -242,7 +242,7 @@ def CUSTOM_TEST_BLOCK(x: int = 1) -> int:
     // Create a custom block with invalid Python syntax
     const errorBlockDir = join(tempProjectPath, "atlasvibe_blocks", "ERROR_BLOCK");
     fs.mkdirSync(errorBlockDir, { recursive: true });
-    
+
     const errorBlockPath = join(errorBlockDir, "ERROR_BLOCK.py");
     fs.writeFileSync(errorBlockPath, `#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -296,16 +296,16 @@ def ERROR_BLOCK(x: int = 1) -> int:
 
     // The manifest should have been refreshed automatically
     // We can verify this by checking that the block is still functional
-    
+
     // Try to connect it to another block
     await window.getByTestId(Selectors.addBlockBtn).click();
     await window.locator("button", { hasText: "CONSTANT" }).first().click();
-    
+
     // Enter a name for the second custom block
     const customNameInput = window.locator('input[placeholder="Enter block name"]');
     await customNameInput.fill("ANOTHER_CUSTOM");
     await window.getByRole("button", { name: "Create" }).click();
-    
+
     await window.getByTestId(Selectors.sidebarCloseBtn).click();
 
     // Both custom blocks should be visible

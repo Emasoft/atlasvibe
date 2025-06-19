@@ -88,6 +88,7 @@ InitFuncType = Callable[[Queue], None]
 
 class RegenerationMessage(TypedDict):
     """Message for block regeneration state updates."""
+
     type: str  # "regeneration_start", "regeneration_complete", "regeneration_error"
     block_name: str
     block_path: str

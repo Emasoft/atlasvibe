@@ -1,4 +1,3 @@
-
 from typing import Optional
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar, OrderedPair
@@ -6,6 +5,7 @@ from pkgs.atlasvibe.atlasvibe.small_memory import SmallMemory
 from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
 
 memory_key = "LOOP_INDEX"
+
 
 @atlasvibe
 def LOOP_INDEX(

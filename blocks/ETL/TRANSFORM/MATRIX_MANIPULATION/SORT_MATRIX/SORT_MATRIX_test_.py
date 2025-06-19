@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
+
 def test_SORT_MATRIX(mock_atlasvibe_decorator):
     import SORT_MATRIX
 

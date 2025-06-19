@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def test_LINSPACE(mock_atlasvibe_decorator):
     import LINSPACE
 

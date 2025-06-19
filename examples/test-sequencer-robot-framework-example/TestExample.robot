@@ -16,4 +16,3 @@ TEST ASSERT
     # Call the `is_in_range` from the test_sequencer
     ${ok}                  Is In Range     ${result}
     Should Be True         ${ok}
-

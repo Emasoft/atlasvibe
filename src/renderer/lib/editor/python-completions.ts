@@ -48,16 +48,16 @@ const NUMPY_COMPLETIONS = [
 function generateDocstringTemplate(context: CompletionContext): Completion | null {
   const line = context.state.doc.lineAt(context.pos);
   const beforeCursor = line.text.slice(0, context.pos - line.from);
-  
+
   // Check if we're right after a function definition
   if (beforeCursor.trim().endsWith(':')) {
     const match = beforeCursor.match(/def\s+(\w+)\s*\((.*?)\)/);
     if (match) {
       const [, , params] = match;
       const paramList = params.split(',').map(p => p.trim().split(':')[0].trim()).filter(p => p && p !== 'self');
-      
+
       let docstring = '"""\n    Brief description.\n    \n';
-      
+
       if (paramList.length > 0) {
         docstring += '    Parameters\n    ----------\n';
         paramList.forEach(param => {
@@ -65,9 +65,9 @@ function generateDocstringTemplate(context: CompletionContext): Completion | nul
         });
         docstring += '    \n';
       }
-      
+
       docstring += '    Returns\n    -------\n    type\n        Description of return value.\n    """';
-      
+
       return {
         label: '"""docstring"""',
         type: "snippet",
@@ -76,7 +76,7 @@ function generateDocstringTemplate(context: CompletionContext): Completion | nul
       };
     }
   }
-  
+
   return null;
 }
 
@@ -90,17 +90,17 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
   }
 
   const completions: Completion[] = [];
-  
+
   // Check if we need a docstring
   const docstringCompletion = generateDocstringTemplate(context);
   if (docstringCompletion) {
     completions.push(docstringCompletion);
   }
-  
+
   // Get the current line
   const line = context.state.doc.lineAt(context.pos);
   const beforeCursor = line.text.slice(0, context.pos - line.from);
-  
+
   // Import completions
   if (beforeCursor.match(/^(from|import)\s+/)) {
     ATLASVIBE_IMPORTS.forEach(imp => {
@@ -111,12 +111,12 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
       });
     });
   }
-  
+
   // Decorator completions
   if (beforeCursor.match(/^@/)) {
     completions.push(...ATLASVIBE_DECORATORS);
   }
-  
+
   // Type hints after colon
   if (beforeCursor.includes(':') && beforeCursor.match(/\w+\s*:\s*$/)) {
     completions.push(...DATA_CONTAINER_TYPES);
@@ -134,18 +134,18 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
       { label: "Literal", type: "class", detail: "from typing" },
     );
   }
-  
+
   // NumPy completions after np.
   if (beforeCursor.endsWith('np.')) {
     completions.push(...NUMPY_COMPLETIONS);
   }
-  
-  // Data container completions  
+
+  // Data container completions
   if (word) {
     completions.push(...DATA_CONTAINER_TYPES);
     completions.push(...PYTHON_KEYWORDS);
   }
-  
+
   return {
     from: word.from,
     options: completions,
@@ -167,14 +167,14 @@ from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector, OrderedPair
 def BLOCK_NAME(input_a: Scalar | Vector, input_b: Scalar | Vector) -> Scalar | Vector:
     """
     Brief description of the block.
-    
+
     Parameters
     ----------
     input_a : Scalar | Vector
         Description of input_a.
-    input_b : Scalar | Vector  
+    input_b : Scalar | Vector
         Description of input_b.
-        
+
     Returns
     -------
     Scalar | Vector
@@ -185,18 +185,18 @@ def BLOCK_NAME(input_a: Scalar | Vector, input_b: Scalar | Vector) -> Scalar | V
   },
   {
     label: "numpy_docstring",
-    type: "snippet", 
+    type: "snippet",
     detail: "NumPy-style docstring template",
     apply: `"""
     Brief description.
-    
+
     Parameters
     ----------
     param1 : type
         Description of param1.
     param2 : type
         Description of param2.
-        
+
     Returns
     -------
     type

@@ -2,6 +2,7 @@ from numpy.random import permutation
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 @atlasvibe
 def SHUFFLE_VECTOR(
     default: Vector,

@@ -7,12 +7,15 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 memory_key = "batch-processor-info"
 
+
 class BATCH_OUTPUT(TypedDict):
     fname: String
     n_files: Scalar
 
+
 def get_fnames(d, p):
     return [file for file in glob.glob(d + "/" + p, recursive=True)]
+
 
 @atlasvibe(inject_node_metadata=True)
 def BATCH_PROCESSOR(

@@ -4,11 +4,13 @@ import numpy as np
 from PIL import Image as PIL_Image
 from os import path
 
+
 @pytest.fixture
 def astronaut_img_array_rgb():
     _image_path = f"{path.dirname(path.realpath(__file__))}/assets/astronaut.png"
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image)
+
 
 @pytest.fixture
 def camera_img_array_rgb():
@@ -16,21 +18,26 @@ def camera_img_array_rgb():
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image)
 
+
 @pytest.fixture
 def iris_csv():
     return f"{path.dirname(path.realpath(__file__))}/assets/iris_test.csv"
+
 
 @pytest.fixture
 def menu_xml():
     return f"{path.dirname(path.realpath(__file__))}/assets/menu.xml"
 
+
 @pytest.fixture
 def employees_json():
     return f"{path.dirname(path.realpath(__file__))}/assets/employees.json"
 
+
 @pytest.fixture
 def insurance_excel():
     return f"{path.dirname(path.realpath(__file__))}/assets/sampledatainsurance.xlsx"
+
 
 def test_LOCAL_FILE_img(
     mock_atlasvibe_decorator, astronaut_img_array_rgb, camera_img_array_rgb
@@ -74,6 +81,7 @@ def test_LOCAL_FILE_img(
     np.testing.assert_array_equal(default_output.g, default_image.g)
     np.testing.assert_array_equal(default_output.b, default_image.b)
     np.testing.assert_array_equal(None, default_image.a)
+
 
 def test_LOCAL_FILE_csv(mock_atlasvibe_decorator, iris_csv):
     import LOCAL_FILE
@@ -126,6 +134,7 @@ def test_LOCAL_FILE_csv(mock_atlasvibe_decorator, iris_csv):
     )
     assert output.m.equals(output_from_textblob.m)
 
+
 # def test_LOCAL_FILE_xml(mock_atlasvibe_decorator, menu_xml):
 #     import LOCAL_FILE
 
@@ -139,6 +148,7 @@ def test_LOCAL_FILE_csv(mock_atlasvibe_decorator, iris_csv):
 #         default=String(s=menu_xml), file_type="XML"
 #     )
 #     assert output.m.equals(output_from_textblob.m)
+
 
 def test_LOCAL_FILE_json(mock_atlasvibe_decorator, employees_json):
     import LOCAL_FILE
@@ -164,6 +174,7 @@ def test_LOCAL_FILE_json(mock_atlasvibe_decorator, employees_json):
         default=String(s=employees_json), file_type="JSON"
     )
     assert output.m.equals(output_from_textblob.m)
+
 
 # def test_LOCAL_FILE_xlsx(mock_atlasvibe_decorator, insurance_excel):
 #     import LOCAL_FILE

@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 import numpy as np
 
+
 def test_DIFFERENTIATE(mock_atlasvibe_decorator):
     import DIFFERENTIATE
 

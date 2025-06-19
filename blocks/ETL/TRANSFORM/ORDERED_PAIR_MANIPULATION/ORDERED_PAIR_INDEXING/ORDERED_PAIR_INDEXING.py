@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar
 
+
 @atlasvibe
 def ORDERED_PAIR_INDEXING(
     default: OrderedPair,
@@ -24,9 +25,9 @@ def ORDERED_PAIR_INDEXING(
         The scalar index of the input OrderedPair.
     """
 
-    assert (
-        len(default.x) > index
-    ), "The index parameter must be less than the length of the OrderedPair."
+    assert len(default.x) > index, (
+        "The index parameter must be less than the length of the OrderedPair."
+    )
     assert index >= 0, "The index parameter must be greater than zero."
 
     if x_axis:

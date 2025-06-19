@@ -43,7 +43,7 @@ export const useManifestStore = create<State & Actions>()(
       return safeTry(async function* () {
         // Get current project path
         const projectPath = useProjectStore.getState().path;
-        
+
         set({
           standardBlocksManifest: yield* (await getManifest(undefined, projectPath)).safeUnwrap(),
           standardBlocksMetadata: yield* (await getMetadata(undefined, false, projectPath)).safeUnwrap(),
@@ -85,7 +85,7 @@ export const useManifestStore = create<State & Actions>()(
     setManifestChanged: (val: boolean) => {
       set({ manifestChanged: val });
     },
-    
+
     setBlockRegenerating: (blockPath: string, isRegenerating: boolean) => {
       set((state) => {
         const newSet = new Set(state.regeneratingBlocks);
@@ -97,7 +97,7 @@ export const useManifestStore = create<State & Actions>()(
         state.regeneratingBlocks = newSet;
       });
     },
-    
+
     clearRegeneratingBlocks: () => {
       set({ regeneratingBlocks: new Set() });
     },

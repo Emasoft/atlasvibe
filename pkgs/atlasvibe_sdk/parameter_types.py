@@ -206,7 +206,7 @@ def format_param_value(value: Any, value_type: str):
         case "NIDMMDevice" | "NIConnection":
             return NIDMMDevice(value)
 
-    if value == "": # Check if value is an empty string, return None if so
+    if value == "":  # Check if value is an empty string, return None if so
         return None
 
     # The following match cases should only be processed if value is not an empty string
@@ -216,7 +216,7 @@ def format_param_value(value: Any, value_type: str):
         case "int":
             return int(value)
         case "bool":
-            return bool(value) # Note: bool('') is False, bool('any_string') is True
+            return bool(value)  # Note: bool('') is False, bool('any_string') is True
         case "NodeReference":
             return NodeReference(str(value))
         case "File":

@@ -93,9 +93,9 @@ export const SocketReceiver = () => {
               setBlockRegenerating(path, true);
             });
           }
-          
+
           toast("Changes detected, regenerating block metadata...");
-          
+
           // Fetch updated manifest and import custom blocks
           Promise.all([doFetch(), doImport()]).then(() => {
             // Clear regenerating state after successful update

@@ -14,9 +14,16 @@ import plotly.graph_objects as go
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
+
 @atlasvibe
 def HEATMAP(
-    default: OrderedPair | Matrix | Grayscale | DataFrame | Vector | OrderedTriple | Surface,
+    default: OrderedPair
+    | Matrix
+    | Grayscale
+    | DataFrame
+    | Vector
+    | OrderedTriple
+    | Surface,
     x_label: str = "x",
     y_label: str = "y",
     z_label: str = "z",

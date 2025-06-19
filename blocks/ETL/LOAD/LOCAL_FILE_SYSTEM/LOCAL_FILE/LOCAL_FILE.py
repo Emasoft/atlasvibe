@@ -7,6 +7,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Grayscale, Image, String
 from PIL import Image as PIL_Image
 
+
 def get_file_path(file_path: str, default_path: str | None = None):
     # TODO: We should not do this, this is too fragile
     # We need to get an actual file picker going to get the absolute path
@@ -21,6 +22,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
         path_to_nodes = __file__[: __file__.rfind("blocks") + 6]
         return os.path.abspath(os.path.join(path_to_nodes, f_path))
     return f_path
+
 
 @atlasvibe(
     deps={

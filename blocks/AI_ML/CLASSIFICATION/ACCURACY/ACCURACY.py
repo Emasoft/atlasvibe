@@ -3,6 +3,7 @@ from typing import Optional
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 @atlasvibe
 def ACCURACY(
     true_data: DataFrame,

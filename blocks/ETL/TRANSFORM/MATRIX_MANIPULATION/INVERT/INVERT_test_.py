@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
+
 def test_INVERT(mock_atlasvibe_decorator):
     import INVERT
 

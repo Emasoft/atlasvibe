@@ -3,6 +3,7 @@ import scipy.signal
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix, OrderedPair, Scalar
 
+
 @atlasvibe
 def BSPLINE(
     default: OrderedPair | Matrix,
@@ -35,9 +36,9 @@ def BSPLINE(
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)
     else:
-        assert isinstance(
-            result, np.number | float | int
-        ), f"Expected np.number, float or int for result, got {type(result)}"
+        assert isinstance(result, np.number | float | int), (
+            f"Expected np.number, float or int for result, got {type(result)}"
+        )
         result = Scalar(c=float(result))
 
     return result

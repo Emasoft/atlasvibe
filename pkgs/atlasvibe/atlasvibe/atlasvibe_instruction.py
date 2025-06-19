@@ -4,6 +4,7 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
+
 class ATLASVIBE_INSTRUCTION:
     FLOW_TO_DIRECTIONS = "__flow_to_directions__"
     FLOW_TO_NODES = "__flow_to_nodes__"

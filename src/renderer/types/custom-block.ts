@@ -5,7 +5,7 @@
 // - New file defining types for custom blocks
 // - Extends BlockDefinition with path and isCustom properties
 // - Provides type safety for custom block operations
-// 
+//
 
 import { BlockDefinition } from '@/renderer/types/manifest';
 

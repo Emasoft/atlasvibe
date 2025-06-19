@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
+
 def test_IMAGE_SMOOTHING(mock_atlasvibe_decorator):
     import IMAGE_SMOOTHING
 

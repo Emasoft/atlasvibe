@@ -6,6 +6,7 @@ from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
 
 memory_key = "loop-info"
 
+
 @atlasvibe
 def BREAK(
     referred_node: NodeReference,

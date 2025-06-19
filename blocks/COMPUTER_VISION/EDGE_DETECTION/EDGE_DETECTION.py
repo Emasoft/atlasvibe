@@ -5,6 +5,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import Image
 from PIL import Image as PILImage
 from PIL import ImageFilter
 
+
 @atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def EDGE_DETECTION(default: Image) -> Image:
     """Detect edges in the image that was passed to it.
@@ -41,7 +42,7 @@ def EDGE_DETECTION(default: Image) -> Image:
 
     # Edge detection converts to RGB (3 channels), so no alpha channel
     r, g, b = cv2.split(image)
-    
+
     return Image(
         r=r,
         g=g,

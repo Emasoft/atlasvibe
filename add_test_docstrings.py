@@ -4,45 +4,50 @@
 import ast
 from pathlib import Path
 
+
 class DocstringAdder(ast.NodeTransformer):
     """Add docstrings to test functions."""
-    
+
     def __init__(self):
         self.modified = False
-        
+
     def visit_FunctionDef(self, node):
-        if node.name.startswith('test_'):
+        if node.name.startswith("test_"):
             # Check if function has docstring
             if not ast.get_docstring(node):
                 # Generate docstring based on function name
                 test_name = node.name[5:]  # Remove 'test_' prefix
                 docstring = f'"""Test {test_name.replace("_", " ")} functionality."""'
-                
+
                 # Add docstring as first statement
-                docstring_node = ast.Expr(value=ast.Constant(value=docstring.strip('"""')))
+                docstring_node = ast.Expr(
+                    value=ast.Constant(value=docstring.strip('"""'))
+                )
                 node.body.insert(0, docstring_node)
                 self.modified = True
-                
+
         return node
+
 
 def add_docstrings_to_file(filepath):
     """Add docstrings to test functions in a file."""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             content = f.read()
-        
+
         tree = ast.parse(content)
         transformer = DocstringAdder()
         new_tree = transformer.visit(tree)
-        
+
         if transformer.modified:
             # Convert back to source code
             import astor
+
             new_content = astor.to_source(new_tree)
-            
-            with open(filepath, 'w') as f:
+
+            with open(filepath, "w") as f:
                 f.write(new_content)
-            
+
             return True
     except (IOError, OSError) as e:
         print(f"Error reading/writing file {filepath}: {e}")
@@ -52,8 +57,9 @@ def add_docstrings_to_file(filepath):
         print("astor module not available - cannot convert AST back to source")
     except Exception as e:
         print(f"Unexpected error processing {filepath}: {e}")
-    
+
     return False
+
 
 # Sample test files to check
 test_files = [

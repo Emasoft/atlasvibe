@@ -16,15 +16,18 @@ try:
 except ImportError:
     hf_hub_download = None
 
+
 @pytest.fixture
-def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory):
+def torchscript_model_path(
+    mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory
+):
     """Create or download a TorchScript model for testing."""
     with tempfile.TemporaryDirectory() as tempdir:
         model_path = os.path.join(tempdir, "model.torchscript")
-        
+
         # Try multiple approaches to get a valid TorchScript model
         model_created = False
-        
+
         # Approach 1: Try to download a real TorchScript model from HuggingFace
         if hf_hub_download and not model_created:
             try:
@@ -34,13 +37,13 @@ def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_d
                 model_created = False
             except Exception as e:
                 print(f"Skipping HuggingFace download: {e}")
-        
+
         # Approach 2: Create a minimal valid TorchScript model
         if not model_created:
             try:
                 import torch
                 import torch.nn as nn
-                
+
                 # Create a more realistic classifier that matches expected input/output
                 class ImageClassifier(nn.Module):
                     def __init__(self, num_classes=1000):
@@ -51,23 +54,22 @@ def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_d
                             nn.Conv2d(3, 16, kernel_size=3, stride=2, padding=1),
                             nn.BatchNorm2d(16),
                             nn.ReLU(inplace=True),
-                            
                             # Depthwise separable convolutions
-                            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1, groups=16),
+                            nn.Conv2d(
+                                16, 16, kernel_size=3, stride=1, padding=1, groups=16
+                            ),
                             nn.BatchNorm2d(16),
                             nn.ReLU(inplace=True),
                             nn.Conv2d(16, 32, kernel_size=1, stride=1),
                             nn.BatchNorm2d(32),
                             nn.ReLU(inplace=True),
-                            
                             # Global average pooling
-                            nn.AdaptiveAvgPool2d(1)
+                            nn.AdaptiveAvgPool2d(1),
                         )
                         self.classifier = nn.Sequential(
-                            nn.Dropout(0.2),
-                            nn.Linear(32, num_classes)
+                            nn.Dropout(0.2), nn.Linear(32, num_classes)
                         )
-                    
+
                     def forward(self, x):
                         # Handle both CHW and HWC input formats
                         if x.dim() == 3:
@@ -75,15 +77,15 @@ def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_d
                         if x.shape[-1] == 3 and x.shape[1] != 3:
                             # Convert HWC to CHW
                             x = x.permute(0, 3, 1, 2)
-                        
+
                         x = self.features(x)
                         x = x.view(x.size(0), -1)
                         x = self.classifier(x)
                         return x
-                
+
                 model = ImageClassifier()
                 model.eval()
-                
+
                 # Trace the model with correct input shape
                 example_input = torch.randn(1, 3, 224, 224)
                 scripted = torch.jit.trace(model, example_input)
@@ -91,18 +93,21 @@ def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_d
                 model_created = True
             except Exception as e:
                 print(f"Could not create TorchScript model: {e}")
-        
+
         # Approach 3: Fallback - create dummy file for testing without torch
         if not model_created:
             with open(model_path, "wb") as f:
                 # Create a more realistic dummy file with TorchScript header
-                f.write(b"PK\x03\x04"  # ZIP header (TorchScript files are ZIP archives)
-                       b"\x00\x00\x00\x00"  # More ZIP header bytes
-                       b"\x00\x00\x00\x00"
-                       b"\x00\x00\x00\x00"
-                       b"dummy torchscript model content")
-        
+                f.write(
+                    b"PK\x03\x04"  # ZIP header (TorchScript files are ZIP archives)
+                    b"\x00\x00\x00\x00"  # More ZIP header bytes
+                    b"\x00\x00\x00\x00"
+                    b"\x00\x00\x00\x00"
+                    b"dummy torchscript model content"
+                )
+
         yield model_path
+
 
 @pytest.fixture
 def class_names():
@@ -110,6 +115,7 @@ def class_names():
         os.path.dirname(os.path.realpath(__file__)), "assets", "class_names.csv"
     )
     return DataFrame(df=pd.read_csv(csv_path))
+
 
 @pytest.fixture
 def obama_image():
@@ -120,6 +126,7 @@ def obama_image():
     )
     image = np.array(PIL.Image.open(_image_path).convert("RGB"))
     return Image(r=image[:, :, 0], g=image[:, :, 1], b=image[:, :, 2], a=None)
+
 
 @pytest.mark.skipif(
     torch is None,
@@ -136,11 +143,11 @@ def test_TORHSCRIPT_CLASSIFIER(
 ):
     """Test TORCHSCRIPT CLASSIFIER functionality"""
     import TORCHSCRIPT_CLASSIFIER
-    
+
     # Since we're using mocked decorators, the actual TORCHSCRIPT_CLASSIFIER
     # won't run in a venv. We need to test that it can be called correctly.
     # The mock decorator will execute the function directly without venv.
-    
+
     # For this test, we'll verify the function can be called with correct parameters
     # The actual functionality would require torch to be installed
     try:
@@ -149,11 +156,11 @@ def test_TORHSCRIPT_CLASSIFIER(
             model_path=torchscript_model_path,
             class_names=class_names,
         )
-        
+
         # If we get here without torch, it means mocking worked
         # Check that output is a DataFrame
         assert isinstance(clf_output, DataFrame)
-        
+
     except Exception as e:
         # If torch is not available, we expect certain errors
         # This is acceptable in the test environment

@@ -4,6 +4,7 @@ from typing import Literal
 
 import scipy.stats
 
+
 @atlasvibe
 def MVSDIST(
     default: OrderedPair | Matrix,

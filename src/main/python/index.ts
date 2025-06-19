@@ -50,7 +50,7 @@ export async function checkPythonInstallation(
         }
       }
     }
-    
+
     const py311 = await new PythonManager().getInterpreterByVersion({
       major: 3,
       minor: 11,
@@ -135,19 +135,19 @@ export async function ensureUvEnvironment(): Promise<void> {
   } catch {
     await installUv();
   }
-  
+
   // Get the app root directory (without ASAR, resourcesPath points to app contents)
-  const appRoot = app.isPackaged 
+  const appRoot = app.isPackaged
     ? join(app.getAppPath(), '..')  // Go up from app.asar directory
     : process.cwd();
-    
+
   // Ensure virtual environment exists
   const venvPath = join(appRoot, ".venv");
   if (!existsSync(venvPath)) {
     log.info("Creating virtual environment with uv...");
     await execCommand(new Command("uv venv --python 3.11"), { cwd: appRoot });
   }
-  
+
   // Set UV_PYTHON to use the venv
   process.env.UV_PYTHON = join(venvPath, "bin", "python");
   process.env.VIRTUAL_ENV = venvPath;
@@ -156,7 +156,7 @@ export async function ensureUvEnvironment(): Promise<void> {
 export async function installDependencies(): Promise<string> {
   // Ensure we're in a virtual environment
   await ensureUvEnvironment();
-  
+
   const validGroups = await uvGroupEnsureValid();
   if (validGroups.length > 0) {
     const extras = validGroups.map(g => `[${g}]`).join("");
@@ -176,14 +176,14 @@ export async function spawnCaptain(): Promise<void> {
     } else if (process.env.PY_INTERPRETER) {
       pythonCommand = process.env.PY_INTERPRETER;
     }
-    
+
     const command = new Command(`"${pythonCommand}" main.py`);
 
     // Get the app root directory
-    const appRoot = app.isPackaged 
+    const appRoot = app.isPackaged
       ? join(app.getAppPath(), '..')  // Go up from app.asar directory
       : process.cwd();
-      
+
     log.info("execCommand: " + command.getCommand());
     log.info("Working directory: " + appRoot);
 

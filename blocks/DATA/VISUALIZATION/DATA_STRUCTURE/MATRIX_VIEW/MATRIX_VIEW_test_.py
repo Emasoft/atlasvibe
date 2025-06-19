@@ -4,6 +4,7 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
+
 def test_MATRIX_VIEW(mock_atlasvibe_node_decorator, mock_atlasvibe_decorator):
     """Verify MATRIX_VIEW can visualize a 3x4 matrix without errors."""
     import MATRIX_VIEW

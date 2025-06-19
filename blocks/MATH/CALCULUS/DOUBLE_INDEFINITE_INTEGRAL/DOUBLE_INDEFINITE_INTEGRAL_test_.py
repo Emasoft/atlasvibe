@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedTriple
 import numpy as np
 
+
 def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
@@ -11,6 +12,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_atlasvibe_decorator):
 
     output = DOUBLE_INDEFINITE_INTEGRAL.DOUBLE_INDEFINITE_INTEGRAL(a_triple, 3, 2)
     np.testing.assert_array_equal(c, output.m)
+
 
 def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
@@ -27,6 +29,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_atlasvibe_decorato
         7,
         3,
     )
+
 
 def test_DOUBLE_INDEFINITE_INTEGRAL_str_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL

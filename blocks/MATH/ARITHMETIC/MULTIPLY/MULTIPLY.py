@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_operation
 
+
 @atlasvibe
 def MULTIPLY(
     a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]

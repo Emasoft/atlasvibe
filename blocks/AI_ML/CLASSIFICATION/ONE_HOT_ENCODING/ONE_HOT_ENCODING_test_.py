@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+
 @pytest.mark.skip(reason="Test isolation issue with mocking - needs fixing")
 def test_ONE_HOT_ENCODING(mock_atlasvibe_decorator):
     from pkgs.atlasvibe.atlasvibe.data_container import DataFrame

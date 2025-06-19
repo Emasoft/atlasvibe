@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataContainer, String
 
+
 @atlasvibe()
 def DATACONTAINER_TYPE(
     default: DataContainer,

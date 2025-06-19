@@ -6,7 +6,7 @@
 // - Shows "Paused - Block Regenerating" when blocks are regenerating
 // - Shows "Running" when execution is active
 // - Automatically resumes after regeneration
-// 
+//
 
 import React, { useEffect, useState } from "react";
 import { cn } from "@/renderer/lib/utils";
@@ -23,17 +23,17 @@ interface ExecutionStatusProps {
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) => {
   const [status, setStatus] = useState<ExecutionStatusType>("idle");
   const [pauseReason, setPauseReason] = useState<string>("");
-  
+
   const { isRunning, serverStatus } = useSocketStore(
     useShallow((state) => ({
       isRunning: state.isRunning,
       serverStatus: state.serverStatus,
     }))
   );
-  
+
   const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
   const hasRegeneratingBlocks = regeneratingBlocks.size > 0;
-  
+
   // Update status based on execution and regeneration state
   useEffect(() => {
     if (hasRegeneratingBlocks && isRunning) {
@@ -47,7 +47,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
       setPauseReason("");
     }
   }, [isRunning, hasRegeneratingBlocks]);
-  
+
   // Auto-resume when regeneration completes
   useEffect(() => {
     if (status === "paused" && !hasRegeneratingBlocks) {
@@ -56,15 +56,15 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
       setPauseReason("");
     }
   }, [status, hasRegeneratingBlocks]);
-  
+
   const getStatusDisplay = () => {
     switch (status) {
       case "running":
         return { text: "Running", className: "text-green-500" };
       case "paused":
-        return { 
-          text: pauseReason ? `Paused - ${pauseReason}` : "Paused", 
-          className: "text-yellow-500" 
+        return {
+          text: pauseReason ? `Paused - ${pauseReason}` : "Paused",
+          className: "text-yellow-500"
         };
       case "completed":
         return { text: "Completed", className: "text-blue-500" };
@@ -74,13 +74,13 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
         return { text: "Idle", className: "text-gray-500" };
     }
   };
-  
+
   const { text, className: statusClassName } = getStatusDisplay();
-  
+
   if (status === "idle") {
     return null; // Don't show status when idle
   }
-  
+
   return (
     <div
       className={cn(

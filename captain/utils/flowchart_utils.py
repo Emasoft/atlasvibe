@@ -251,7 +251,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
 
     """
     ____________________________________________________________________________
-    START PRE JOB OPERATION 
+    START PRE JOB OPERATION
     """
     logger.info("PREJOB_OP")
     pre_job_op_start = time.time()
@@ -306,8 +306,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
 
     # get the amount of workers needed
     funcs, errs = pre_import_functions(
-        topology=manager.running_topology,
-        project_path=request.projectPath
+        topology=manager.running_topology, project_path=request.projectPath
     )
 
     if errs:

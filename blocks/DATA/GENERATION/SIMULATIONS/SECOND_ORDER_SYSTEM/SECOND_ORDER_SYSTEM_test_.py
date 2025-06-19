@@ -2,9 +2,10 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
+
 def test_SECOND_ORDER_SYSTEM(mock_atlasvibe_decorator):
     import SECOND_ORDER_SYSTEM
-    
+
     defaultP = DefaultParams(
         node_id="SECOND_ORDER_SYSTEM", job_id="0", jobset_id="0", node_type="default"
     )

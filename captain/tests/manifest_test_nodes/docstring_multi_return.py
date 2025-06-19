@@ -6,7 +6,11 @@
 
 from typing import TypedDict
 
-from pkgs.atlasvibe.atlasvibe import OrderedPair, OrderedTriple, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import (
+    OrderedPair,
+    OrderedTriple,
+    atlasvibe_node,
+)  # CHANGED
 
 
 class DocstringMultiReturnOutput(TypedDict):
@@ -14,7 +18,7 @@ class DocstringMultiReturnOutput(TypedDict):
     output2: OrderedTriple
 
 
-@atlasvibe_node(node_type="TEST_TYPE") # CHANGED
+@atlasvibe_node(node_type="TEST_TYPE")  # CHANGED
 def DOCSTRING_MULTI_RETURN(
     a: OrderedPair, b: OrderedPair
 ) -> DocstringMultiReturnOutput:

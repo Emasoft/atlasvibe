@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 from skimage.exposure import adjust_gamma
 
+
 @atlasvibe(deps={"scikit-image": "0.21.0"})
 def GAMMA_ADJUSTMENT(
     default: Image,

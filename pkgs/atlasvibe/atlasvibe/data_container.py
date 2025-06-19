@@ -242,7 +242,7 @@ class DataContainer(Box):
     def __build_error_text(self, key: str, data_type: str, available_keys: list[str]):
         return (
             f'Invalid key "{key}" provided for data type "{data_type}", '
-            f'supported keys: {", ".join(available_keys)}'
+            f"supported keys: {', '.join(available_keys)}"
         )
 
     def validate(self):

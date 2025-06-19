@@ -2,6 +2,7 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector
 
+
 @atlasvibe
 def VECTOR_MIN(default: Vector) -> Scalar:
     """The VECTOR_MIN node returns the minimum value from the Vector

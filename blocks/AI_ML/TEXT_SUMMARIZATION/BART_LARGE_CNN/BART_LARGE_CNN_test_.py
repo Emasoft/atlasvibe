@@ -8,12 +8,14 @@ try:
 except ImportError:
     torch = None
 
+
 @pytest.fixture
 def long_text():
     _file_path = f"{os.path.dirname(os.path.realpath(__file__))}/story.txt"
     with open(_file_path, "r") as f:
         text = f.read()
     return text
+
 
 @pytest.mark.skipif(
     torch is None,

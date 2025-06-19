@@ -4,6 +4,7 @@ import numpy as np
 
 import scipy.stats
 
+
 @atlasvibe
 def SKEW(
     default: OrderedPair | Matrix,
@@ -18,7 +19,7 @@ def SKEW(
 
         Compute the sample skewness of a dataset.
 
-        For normally distributed data, the skewness should be about zero. 
+        For normally distributed data, the skewness should be about zero.
         For unimodal continuous distributions, a skewness value greater than zero means that there is more weight in the right tail of the distribution. \
         The function 'skewtest' can be used to determine if the skewness value is close enough to zero, statistically speaking.
 
@@ -26,7 +27,7 @@ def SKEW(
     ----------
     a : ndarray
         Input array.
-    axis : int 
+    axis : int
         Default = 0.
         If an int, the axis of the input along which to compute the statistic.
         The statistic of each axis-slice (e.g. row) of the input will appear in a
@@ -65,9 +66,9 @@ def SKEW(
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)
     else:
-        assert isinstance(
-            result, np.number | float | int
-        ), f"Expected np.number, float or int for result, got {type(result)}"
+        assert isinstance(result, np.number | float | int), (
+            f"Expected np.number, float or int for result, got {type(result)}"
+        )
         result = Scalar(c=float(result))
 
     return result

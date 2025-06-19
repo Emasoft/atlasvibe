@@ -7,6 +7,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from scipy.io import loadmat
 from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
+
 @atlasvibe
 def OPEN_MATLAB(file_path: File | None = None) -> DataFrame:
     """The OPEN_MATLAB node loads a local file of the .mat file format.

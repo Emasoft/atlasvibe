@@ -5,6 +5,7 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
+
 @atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def IMAGE_SMOOTHING(
     default: Image,
@@ -57,7 +58,7 @@ def IMAGE_SMOOTHING(
         case "bilateral":
             rgba_image = cv2.cvtColor(rgba_image, cv2.COLOR_BGRA2BGR)
             image = cv2.bilateralFilter(rgba_image, kernel, kernel * 5, kernel * 5)
-    
+
     # Split the image back into channels
     # bilateral filter returns 3 channels, others return 4 if input had 4
     channels = cv2.split(image)
@@ -66,7 +67,7 @@ def IMAGE_SMOOTHING(
     else:
         r, g, b = channels
         a = None
-    
+
     return Image(
         r=r,
         g=g,

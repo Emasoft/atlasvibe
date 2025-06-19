@@ -1,6 +1,7 @@
 from numpy import arange, array_equal, roll
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_SHIFT_VECTOR(mock_atlasvibe_decorator):
     import SHIFT_VECTOR
 

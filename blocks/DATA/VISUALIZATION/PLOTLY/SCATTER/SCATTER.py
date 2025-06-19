@@ -2,8 +2,15 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
-from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, OrderedPair, Plotly, Vector
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    DataFrame,
+    Matrix,
+    OrderedPair,
+    Plotly,
+    Vector,
+)
 from blocks.DATA.VISUALIZATION.template import plot_layout
+
 
 @atlasvibe
 def SCATTER(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
@@ -56,7 +63,9 @@ def SCATTER(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
 
             for i in range(num_rows):
                 fig.add_trace(
-                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i+1}", mode="markers")
+                    go.Scatter(
+                        x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="markers"
+                    )
                 )
 
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")

@@ -54,7 +54,11 @@ def _get_venv_cache_dir():
 
 def _get_venv_syspath(venv_executable: os.PathLike[Any]) -> list[str]:
     """Get the sys.path of the virtual environment."""
-    command = [venv_executable, "-c", "import sys\nimport json\nprint(json.dumps(sys.path))"]
+    command = [
+        venv_executable,
+        "-c",
+        "import sys\nimport json\nprint(json.dumps(sys.path))",
+    ]
     cmd_output = subprocess.run(command, check=True, capture_output=True, text=True)
     return json.loads(cmd_output.stdout)
 
@@ -122,8 +126,12 @@ def _bootstrap_venv(
             cmd = ["uv", "venv", str(venv_path)]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
-                logger.error(f"Failed to create virtual environment with uv: {result.stderr}")
-                raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
+                logger.error(
+                    f"Failed to create virtual environment with uv: {result.stderr}"
+                )
+                raise subprocess.CalledProcessError(
+                    result.returncode, cmd, result.stdout, result.stderr
+                )
         # At this point, the venv should be created and
         # _get_venv_executable_path should return a valid path (with symlinks resolved)
         venv_executable = _get_venv_executable_path(venv_path)

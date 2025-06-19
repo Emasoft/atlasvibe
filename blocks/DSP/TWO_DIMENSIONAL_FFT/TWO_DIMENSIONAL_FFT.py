@@ -6,8 +6,10 @@ from PIL import Image as PillowImage
 import pandas as pd
 import numpy as np
 
+
 def extrapolate(x):
     return (x - x.min()) / (x.max() - x.min())
+
 
 @atlasvibe
 def TWO_DIMENSIONAL_FFT(

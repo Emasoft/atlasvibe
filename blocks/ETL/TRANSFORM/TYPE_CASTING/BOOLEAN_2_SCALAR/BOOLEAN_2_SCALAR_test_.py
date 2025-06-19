@@ -1,5 +1,6 @@
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
+
 def test_BOOLEAN_2_SCALAR(mock_atlasvibe_decorator):
     import BOOLEAN_2_SCALAR
 

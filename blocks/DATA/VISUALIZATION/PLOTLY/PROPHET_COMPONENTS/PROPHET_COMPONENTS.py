@@ -6,6 +6,7 @@ import pandas as pd
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Plotly
 
+
 @atlasvibe(deps={"prophet": "1.1.5"})
 def PROPHET_COMPONENTS(default: DataFrame, periods: int = 365) -> Plotly:
     """The PROPHET_COMPONENTS node plots the components of the prophet model trained in the PROPHET_PREDICT node.

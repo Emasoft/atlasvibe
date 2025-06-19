@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 def test_PROPHET_PREDICT(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory):
     pytest.importorskip(
         "fastparquet",

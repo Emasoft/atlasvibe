@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_VECTOR_2_ORDERED_PAIR(mock_atlasvibe_decorator):
     import VECTOR_2_ORDERED_PAIR
 

@@ -53,8 +53,7 @@ class Signaler:
 
     async def signal_prejob_op(self, jobset_id: str):
         await self._broadcast_message(
-            jobset_id=jobset_id, 
-            sys_status=STATUS_CODES["RUN_PRE_JOB_OP"]
+            jobset_id=jobset_id, sys_status=STATUS_CODES["RUN_PRE_JOB_OP"]
         )
 
     async def signal_standby(self, jobset_id: str):

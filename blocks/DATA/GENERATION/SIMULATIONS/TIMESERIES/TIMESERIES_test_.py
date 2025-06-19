@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def test_TIMESERIES(mock_atlasvibe_decorator):
     import TIMESERIES
 

@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
+
 @atlasvibe
 def NOT(default: Boolean) -> Boolean:
     """Takes a boolean data type and computs logical NOT operation on them.

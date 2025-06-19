@@ -62,7 +62,7 @@ This functionality is **completely missing**. There is:
 
 ## Code Locations Examined:
 
-1. **Manifest Generation**: 
+1. **Manifest Generation**:
    - `captain/utils/manifest/build_manifest.py` - Creates manifest from Python AST
    - `captain/utils/manifest/generate_manifest.py` - Generates manifest for all blocks
 

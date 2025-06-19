@@ -18,13 +18,13 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        dotted: `rounded-2xl 
-                border-2 border-dashed border-foreground 
-                bg-background px-6 py-3 
-                font-semibold uppercase text-foreground 
-                transition-all duration-300 
-                hover:rounded-md shadow-[4px_4px_0px_0px] shadow-foreground  
-                active:translate-x-[4px] active:translate-y-[4px] 
+        dotted: `rounded-2xl
+                border-2 border-dashed border-foreground
+                bg-background px-6 py-3
+                font-semibold uppercase text-foreground
+                transition-all duration-300
+                hover:rounded-md shadow-[4px_4px_0px_0px] shadow-foreground
+                active:translate-x-[4px] active:translate-y-[4px]
                 active:rounded-2xl active:shadow-none`,
         none: "",
         // neumorphism:

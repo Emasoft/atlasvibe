@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
+
 def test_TRIM_MEAN(mock_atlasvibe_decorator):
     import TRIM_MEAN
 

@@ -4,6 +4,7 @@ import numpy as np
 
 import scipy.stats
 
+
 @atlasvibe
 def MOMENT(
     default: OrderedPair | Matrix,
@@ -63,9 +64,9 @@ def MOMENT(
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)
     else:
-        assert isinstance(
-            result, np.number | float | int
-        ), f"Expected np.number, float or int for result, got {type(result)}"
+        assert isinstance(result, np.number | float | int), (
+            f"Expected np.number, float or int for result, got {type(result)}"
+        )
         result = Scalar(c=float(result))
 
     return result

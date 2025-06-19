@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from "@/renderer/components/ui/dialog";
 import { BlockResult } from "@/renderer/types/block-result";
-import { BlockData } from "@/renderer/stores/project"; 
+import { BlockData } from "@/renderer/stores/project";
 import { ScrollArea, ScrollBar } from "@/renderer/components/ui/scroll-area";
 import { useTheme } from "@/renderer/providers/theme-provider";
 import { Button } from "@/renderer/components/ui/button";
@@ -60,7 +60,7 @@ export type BlockModalProps = {
   pythonString: string;
   blockFilePath: string;
   blockFullPath: string;
-  selectedNode: Node<BlockData>; 
+  selectedNode: Node<BlockData>;
 };
 
 const BlockModal = ({
@@ -80,9 +80,9 @@ const BlockModal = ({
   const link =
     path.startsWith("/") || path.includes(":")
       ? null
-      : `${import.meta.env.VITE_ATLASVIBE_REPO}/blocks/${path}`; 
+      : `${import.meta.env.VITE_ATLASVIBE_REPO}/blocks/${path}`;
 
-  const docsLink = `${import.meta.env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path 
+  const docsLink = `${import.meta.env.VITE_ATLASVIBE_DOCS_LINK}/blocks/${path
     .split("/")
     .slice(0, -1)
     .join("/")}`.toLowerCase();
@@ -94,7 +94,7 @@ const BlockModal = ({
     );
   };
 
-  const isDevMode = import.meta.env.DEV; 
+  const isDevMode = import.meta.env.DEV;
   const isCustomBlock = !!selectedNode.data.isCustom;
 
 
@@ -146,7 +146,7 @@ const BlockModal = ({
             onClick={withPermissionCheck(handleEditCode)}
             data-testid="btn-edit-python"
             variant="secondary"
-            disabled={!isCustomBlock && !isDevMode} 
+            disabled={!isCustomBlock && !isDevMode}
           >
             Edit Python Code
             {isCustomBlock || isDevMode ? "" : " (Read-only)"}
@@ -197,7 +197,7 @@ const BlockModal = ({
 
 type NodeModalDataVizProps = {
   result: BlockResult;
-  selectedNode: Node<BlockData>; 
+  selectedNode: Node<BlockData>;
   theme: "light" | "dark";
 };
 

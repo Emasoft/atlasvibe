@@ -7,9 +7,9 @@ try:
 except ImportError:
     sklearn = None
 
+
 @pytest.mark.skipif(
-    sklearn is None,
-    reason="TEXT_DATASET requires scikit-learn to be installed"
+    sklearn is None, reason="TEXT_DATASET requires scikit-learn to be installed"
 )
 def test_load_training_set_by_default(mock_atlasvibe_decorator):
     """Verify TEXT_DATASET loads the default 20 newsgroups training set with all categories."""
@@ -51,9 +51,9 @@ def test_load_training_set_by_default(mock_atlasvibe_decorator):
         else:
             raise
 
+
 @pytest.mark.skipif(
-    sklearn is None,
-    reason="TEXT_DATASET requires scikit-learn to be installed"
+    sklearn is None, reason="TEXT_DATASET requires scikit-learn to be installed"
 )
 def test_load_specific_categories(mock_atlasvibe_decorator):
     """Test loading TEXT_DATASET with specific newsgroup categories (comp.graphics, comp.os.ms-windows.misc)."""
@@ -76,9 +76,9 @@ def test_load_specific_categories(mock_atlasvibe_decorator):
         else:
             raise
 
+
 @pytest.mark.skipif(
-    sklearn is None,
-    reason="TEXT_DATASET requires scikit-learn to be installed"
+    sklearn is None, reason="TEXT_DATASET requires scikit-learn to be installed"
 )
 def test_non_existent_category(mock_atlasvibe_decorator):
     """Verify TEXT_DATASET raises ValueError when given non-existent category names."""
@@ -91,7 +91,7 @@ def test_non_existent_category(mock_atlasvibe_decorator):
             TEXT_DATASET(categories=Array(["non_existent_category"]))
         except ValueError:
             raised_error = True
-        
+
         assert raised_error, "Expected ValueError for non-existent category"
     except Exception as e:
         # Known scikit-learn issue #27251 - treat sporadic errors as pass

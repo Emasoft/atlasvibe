@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector, OrderedPair
 from typing import Optional, Literal
 
+
 @atlasvibe
 def UNIX_TIMESTAMP(
     default: Optional[Scalar] = None,

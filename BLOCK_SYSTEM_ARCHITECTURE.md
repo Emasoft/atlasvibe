@@ -46,7 +46,7 @@ from atlasvibe import atlasvibe, OrderedPair, Scalar, Vector
 
 @atlasvibe
 def ADD(
-    a: OrderedPair | Scalar | Vector, 
+    a: OrderedPair | Scalar | Vector,
     b: list[OrderedPair | Scalar | Vector]
 ) -> OrderedPair | Scalar | Vector:
     """Add two or more numeric arrays, matrices, dataframes, or constants element-wise."""

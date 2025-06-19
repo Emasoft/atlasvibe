@@ -2,9 +2,11 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector, OrderedPair
 from typing import TypedDict
 
+
 class ResultSplit(TypedDict):
     x: Vector
     y: Vector
+
 
 @atlasvibe
 def ORDERED_PAIR_2_VECTOR(default: OrderedPair) -> ResultSplit:

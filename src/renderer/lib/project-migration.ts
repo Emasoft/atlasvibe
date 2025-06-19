@@ -5,7 +5,7 @@
 // - New file for project file format migration
 // - Handles backward compatibility with old project formats
 // - Ensures custom blocks are properly identified
-// 
+//
 
 import { Project } from '@/renderer/types/project';
 import { Node } from 'reactflow';
@@ -24,7 +24,7 @@ export interface ProjectMigrationResult {
 export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
   // Detect version (old projects don't have version field)
   const version = projectData.version || '1.0.0';
-  
+
   let migrated = false;
   const project = { ...projectData };
 
@@ -32,7 +32,7 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
   if (!project.version || project.version === '1.0.0') {
     migrated = true;
     project.version = '2.0.0';
-    
+
     // Check each node to see if it might be a custom block
     if (project.rfInstance?.nodes) {
       project.rfInstance.nodes = project.rfInstance.nodes.map((node: Node<BlockData>) => {
@@ -40,11 +40,11 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
         if (node.data.isCustom !== undefined) {
           return node;
         }
-        
+
         // Try to detect custom blocks by checking if they're not in standard blocks
         // This is a heuristic - in v1 we didn't track custom blocks properly
         const isLikelyCustom = detectIfCustomBlock(node);
-        
+
         if (isLikelyCustom) {
           return {
             ...node,
@@ -56,7 +56,7 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
             },
           };
         }
-        
+
         return node;
       });
     }
@@ -75,12 +75,12 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
  */
 function detectIfCustomBlock(node: Node<BlockData>): boolean {
   const func = node.data.func;
-  
+
   // If it has a path already, it's definitely custom
   if (node.data.path && node.data.path.includes('atlasvibe_blocks/')) {
     return true;
   }
-  
+
   // Check for common patterns in standard blocks
   // Standard blocks typically have ALL_CAPS names with underscores
   // and belong to known categories
@@ -104,14 +104,14 @@ function detectIfCustomBlock(node: Node<BlockData>): boolean {
     // Hardware/devices
     /^(ARDUINO|LABJACK|OSCILLOSCOPE|DMM|CAMERA)/,
   ];
-  
+
   // If it matches any standard pattern, it's not custom
   const isStandard = standardPatterns.some(pattern => pattern.test(func));
-  
+
   // Additional check: custom blocks often have project-specific names
   // that don't follow the ALL_CAPS_WITH_UNDERSCORES convention
   const hasNonStandardNaming = !(/^[A-Z][A-Z0-9_]*$/.test(func));
-  
+
   return !isStandard || hasNonStandardNaming;
 }
 
@@ -120,7 +120,7 @@ function detectIfCustomBlock(node: Node<BlockData>): boolean {
  */
 export function validateProjectReferences(project: Project): string[] {
   const errors: string[] = [];
-  
+
   project.rfInstance.nodes.forEach((node, index) => {
     if (node.data.isCustom) {
       if (!node.data.path) {
@@ -130,7 +130,7 @@ export function validateProjectReferences(project: Project): string[] {
       }
     }
   });
-  
+
   return errors;
 }
 
@@ -145,10 +145,10 @@ export function updateCustomBlockPaths(
   // Since paths are relative to the project directory,
   // they don't need updating when the project moves
   // This function is here for future compatibility if we switch to absolute paths
-  
+
   // Clone the project to avoid mutations
   const updatedProject = JSON.parse(JSON.stringify(project)) as Project;
-  
+
   // If we ever use absolute paths, the logic would be:
   // updatedProject.rfInstance.nodes = updatedProject.rfInstance.nodes.map(node => {
   //   if (node.data.isCustom && node.data.path) {
@@ -157,6 +157,6 @@ export function updateCustomBlockPaths(
   //   }
   //   return node;
   // });
-  
+
   return updatedProject;
 }

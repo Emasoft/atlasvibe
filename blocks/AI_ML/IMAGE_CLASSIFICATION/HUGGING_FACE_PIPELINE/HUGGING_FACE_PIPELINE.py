@@ -7,6 +7,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Image
 from pkgs.atlasvibe.atlasvibe.utils import ATLASVIBE_CACHE_DIR
 
+
 @atlasvibe(deps={"transformers": "4.30.2"})
 def HUGGING_FACE_PIPELINE(
     default: Image,

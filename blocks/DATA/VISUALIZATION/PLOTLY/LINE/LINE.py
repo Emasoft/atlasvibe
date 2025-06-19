@@ -1,9 +1,16 @@
 import plotly.graph_objects as go
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
-from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Matrix, OrderedPair, Plotly, Vector
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    DataFrame,
+    Matrix,
+    OrderedPair,
+    Plotly,
+    Vector,
+)
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from numpy import arange
 from pandas.api.types import is_datetime64_any_dtype
+
 
 @atlasvibe
 def LINE(
@@ -78,7 +85,7 @@ def LINE(
 
             for i in range(num_rows):
                 fig.add_trace(
-                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i+1}", mode="lines")
+                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="lines")
                 )
 
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")

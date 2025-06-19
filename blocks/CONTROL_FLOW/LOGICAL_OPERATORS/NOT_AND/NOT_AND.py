@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
+
 @atlasvibe
 def NOT_AND(default: Boolean, a: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical NOT AND operation on them.

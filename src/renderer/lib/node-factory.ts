@@ -5,18 +5,18 @@
 // - New file for creating nodes with consistent logic
 // - Extracts duplicated node creation code into reusable functions
 // - Handles both standard and custom blocks
-// 
+//
 
 import { Node, XYPosition } from 'reactflow';
 import { v4 as uuidv4 } from 'uuid';
 import { BlockDefinition } from '@/renderer/types/manifest';
 import { BlockData } from '@/renderer/stores/project';
 import { DeviceInfo } from '@/renderer/types/hardware';
-import { 
-  createBlockId, 
-  createBlockLabel, 
+import {
+  createBlockId,
+  createBlockLabel,
   ctrlsFromParams,
-  addRandomPositionOffset 
+  addRandomPositionOffset
 } from '@/renderer/lib/block';
 
 export interface CreateNodeOptions {
@@ -62,7 +62,7 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
   } = blockDefinition;
 
   const nodeId = createBlockId(funcName);
-  
+
   // Determine label
   let nodeLabel = customLabel;
   if (!nodeLabel) {
@@ -111,7 +111,7 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
  * Handles position offset and label generation
  */
 export function duplicateNode(
-  originalNode: Node<BlockData>, 
+  originalNode: Node<BlockData>,
   takenLabels: RegExpMatchArray[]
 ): Node<BlockData> {
   const funcName = originalNode.data.func;

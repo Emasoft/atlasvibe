@@ -54,11 +54,11 @@ mapping: dict[str, str] = {}
 
 def get_module_func(file_name: str, project_path: str | None = None):
     """Get module for a block function, supporting project-specific blocks.
-    
+
     Args:
         file_name: Name of the block/function
         project_path: Optional path to .atlasvibe project file
-        
+
     Returns:
         Module object or None if not found
     """
@@ -68,21 +68,21 @@ def get_module_func(file_name: str, project_path: str | None = None):
 
 def create_map(custom_blocks_dir: str | None, project_path: str | None = None):
     """Create mapping of blocks.
-    
+
     This function is kept for backward compatibility but now delegates
     to the new project-aware loader.
-    
+
     Args:
         custom_blocks_dir: Custom blocks directory (legacy parameter)
         project_path: Optional path to .atlasvibe project file
     """
     loader = get_project_loader(project_path)
     loader.initialize()
-    
+
     # Update the global mapping for backward compatibility
     global mapping
     mapping.clear()
     mapping.update(loader.combined_mapping)
-    
+
     if custom_blocks_dir:
         mapping["root"] = custom_blocks_dir

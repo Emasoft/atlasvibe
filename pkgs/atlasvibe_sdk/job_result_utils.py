@@ -106,9 +106,13 @@ def get_frontend_res_obj_from_result(
 
         plotly_fig = None
         text_blob = None
-        data = None # data variable was previously not consistently assigned a value here
-        match result: # This match should be on 'data' not 'result' if data is the DC
-            case Plotly() | String() | Bytes(): # This will likely not match if result is a dict
+        data = (
+            None  # data variable was previously not consistently assigned a value here
+        )
+        match result:  # This match should be on 'data' not 'result' if data is the DC
+            case (
+                Plotly() | String() | Bytes()
+            ):  # This will likely not match if result is a dict
                 # This logic needs to be based on the actual DataContainer instance
                 # Assuming 'data' is the DataContainer instance after extraction
                 if isinstance(data, (Plotly, String, Bytes)):
@@ -119,16 +123,17 @@ def get_frontend_res_obj_from_result(
                     # data = data # No change needed if 'data' is already the DC
                     pass
 
-
         return {
             **result,
-            "data": data, # Return the extracted DataContainer or None
+            "data": data,  # Return the extracted DataContainer or None
             "plotly_fig": plotly_fig,
             "text_blob": text_blob,
         }
     keys = list(result.keys())
     # This recursive call might lead to issues if the structure isn't as expected.
     # Assuming it's intended to dive into nested dictionaries.
-    if keys: # Ensure there are keys before trying to access
-        return get_frontend_res_obj_from_result(node_id, observe_blocks, result[keys[0]])
-    return None # Return None if result is an empty dictionary
+    if keys:  # Ensure there are keys before trying to access
+        return get_frontend_res_obj_from_result(
+            node_id, observe_blocks, result[keys[0]]
+        )
+    return None  # Return None if result is an empty dictionary

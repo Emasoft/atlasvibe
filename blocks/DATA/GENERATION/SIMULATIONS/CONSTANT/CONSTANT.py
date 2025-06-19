@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector, OrderedPair, Scalar
 from typing import Optional, Literal
 
+
 @atlasvibe
 def CONSTANT(
     default: Optional[Vector | OrderedPair] = None,

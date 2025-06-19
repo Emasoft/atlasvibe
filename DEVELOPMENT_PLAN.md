@@ -379,4 +379,3 @@ This phase will focus on the long-term goal of transforming nodes into AI agents
 *   **User Experience (UX):** Prioritize an intuitive and clear UX for the new block management and project system.
 *   **Backwards Compatibility:** Projects created with the old system will likely not be compatible. This should be clearly communicated.
 *   **Package Distribution:** The new pip-based distribution simplifies installation but requires proper testing of the bundled Electron app across platforms.
-

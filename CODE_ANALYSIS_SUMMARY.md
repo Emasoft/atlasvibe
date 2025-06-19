@@ -8,10 +8,10 @@
 ### 2. Mypy Type Errors
 - **build_ast.py**:
   - Fixed ast.Pass usage in expression context by using ast.Expr with ast.Constant
-  - Fixed generic_visit to accept ast.AST instead of ast.Module  
+  - Fixed generic_visit to accept ast.AST instead of ast.Module
   - Fixed variable redefinition by renaming tree to transformed_tree
   - Fixed dict type annotation to include both key and value types
-  
+
 - **test_sequencer.py**:
   - Fixed conditional_type to use ConditionalComponent enum value instead of string
 
@@ -23,7 +23,7 @@
 ### 3. TypeScript/JavaScript Issues
 - **executor.ts**:
   - Replaced require('path') with ES module import
-  
+
 - **preload/index.ts**:
   - Changed @ts-ignore to @ts-expect-error for better error handling
 

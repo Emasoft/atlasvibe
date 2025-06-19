@@ -6,6 +6,7 @@ from matplotlib import image
 from numpy import asarray
 from pkgs.atlasvibe.atlasvibe.parameter_types import File
 
+
 @atlasvibe
 def OPEN_IMAGE(file_path: File | None = None) -> Image:
     """Load an image file from disk and return a DataContainer of type 'image'.

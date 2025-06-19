@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedTriple, Plotly
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
+
 @atlasvibe
 def SCATTER3D(default: OrderedTriple | DataFrame) -> Plotly:
     """Create a Plotly 3D Scatter visualization for a given input DataContainer.

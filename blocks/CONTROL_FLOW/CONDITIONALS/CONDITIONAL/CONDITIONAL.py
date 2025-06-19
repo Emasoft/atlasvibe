@@ -4,9 +4,11 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar
 from pkgs.atlasvibe.atlasvibe.job_result_builder import JobResultBuilder
 
+
 class ConditionalOutput(TypedDict):
     true: Any
     false: Any
+
 
 @atlasvibe
 def CONDITIONAL(
@@ -65,6 +67,7 @@ def CONDITIONAL(
         .flow_to_directions([next_direction])
         .build(),
     )
+
 
 def compare_values(first_value: Any, second_value: Any, operator: str):
     bool_: bool = False

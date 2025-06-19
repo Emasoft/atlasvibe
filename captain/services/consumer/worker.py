@@ -10,7 +10,7 @@ from captain.utils.broadcast import Signaler
 from captain.utils.logger import logger
 
 """
-IMPORTANT NOTE: This class mimics the RQ Worker package. 
+IMPORTANT NOTE: This class mimics the RQ Worker package.
 """
 
 

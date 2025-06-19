@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
 import numpy as np
 
+
 def trapz(x: np.ndarray, y: np.ndarray):
     m = [0] * len(x)
     trapezium = (1 / 2) * (x[1] - x[0]) * (y[1] + y[0])
@@ -12,6 +13,7 @@ def trapz(x: np.ndarray, y: np.ndarray):
         m[i] = m[i - 1] + trapezium
 
     return m
+
 
 @atlasvibe
 def INTEGRATE(default: OrderedPair | Vector) -> OrderedPair:

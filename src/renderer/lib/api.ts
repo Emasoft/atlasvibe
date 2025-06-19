@@ -36,8 +36,8 @@ export const getManifest = (blocksPath?: string, projectPath?: string) => {
   if (blocksPath) searchParams.blocks_path = blocksPath;
   if (projectPath) searchParams.project_path = projectPath;
 
-  return get("blocks/manifest", blockManifestSchema, { 
-    searchParams: Object.keys(searchParams).length > 0 ? searchParams : undefined 
+  return get("blocks/manifest", blockManifestSchema, {
+    searchParams: Object.keys(searchParams).length > 0 ? searchParams : undefined
   });
 };
 
@@ -128,7 +128,7 @@ export const runFlowchart = async ({
 }: RunFlowchartArgs) => {
   // Get current project path from project store
   const projectPath = useProjectStore.getState().path;
-  
+
   return fromPromise(
     captain.post("wfc", {
       json: {

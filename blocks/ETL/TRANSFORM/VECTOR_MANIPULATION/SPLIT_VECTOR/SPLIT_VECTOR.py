@@ -2,9 +2,11 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 from typing import TypedDict
 
+
 class resultSplit(TypedDict):
     vector1: Vector
     vector2: Vector
+
 
 @atlasvibe
 def SPLIT_VECTOR(

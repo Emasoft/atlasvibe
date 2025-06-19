@@ -5,7 +5,7 @@
 // - New hook for Save As functionality with custom dialog
 // - Integrates SaveProjectDialog component
 // - Handles project creation and validation
-// 
+//
 
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { fromPromise } from "neverthrow";
 export const useSaveAs = () => {
   const { withPermissionCheck } = useWithPermission();
   const [dialogOpen, setDialogOpen] = useState(false);
-  
+
   const { name, setProjectName } = useProjectStore(
     useShallow((state) => ({
       name: state.name,
@@ -33,7 +33,7 @@ export const useSaveAs = () => {
   const handleSave = async (projectPath: string, projectName: string) => {
     // Update project name in store
     setProjectName(projectName);
-    
+
     // Create project directory
     const createResult = await fromPromise(
       window.api.createDirectory(projectPath),
@@ -72,7 +72,7 @@ export const useSaveAs = () => {
     }
 
     // Update project path in store
-    useProjectStore.setState({ 
+    useProjectStore.setState({
       path: filePath,
       hasUnsavedChanges: false,
     });

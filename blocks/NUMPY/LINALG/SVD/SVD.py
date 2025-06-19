@@ -5,6 +5,7 @@ from typing import Literal
 
 import numpy.linalg
 
+
 @atlasvibe
 def SVD(
     default: Matrix,
@@ -70,9 +71,9 @@ def SVD(
     if isinstance(result, np.ndarray):
         result = Matrix(m=result)
     else:
-        assert isinstance(
-            result, np.number | float | int
-        ), f"Expected np.number, float or int for result, got {type(result)}"
+        assert isinstance(result, np.number | float | int), (
+            f"Expected np.number, float or int for result, got {type(result)}"
+        )
         result = Scalar(c=float(result))
 
     return result

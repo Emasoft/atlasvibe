@@ -120,17 +120,17 @@ export const Index = (): JSX.Element => {
     }
   }, []);
 
-  const spawnBackendEngine = useCallback(async (): Promise<void> => { 
+  const spawnBackendEngine = useCallback(async (): Promise<void> => {
     try {
       await window.api.spawnCaptain(); // This should be window.api.spawnAtlasVibeEngine()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       updateSetupStatus({
-        stage: "spawn-captain", 
+        stage: "spawn-captain",
         status: "error",
         message: "Something went wrong when starting atlasvibe...",
       });
-      setErrorTitle("Failed to spawn atlasvibe engine!"); 
+      setErrorTitle("Failed to spawn atlasvibe engine!");
       setErrorDesc(
         "Sorry about that! Please open the log folder and send the log to us on Discord!",
       );
@@ -171,14 +171,14 @@ export const Index = (): JSX.Element => {
         await window.api.openLogFolder();
         break;
       }
-      case "spawn-captain": { 
+      case "spawn-captain": {
         await window.api.openLogFolder();
         break;
       }
       case "check-blocks-resource": {
         const isPackaged = await window.api.isPackaged();
         if (isPackaged) {
-          window.api.restartAtlasVibe(); 
+          window.api.restartAtlasVibe();
         } else {
           alert(
             "Restart is not supported for dev build, please relaunch atlasvibe manually!",
@@ -246,13 +246,13 @@ export const Index = (): JSX.Element => {
         installDependencies();
         break;
       }
-      case "spawn-captain": { 
+      case "spawn-captain": {
         updateSetupStatus({
           stage: "spawn-captain", // Consider renaming this stage to "spawn-atlasvibe-engine"
           status: "running",
           message: "Almost there, starting atlasvibe...",
         });
-        spawnBackendEngine(); 
+        spawnBackendEngine();
         break;
       }
     }
@@ -260,7 +260,7 @@ export const Index = (): JSX.Element => {
     checkPythonInstallation,
     installDependencies,
     setupStatuses,
-    spawnBackendEngine, 
+    spawnBackendEngine,
   ]);
 
   useEffect(() => {
@@ -339,7 +339,7 @@ export const Index = (): JSX.Element => {
         {setupStatuses.find((status) => status.status === "error") && (
           <Button
             onClick={async (): Promise<void> =>
-              await window.api.restartAtlasVibe() 
+              await window.api.restartAtlasVibe()
             }
           >
             Retry

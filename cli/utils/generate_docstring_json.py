@@ -48,9 +48,7 @@ def generate_docstring_json() -> bool:
             parsed_docstring = parse_docstring(docstring)
 
             if not parsed_docstring.short_description:
-                print(
-                    f"{ERR_STRING} short_description not found for {block_name}"
-                )
+                print(f"{ERR_STRING} short_description not found for {block_name}")
                 error += 1
 
             if not parsed_docstring.long_description:
@@ -66,9 +64,14 @@ def generate_docstring_json() -> bool:
                 error += 1
 
             # Build the JSON data using shared utility
-            docstring_json_data = create_docstring_json(parsed_docstring, include_empty_fields=False)
+            docstring_json_data = create_docstring_json(
+                parsed_docstring, include_empty_fields=False
+            )
             # Remove the "docstring" key since we'll wrap it later
-            if isinstance(docstring_json_data, dict) and "docstring" in docstring_json_data:
+            if (
+                isinstance(docstring_json_data, dict)
+                and "docstring" in docstring_json_data
+            ):
                 docstring_json_data = docstring_json_data["docstring"]
 
             # Write the data to a JSON file in the same directory

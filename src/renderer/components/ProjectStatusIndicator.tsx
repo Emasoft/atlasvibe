@@ -6,7 +6,7 @@
 // - Shows status: saved, unsaved changes, saving, autosaving
 // - Implements color scheme readable on black background
 // - Includes transaction queue for autosave
-// 
+//
 
 import { useEffect, useState, useRef } from "react";
 import { cn } from "@/renderer/lib/utils";
@@ -55,7 +55,7 @@ export const ProjectStatusIndicator = () => {
         for (const transaction of transactions) {
           await transaction.action();
         }
-        
+
         // Log transactions for recovery
         if (path) {
           const transactionLog = {
@@ -91,7 +91,7 @@ export const ProjectStatusIndicator = () => {
   useEffect(() => {
     if (hasUnsavedChanges && !isSaving && status !== "autosaving") {
       setStatus("unsaved");
-      
+
       // Clear existing autosave timer
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);

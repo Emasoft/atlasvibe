@@ -2,6 +2,7 @@ from numpy import sort
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
+
 @atlasvibe
 def SORT_MATRIX(a: Matrix, axis: int = -1) -> Matrix:
     """Take an input matrix and sort it along the chosen axis.

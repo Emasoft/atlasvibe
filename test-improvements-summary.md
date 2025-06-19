@@ -25,7 +25,7 @@
 - Tests v1 to v2 project migration
 - Tests custom block renaming and deletion handling
 
-### 2. Visual Indicators Test  
+### 2. Visual Indicators Test
 - **File**: `playwright-test/18_custom_block_visual_indicators.spec.ts`
 - Tests distinct visual styling for custom blocks
 - Tests hover tooltips with custom block information

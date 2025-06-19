@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
 from scipy import signal
 from typing import Literal
 
+
 @atlasvibe
 def SINE(
     default: OrderedPair | Vector,

@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Grayscale, Image, Plotly
 from blocks.DATA.VISUALIZATION.template import plot_layout
 
+
 @atlasvibe
 def IMAGE(default: Image | Grayscale) -> Plotly:
     """Create a Plotly Image visualization for a given input DataContainer type of image.

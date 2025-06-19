@@ -1,10 +1,17 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
-from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame, Matrix, Plotly, Vector
+from pkgs.atlasvibe.atlasvibe.data_container import (
+    OrderedPair,
+    DataFrame,
+    Matrix,
+    Plotly,
+    Vector,
+)
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from typing import Literal
+
 
 @atlasvibe
 def COMPOSITE(
@@ -44,6 +51,7 @@ def COMPOSITE(
     fig.update_layout(dict(autosize=True, height=None, width=None))
     return Plotly(fig=fig)
 
+
 def match_figure(
     fig: go.Figure,
     figure_type: Literal["bar", "line", "histogram", "scatter"],
@@ -58,6 +66,7 @@ def match_figure(
             add_line_trace(fig, dc)
         case "scatter":
             add_scatter_trace(fig, dc)
+
 
 def add_bar_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -97,12 +106,13 @@ def add_bar_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector)
             x_ticks = np.arange(num_cols)
 
             for i in range(num_rows):
-                fig.add_trace(go.Bar(x=x_ticks, y=m[i, :], name=f"Row {i+1}"))
+                fig.add_trace(go.Bar(x=x_ticks, y=m[i, :], name=f"Row {i + 1}"))
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")
         case Vector():
             y = dc.v
             x = np.arange(len(y))
             fig.add_trace(go.Bar(x=x, y=y))
+
 
 def add_histogram_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -121,6 +131,7 @@ def add_histogram_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | V
         case Vector():
             y = dc.v
             fig.add_trace(go.Histogram(x=y))
+
 
 def add_line_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -164,13 +175,14 @@ def add_line_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector
             x_ticks = np.arange(num_cols)
             for i in range(num_rows):
                 fig.add_trace(
-                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i+1}", mode="lines")
+                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="lines")
                 )
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")
         case Vector():
             y = dc.v
             x = np.arange(len(y))
             fig.add_trace(go.Scatter(x=x, y=y, mode="lines"))
+
 
 def add_scatter_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vector):
     match dc:
@@ -204,7 +216,9 @@ def add_scatter_trace(fig: go.Figure, dc: OrderedPair | Matrix | DataFrame | Vec
             x_ticks = np.arange(num_cols)
             for i in range(num_rows):
                 fig.add_trace(
-                    go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i+1}", mode="markers")
+                    go.Scatter(
+                        x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="markers"
+                    )
                 )
 
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")

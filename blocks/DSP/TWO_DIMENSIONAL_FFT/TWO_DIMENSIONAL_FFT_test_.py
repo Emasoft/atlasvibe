@@ -3,6 +3,7 @@ from scipy import fft
 
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix
 
+
 def test_2DFFT(mock_atlasvibe_decorator):
     import TWO_DIMENSIONAL_FFT
 

@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import Vector
 from numpy import array
 from typing import Literal
 
+
 @atlasvibe
 def VECTOR(
     elements: str = "", elements_type: Literal["boolean", "numeric"] = "boolean"

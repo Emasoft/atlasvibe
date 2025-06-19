@@ -46,8 +46,8 @@ className={clsx(
 
 // Show regenerating label
 {isRegenerating && (
-  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 
-                  bg-orange-500 text-white px-2 py-1 rounded text-xs 
+  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2
+                  bg-orange-500 text-white px-2 py-1 rounded text-xs
                   animate-blink">
     Regenerating...
   </div>

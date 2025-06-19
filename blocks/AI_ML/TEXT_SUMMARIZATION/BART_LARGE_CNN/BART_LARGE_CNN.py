@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from huggingface_hub import snapshot_download
 
+
 @atlasvibe(deps={"transformers": "4.30.2", "torch": "2.0.1", "torchvision": "0.15.2"})
 def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
     """Take an input dataframe with multiple rows and a single column, then produce a dataframe with a single "summary_text" column.
@@ -25,9 +26,9 @@ def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
 
     input_df = default.m
 
-    assert (
-        len(input_df.columns.tolist()) == 1
-    ), "Can only take a single-column dataframe as input"
+    assert len(input_df.columns.tolist()) == 1, (
+        "Can only take a single-column dataframe as input"
+    )
 
     # Load the repo from either the local cache or from the web, and get the local path
     local_path = snapshot_download(

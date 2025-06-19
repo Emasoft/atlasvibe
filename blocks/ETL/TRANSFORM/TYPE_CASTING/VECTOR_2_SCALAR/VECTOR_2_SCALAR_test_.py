@@ -1,6 +1,7 @@
 from numpy import array
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_VECTOR_2_SCALAR(mock_atlasvibe_decorator):
     import VECTOR_2_SCALAR
 

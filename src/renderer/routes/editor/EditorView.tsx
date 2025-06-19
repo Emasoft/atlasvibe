@@ -37,7 +37,7 @@ const EditorView = () => {
   const loadFile = async () => {
     const res = await window.api.loadFileFromFullPath(fullPath);
     setValue(res);
-    
+
     // Check if this is a custom block
     setIsCustomBlock(fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py"));
   };
@@ -46,21 +46,21 @@ const EditorView = () => {
     const res = await window.api.saveFileToFullPath(fullPath, value);
     if (res.isOk()) {
       setHasChanged(false);
-      
+
       // Check if this is a custom block file (contains "atlasvibe_blocks" in path)
       if (fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py")) {
         // Get the current project path
         const projectPath = useProjectStore.getState().path;
-        
+
         if (projectPath) {
           // Update block code on backend to regenerate metadata
           const updateRes = await updateBlockCode(fullPath, value, projectPath);
-          
+
           if (updateRes.isOk()) {
             toast.success("Block updated successfully", {
               description: "Metadata has been regenerated"
             });
-            
+
             // Refresh manifests to reflect the changes
             const { fetchManifest } = useManifestStore.getState();
             await fetchManifest();
@@ -81,7 +81,7 @@ const EditorView = () => {
   const handleChange = (value: string) => {
     setValue(value);
     setHasChanged(true);
-    
+
     // Check docstring validity for AtlasVibe blocks
     if (isCustomBlock && value.includes("@atlasvibe")) {
       const hasValidDocstring = checkDocstringFormat(value);
@@ -92,7 +92,7 @@ const EditorView = () => {
   const checkDocstringFormat = (code: string): boolean => {
     const functionMatch = code.match(/@atlasvibe[\s\S]*?def\s+\w+\([^)]*\)[\s\S]*?"""([\s\S]*?)"""/);
     if (!functionMatch) return false;
-    
+
     const docstring = functionMatch[1];
     return hasValidDocstringFormat(docstring);
   };
@@ -134,7 +134,7 @@ const EditorView = () => {
             <Badge variant="outline">Modified</Badge>
           )}
         </div>
-        
+
         <div className="flex items-center gap-4">
           {isCustomBlock && (
             <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ const EditorView = () => {
               )}
             </div>
           )}
-          
+
           <Button onClick={saveFile} disabled={!hasChanged}>
             Save
           </Button>

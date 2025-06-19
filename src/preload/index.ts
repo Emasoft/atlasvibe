@@ -1,7 +1,7 @@
-import { contextBridge, ipcRenderer } from "electron"; 
+import { contextBridge, ipcRenderer } from "electron";
 import { API } from "../api/index";
-import { InterpretersList } from "src/main/python/interpreter"; 
-import { BlockDefinition } from "@/renderer/types/manifest"; 
+import { InterpretersList } from "src/main/python/interpreter";
+import { BlockDefinition } from "@/renderer/types/manifest";
 
 // Define a type for the extended API
 // This should match the handlers you set up in your main process
@@ -32,7 +32,7 @@ export interface ExtendedWindowApi {
     cancelId?: number;
   }) => Promise<{ response: number }>;
   logTransaction: (transaction: string) => void;
-  
+
   // Python/Poetry operations
   checkPythonInstallation: (force?: boolean) => Promise<InterpretersList>;
   setPythonInterpreter: (path: string) => Promise<void>;
@@ -49,7 +49,7 @@ export interface ExtendedWindowApi {
   poetryInstallDepUserGroup: (dep: string) => Promise<boolean>;
   poetryUninstallDepUserGroup: (dep: string) => Promise<boolean>;
   poetryInstallRequirementsUserGroup: (filePath: string) => Promise<boolean>;
-  
+
   // System operations
   spawnCaptain: () => Promise<void>;
   restartCaptain: () => Promise<void>;
@@ -62,14 +62,14 @@ export interface ExtendedWindowApi {
   setUnsavedChanges: (hasChanges: boolean) => void;
   subscribeToElectronLogs: (func: (arg: string) => void) => void;
   checkForUpdates: () => void;
-  
+
   // Network/Debug operations
   ping: (addr: string) => Promise<string>;
   netstat: () => Promise<string>;
   ifconfig: () => Promise<string>;
   listPythonPackages: () => Promise<string>;
   pyvisaInfo: () => Promise<string>;
-  
+
   // Auth operations
   getUserProfiles: () => Promise<any[]>;
   setUserProfile: (username: string) => void;
@@ -77,7 +77,7 @@ export interface ExtendedWindowApi {
   validatePassword: (username: string, password: string) => Promise<boolean>;
   createUserProfile: (user: any) => Promise<void>;
   deleteUserProfile: (username: string, currentUser: any) => Promise<void>;
-  
+
   // Block operations
   createCustomBlockFromBlueprint: (
     blueprintKey: string,
@@ -113,7 +113,7 @@ const extendedApi: ExtendedWindowApi = {
   createDirectory: (path: string) => ipcRenderer.invoke(API.createDirectory, path),
   showConfirmDialog: (options) => ipcRenderer.invoke(API.showConfirmDialog, options),
   logTransaction: (transaction: string) => ipcRenderer.send(API.logTransaction, transaction),
-  
+
   // Python/Poetry operations
   checkPythonInstallation: (force?: boolean) => ipcRenderer.invoke(API.checkPythonInstallation, force),
   setPythonInterpreter: (path: string) => ipcRenderer.invoke(API.setPythonInterpreter, path),
@@ -130,7 +130,7 @@ const extendedApi: ExtendedWindowApi = {
   poetryInstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.poetryInstallDepUserGroup, dep),
   poetryUninstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.poetryUninstallDepUserGroup, dep),
   poetryInstallRequirementsUserGroup: (filePath: string) => ipcRenderer.invoke(API.poetryInstallRequirementsUserGroup, filePath),
-  
+
   // System operations
   spawnCaptain: () => ipcRenderer.invoke(API.spawnCaptain),
   restartCaptain: () => ipcRenderer.invoke(API.restartCaptain),
@@ -145,14 +145,14 @@ const extendedApi: ExtendedWindowApi = {
     ipcRenderer.on(API.statusBarLogging, (event, data: string) => func(data));
   },
   checkForUpdates: () => ipcRenderer.send(API.checkForUpdates),
-  
+
   // Network/Debug operations
   ping: (addr: string) => ipcRenderer.invoke(API.ping, addr),
   netstat: () => ipcRenderer.invoke(API.netstat),
   ifconfig: () => ipcRenderer.invoke(API.ifconfig),
   listPythonPackages: () => ipcRenderer.invoke(API.listPythonPackages),
   pyvisaInfo: () => ipcRenderer.invoke(API.pyvisaInfo),
-  
+
   // Auth operations
   getUserProfiles: () => ipcRenderer.invoke(API.getUserProfiles),
   setUserProfile: (username: string) => ipcRenderer.send(API.setUserProfile, username),
@@ -160,7 +160,7 @@ const extendedApi: ExtendedWindowApi = {
   validatePassword: (username: string, password: string) => ipcRenderer.invoke(API.validatePassword, username, password),
   createUserProfile: (user: any) => ipcRenderer.invoke(API.createUserProfile, user),
   deleteUserProfile: (username: string, currentUser: any) => ipcRenderer.invoke(API.deleteUserProfile, username, currentUser),
-  
+
   // Block operations
   createCustomBlockFromBlueprint: (blueprintKey, newCustomBlockName, projectPath) =>
     ipcRenderer.invoke(API.createCustomBlock, blueprintKey, newCustomBlockName, projectPath),

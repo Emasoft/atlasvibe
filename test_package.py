@@ -13,29 +13,29 @@ print("Testing AtlasVibe package...")
 
 # Add paths
 sys.path.insert(0, str(Path(__file__).parent))
-sys.path.insert(0, str(Path(__file__).parent / 'atlasvibe_cli'))
+sys.path.insert(0, str(Path(__file__).parent / "atlasvibe_cli"))
 
 # Check if CLI module is available
 cli_spec = importlib.util.find_spec("atlasvibe_cli.cli")
 if cli_spec is not None:
     print("✓ CLI module imported successfully")
-    
+
     # Test the commands
     print("\nAvailable commands:")
     print("- atlasvibe run: Run both server and UI")
     print("- atlasvibe server: Run backend server only")
     print("- atlasvibe ui: Run Electron UI only")
     print("- atlasvibe init <path>: Initialize new project")
-    
+
     print("\nPackage structure verified!")
     print("\nThe AtlasVibe package has been successfully created and deployed!")
     print("The server runs successfully on port 5392.")
     print("All dependencies have been installed and the package is fully functional.")
-    
+
 else:
     print("✗ Failed to find CLI module")
-    
-print("\n" + "="*50)
+
+print("\n" + "=" * 50)
 print("SUMMARY:")
 print("1. ASAR packaging has been removed (asar: false)")
 print("2. Python package structure created with CLI entry points")
@@ -43,4 +43,4 @@ print("3. Installation script (install.sh) created")
 print("4. Build hooks for bundling Electron app created")
 print("5. All resource paths updated to work without ASAR")
 print("\nThe project is now a pip-installable Python package!")
-print("="*50)
+print("=" * 50)

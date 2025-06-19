@@ -4,7 +4,7 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Initial test implementation for update_block_code endpoint
 # - Following TDD methodology
-# 
+#
 
 """Tests for the update_block_code endpoint."""
 
@@ -22,10 +22,10 @@ from atlasvibe import atlasvibe
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
     '''A custom test block.
-    
+
     Parameters:
         x: Input value
-        
+
     Returns:
         int: The input multiplied by 2
     '''
@@ -40,10 +40,10 @@ from atlasvibe import atlasvibe
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
     '''A custom test block - updated.
-    
+
     Parameters:
         x: Input value
-        
+
     Returns:
         int: The input multiplied by 3
     '''
@@ -53,87 +53,84 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
 
 class TestUpdateBlockCode:
     """Test cases for update_block_code functionality."""
-    
+
     @pytest.fixture
     def temp_custom_block(self):
         """Create a temporary custom block file."""
         with tempfile.NamedTemporaryFile(
-            mode='w',
-            suffix='.py',
-            prefix='atlasvibe_blocks_CUSTOM_',
-            delete=False
+            mode="w", suffix=".py", prefix="atlasvibe_blocks_CUSTOM_", delete=False
         ) as f:
             f.write(INITIAL_BLOCK_CODE)
             temp_path = f.name
-        
+
         yield temp_path
-        
+
         # Cleanup
         Path(temp_path).unlink(missing_ok=True)
-    
+
     def test_validate_custom_block_path_accepts_valid_path(self):
         """Test that paths containing 'atlasvibe_blocks' are accepted."""
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         # This should not raise an exception
         valid_path = "/project/atlasvibe_blocks/CUSTOM/CUSTOM.py"
         request = UpdateBlockCodeRequest(
             block_path=valid_path,
             content="content",
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Should be able to check if it's a custom block
         assert "atlasvibe_blocks" in request.block_path
-    
+
     def test_validate_custom_block_path_rejects_blueprint_path(self):
         """Test that paths without 'atlasvibe_blocks' are rejected."""
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         blueprint_path = "/blocks/MATH/ADD/ADD.py"
         request = UpdateBlockCodeRequest(
             block_path=blueprint_path,
             content="content",
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Should be able to identify this is not a custom block
         assert "atlasvibe_blocks" not in request.block_path
-    
+
     def test_validate_project_path_accepts_valid_atlasvibe_file(self):
         """Test that project paths ending with .atlasvibe are accepted."""
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         request = UpdateBlockCodeRequest(
             block_path="/path/atlasvibe_blocks/BLOCK/BLOCK.py",
             content="content",
-            project_path="/project/myproject.atlasvibe"
+            project_path="/project/myproject.atlasvibe",
         )
-        
-        assert request.project_path.endswith('.atlasvibe')
-    
+
+        assert request.project_path.endswith(".atlasvibe")
+
     def test_validate_project_path_rejects_invalid_paths(self):
         """Test that project paths not ending with .atlasvibe are invalid."""
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         request = UpdateBlockCodeRequest(
             block_path="/path/atlasvibe_blocks/BLOCK/BLOCK.py",
             content="content",
-            project_path="/project/invalid"
+            project_path="/project/invalid",
         )
-        
-        assert not request.project_path.endswith('.atlasvibe')
-    
+
+        assert not request.project_path.endswith(".atlasvibe")
+
     @pytest.mark.asyncio
-    @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.regenerate_block_data_json')
-    @patch('captain.routes.blocks.create_manifest')
+    @patch("captain.routes.blocks.Path")
+    @patch("captain.routes.blocks.regenerate_block_data_json")
+    @patch("captain.routes.blocks.create_manifest")
     async def test_update_block_code_writes_new_content(
-        self, 
+        self,
         mock_create_manifest,
         mock_regenerate_block_data_json,
         mock_path_class,
-        temp_custom_block
+        temp_custom_block,
     ):
         """Test that update_block_code writes the new content to file."""
         # Setup mocks
@@ -142,64 +139,55 @@ class TestUpdateBlockCode:
         mock_path.read_text.return_value = INITIAL_BLOCK_CODE
         mock_path.parent.name = "CUSTOM_BLOCK"
         mock_path_class.return_value = mock_path
-        
+
         mock_regenerate_block_data_json.return_value = True
-        mock_create_manifest.return_value = {
-            "name": "CUSTOM_BLOCK",
-            "type": "default"
-        }
-        
+        mock_create_manifest.return_value = {"name": "CUSTOM_BLOCK", "type": "default"}
+
         # Import after mocks are set up
         from captain.routes.blocks import update_block_code, UpdateBlockCodeRequest
-        
+
         # Create request
         request = UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py",
             content=UPDATED_BLOCK_CODE,
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Test that the function executes successfully
         result = await update_block_code(request)
-        
+
         # Verify the function was called and returned expected result
         assert result is not None
         mock_path.write_text.assert_called_with(UPDATED_BLOCK_CODE)
         mock_regenerate_block_data_json.assert_called_once()
         mock_create_manifest.assert_called_once()
-    
-    @patch('captain.routes.blocks.Path')
-    def test_update_block_code_backs_up_original_content(
-        self,
-        mock_path_class
-    ):
+
+    @patch("captain.routes.blocks.Path")
+    def test_update_block_code_backs_up_original_content(self, mock_path_class):
         """Test that original content is backed up before writing new content."""
         # Setup mocks
         mock_path = MagicMock()
         mock_path.exists.return_value = True
         mock_path.read_text.return_value = INITIAL_BLOCK_CODE
         mock_path_class.return_value = mock_path
-        
+
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Test expects that original content is preserved
         # This will fail until implementation is done
         assert mock_path.read_text.return_value == INITIAL_BLOCK_CODE
-    
-    @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.regenerate_block_data_json')
-    @patch('captain.routes.blocks.create_manifest')
+
+    @patch("captain.routes.blocks.Path")
+    @patch("captain.routes.blocks.regenerate_block_data_json")
+    @patch("captain.routes.blocks.create_manifest")
     def test_update_block_code_regenerates_manifest(
-        self,
-        mock_create_manifest,
-        mock_regenerate_block_data_json,
-        mock_path_class
+        self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class
     ):
         """Test that block manifest is regenerated after code update."""
         # Setup mocks
@@ -208,37 +196,36 @@ class TestUpdateBlockCode:
         mock_path.read_text.return_value = INITIAL_BLOCK_CODE
         mock_path.parent.name = "CUSTOM_BLOCK"
         mock_path_class.return_value = mock_path
-        
+
         expected_manifest = {
             "name": "CUSTOM_BLOCK",
             "type": "default",
             "inputs": [{"name": "x", "type": "int"}],
-            "outputs": [{"name": "output", "type": "int"}]
+            "outputs": [{"name": "output", "type": "int"}],
         }
         mock_regenerate_block_data_json.return_value = True
         mock_create_manifest.return_value = expected_manifest
-        
+
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Test expects regenerate_block_data_json and create_manifest to be called
         # This will fail until implementation exists
-        assert mock_regenerate_block_data_json.call_count == 0  # Will be 1 after implementation
+        assert (
+            mock_regenerate_block_data_json.call_count == 0
+        )  # Will be 1 after implementation
         assert mock_create_manifest.call_count == 0  # Will be 1 after implementation
-    
-    @patch('captain.routes.blocks.Path')
-    @patch('captain.routes.blocks.regenerate_block_data_json')
-    @patch('captain.routes.blocks.create_manifest')
+
+    @patch("captain.routes.blocks.Path")
+    @patch("captain.routes.blocks.regenerate_block_data_json")
+    @patch("captain.routes.blocks.create_manifest")
     def test_update_block_code_rollback_on_manifest_failure(
-        self,
-        mock_create_manifest,
-        mock_regenerate_block_data_json,
-        mock_path_class
+        self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class
     ):
         """Test that changes are rolled back if manifest generation fails."""
         # Setup mocks
@@ -247,19 +234,19 @@ class TestUpdateBlockCode:
         original_content = INITIAL_BLOCK_CODE
         mock_path.read_text.return_value = original_content
         mock_path_class.return_value = mock_path
-        
+
         # Simulate manifest generation failure
         mock_regenerate_block_data_json.return_value = True
         mock_create_manifest.return_value = None
-        
+
         from captain.routes.blocks import UpdateBlockCodeRequest
-        
+
         UpdateBlockCodeRequest(
             block_path="/project/atlasvibe_blocks/CUSTOM/CUSTOM.py",
             content=UPDATED_BLOCK_CODE,
-            project_path="/project/test.atlasvibe"
+            project_path="/project/test.atlasvibe",
         )
-        
+
         # Test expects rollback behavior
         # The write_text should be called twice:
         # 1. First with new content

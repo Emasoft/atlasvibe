@@ -16,15 +16,15 @@ export function hasValidDocstringFormat(docstring: string): boolean {
  */
 export function validateDocstring(docstring: string, docstringStart: number): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-  
+
   // Check for required sections
   const hasParameters = /^\s*Parameters\s*$/m.test(docstring);
   const hasReturns = /^\s*Returns\s*$/m.test(docstring);
-  
+
   // Check for proper formatting with dashes
   const hasParametersDashes = /Parameters\s*\n\s*-+/m.test(docstring);
   const hasReturnsDashes = /Returns\s*\n\s*-+/m.test(docstring);
-  
+
   if (!hasParameters || !hasReturns) {
     diagnostics.push({
       from: docstringStart,
@@ -40,14 +40,14 @@ export function validateDocstring(docstring: string, docstringStart: number): Di
       message: "Parameters and Returns sections must be followed by dashes (------)",
     });
   }
-  
+
   // Check parameter format (name : type)
   const parameterSection = docstring.match(/Parameters\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*Returns|$)/);
   if (parameterSection) {
     const paramContent = parameterSection[1];
     const paramStartOffset = docstring.indexOf(paramContent);
     const paramLines = paramContent.split('\n');
-    
+
     let currentOffset = paramStartOffset;
     paramLines.forEach((line) => {
       if (line.trim() && !line.match(/^\s*\w+\s*:\s*[\w[\]|\s,]+/) && !line.match(/^\s*Description/)) {
@@ -61,7 +61,7 @@ export function validateDocstring(docstring: string, docstringStart: number): Di
       currentOffset += line.length + 1; // +1 for newline
     });
   }
-  
+
   return diagnostics;
 }
 
@@ -71,27 +71,27 @@ export function validateDocstring(docstring: string, docstringStart: number): Di
 export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
   const diagnostics: Diagnostic[] = [];
   const doc = view.state.doc;
-  
+
   try {
     // Basic syntax checks
     const tree = syntaxTree(view.state);
-    
+
     // Check for common Python errors
     tree.iterate({
       enter(node) {
         const text = doc.sliceString(node.from, node.to);
-        
+
         // Check for tabs vs spaces (Python is sensitive to this)
         if (node.name === "Body") {
           const lines = text.split('\n');
           let usesSpaces = false;
           let usesTabs = false;
-          
+
           lines.forEach((line) => {
             if (line.match(/^ +/)) usesSpaces = true;
             if (line.match(/^\t+/)) usesTabs = true;
           });
-          
+
           if (usesSpaces && usesTabs) {
             diagnostics.push({
               from: node.from,
@@ -101,9 +101,9 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
             });
           }
         }
-        
+
         // Check for missing colons after def, if, for, etc.
-        if (node.name === "FunctionDefinition" || node.name === "IfStatement" || 
+        if (node.name === "FunctionDefinition" || node.name === "IfStatement" ||
             node.name === "ForStatement" || node.name === "WhileStatement") {
           const lastChar = text.trim().slice(-1);
           if (lastChar !== ':') {
@@ -115,19 +115,19 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
             });
           }
         }
-        
+
         // Check docstrings in functions
         if (node.name === "FunctionDefinition") {
           const functionText = doc.sliceString(node.from, node.to);
           const docstringMatch = functionText.match(/"""([\s\S]*?)"""/);
-          
+
           if (docstringMatch) {
             const docstring = docstringMatch[1];
             const docstringStart = node.from + functionText.indexOf('"""');
-            
+
             // Check if this is an AtlasVibe block function
             const hasAtlasVibeDecorator = functionText.includes("@atlasvibe");
-            
+
             if (hasAtlasVibeDecorator) {
               const docstringDiagnostics = validateDocstring(docstring, docstringStart);
               diagnostics.push(...docstringDiagnostics);
@@ -144,10 +144,10 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
         }
       }
     });
-    
+
   } catch (error) {
     // Silently ignore parsing errors and return diagnostics collected so far
   }
-  
+
   return diagnostics;
 }

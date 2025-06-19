@@ -7,7 +7,7 @@ virtual environment exists but does not contain the pip dependencies.
 Example usage:
 
 ```python
-from atlasvibe_sdk import atlasvibe_node, run_in_venv, Matrix 
+from atlasvibe_sdk import atlasvibe_node, run_in_venv, Matrix
 
 @atlasvibe_node
 @run_in_venv(pip_dependencies=["torch==2.0.1", "torchvision==0.15.2"])
@@ -43,7 +43,7 @@ import cloudpickle
 import portalocker
 
 from ._logging import LogPipe, LogPipeMode, StreamEnum
-from atlasvibe_engine.utils.cache_utils import ATLASVIBE_CACHE_DIR # Corrected import
+from atlasvibe_engine.utils.cache_utils import ATLASVIBE_CACHE_DIR  # Corrected import
 
 __all__ = ["run_in_venv"]
 
@@ -54,7 +54,11 @@ def _get_venv_cache_dir():
 
 def _get_venv_syspath(venv_executable: os.PathLike[Any]) -> list[str]:
     """Get the sys.path of the virtual environment."""
-    command = [venv_executable, "-c", "import sys\nimport json\nprint(json.dumps(sys.path))"]
+    command = [
+        venv_executable,
+        "-c",
+        "import sys\nimport json\nprint(json.dumps(sys.path))",
+    ]
     cmd_output = subprocess.run(command, check=True, capture_output=True, text=True)
     return json.loads(cmd_output.stdout)
 
@@ -122,8 +126,12 @@ def _bootstrap_venv(
             cmd = ["uv", "venv", str(venv_path)]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
-                logger.error(f"Failed to create virtual environment with uv: {result.stderr}")
-                raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
+                logger.error(
+                    f"Failed to create virtual environment with uv: {result.stderr}"
+                )
+                raise subprocess.CalledProcessError(
+                    result.returncode, cmd, result.stdout, result.stderr
+                )
         # At this point, the venv should be created and
         # _get_venv_executable_path should return a valid path (with symlinks resolved)
         venv_executable = _get_venv_executable_path(venv_path)
@@ -205,14 +213,14 @@ class PipInstallThread(threading.Thread):
         group: None = None,
         target: Callable[..., object] | None = None,
         name: str | None = None,
-        args: Iterable[Any] = ..., 
-        kwargs: Mapping[str, Any] | None = None, 
+        args: Iterable[Any] = ...,
+        kwargs: Mapping[str, Any] | None = None,
     ) -> None:
-        super().__init__(group, target, name, args, kwargs, daemon=False) 
+        super().__init__(group, target, name, args, kwargs, daemon=False)
         self.target = target
-        self.args = args if args is not ... else tuple() 
-        self.kwargs = kwargs if kwargs is not None else {} 
-        if self.name: # Ensure name is not None before using as key
+        self.args = args if args is not ... else tuple()
+        self.kwargs = kwargs if kwargs is not None else {}
+        if self.name:  # Ensure name is not None before using as key
             PipInstallThread._threads.update({self.name: self})
             PipInstallThread._exceptions.update({self.name: None})
         else:
@@ -220,26 +228,25 @@ class PipInstallThread(threading.Thread):
             # For now, we'll assume a name is typically provided or defaults acceptably.
             pass
 
-
     def run(self):
         with PipInstallThread._bounded_semaphore:
             if PipInstallThread._cancel_all_threads.is_set():
                 return
             try:
-                if self.target: 
+                if self.target:
                     self.target(*self.args, **self.kwargs)
             except Exception as e:
-                if self.name: # Check if name exists before updating exception
+                if self.name:  # Check if name exists before updating exception
                     PipInstallThread._exceptions.update({self.name: e})
                 raise e
 
     @staticmethod
     def terminate_all():
         PipInstallThread._cancel_all_threads.set()
-        for thread_name in list(PipInstallThread._threads.keys()): 
+        for thread_name in list(PipInstallThread._threads.keys()):
             thread = PipInstallThread._threads.get(thread_name)
             if thread and thread.is_alive():
-                thread.join(timeout=5.0) 
+                thread.join(timeout=5.0)
             if thread_name in PipInstallThread._threads:
                 del PipInstallThread._threads[thread_name]
             if thread_name in PipInstallThread._exceptions:
@@ -248,6 +255,7 @@ class PipInstallThread(threading.Thread):
 
 class ChildProcessError(Exception):
     """Custom exception for errors originating in a child process."""
+
     pass
 
 
@@ -258,7 +266,7 @@ class PickleableFunctionWithPipeIO:
         self,
         func: Callable,
         child_conn: multiprocessing.connection.Connection,
-        venv_executable: str, 
+        venv_executable: str,
     ):
         self._func_serialized = cloudpickle.dumps(func)
         func_module_path = os.path.dirname(os.path.realpath(inspect.getabsfile(func)))
@@ -285,12 +293,16 @@ class PickleableFunctionWithPipeIO:
                 exc_type = type(e)
                 exc_tb_str = traceback.format_exception(exc_type, e, e.__traceback__)
                 serialized_result = cloudpickle.dumps(
-                    (exc_type, e.args, exc_tb_str) # Send type, args, and traceback string
+                    (
+                        exc_type,
+                        e.args,
+                        exc_tb_str,
+                    )  # Send type, args, and traceback string
                 )
         self._child_conn.send_bytes(serialized_result)
 
 
-def run_in_venv(pip_dependencies: list[str], verbose: bool = True): 
+def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
     """A decorator that allows a function to be executed in a virtual environment.
 
     Args:
@@ -314,26 +326,28 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
     def decorator(
         func: Callable[..., Any],
         *,
-        pip_dependencies: list[str] = pip_dependencies, 
-        verbose: bool = verbose, 
+        pip_dependencies: list[str] = pip_dependencies,
+        verbose: bool = verbose,
     ):
         if multiprocessing.current_process().name.startswith("run_in_venv"):
             return func
 
         packages_dict = {
-            package.name.lower(): package.version 
+            package.name.lower(): package.version
             for package in importlib.metadata.distributions()
         }
-        
-        cloudpickle_version = packages_dict.get('cloudpickle')
+
+        cloudpickle_version = packages_dict.get("cloudpickle")
         if not cloudpickle_version:
-            raise RuntimeError("cloudpickle not found in the current environment. It's required for @run_in_venv.")
+            raise RuntimeError(
+                "cloudpickle not found in the current environment. It's required for @run_in_venv."
+            )
 
         # The 'atlasvibe_sdk' itself is not pip-installed into these venvs;
         # its code is made available via PYTHONPATH adjustments if needed, or by being part of the main app's env.
         current_pip_dependencies = sorted(
             list(
-                set( 
+                set(
                     [
                         f"cloudpickle=={cloudpickle_version}",
                     ]
@@ -345,31 +359,34 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
         os.makedirs(venv_cache_dir, exist_ok=True)
         venv_cache_dir = os.path.realpath(venv_cache_dir)
         pip_dependencies_hash = hashlib.md5(
-            "".join(sorted(current_pip_dependencies)).encode() 
+            "".join(sorted(current_pip_dependencies)).encode()
         ).hexdigest()[:8]
         venv_path = os.path.join(venv_cache_dir, f"{pip_dependencies_hash}")
         logger = logging.getLogger(func.__name__)
-        if verbose: 
+        if verbose:
             logger.setLevel(logging.INFO)
         else:
-            logger.setLevel(logging.WARNING) 
+            logger.setLevel(logging.WARNING)
 
         thread_name = f"PipInstallThread-{pip_dependencies_hash}"
         thread = PipInstallThread(
-            name=thread_name, 
+            name=thread_name,
             target=_bootstrap_venv,
-            args=(venv_path, current_pip_dependencies, logger, verbose), 
+            args=(venv_path, current_pip_dependencies, logger, verbose),
         )
         thread.start()
 
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any): 
+        def wrapper(*args: Any, **kwargs: Any):
             logger.info(
                 f"Waiting for pip install to finish for virtual environment of {func.__name__} at {venv_path}..."
             )
-            thread.join() 
+            thread.join()
             venv_executable = _get_venv_executable_path(venv_path)
-            if thread.name and PipInstallThread._exceptions.get(thread.name) is not None: 
+            if (
+                thread.name
+                and PipInstallThread._exceptions.get(thread.name) is not None
+            ):
                 raise PipInstallThread._exceptions[thread.name]
             logger.info(
                 f"Pip install complete. Spawning process for function {func.__name__}..."
@@ -377,7 +394,7 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
             parent_mp_context = multiprocessing.get_context("spawn")
             parent_conn, child_conn = parent_mp_context.Pipe()
             child_mp_context = multiprocessing.get_context("spawn")
-            child_mp_context.set_executable(str(venv_executable)) 
+            child_mp_context.set_executable(str(venv_executable))
             with ExitStack() as stack:
                 log_pipe_stdout = stack.enter_context(
                     LogPipe(
@@ -394,7 +411,7 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
                 pickleable_func_with_pipe = PickleableFunctionWithPipeIO(
                     func=func,
                     child_conn=child_conn,
-                    venv_executable=str(venv_executable), 
+                    venv_executable=str(venv_executable),
                 )
                 mp_func = LogPipe.wrap_and_redirect_stream(
                     pickleable_func_with_pipe,
@@ -412,8 +429,8 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
                 process = child_mp_context.Process(
                     name=f"run_in_venv_{os.urandom(4).hex()}",
                     target=mp_func,
-                    args=tuple(serialized_args), 
-                    kwargs=serialized_kwargs, 
+                    args=tuple(serialized_args),
+                    kwargs=serialized_kwargs,
                 )
                 process.start()
                 serialized_result = parent_conn.recv_bytes()
@@ -422,8 +439,8 @@ def run_in_venv(pip_dependencies: list[str], verbose: bool = True):
             if (
                 isinstance(result, tuple)
                 and len(result) == 3
-                and isinstance(result[0], type) 
-                and issubclass(result[0], Exception) 
+                and isinstance(result[0], type)
+                and issubclass(result[0], Exception)
             ):
                 exc_type, exc_args, tcb_str_list = result
                 exception_instance = exc_type(*exc_args)

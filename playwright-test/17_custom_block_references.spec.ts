@@ -1,13 +1,13 @@
 /**
  * Playwright E2E tests for custom block references and project format v2.
- * 
+ *
  * These tests verify that:
  * 1. Custom blocks maintain their references when projects are saved/loaded
  * 2. Custom blocks show visual indicators in the UI
  * 3. Multiple projects can have blocks with the same name
  * 4. Project migration from v1 to v2 works correctly
  * 5. Custom blocks can be renamed while maintaining references
- * 
+ *
  * NOTE: These tests require the application to be built first.
  * Run: pnpm run build
  * Then: npx playwright test 17_custom_block_references.spec.ts
@@ -51,7 +51,7 @@ test.describe("Custom block references", () => {
     });
     tempDir = join(tempDir, `custom_block_test_${Date.now()}`);
     fs.mkdirSync(tempDir, { recursive: true });
-    
+
     // Create two test projects
     project1Path = join(tempDir, "project1.atlasvibe");
     project2Path = join(tempDir, "project2.atlasvibe");
@@ -59,12 +59,12 @@ test.describe("Custom block references", () => {
 
   test.afterAll(async () => {
     await writeLogFile(app, "custom-block-references");
-    
+
     // Cleanup temporary files
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
-    
+
     await app.close();
   });
 
@@ -72,7 +72,7 @@ test.describe("Custom block references", () => {
     // Create a custom block
     await window.getByTestId(Selectors.addBlockBtn).click();
     await window.locator("button", { hasText: "CONSTANT" }).first().click();
-    
+
     // Enter custom name
     const nameInput = window.locator('input[placeholder="Enter block name"]');
     await nameInput.fill("MY_PROCESSOR");
@@ -86,7 +86,7 @@ test.describe("Custom block references", () => {
 
     // Save the project
     await app.evaluate(async ({ dialog }, savePath) => {
-      dialog.showSaveDialog = () => 
+      dialog.showSaveDialog = () =>
         Promise.resolve({ filePath: savePath, canceled: false });
     }, project1Path);
 
@@ -114,7 +114,7 @@ test.describe("Custom block references", () => {
     // Verify the loaded project data contains custom block info
     const projectData = JSON.parse(fs.readFileSync(project1Path, 'utf-8'));
     expect(projectData.version).toBe("2.0.0");
-    
+
     const customNode = projectData.rfInstance.nodes.find(
       (n: any) => n.data.func === "MY_PROCESSOR"
     );
@@ -127,11 +127,11 @@ test.describe("Custom block references", () => {
     // Custom blocks should have a visual indicator
     const customBlock = window.locator("h2", { hasText: "MY_PROCESSOR" }).first();
     const blockContainer = customBlock.locator("..");
-    
+
     // Check for custom block styling or badge
     // The exact implementation may vary, but there should be some visual difference
     await expect(blockContainer).toHaveClass(/custom-block|project-block/);
-    
+
     // Or check for a badge/icon
     const customIndicator = blockContainer.locator('[data-testid="custom-block-indicator"]');
     if (await customIndicator.count() > 0) {
@@ -152,7 +152,7 @@ test.describe("Custom block references", () => {
 
     // Create a new project
     await window.keyboard.press("Control+N");
-    
+
     // Confirm if prompted
     const confirmButton = window.getByRole("button", { name: "Yes" });
     if (await confirmButton.isVisible({ timeout: 1000 })) {
@@ -162,7 +162,7 @@ test.describe("Custom block references", () => {
     // Create another custom block with the same name
     await window.getByTestId(Selectors.addBlockBtn).click();
     await window.locator("button", { hasText: "CONSTANT" }).first().click();
-    
+
     const nameInput = window.locator('input[placeholder="Enter block name"]');
     await nameInput.fill("MY_PROCESSOR"); // Same name as in project1
     await window.getByRole("button", { name: "Create" }).click();
@@ -175,7 +175,7 @@ test.describe("Custom block references", () => {
 
     // Save as project2
     await app.evaluate(async ({ dialog }, savePath) => {
-      dialog.showSaveDialog = () => 
+      dialog.showSaveDialog = () =>
         Promise.resolve({ filePath: savePath, canceled: false });
     }, project2Path);
 
@@ -229,7 +229,7 @@ test.describe("Custom block references", () => {
         edges: []
       }
     };
-    
+
     fs.writeFileSync(v1ProjectPath, JSON.stringify(v1ProjectData, null, 2));
 
     // Load the v1 project
@@ -249,7 +249,7 @@ test.describe("Custom block references", () => {
     // Save it (which should trigger migration)
     const migratedPath = join(tempDir, "v1_migrated.atlasvibe");
     await app.evaluate(async ({ dialog }, savePath) => {
-      dialog.showSaveDialog = () => 
+      dialog.showSaveDialog = () =>
         Promise.resolve({ filePath: savePath, canceled: false });
     }, migratedPath);
 
@@ -259,7 +259,7 @@ test.describe("Custom block references", () => {
     // Check the saved file has v2 format
     const migratedData = JSON.parse(fs.readFileSync(migratedPath, 'utf-8'));
     expect(migratedData.version).toBe("2.0.0");
-    
+
     // Custom blocks should have default values added
     const migratedNode = migratedData.rfInstance.nodes[0];
     expect(migratedNode.data.path).toBeDefined();
@@ -312,7 +312,7 @@ test.describe("Custom block references", () => {
   test("Should handle custom block deletion gracefully", async () => {
     // Create a project with custom block
     await window.keyboard.press("Control+N");
-    
+
     // Confirm if prompted
     const confirmButton = window.getByRole("button", { name: "Yes" });
     if (await confirmButton.isVisible({ timeout: 1000 })) {
@@ -322,7 +322,7 @@ test.describe("Custom block references", () => {
     // Add custom block
     await window.getByTestId(Selectors.addBlockBtn).click();
     await window.locator("button", { hasText: "CONSTANT" }).first().click();
-    
+
     const nameInput = window.locator('input[placeholder="Enter block name"]');
     await nameInput.fill("DELETABLE_BLOCK");
     await window.getByRole("button", { name: "Create" }).click();
@@ -331,7 +331,7 @@ test.describe("Custom block references", () => {
     // Save project
     const deletionTestPath = join(tempDir, "deletion_test.atlasvibe");
     await app.evaluate(async ({ dialog }, savePath) => {
-      dialog.showSaveDialog = () => 
+      dialog.showSaveDialog = () =>
         Promise.resolve({ filePath: savePath, canceled: false });
     }, deletionTestPath);
 
@@ -378,17 +378,17 @@ test.describe("Custom block references", () => {
 
     // Custom blocks from current project should be listed
     const customBlocksList = window.locator('[data-testid="custom-blocks-list"]');
-    
+
     // Should show project custom blocks if any exist
     const projectBlocks = customBlocksList.locator("button");
     const blockCount = await projectBlocks.count();
-    
+
     if (blockCount > 0) {
       // Verify they're marked as custom/project blocks
       for (let i = 0; i < blockCount; i++) {
         const block = projectBlocks.nth(i);
         const blockText = await block.textContent();
-        
+
         // Custom blocks might have special styling or badges
         await expect(block).toHaveClass(/custom|project/);
       }

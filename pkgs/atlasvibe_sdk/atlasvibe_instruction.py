@@ -3,7 +3,8 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-class ATLASVIBE_INSTRUCTION: # Renamed from ATLASVIBE_INSTRUCTION
+
+class ATLASVIBE_INSTRUCTION:  # Renamed from ATLASVIBE_INSTRUCTION
     FLOW_TO_DIRECTIONS = "__flow_to_directions__"
     FLOW_TO_NODES = "__flow_to_nodes__"
     RESULT_FIELD = "__result_field__"

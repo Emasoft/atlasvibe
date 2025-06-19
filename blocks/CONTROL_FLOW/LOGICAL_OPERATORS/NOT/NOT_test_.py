@@ -1,5 +1,6 @@
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
+
 def test_NOT(mock_atlasvibe_decorator):
     import NOT
 

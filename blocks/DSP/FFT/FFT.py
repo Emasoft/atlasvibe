@@ -5,6 +5,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame
 from typing import Literal
 from pandas import DataFrame as df
 
+
 @atlasvibe
 def FFT(
     default: OrderedPair,

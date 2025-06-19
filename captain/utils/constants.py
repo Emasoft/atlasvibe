@@ -5,7 +5,7 @@
 # - Created constants module to eliminate hardcoded strings
 # - Centralized metadata file names and keys
 # - Improved maintainability and consistency
-# 
+#
 
 """
 Constants for AtlasVibe block system.

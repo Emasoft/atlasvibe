@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Plotly
 from pkgs.atlasvibe.atlasvibe.parameter_types import TextArea
 
+
 @atlasvibe
 def ANNOTATE_PLOTLY(
     default: Plotly,

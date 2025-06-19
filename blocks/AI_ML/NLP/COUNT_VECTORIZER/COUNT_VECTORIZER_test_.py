@@ -8,6 +8,7 @@ try:
 except ImportError:
     sklearn_installed = False
 
+
 @pytest.mark.skipif(
     not sklearn_installed, reason="sklearn is not installed | Skipping test in CI"
 )

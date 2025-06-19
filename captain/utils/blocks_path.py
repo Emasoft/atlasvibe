@@ -12,8 +12,10 @@ def get_blocks_path() -> str:
     return os.path.join(os.getcwd(), "blocks")
 
 
-def get_atlasvibe_dir(): # RENAMED
-    dir_path = os.path.abspath(os.path.join(Path.home(), ".atlasvibe")) # CHANGED .atlasvibe to .atlasvibe
+def get_atlasvibe_dir():  # RENAMED
+    dir_path = os.path.abspath(
+        os.path.join(Path.home(), ".atlasvibe")
+    )  # CHANGED .atlasvibe to .atlasvibe
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
     return dir_path

@@ -5,9 +5,10 @@ try:
 except ImportError:
     sympy = None
 
+
 @pytest.mark.skipif(
     sympy is None,
-    reason="DOUBLE_DEFINITE_INTEGRAL requires sympy to be installed | Ignore this test in CI"
+    reason="DOUBLE_DEFINITE_INTEGRAL requires sympy to be installed | Ignore this test in CI",
 )
 def test_DOUBLE_DEFINITE_INTEGRAL(mock_atlasvibe_decorator):
     import DOUBLE_DEFINITE_INTEGRAL

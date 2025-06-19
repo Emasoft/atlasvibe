@@ -5,7 +5,7 @@
 # - Created tests for import namespace fix in build_manifest.py
 # - Tests verify that 'atlasvibe' imports are redirected to 'pkgs.atlasvibe.atlasvibe'
 # - Follows TDD methodology (written after implementation as correction)
-# 
+#
 
 """
 Tests for the import namespace fix in build_manifest.py.
@@ -24,10 +24,10 @@ from captain.utils.manifest.build_manifest import create_manifest
 
 class TestImportNamespaceFix:
     """Test the import namespace redirection in manifest generation."""
-    
+
     def test_atlasvibe_import_redirection(self):
         """Test that 'import atlasvibe' is redirected correctly."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 import atlasvibe
 from atlasvibe import atlasvibe_node, DataContainer
@@ -38,21 +38,21 @@ def TEST_IMPORT():
     return DataContainer(type="scalar", value=42)
 ''')
             f.flush()
-            
+
             # Should not raise ImportError
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "TEST_IMPORT"
             assert manifest["key"] == "TEST_IMPORT"
             assert manifest["type"] == "TEST"
             assert manifest["pip_dependencies"] == [{"name": "numpy", "v": "1.0.0"}]
-            
+
             Path(f.name).unlink()
-    
+
     def test_atlasvibe_submodule_import(self):
         """Test that 'from atlasvibe.data_container import ...' works."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe.data_container import OrderedPair, Scalar
 from atlasvibe import atlasvibe_node
@@ -63,22 +63,22 @@ def MATH_OP(a: Scalar, b: Scalar) -> OrderedPair:
     return OrderedPair(x=a.value, y=b.value)
 ''')
             f.flush()
-            
+
             # Should successfully parse types
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "MATH_OP"
             assert len(manifest["inputs"]) == 2
             assert manifest["inputs"][0]["type"] == "Scalar"
             assert manifest["inputs"][1]["type"] == "Scalar"
             assert manifest["outputs"][0]["type"] == "OrderedPair"
-            
+
             Path(f.name).unlink()
-    
+
     def test_parameter_types_import(self):
         """Test importing parameter types from atlasvibe."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe import atlasvibe_node, TextArea, Secret, File, Directory
 
@@ -91,9 +91,9 @@ def PARAM_TEST(text: TextArea = TextArea("default text"),
     pass
 ''')
             f.flush()
-            
+
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert "parameters" in manifest
             assert manifest["parameters"]["text"]["type"] == "TextArea"
@@ -101,16 +101,16 @@ def PARAM_TEST(text: TextArea = TextArea("default text"),
             assert manifest["parameters"]["secret"]["type"] == "Secret"
             assert manifest["parameters"]["file"]["type"] == "File"
             assert manifest["parameters"]["directory"]["type"] == "Directory"
-            
+
             Path(f.name).unlink()
-    
+
     def test_hardware_types_import(self):
         """Test importing hardware-related types."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe import (
-    atlasvibe_node, 
-    CameraDevice, 
+    atlasvibe_node,
+    CameraDevice,
     SerialDevice,
     VisaDevice,
     HardwareConnection
@@ -127,49 +127,49 @@ def HARDWARE_TEST(
     pass
 ''')
             f.flush()
-            
+
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert "parameters" in manifest
             assert manifest["parameters"]["camera"]["type"] == "CameraDevice"
             assert manifest["parameters"]["serial"]["type"] == "SerialDevice"
             assert manifest["parameters"]["visa"]["type"] == "VisaDevice"
             assert manifest["parameters"]["connection"]["type"] == "HardwareConnection"
-            
+
             Path(f.name).unlink()
-    
+
     def test_atlasvibe_decorator_import(self):
         """Test that @atlasvibe decorator works (not just @atlasvibe_node)."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe import atlasvibe, Matrix, Vector
 
-@atlasvibe(deps={"scipy": "1.10.0"})  
+@atlasvibe(deps={"scipy": "1.10.0"})
 def SIGNAL_PROCESS(signal: Vector) -> Matrix:
     """Process signal data."""
     return Matrix([[1, 2], [3, 4]])
 ''')
             f.flush()
-            
+
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "SIGNAL_PROCESS"
             assert manifest["inputs"][0]["type"] == "Vector"
             assert manifest["outputs"][0]["type"] == "Matrix"
             assert manifest["pip_dependencies"] == [{"name": "scipy", "v": "1.10.0"}]
-            
+
             Path(f.name).unlink()
-    
+
     def test_data_container_types_comprehensive(self):
         """Test all DataContainer subclasses can be imported."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe import (
     atlasvibe_node,
     OrderedPair,
-    Scalar, 
+    Scalar,
     Vector,
     Matrix,
     DataFrame,
@@ -187,19 +187,19 @@ def ALL_TYPES_TEST() -> DataContainer:
     return Scalar(42)
 ''')
             f.flush()
-            
+
             # Should not raise any import errors
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "ALL_TYPES_TEST"
             assert manifest["outputs"][0]["type"] == "Any"  # DataContainer becomes Any
-            
+
             Path(f.name).unlink()
-    
+
     def test_non_atlasvibe_imports_unchanged(self):
         """Test that non-atlasvibe imports are not affected."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 import numpy as np
 import pandas as pd
@@ -214,38 +214,38 @@ def NUMPY_TEST(data: Vector) -> Vector:
     return Vector(arr)
 ''')
             f.flush()
-            
+
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "NUMPY_TEST"
             assert manifest["inputs"][0]["type"] == "Vector"
             assert manifest["outputs"][0]["type"] == "Vector"
-            
+
             Path(f.name).unlink()
-    
+
     def test_import_error_handling(self):
         """Test that invalid imports still raise appropriate errors."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write('''
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write("""
 from atlasvibe import NonExistentClass  # This should fail
 from atlasvibe import atlasvibe_node
 
-@atlasvibe_node  
+@atlasvibe_node
 def ERROR_TEST():
     pass
-''')
+""")
             f.flush()
-            
+
             # Should raise AttributeError since NonExistentClass doesn't exist
             with pytest.raises((AttributeError, ImportError)):
                 create_manifest(f.name)
-            
+
             Path(f.name).unlink()
-    
+
     def test_fromlist_handling(self):
         """Test that fromlist parameter is handled correctly in imports."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 # Test various import styles
 import atlasvibe
@@ -258,14 +258,14 @@ def FROMLIST_TEST() -> DataContainer:
     return Scalar(123)
 ''')
             f.flush()
-            
+
             manifest = create_manifest(f.name)
-            
+
             assert manifest is not None
             assert manifest["name"] == "FROMLIST_TEST"
             # Note: Using module.Class notation in type hints may not parse correctly
             # This is a known limitation
-            
+
             Path(f.name).unlink()
 
 

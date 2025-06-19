@@ -5,7 +5,7 @@
 # - Initial test implementation for Python validator
 # - Test real validation scenarios without mocks
 # - Test AtlasVibe-specific validation rules
-# 
+#
 
 """
 Test suite for Python code validator.
@@ -14,14 +14,12 @@ Tests real validation scenarios without mocking to ensure
 the validator works correctly with actual Python code.
 """
 
-import pytest
-from pathlib import Path
-from captain.utils.python_validator import PythonValidator, ValidationError
+from captain.utils.python_validator import PythonValidator
 
 
 class TestPythonValidator:
     """Test Python code validation functionality."""
-    
+
     def test_validate_syntax_error(self):
         """Test that syntax errors are detected."""
         code = """
@@ -31,10 +29,12 @@ def test_func():
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "test.py")
-        
+
         assert len(errors) > 0
-        assert any(e.severity == "error" and "syntax" in e.category.lower() for e in errors)
-    
+        assert any(
+            e.severity == "error" and "syntax" in e.category.lower() for e in errors
+        )
+
     def test_validate_undefined_variable(self):
         """Test that undefined variables are detected."""
         code = """
@@ -44,9 +44,9 @@ def test_func():
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "test.py")
-        
+
         assert any(e.message.startswith("Undefined variable") for e in errors)
-    
+
     def test_validate_missing_docstring(self):
         """Test that missing docstrings are detected for AtlasVibe functions."""
         code = """
@@ -58,9 +58,9 @@ def process_data(x, y):
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "atlasvibe_blocks/test_block.py")
-        
+
         assert any("docstring" in e.message.lower() for e in errors)
-    
+
     def test_validate_valid_atlasvibe_block(self):
         """Test that valid AtlasVibe blocks pass validation."""
         code = '''
@@ -70,14 +70,14 @@ from pkgs.atlasvibe.atlasvibe.data_container import Scalar
 @atlasvibe(deps=["numpy"])
 def process_data(x: Scalar, y: Scalar) -> Scalar:
     """Add two scalars.
-    
+
     Parameters
     ----------
     x : Scalar
         First input value
     y : Scalar
         Second input value
-    
+
     Returns
     -------
     Scalar
@@ -89,11 +89,11 @@ def process_data(x: Scalar, y: Scalar) -> Scalar:
 '''
         validator = PythonValidator()
         errors = validator.validate_code(code, "atlasvibe_blocks/test_block.py")
-        
+
         # Should have no errors or only minor warnings
         error_count = sum(1 for e in errors if e.severity == "error")
         assert error_count == 0
-    
+
     def test_validate_import_error(self):
         """Test that import errors are detected."""
         code = """
@@ -102,11 +102,11 @@ from another_missing import something
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "test.py")
-        
+
         # Import validation might not catch all missing modules without
         # actually trying to import, but it should at least parse correctly
         assert isinstance(errors, list)
-    
+
     def test_validate_type_annotations(self):
         """Test type annotation validation."""
         code = """
@@ -118,10 +118,10 @@ def missing_return_type(x: str):
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "test.py")
-        
+
         # Should suggest adding return type annotation
         assert any("return type" in e.message.lower() for e in errors)
-    
+
     def test_validate_complexity(self):
         """Test complexity validation."""
         code = """
@@ -137,6 +137,6 @@ def complex_function(a, b, c, d, e, f):
 """
         validator = PythonValidator()
         errors = validator.validate_code(code, "test.py")
-        
+
         # Should warn about complexity
         assert any("complex" in e.message.lower() for e in errors)

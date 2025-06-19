@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar, DataContainer
 from typing import Optional
 
+
 @atlasvibe
 def SCALAR(
     _: Optional[DataContainer] = None,

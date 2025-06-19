@@ -78,7 +78,7 @@ const ControlBar = () => {
         setIsDebugSettingsOpen={setIsDebugSettingsOpen}
       />
       <DepManagerModal />
-      
+
       <BlueprintManagerDialog
         open={isBlueprintManagerOpen}
         onOpenChange={setIsBlueprintManagerOpen}

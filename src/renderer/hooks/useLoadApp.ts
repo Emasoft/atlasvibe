@@ -30,7 +30,7 @@ export const useLoadApp = () => {
       return;
     }
     const { fileContent, filePath } = res.value;
-    
+
     // Parse and migrate project format if needed
     let parsedData;
     try {
@@ -39,15 +39,15 @@ export const useLoadApp = () => {
       toast.error("Invalid JSON", { description: "Failed to parse project file" });
       return;
     }
-    
+
     const { project: migratedProject, migrated } = migrateProjectFormat(parsedData);
-    
+
     if (migrated) {
-      toast.info("Project migrated", { 
-        description: "Project file was updated to the latest format" 
+      toast.info("Project migrated", {
+        description: "Project file was updated to the latest format"
       });
     }
-    
+
     // Validate and load
     const loadRes = tryParse(Project)(migratedProject)
       .andThen((proj) => {

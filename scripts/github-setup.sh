@@ -45,7 +45,7 @@ fi
 echo -e "\n${YELLOW}Checking Gitleaks configuration...${NC}"
 if [ -f ".gitleaks.toml" ]; then
     echo -e "${GREEN}✅ Gitleaks configuration found${NC}"
-    
+
     # Test Gitleaks
     if gitleaks detect --config .gitleaks.toml --verbose &>/dev/null; then
         echo -e "${GREEN}✅ Gitleaks scan passed${NC}"
@@ -104,7 +104,7 @@ if gh repo view &>/dev/null; then
         -f delete_branch_on_merge=true \
         -f allow_auto_merge=false \
         &>/dev/null && echo -e "${GREEN}✅ Repository settings updated${NC}" || echo "Unable to update settings"
-    
+
     # Set up branch protection (only if repo admin)
     echo "Setting up branch protection..."
     gh api repos/:owner/:repo/branches/main/protection \

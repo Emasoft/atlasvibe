@@ -1,1 +1,1 @@
-In this example, we generate two matrix by using `MATRIX` nodes. Then, these are multiplied using `DOT_PRODUCT` node. 
+In this example, we generate two matrix by using `MATRIX` nodes. Then, these are multiplied using `DOT_PRODUCT` node.

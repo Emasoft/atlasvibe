@@ -3,6 +3,7 @@ from typing import Literal
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 @atlasvibe()
 def SCIKIT_LEARN_DATASET(
     dataset_name: Literal[

@@ -4,11 +4,13 @@ import pytest
 try:
     import pyarrow  # noqa: F401
     import fastparquet  # noqa: F401
+
     pyarrow = pyarrow
     fastparquet = fastparquet
 except ImportError:
     pyarrow = None
     fastparquet = None
+
 
 @pytest.mark.skipif(
     pyarrow is None or fastparquet is None,

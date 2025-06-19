@@ -22,7 +22,57 @@ env:
   AZURE_CERT_NAME: ${{ secrets.AZURE_CERT_NAME }}
 
 jobs:
+  # Run pre-commit checks before building
+  pre-release-checks:
+    name: Pre-release Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --locked --all-extras --dev
+          uv pip install pre-commit
+
+      - name: Run pre-commit checks
+        run: uv run pre-commit run --all-files
+
+      - name: Run deptry dependency check
+        run: |
+          uv run deptry . \
+            --extend-exclude "tests" \
+            --extend-exclude ".*_test.*\.py" \
+            --extend-exclude "node_modules" \
+            --extend-exclude "playwright-test" \
+            --extend-exclude "examples" \
+            --extend-exclude "public" \
+            --extend-exclude "out" \
+            --extend-exclude "dist" \
+            --extend-exclude "PYTHON/tests" \
+            --known-first-party atlasvibe \
+            --known-first-party atlasvibe_sdk \
+            --known-first-party atlasvibe_engine \
+            --known-first-party atlasvibe_cli \
+            --known-first-party captain \
+            --known-first-party cli \
+            --ignore DEP003 \
+            --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
+
   buildElectron:
+    needs: pre-release-checks  # Only build if checks pass
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

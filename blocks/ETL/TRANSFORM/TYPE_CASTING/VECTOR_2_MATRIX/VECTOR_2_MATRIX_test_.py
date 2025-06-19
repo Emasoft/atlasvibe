@@ -1,6 +1,7 @@
 from numpy import array, array_equal
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_VECTOR_2_MATRIX(mock_atlasvibe_decorator):
     import VECTOR_2_MATRIX
 

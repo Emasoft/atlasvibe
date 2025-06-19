@@ -2,6 +2,7 @@ from numpy import ones, array_equal
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 from pytest import raises
 
+
 def test_VECTOR_INSERT(mock_atlasvibe_decorator):
     import VECTOR_INSERT
 

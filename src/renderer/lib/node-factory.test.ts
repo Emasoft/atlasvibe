@@ -5,7 +5,7 @@
 // - New test file for node factory functions
 // - Tests for creating nodes from block definitions
 // - Tests for duplicating nodes with proper label generation
-// 
+//
 
 import { describe, it, expect, vi } from 'vitest';
 import { createNodeFromBlock, duplicateNode, CreateNodeOptions } from './node-factory';

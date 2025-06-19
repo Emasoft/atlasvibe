@@ -4,12 +4,14 @@ import pandas as pd
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 from plotly.graph_objs import Figure
 
+
 @pytest.fixture
 def mock_prophet_model_json():
     with open(
         os.path.join(os.path.dirname(__file__), "mock_prophet_model.json"), "r"
     ) as f:
         return f.read()
+
 
 @pytest.fixture
 def mock_prophet_output_dataframe():
@@ -20,6 +22,7 @@ def mock_prophet_output_dataframe():
     return pd.read_parquet(
         os.path.join(os.path.dirname(__file__), "mock_prophet_output_dataframe.parquet")
     )
+
 
 def test_PROPHET_COMPONENTS(
     mock_atlasvibe_decorator,

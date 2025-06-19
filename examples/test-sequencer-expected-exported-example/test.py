@@ -33,7 +33,7 @@ def test_dataframe():
     # Check DataFrame is valid
     assert df is not None
     assert len(df) == 3
-    assert df['value'].mean() == 6.15
+    assert df["value"].mean() == 6.15
 
 
 def test_failing_example():

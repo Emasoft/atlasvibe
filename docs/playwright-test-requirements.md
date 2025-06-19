@@ -35,7 +35,7 @@ This document outlines the comprehensive Playwright tests created following TDD 
 **Purpose**: Tests blueprint creation and management functionality
 
 **Key Requirements**:
-- **Save as Blueprint**: 
+- **Save as Blueprint**:
   - Right-click context menu option "Save as Blueprint"
   - Dialog for entering blueprint name
   - Blueprint appears in global palette with `.blueprint-badge`

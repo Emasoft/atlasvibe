@@ -157,7 +157,7 @@ if [ "$RUN_PYTHON_TESTS" = true ] || [ "$RUN_E2E_TESTS" = true ]; then
             echo "❌ E2E tests: FAILED"
         fi
     fi
-    
+
     if [ -n "$PYTHON_TESTS_FAILED" ] || [ -n "$E2E_TESTS_FAILED" ]; then
         exit 1
     fi

@@ -4,7 +4,7 @@
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New file to replace Poetry functionality with uv
 // - Implements all Poetry commands using uv equivalents
-// 
+//
 
 import { PoetryGroupInfo, PythonDependency } from "src/types/poetry";
 import { Command } from "../command";
@@ -77,7 +77,7 @@ export async function uvShowUserGroup(): Promise<PythonDependency[]> {
   // For user group, we'll read from pyproject.toml and check what's installed
   const installed = await uvShowTopLevel();
   const parsed = toml.parse(pyproject);
-  
+
   if (parsed?.project?.["optional-dependencies"]?.user) {
     const userDeps = parsed.project["optional-dependencies"].user;
     return userDeps.map((dep: string) => {
@@ -92,16 +92,16 @@ export async function uvShowUserGroup(): Promise<PythonDependency[]> {
       };
     });
   }
-  
+
   return [];
 }
 
 export async function uvGetGroupInfo(): Promise<PoetryGroupInfo[]> {
   const installed = await uvShowTopLevel();
   const parsed = toml.parse(pyproject);
-  
+
   const result: PoetryGroupInfo[] = [];
-  
+
   // Check optional-dependencies (uv style)
   if (parsed?.project?.["optional-dependencies"]) {
     Object.entries(parsed.project["optional-dependencies"]).forEach(([key, deps]) => {
@@ -111,14 +111,14 @@ export async function uvGetGroupInfo(): Promise<PoetryGroupInfo[]> {
           const name = match ? match[1] : dep;
           const version = match && match[2] ? match[2] : "*";
           const installedDep = installed.find(d => d.name === name);
-          
+
           return {
             name,
             version,
             installed: !!installedDep,
           };
         });
-        
+
         result.push({
           name: key,
           dependencies,
@@ -132,13 +132,13 @@ export async function uvGetGroupInfo(): Promise<PoetryGroupInfo[]> {
       }
     });
   }
-  
+
   return result;
 }
 
 export async function uvGroupEnsureValid(): Promise<string[]> {
   const groups = store.get("poetryOptionalGroups"); // Keep same store key for compatibility
-  
+
   // make sure the group actually exists
   const validGroups = groups.filter((group) =>
     UV_DEP_GROUPS.find((g) => g.name === group),
@@ -156,7 +156,7 @@ export async function uvInstallDepGroup(group: string): Promise<boolean> {
   }
 
   const validGroups = await uvGroupEnsureValid();
-  
+
   // UV installs optional dependencies differently
   // We need to install with extras
   if (validGroups.length > 0) {
@@ -178,13 +178,13 @@ export async function uvInstallDepUserGroup(
   if (!groups.includes("user")) {
     store.set("poetryOptionalGroups", [...groups, "user"]);
   }
-  
+
   // UV doesn't have groups like Poetry, so we install directly
   await execCommand(new Command(`uv pip install ${name}`));
-  
+
   // TODO: Update pyproject.toml to add to user group
   // This would require modifying the pyproject.toml file
-  
+
   return true;
 }
 
@@ -205,14 +205,14 @@ export async function uvUninstallDepUserGroup(
   name: string,
 ): Promise<boolean> {
   await execCommand(new Command(`uv pip uninstall ${name} -y`));
-  
+
   // Reinstall with current groups
   const validGroups = await uvGroupEnsureValid();
   if (validGroups.length > 0) {
     const extras = validGroups.map(g => `[${g}]`).join("");
     await execCommand(new Command(`uv pip install -e .${extras}`));
   }
-  
+
   return true;
 }
 
@@ -224,7 +224,7 @@ export async function uvUninstallDepGroup(group: string): Promise<boolean> {
   }
 
   const validGroups = await uvGroupEnsureValid();
-  
+
   // Reinstall with remaining groups
   if (validGroups.length > 0) {
     const extras = validGroups.map(g => `[${g}]`).join("");

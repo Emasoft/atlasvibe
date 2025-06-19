@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 
 import scipy.stats
 
+
 @atlasvibe
 def BAYES_MVS(
     default: OrderedPair | Matrix,

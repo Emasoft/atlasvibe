@@ -48,14 +48,14 @@ jobs:
           script: |
             const output = `
             ### ❌ Gitleaks Security Scan Failed
-            
+
             Potential secrets were detected in your code. Please review the findings and:
             1. Remove any actual secrets from the code
             2. If it's a false positive, update the \`.gitleaks.toml\` configuration
-            
+
             Check the Security tab for detailed findings.
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -92,13 +92,13 @@ jobs:
             const title = '🚨 Security: Potential secrets detected in commit ${{ github.sha }}';
             const body = `
             ## Security Alert
-            
+
             Gitleaks detected potential secrets in commit ${{ github.sha }}.
-            
+
             **Commit**: ${{ github.sha }}
             **Author**: ${{ github.actor }}
             **Branch**: ${{ github.ref_name }}
-            
+
             ### Action Required:
             1. Review the commit for any secrets
             2. If secrets were committed:
@@ -106,10 +106,10 @@ jobs:
                - Remove them from the git history
                - Generate new secrets
             3. If false positive, update \`.gitleaks.toml\`
-            
+
             See the [Actions log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
             `;
-            
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -2,6 +2,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedTriple, Surface
 import numpy as np
 
+
 @atlasvibe
 def ORDERED_TRIPLE_2_SURFACE(default: OrderedTriple) -> Surface:
     """Convert an OrderedTriple DataContainer to a Surface DataContainer.

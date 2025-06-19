@@ -17,6 +17,7 @@ v_dot = "$\\vdots$"
 d_dot = "$\\ddots$"
 l_dot = "$\\ldots$"
 
+
 def numpy_2d_array_as_table(
     arr: DCNpArrayType,
     arr_row_shape: int,
@@ -46,6 +47,7 @@ def numpy_2d_array_as_table(
 
     return new_arr.T
 
+
 def numpy_1d_array_as_table(arr: DCNpArrayType):
     if arr.size > MAX_ALLOWED_SHAPE:
         converted_type = arr.astype(object)
@@ -54,6 +56,7 @@ def numpy_1d_array_as_table(arr: DCNpArrayType):
     else:
         new_arr = arr
     return new_arr.reshape(-1, 1)
+
 
 def numpy_array_as_table(arr: DCNpArrayType):
     ndim = arr.ndim
@@ -65,6 +68,7 @@ def numpy_array_as_table(arr: DCNpArrayType):
         row_shape, col_shape = arr.shape
         cell_values = numpy_2d_array_as_table(arr, row_shape, col_shape, d_dot)
     return cell_values
+
 
 @atlasvibe_node
 def MATRIX_VIEW(default: OrderedPair | Matrix) -> Plotly:

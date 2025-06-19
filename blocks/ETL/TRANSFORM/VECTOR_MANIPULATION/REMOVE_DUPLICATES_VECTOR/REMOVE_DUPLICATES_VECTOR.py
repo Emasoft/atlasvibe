@@ -2,6 +2,7 @@ from numpy import unique
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 @atlasvibe
 def REMOVE_DUPLICATES_VECTOR(
     default: Vector,

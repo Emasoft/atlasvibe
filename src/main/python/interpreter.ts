@@ -160,7 +160,7 @@ export class PythonManager {
         console.log(`Failed to use VIRTUAL_ENV Python at ${venvPython}`);
       }
     }
-    
+
     // Try python3.11 first
     try {
       const cmd311 = `python3.11 -c "import sys; print(sys.executable)"`;

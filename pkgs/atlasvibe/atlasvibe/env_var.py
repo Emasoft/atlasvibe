@@ -27,7 +27,6 @@ def get_env_var(key: str) -> Optional[str]:
     return kr.get_password("atlasvibe", key)
 
 
-
 def set_env_var(key: str, value: str) -> None:
     kr = get_keyring()
     kr.set_password("atlasvibe", key, value)

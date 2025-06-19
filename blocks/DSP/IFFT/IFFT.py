@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, DataFrame
 import pandas as pd
 
+
 @atlasvibe
 def IFFT(default: DataFrame, real_signal: bool = True) -> OrderedPair:
     """Perform the Inverse Discrete Fourier Transform on an input signal.

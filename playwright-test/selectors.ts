@@ -54,12 +54,12 @@ export enum Selectors {
   newSeqModalCreateButton = "new-seq-modal-create-btn",
   pathInputSelectButton = "path-input-select-button",
   runBtn = "run-test-btn",
-  
+
   // Status indicators
   projectStatusIndicator = "project-status-indicator",
   blockRegeneratingIndicator = "block-regenerating-indicator",
   executionStatus = "execution-status",
-  
+
   // Blueprint management
   blueprintManagerBtn = "blueprint-manager-btn",
   saveAsBlueprintBtn = "save-as-blueprint-btn",

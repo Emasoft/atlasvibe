@@ -69,16 +69,16 @@ export default function BlockContextMenu({
   };
 
   const deleteBlock = useDeleteBlock();
-  
+
   const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false);
   const [venvDialogOpen, setVenvDialogOpen] = useState(false);
   const manifest = useManifest();
-  
+
   // Get existing blueprint names
-  const existingBlueprints = manifest 
+  const existingBlueprints = manifest
     ? Object.keys(manifest).filter(key => manifest[key].isBlueprint)
     : [];
-  
+
   const saveAsBlueprint = () => {
     setBlueprintDialogOpen(true);
   };

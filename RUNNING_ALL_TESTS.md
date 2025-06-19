@@ -29,7 +29,7 @@ uv run pytest -v --runxfail
 Use the force run script that overrides skip decorators:
 
 ```bash
-# Make script executable (first time only) 
+# Make script executable (first time only)
 chmod +x force_run_all_tests.py
 
 # Run all tests, ignoring skip decorators
@@ -103,7 +103,7 @@ uv pip install sympy scikit-learn xlrd openpyxl
 - `--tb=short`: Short traceback format
 - `-r fEsxXpP`: Show all test outcomes in summary
   - `f`: failed
-  - `E`: error  
+  - `E`: error
   - `s`: skipped
   - `x`: xfailed
   - `X`: xpassed

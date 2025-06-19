@@ -2,6 +2,7 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix, Scalar
 
+
 @atlasvibe
 def MATRIX(row: Scalar = 100, column: Scalar = 100) -> Matrix:
     """Generates a random matrix with values between 0 and 1.

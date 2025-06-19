@@ -60,11 +60,11 @@ describe("EditorView", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup default mocks
     mockApi.loadFileFromFullPath.mockResolvedValue("# Initial content");
     mockApi.saveFileToFullPath.mockResolvedValue({ isOk: () => true });
-    
+
     useProjectStore.getState.mockReturnValue({ path: projectPath });
     useManifestStore.getState.mockReturnValue({
       fetchManifest: vi.fn().mockResolvedValue(undefined),
@@ -85,7 +85,7 @@ describe("EditorView", () => {
   describe("Custom Block Detection", () => {
     it("should detect and display 'Custom Block' indicator for custom blocks", async () => {
       renderEditor(customBlockPath);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Custom Block")).toBeInTheDocument();
       });
@@ -93,7 +93,7 @@ describe("EditorView", () => {
 
     it("should not display 'Custom Block' indicator for regular files", async () => {
       renderEditor(regularFilePath);
-      
+
       await waitFor(() => {
         expect(screen.queryByText("Custom Block")).not.toBeInTheDocument();
       });
@@ -103,11 +103,11 @@ describe("EditorView", () => {
   describe("File Loading", () => {
     it("should load file content on mount", async () => {
       renderEditor(customBlockPath);
-      
+
       await waitFor(() => {
         expect(mockApi.loadFileFromFullPath).toHaveBeenCalledWith(customBlockPath);
       });
-      
+
       const editor = screen.getByTestId("code-editor");
       expect(editor).toHaveValue("# Initial content");
     });
@@ -120,22 +120,22 @@ describe("EditorView", () => {
         isOk: () => true,
         isErr: () => false,
       } as any);
-      
+
       renderEditor(customBlockPath);
-      
+
       // Wait for initial load
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
       });
-      
+
       // Change content
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Updated content" } });
-      
+
       // Save
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(mockApi.saveFileToFullPath).toHaveBeenCalledWith(
           customBlockPath,
@@ -160,22 +160,22 @@ describe("EditorView", () => {
         isErr: () => true,
         error: { message: "Metadata generation failed" },
       } as any);
-      
+
       renderEditor(customBlockPath);
-      
+
       // Wait for initial load
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
       });
-      
+
       // Change content
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Updated content" } });
-      
+
       // Save
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           "Failed to update block metadata",
@@ -186,22 +186,22 @@ describe("EditorView", () => {
 
     it("should not update metadata for regular files", async () => {
       const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
-      
+
       renderEditor(regularFilePath);
-      
+
       // Wait for initial load
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
       });
-      
+
       // Change content
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Updated content" } });
-      
+
       // Save
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(mockApi.saveFileToFullPath).toHaveBeenCalled();
         expect(mockUpdateBlockCode).not.toHaveBeenCalled();
@@ -211,21 +211,21 @@ describe("EditorView", () => {
     it("should not update metadata if project path is not available", async () => {
       useProjectStore.getState.mockReturnValue({ path: null });
       const mockUpdateBlockCode = vi.mocked(api.updateBlockCode);
-      
+
       renderEditor(customBlockPath);
-      
+
       // Wait for initial load
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toHaveValue("# Initial content");
       });
-      
+
       // Change content and save
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Updated content" } });
-      
+
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(mockApi.saveFileToFullPath).toHaveBeenCalled();
         expect(mockUpdateBlockCode).not.toHaveBeenCalled();
@@ -236,39 +236,39 @@ describe("EditorView", () => {
   describe("Change Detection", () => {
     it("should show 'Changed' indicator when content is modified", async () => {
       renderEditor(customBlockPath);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toBeInTheDocument();
       });
-      
+
       // Initially no changes
       expect(screen.queryByText("Changed")).not.toBeInTheDocument();
-      
+
       // Change content
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Modified content" } });
-      
+
       // Should show changed indicator
       expect(screen.getByText("Changed")).toBeInTheDocument();
     });
 
     it("should hide 'Changed' indicator after successful save", async () => {
       renderEditor(customBlockPath);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toBeInTheDocument();
       });
-      
+
       // Change content
       const editor = screen.getByTestId("code-editor");
       fireEvent.change(editor, { target: { value: "# Modified content" } });
-      
+
       expect(screen.getByText("Changed")).toBeInTheDocument();
-      
+
       // Save
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(screen.queryByText("Changed")).not.toBeInTheDocument();
       });
@@ -281,17 +281,17 @@ describe("EditorView", () => {
         isOk: () => false,
         error: { message: "Permission denied" },
       });
-      
+
       renderEditor(customBlockPath);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId("code-editor")).toBeInTheDocument();
       });
-      
+
       // Save
       const saveButton = screen.getByText("Save");
       fireEvent.click(saveButton);
-      
+
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           "Error when trying to save file",

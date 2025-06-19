@@ -6,7 +6,7 @@
 
 import { test, expect, Page } from "@playwright/test";
 import { Selectors, blockPaletteSelectors, flowchartSelectors } from "./selectors";
-import { ElectronAppInfo, launchApp, newProject } from "./utils"; 
+import { ElectronAppInfo, launchApp, newProject } from "./utils";
 
 let appInfo: ElectronAppInfo;
 
@@ -33,14 +33,14 @@ test.describe("Block Operations on Flowchart", () => {
   });
 
   test("Add multiple blueprint blocks creates custom blocks with incrementing default suffixed names", async () => {
-    const blueprintKey = "MATRIX_VIEW"; 
+    const blueprintKey = "MATRIX_VIEW";
     const expectedFirstName = `${blueprintKey}_1`;
     const expectedSecondName = `${blueprintKey}_2`;
     const expectedThirdName = `${blueprintKey}_3`;
 
     const paletteBlock = page.locator(blockPaletteSelectors.blockByTestId(blueprintKey));
     await expect(paletteBlock).toBeVisible({ timeout: 10000 });
-    
+
     // Add first block
     await paletteBlock.dragTo(page.locator(Selectors.flowchartCanvas), { targetPosition: { x: 50, y: 50 } });
     const firstNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(expectedFirstName));
@@ -52,7 +52,7 @@ test.describe("Block Operations on Flowchart", () => {
     const secondNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(expectedSecondName));
     await expect(secondNodeLabel).toBeVisible();
     await expect(secondNodeLabel).toHaveText(expectedSecondName);
-    
+
     // Add third block
     await paletteBlock.dragTo(page.locator(Selectors.flowchartCanvas), { targetPosition: { x: 50, y: 250 } });
     const thirdNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(expectedThirdName));
@@ -105,7 +105,7 @@ test.describe("Block Operations on Flowchart", () => {
     // const errorMessage = page.locator("div[data-testid='error-message-name-empty']"); // Adjust selector
     // await expect(errorMessage).toBeVisible();
   });
-  
+
   test("Rename a block to a name with special characters", async () => {
     const blueprintKey = "CONSTANT";
     const initialName = `${blueprintKey}_1`;
@@ -137,24 +137,24 @@ test.describe("Block Operations on Flowchart", () => {
     const paletteBlock = page.locator(blockPaletteSelectors.blockByTestId(blueprintKey));
     await paletteBlock.dragTo(page.locator(Selectors.flowchartCanvas));
     await page.locator(flowchartSelectors.nodeLabelByName(initialName)).click();
-    
+
     const nameInput = page.locator(Selectors.propertiesPanelBlockNameInput);
     await expect(nameInput).toBeVisible();
     await nameInput.fill(collidingBlueprintName);
     await page.locator(Selectors.flowchartCanvas).click({ position: { x: 0, y: 0 } });
 
     const finalNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(expectedSuffixedName));
-    await expect(finalNodeLabel).toBeVisible({ timeout: 5000 }); 
+    await expect(finalNodeLabel).toBeVisible({ timeout: 5000 });
     await expect(finalNodeLabel).toHaveText(expectedSuffixedName);
   });
 
   test("Rename collision with an existing custom block name should result in suffixed name", async () => {
     const blueprintKey1 = "CONSTANT";
     const block1InitialName = `${blueprintKey1}_1`;
-    
+
     const blueprintKey2 = "ADD"; // Different blueprint
     const block2InitialName = `${blueprintKey2}_1`;
-    
+
     const expectedSuffixedNameAfterCollision = `${block1InitialName}_1`;
 
     const paletteBlock1 = page.locator(blockPaletteSelectors.blockByTestId(blueprintKey1));
@@ -205,7 +205,7 @@ test.describe("Block Operations on Flowchart", () => {
     await page.locator(blockPaletteSelectors.blockByTestId(addBlueprintKey)).dragTo(page.locator(Selectors.flowchartCanvas), { targetPosition: { x: 50, y: 150 } });
     const addNodeLabel = page.locator(flowchartSelectors.nodeLabelByName(addBlockOriginalName));
     await expect(addNodeLabel).toBeVisible();
-    
+
     // Rename ADD_1 to CONSTANT_1 (which is now available)
     await addNodeLabel.click();
     await nameInput.fill(constBlockOriginalName); // Target: CONSTANT_1

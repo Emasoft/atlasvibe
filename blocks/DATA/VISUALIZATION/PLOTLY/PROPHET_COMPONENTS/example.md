@@ -1,13 +1,13 @@
-In this example, the `TIMESERIES` node generates random time series data 
+In this example, the `TIMESERIES` node generates random time series data
 
 This dataframe is then passed to the `PROPHET_PREDICT` node, with the default parameters
 of `run_forecast=True` and `periods=365`. This node trains a `Prophet` model and runs a prediction
-forecast over a 365 period. 
+forecast over a 365 period.
 
 It returns a DataContainer with the following
 * `type`: `dataframe`
 * `m`: The forecasted dataframe
-* `extra`: 
+* `extra`:
   * `run_forecast`: `True` (because that's what was passed in)
   * `prophet`: The trained `Prophet` model
   * `original`: The dataframe passed into the node

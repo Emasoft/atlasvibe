@@ -1,0 +1,209 @@
+name: Pre-commit Checks
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pre-commit:
+    name: Run all pre-commit hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --locked --all-extras --dev
+          uv pip install pre-commit
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+
+      - name: Run pre-commit on all files
+        id: pre-commit
+        continue-on-error: true
+        run: |
+          uv run pre-commit run --all-files --verbose
+
+      - name: Generate pre-commit report
+        if: always()
+        run: |
+          {
+            echo "## Pre-commit Report"
+            echo ""
+            if [ "${{ steps.pre-commit.outcome }}" == "success" ]; then
+              echo "✅ All pre-commit checks passed!"
+            else
+              echo "❌ Some pre-commit checks failed. See details below."
+              echo ""
+              echo "Run locally to see details:"
+              echo "\`\`\`bash"
+              echo "pre-commit run --all-files"
+              echo "\`\`\`"
+            fi
+          } > pre-commit-report.md
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request' && steps.pre-commit.outcome != 'success'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('pre-commit-report.md', 'utf8');
+
+            const output = `
+            ### 🔍 Pre-commit Check Results
+
+            ${report}
+
+            **Hooks run:**
+            - ✅ uv-lock: Ensures lockfile is up-to-date
+            - ✅ ruff: Python linting and formatting
+            - ✅ gitleaks: Secret detection
+            - ✅ deptry: Dependency analysis
+            - ✅ Various file checks (YAML, JSON, TOML, etc.)
+
+            To fix issues locally:
+            \`\`\`bash
+            # Install pre-commit
+            uv pip install pre-commit
+            pre-commit install
+
+            # Run on all files
+            pre-commit run --all-files
+
+            # Auto-fix what's possible
+            pre-commit run --all-files --hook-stage manual
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Upload pre-commit log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-commit-log
+          path: ~/.cache/pre-commit/pre-commit.log
+
+  # Specific deptry job for more detailed reporting
+  deptry-analysis:
+    name: Dependency Analysis with deptry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --locked --all-extras --dev
+
+      - name: Run deptry with JSON output
+        id: deptry
+        continue-on-error: true
+        run: |
+          uv run deptry . \
+            --extend-exclude "tests" \
+            --extend-exclude ".*_test.*\.py" \
+            --extend-exclude "node_modules" \
+            --extend-exclude "playwright-test" \
+            --extend-exclude "examples" \
+            --extend-exclude "public" \
+            --extend-exclude "out" \
+            --extend-exclude "dist" \
+            --extend-exclude "PYTHON/tests" \
+            --known-first-party atlasvibe \
+            --known-first-party atlasvibe_sdk \
+            --known-first-party atlasvibe_engine \
+            --known-first-party atlasvibe_cli \
+            --known-first-party captain \
+            --known-first-party cli \
+            --ignore DEP003 \
+            --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring" \
+            --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> "$GITHUB_ENV"
+
+      - name: Upload deptry report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deptry-report
+          path: deptry-report.json
+
+      - name: Parse and comment deptry results
+        if: github.event_name == 'pull_request' && env.DEPTRY_FAILED == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let report = {};
+            try {
+              const fs = require('fs');
+              const reportContent = fs.readFileSync('deptry-report.json', 'utf8');
+              report = JSON.parse(reportContent);
+            } catch (e) {
+              console.log('Could not parse deptry report:', e);
+            }
+
+            const output = `
+            ### 📦 Dependency Analysis (deptry)
+
+            Found potential dependency issues. Many might be false positives due to dynamic imports.
+
+            **Summary:**
+            - Missing dependencies (DEP001): ${report.DEP001?.length || 0} issues
+            - Unused dependencies (DEP002): ${report.DEP002?.length || 0} issues
+            - Transitive dependencies (DEP003): ${report.DEP003?.length || 0} issues
+            - Misplaced dev dependencies (DEP004): ${report.DEP004?.length || 0} issues
+
+            See the [workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for the full report.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });

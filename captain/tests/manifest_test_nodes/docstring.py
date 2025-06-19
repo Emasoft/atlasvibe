@@ -4,10 +4,10 @@
 # This software is licensed under the MIT License.
 # Refer to the LICENSE file for more details.
 
-from pkgs.atlasvibe.atlasvibe import OrderedPair, atlasvibe_node # CHANGED
+from pkgs.atlasvibe.atlasvibe import OrderedPair, atlasvibe_node  # CHANGED
 
 
-@atlasvibe_node(node_type="TEST_TYPE") # CHANGED
+@atlasvibe_node(node_type="TEST_TYPE")  # CHANGED
 def DOCSTRING(a: OrderedPair, b: OrderedPair, foo: int, bar: str) -> OrderedPair:
     """A docstring test.
 

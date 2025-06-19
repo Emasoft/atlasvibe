@@ -6,7 +6,7 @@
 // - Lists all blueprints with rename and delete options
 // - Validates names with two-step space replacement
 // - Handles name collision detection
-// 
+//
 
 import { useState, useEffect } from "react";
 import {
@@ -47,13 +47,13 @@ export function BlueprintManagerDialog({
   const [editingName, setEditingName] = useState("");
   const [nameError, setNameError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  
+
   const manifest = useManifest();
 
   // Helper function to extract blueprints from manifest tree
   const extractBlueprints = (node: any, category: string = ""): BlueprintItem[] => {
     const items: BlueprintItem[] = [];
-    
+
     if (node.children) {
       // This is a section node
       node.children.forEach((child: any) => {
@@ -68,7 +68,7 @@ export function BlueprintManagerDialog({
         category: category,
       });
     }
-    
+
     return items;
   };
 
@@ -107,11 +107,11 @@ export function BlueprintManagerDialog({
     let cleaned = name.trim();
     cleaned = cleaned.replace(/\s+/g, "_");
     cleaned = cleaned.replace(/[^A-Za-z0-9_]/g, "");
-    
+
     if (/^\d/.test(cleaned)) {
       cleaned = "Blueprint_" + cleaned;
     }
-    
+
     return cleaned || "Renamed_Blueprint";
   };
 
@@ -135,7 +135,7 @@ export function BlueprintManagerDialog({
   const handleNameChange = (value: string) => {
     setEditingName(value);
     setShowPreview(false);
-    
+
     const error = validateName(value);
     setNameError(error);
   };
@@ -149,7 +149,7 @@ export function BlueprintManagerDialog({
       const cleaned = cleanName(editingName);
       setEditingName(cleaned);
       setShowPreview(true);
-      
+
       const error = validateName(cleaned);
       setNameError(error);
       return;
@@ -174,7 +174,7 @@ export function BlueprintManagerDialog({
 
       toast.success(`Blueprint renamed to "${editingName}"`);
       cancelEdit();
-      
+
       // Reload blueprints
       if (manifest) {
         // Trigger manifest reload
@@ -201,7 +201,7 @@ export function BlueprintManagerDialog({
       }
 
       toast.success(`Blueprint "${blueprint.name}" deleted`);
-      
+
       // Reload blueprints
       window.location.reload();
     } catch (error: any) {
@@ -298,7 +298,7 @@ export function BlueprintManagerDialog({
               ))}
             </div>
           )}
-          
+
           {/* Error/preview messages */}
           {editingKey && nameError && (
             <p className="error-message mt-2 text-sm text-red-500">{nameError}</p>

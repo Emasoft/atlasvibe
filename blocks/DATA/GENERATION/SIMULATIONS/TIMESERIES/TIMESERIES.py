@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 import pandas as pd
 import traceback
 
+
 @atlasvibe
 def TIMESERIES(
     start_date: str = "2023-01-01", end_date: str = "2023-07-20"

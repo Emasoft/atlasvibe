@@ -12,6 +12,7 @@ import math
 from blocks.DATA.VISUALIZATION.template import plot_layout
 from PIL import Image as PILImage
 
+
 @atlasvibe(deps={"scikit-image": "0.21.0"}, node_type="VISUALIZERS")
 def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> Plotly:
     """A stand-alone visualizer for analyzing an input array of image data.
@@ -171,7 +172,7 @@ def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> P
         hoverinfo = ""
         for prop_name in properties:
             val = getattr(rprops[index], prop_name)
-            if type(val) == tuple:
+            if isinstance(val, tuple):
                 line = [
                     f" <b>{prop_name}_{idv}: {v:.2f}</b>" for idv, v in enumerate(val)
                 ]

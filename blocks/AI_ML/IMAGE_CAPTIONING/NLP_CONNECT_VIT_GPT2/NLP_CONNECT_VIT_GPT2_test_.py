@@ -9,11 +9,13 @@ try:
 except ImportError:
     torch = None
 
+
 @pytest.fixture
 def obama_image_array_rgb():
     _image_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/President_Barack_Obama.jpg"
     image = PIL.Image.open(_image_path).convert("RGB")
     return np.array(image)
+
 
 @pytest.mark.slow
 @pytest.mark.skipif(

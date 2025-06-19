@@ -4,6 +4,7 @@ import pandas as pd
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 @atlasvibe
 def ONE_HOT_ENCODING(
     data: DataFrame,

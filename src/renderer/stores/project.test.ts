@@ -5,7 +5,7 @@
 // - New test file for project store with custom block handling
 // - Tests for saving and loading projects with custom blocks
 // - Tests for referencing custom blocks by path
-// 
+//
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
@@ -112,12 +112,12 @@ describe('Project Store - Custom Block References', () => {
       );
 
       const savedProject = JSON.parse(savedContent) as any;
-      
+
       // Check that custom block has path reference
       const savedCustomBlock = savedProject.rfInstance.nodes.find(n => n.id === 'custom-1');
       expect(savedCustomBlock?.data.isCustom).toBe(true);
       expect(savedCustomBlock?.data.path).toBe('atlasvibe_blocks/MY_CUSTOM_BLOCK');
-      
+
       // Check that standard block doesn't have path
       const savedStandardBlock = savedProject.rfInstance.nodes.find(n => n.id === 'standard-1');
       expect(savedStandardBlock?.data.isCustom).toBe(false);
@@ -182,7 +182,7 @@ describe('Project Store - Custom Block References', () => {
 
       // Assert
       const savedProject = JSON.parse(savedContent) as any;
-      
+
       // Each custom block should have its unique path
       savedProject.rfInstance.nodes.forEach((node, index) => {
         expect(node.data.isCustom).toBe(true);
@@ -227,13 +227,13 @@ describe('Project Store - Custom Block References', () => {
 
       // Act
       const { result } = renderHook(() => useProjectStore());
-      
+
       // Directly set state since useLoadProject requires manifest/metadata
       result.current.handleNodeChanges(
         () => projectToLoad.rfInstance.nodes,
         () => []
       );
-      
+
       // Assert
       const loadedNode = result.current.nodes[0];
       expect(loadedNode.data.isCustom).toBe(true);
@@ -246,7 +246,7 @@ describe('Project Store - Custom Block References', () => {
       // Arrange
       const projectName = 'MyTestProject';
       const projectPath = '/path/to/my-test-project.atlasvibe';
-      
+
       useProjectStore.setState({
         name: projectName,
         path: projectPath,
@@ -267,7 +267,7 @@ describe('Project Store - Custom Block References', () => {
       // Assert
       const savedProject = JSON.parse(savedContent) as any;
       expect(savedProject.name).toBe(projectName);
-      
+
       // Check structure
       expect((savedProject as any).version).toBeDefined();
       expect(savedProject).toHaveProperty('rfInstance');
@@ -317,7 +317,7 @@ describe('Project Store - Custom Block References', () => {
 
       // Assert
       const savedProject = JSON.parse(savedContent) as any;
-      
+
       // No custom blocks should have path or isCustom
       savedProject.rfInstance.nodes.forEach(node => {
         expect(node.data.isCustom).toBeFalsy();

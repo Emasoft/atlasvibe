@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar
 
+
 @atlasvibe
 def ORDERED_PAIR_LENGTH(default: OrderedPair) -> Scalar:
     """Returns the length of the input OrderedPair.

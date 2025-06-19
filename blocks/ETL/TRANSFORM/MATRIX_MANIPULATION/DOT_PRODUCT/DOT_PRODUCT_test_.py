@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix, Vector
 
+
 def test_DOT_PRODUCT(mock_atlasvibe_decorator):
     import DOT_PRODUCT
 

@@ -2,7 +2,11 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 from typing import Literal
-from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import get_val, perform_arithmetic_operation
+from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import (
+    get_val,
+    perform_arithmetic_operation,
+)
+
 
 @atlasvibe
 def LOG(
@@ -38,7 +42,7 @@ def LOG(
         Vector if a is a Vector.
         v: the result of the logarithm.
     """
-    
+
     # For standard log bases, just compute log of input a
     if log_base != "input":
         value = get_val(a)
@@ -49,7 +53,7 @@ def LOG(
                 y = np.log10(value)
             case "2":
                 y = np.log2(value)
-        
+
         match a:
             case OrderedPair():
                 return OrderedPair(x=a.x, y=y)

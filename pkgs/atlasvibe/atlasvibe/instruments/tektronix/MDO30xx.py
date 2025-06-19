@@ -190,7 +190,7 @@ class TekronixMSOWaveform(InstrumentChannel):
 
         if identifier not in self.valid_identifiers:
             raise ValueError(
-                f"Identifier {identifier} must be one of " f"{self.valid_identifiers}"
+                f"Identifier {identifier} must be one of {self.valid_identifiers}"
             )
 
         self._identifier = identifier
@@ -782,7 +782,7 @@ class TektronixMSOMeasurement(InstrumentChannel):
         for src in [1, 2]:
             self.add_parameter(
                 f"source{src}",
-                get_cmd=f"MEASUrement:MEAS{self._measurement_number}:SOUrce" f"{src}?",
+                get_cmd=f"MEASUrement:MEAS{self._measurement_number}:SOUrce{src}?",
                 set_cmd=partial(self._set_source, src),
                 vals=Enum(*(TekronixMSOWaveform.valid_identifiers + ["HISTogram"])),
             )
@@ -798,8 +798,7 @@ class TektronixMSOMeasurement(InstrumentChannel):
     def _set_source(self, source_number: int, value: str) -> None:
         self._adjustment_time = time.perf_counter()
         self.write(
-            f"MEASUrement:MEAS{self._measurement_number}:SOUrce{source_number} "
-            f"{value}"
+            f"MEASUrement:MEAS{self._measurement_number}:SOUrce{source_number} {value}"
         )
 
     def wait_adjustment_time(self) -> None:

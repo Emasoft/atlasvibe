@@ -2,9 +2,11 @@ import pytest
 import os
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 @pytest.fixture
 def iris_csv_file_path():
     return f"{os.path.dirname(os.path.realpath(__file__))}/assets/iris_test.csv"
+
 
 def test_READ_CSV(mock_atlasvibe_decorator, iris_csv_file_path):
     import READ_CSV

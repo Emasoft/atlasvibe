@@ -9,6 +9,7 @@ try:
 except ImportError:
     torch = None
 
+
 @pytest.fixture
 def obama_image_array_rgb():
     _image_path = os.path.join(
@@ -16,6 +17,7 @@ def obama_image_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
+
 
 @pytest.fixture
 def obama_segmentation_array_rgb():
@@ -26,6 +28,7 @@ def obama_segmentation_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
+
 
 @pytest.mark.skipif(
     torch is None,

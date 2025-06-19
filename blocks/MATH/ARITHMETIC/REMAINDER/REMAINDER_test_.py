@@ -2,6 +2,7 @@ import numpy as np
 
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
 
+
 def test_REMAINDER_Vector_Vector(mock_atlasvibe_decorator):
     import REMAINDER
 
@@ -11,6 +12,7 @@ def test_REMAINDER_Vector_Vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.v, np.remainder(x.v, y.v))
 
+
 def test_REMAINDER_Vector_Scalar(mock_atlasvibe_decorator):
     import REMAINDER
 
@@ -18,6 +20,7 @@ def test_REMAINDER_Vector_Scalar(mock_atlasvibe_decorator):
     res = REMAINDER.REMAINDER(a=x, b=[Scalar(c=2)])
 
     np.testing.assert_allclose(res.v, np.remainder(x.v, 2))
+
 
 def test_REMAINDER_OrderedPair_Vector(mock_atlasvibe_decorator):
     import REMAINDER

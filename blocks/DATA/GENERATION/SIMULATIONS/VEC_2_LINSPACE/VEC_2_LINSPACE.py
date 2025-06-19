@@ -2,6 +2,7 @@ import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Scalar, Vector
 
+
 @atlasvibe
 def VEC_2_LINSPACE(
     default: Scalar | Vector,

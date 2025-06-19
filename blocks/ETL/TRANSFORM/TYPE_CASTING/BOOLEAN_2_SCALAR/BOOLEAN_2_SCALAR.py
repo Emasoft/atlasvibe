@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean, Scalar
 
+
 @atlasvibe
 def BOOLEAN_2_SCALAR(default: Boolean) -> Scalar:
     """Takes boolean type data and converts it into scalar data type.

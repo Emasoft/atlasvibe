@@ -6,6 +6,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 
 memory_key = "SECOND_ORDER_SYSTEM"
 
+
 @atlasvibe(inject_node_metadata=True)
 def SECOND_ORDER_SYSTEM(
     default: OrderedPair | Vector | Scalar,

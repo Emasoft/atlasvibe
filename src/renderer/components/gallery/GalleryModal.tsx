@@ -59,7 +59,7 @@ export const GalleryModal = ({
     );
     // console.log(entries);
     setFilteredData(entries);
-  }, [searchQuery, data]); 
+  }, [searchQuery, data]);
 
   return (
     <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
@@ -117,11 +117,11 @@ export const GalleryModal = ({
               <br /> Would you like to search for an example app containing{" "}
               <span className="font-bold">{searchQuery}</span> on{" "}
               <a
-                href={import.meta.env.VITE_ATLASVIBE_DOCS_LINK} 
+                href={import.meta.env.VITE_ATLASVIBE_DOCS_LINK}
                 target="_blank"
                 className="text-accent1"
               >
-                {import.meta.env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ?? 
+                {import.meta.env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ??
                   "atlasvibe documentation"}
               </a>{" "}
               instead?

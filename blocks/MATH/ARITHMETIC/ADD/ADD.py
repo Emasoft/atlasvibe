@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar, Vector
 
 from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_operation
 
+
 @atlasvibe
 def ADD(
     a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]

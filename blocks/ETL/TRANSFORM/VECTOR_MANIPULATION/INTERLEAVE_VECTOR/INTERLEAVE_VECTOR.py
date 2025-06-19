@@ -2,6 +2,7 @@ from numpy import stack
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 @atlasvibe
 def INTERLEAVE_VECTOR(
     default: Vector,

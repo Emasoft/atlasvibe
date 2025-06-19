@@ -17,7 +17,11 @@ from typing import (
     is_typeddict,
 )
 
-from captain.utils.docstring_utils import parse_numpy_style_docstring, get_param_descriptions, get_return_descriptions
+from captain.utils.docstring_utils import (
+    parse_numpy_style_docstring,
+    get_param_descriptions,
+    get_return_descriptions,
+)
 from pkgs.atlasvibe.atlasvibe import (
     Array,
     CameraConnection,
@@ -87,7 +91,9 @@ class ManifestBuilder:
 
         if docstring:
             # Parse the docstring with Inputs section support
-            self.docstring = parse_numpy_style_docstring(docstring, [("Inputs", "inputs")])
+            self.docstring = parse_numpy_style_docstring(
+                docstring, [("Inputs", "inputs")]
+            )
             self.param_descriptions = get_param_descriptions(docstring)
             self.return_descriptions = get_return_descriptions(docstring)
         else:
@@ -195,19 +201,19 @@ class ManifestBuilder:
         # First check standard parameter descriptions
         if self.param_descriptions and param in self.param_descriptions:
             return self.param_descriptions.get(param)
-        
+
         # Also check the custom "inputs" section if it exists
-        if self.docstring and hasattr(self.docstring, 'inputs'):
+        if self.docstring and hasattr(self.docstring, "inputs"):
             for input_param in self.docstring.inputs:
                 if input_param.arg_name == param:
                     return input_param.description
-        
+
         # Also check if this is a regular param in the docstring
-        if self.docstring and hasattr(self.docstring, 'params'):
+        if self.docstring and hasattr(self.docstring, "params"):
             for doc_param in self.docstring.params:
                 if doc_param.arg_name == param:
                     return doc_param.description
-        
+
         return None
 
     def _get_return_desc(self, param: str, named: bool) -> Optional[str]:
@@ -224,73 +230,96 @@ class ManifestBuilder:
 
 def create_manifest(path: str) -> dict[str, Any]:
     node_name, init_func_name, tree, overload = make_manifest_ast(path)
-    
+
     # Import atlasvibe at module level to ensure it's available
     import pkgs.atlasvibe.atlasvibe as atlasvibe_module
-    
+
     code = compile(tree, filename="<unknown>", mode="exec")
     module = ModuleType("node_module")
-    
+
     # Create a custom import hook for 'atlasvibe' imports
     import sys
     from importlib import import_module
     import builtins
-    
+
     # Save the original __import__ function
     original_import = builtins.__import__
-    
+
     def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
         """Custom import function that redirects 'atlasvibe' imports to 'pkgs.atlasvibe.atlasvibe'"""
-        if name == 'atlasvibe' or name.startswith('atlasvibe.'):
+        if name == "atlasvibe" or name.startswith("atlasvibe."):
             # Redirect to the actual package location
-            if name == 'atlasvibe':
-                actual_name = 'pkgs.atlasvibe.atlasvibe'
+            if name == "atlasvibe":
+                actual_name = "pkgs.atlasvibe.atlasvibe"
             else:
                 # Replace 'atlasvibe.' with 'pkgs.atlasvibe.atlasvibe.'
-                actual_name = name.replace('atlasvibe.', 'pkgs.atlasvibe.atlasvibe.')
-            
+                actual_name = name.replace("atlasvibe.", "pkgs.atlasvibe.atlasvibe.")
+
             # Import the actual module
             actual_module = import_module(actual_name)
-            
+
             # If fromlist is specified, we need to handle it properly
             if fromlist:
                 return actual_module
             else:
                 # Return the top-level module
-                parts = actual_name.split('.')
+                parts = actual_name.split(".")
                 return sys.modules[parts[0]]
         else:
             # Use the original import for everything else
             return original_import(name, globals, locals, fromlist, level)
-    
+
     # Temporarily replace __import__ for the exec
     try:
         builtins.__import__ = custom_import
-        
+
         # Also ensure the atlasvibe module is available directly in the module's namespace
-        module.__dict__['__builtins__'] = {'__import__': custom_import}
+        module.__dict__["__builtins__"] = {"__import__": custom_import}
         # Add all other builtins, including special ones like __build_class__
         for name in dir(builtins):
-            if not name.startswith('_') or name in ['__import__', '__build_class__', '__name__']:
-                module.__dict__['__builtins__'][name] = getattr(builtins, name)
-        
+            if not name.startswith("_") or name in [
+                "__import__",
+                "__build_class__",
+                "__name__",
+            ]:
+                module.__dict__["__builtins__"][name] = getattr(builtins, name)
+
         # Pre-import and inject commonly used items
-        module.__dict__['atlasvibe_node'] = atlasvibe_module.atlasvibe_node
-        module.__dict__['atlasvibe'] = atlasvibe_module.atlasvibe
-        
+        module.__dict__["atlasvibe_node"] = atlasvibe_module.atlasvibe_node
+        module.__dict__["atlasvibe"] = atlasvibe_module.atlasvibe
+
         # Inject commonly used data container types
-        for attr in ['OrderedPair', 'Scalar', 'Vector', 'Matrix', 'DataContainer', 
-                     'DataFrame', 'Image', 'Surface', 'OrderedTriple', 'Stateful',
-                     'DefaultParams', 'NodeInitContainer', 'Array', 'TextArea',
-                     'Secret', 'File', 'Directory', 'String', 'ParametricScalar',
-                     'ParametricVector']:
+        for attr in [
+            "OrderedPair",
+            "Scalar",
+            "Vector",
+            "Matrix",
+            "DataContainer",
+            "DataFrame",
+            "Image",
+            "Surface",
+            "OrderedTriple",
+            "Stateful",
+            "DefaultParams",
+            "NodeInitContainer",
+            "Array",
+            "TextArea",
+            "Secret",
+            "File",
+            "Directory",
+            "String",
+            "ParametricScalar",
+            "ParametricVector",
+        ]:
             if hasattr(atlasvibe_module, attr):
                 module.__dict__[attr] = getattr(atlasvibe_module, attr)
-        
+
         # Add parameter types aliases for convenience
-        if hasattr(atlasvibe_module, 'Scalar'):
-            module.__dict__['Number'] = getattr(atlasvibe_module, 'Scalar')  # Number alias for Scalar
-        
+        if hasattr(atlasvibe_module, "Scalar"):
+            module.__dict__["Number"] = getattr(
+                atlasvibe_module, "Scalar"
+            )  # Number alias for Scalar
+
         exec(code, module.__dict__)
     finally:
         # Restore the original __import__

@@ -4,6 +4,7 @@ import pandas as pd
 
 from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
+
 def test_IFFT(mock_atlasvibe_decorator):
     import IFFT
 

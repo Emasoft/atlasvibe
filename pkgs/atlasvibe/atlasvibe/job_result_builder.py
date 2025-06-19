@@ -37,7 +37,9 @@ class JobResultBuilder:
 
     def flow_to_directions(self, directions: list[str]):
         if directions.__len__() > 0:
-            self._add_instructions({ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: directions})
+            self._add_instructions(
+                {ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: directions}
+            )
         return self
 
     def flow_by_flag(

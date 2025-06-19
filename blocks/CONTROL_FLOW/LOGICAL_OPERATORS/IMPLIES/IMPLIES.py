@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Boolean
 
+
 @atlasvibe
 def IMPLIES(x: Boolean, y: Boolean) -> Boolean:
     """Takes two boolean data type and computs logical IMPLIES operation on them.

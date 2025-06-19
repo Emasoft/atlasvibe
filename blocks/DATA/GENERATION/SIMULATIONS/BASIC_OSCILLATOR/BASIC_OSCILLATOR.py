@@ -4,6 +4,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 from scipy import signal
 from typing import Literal
 
+
 @atlasvibe
 def BASIC_OSCILLATOR(
     sample_rate: int = 100,

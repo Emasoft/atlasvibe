@@ -2,6 +2,7 @@ from numpy import roll
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 @atlasvibe
 def SHIFT_VECTOR(default: Vector, shift: int = 1) -> Vector:
     """The SHIFT_VECTOR node shifts the elements in the vector by the amount specified

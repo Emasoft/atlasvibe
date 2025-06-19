@@ -4,7 +4,7 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Integrated automatic block_data.json regeneration when blocks are created/updated
 # - Added import for block_metadata_generator module
-# 
+#
 
 import json
 from pathlib import Path
@@ -22,7 +22,7 @@ from captain.utils.logger import logger
 from captain.utils.project_structure import (
     copy_blueprint_to_project,
     ProjectStructureError,
-    validate_block_name
+    validate_block_name,
 )
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
@@ -37,6 +37,7 @@ router = APIRouter(tags=["blocks"])
 
 class CreateCustomBlockRequest(BaseModel):
     """Request model for creating a custom block."""
+
     blueprint_key: str
     new_block_name: str
     project_path: str
@@ -44,6 +45,7 @@ class CreateCustomBlockRequest(BaseModel):
 
 class UpdateBlockCodeRequest(BaseModel):
     """Request model for updating a custom block's code."""
+
     block_path: str
     content: str
     project_path: str
@@ -51,6 +53,7 @@ class UpdateBlockCodeRequest(BaseModel):
 
 class ValidateCodeRequest(BaseModel):
     """Request model for validating Python code."""
+
     code: str
     filename: str = "<unknown>"
     project_path: Optional[str] = None
@@ -58,6 +61,7 @@ class ValidateCodeRequest(BaseModel):
 
 class GetCompletionsRequest(BaseModel):
     """Request model for getting code completions."""
+
     code: str
     line: int
     column: int
@@ -67,6 +71,7 @@ class GetCompletionsRequest(BaseModel):
 
 class GetHoverRequest(BaseModel):
     """Request model for getting hover information."""
+
     code: str
     line: int
     column: int
@@ -75,12 +80,14 @@ class GetHoverRequest(BaseModel):
 
 class FormatCodeRequest(BaseModel):
     """Request model for formatting Python code."""
+
     code: str
     line_length: int = 88
 
 
 class RegenerateVenvRequest(BaseModel):
     """Request model for regenerating virtual environment."""
+
     block_path: str
     dependencies: Optional[list[str]] = None
     python_version: Optional[str] = None
@@ -88,18 +95,19 @@ class RegenerateVenvRequest(BaseModel):
 
 class GetVenvLogsRequest(BaseModel):
     """Request model for getting venv logs."""
+
     block_path: str
     limit: int = 10
 
 
 def sanitize_error_message(error: Exception) -> str:
     """Sanitize error messages to prevent information disclosure.
-    
+
     Parameters
     ----------
     error : Exception
         The exception to sanitize
-        
+
     Returns
     -------
     str
@@ -107,10 +115,10 @@ def sanitize_error_message(error: Exception) -> str:
     """
     # Log the full error internally
     logger.error(f"Error details: {error}", exc_info=True)
-    
+
     # Return generic messages for different error types
     error_type = type(error).__name__
-    
+
     # Map specific exceptions to safe messages
     safe_messages = {
         "ProjectStructureError": str(error),  # These are user-facing validation errors
@@ -120,9 +128,11 @@ def sanitize_error_message(error: Exception) -> str:
         "TypeError": "Invalid type provided",
         "SyntaxError": f"Syntax error in code: {error}",  # Users need to know about syntax errors
     }
-    
+
     # Return specific message if available, otherwise generic
-    return safe_messages.get(error_type, "An internal error occurred. Please check logs for details.")
+    return safe_messages.get(
+        error_type, "An internal error occurred. Please check logs for details."
+    )
 
 
 @router.get("/blocks/manifest/")
@@ -164,31 +174,31 @@ async def get_metadata(
 
 def find_blueprint_path(blueprint_key: str) -> Optional[Path]:
     """Find the path to a blueprint block by its key.
-    
+
     Args:
         blueprint_key: The key/name of the blueprint block
-        
+
     Returns:
         Path to the blueprint directory if found, None otherwise
     """
     blocks_base_path = Path(get_blocks_path())
-    
+
     # Use glob to search more efficiently
     for pattern in ["*/*", "*/*/*"]:  # Support 2 and 3 level nesting
         for block_dir in blocks_base_path.glob(f"{pattern}/{blueprint_key}"):
             if block_dir.is_dir():
                 return block_dir
-    
+
     return None
 
 
 @router.post("/blocks/create-custom/")
 async def create_custom_block(request: CreateCustomBlockRequest):
     """Create a custom block from a blueprint for a specific project.
-    
+
     Args:
         request: Request containing blueprint key, new block name, and project path
-        
+
     Returns:
         Block definition with additional path information
     """
@@ -197,47 +207,48 @@ async def create_custom_block(request: CreateCustomBlockRequest):
         validate_block_name(request.new_block_name)
     except ProjectStructureError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    
+
     # Validate project path
-    if not request.project_path or not request.project_path.endswith('.atlasvibe'):
+    if not request.project_path or not request.project_path.endswith(".atlasvibe"):
         raise HTTPException(
-            status_code=422,
-            detail="Invalid project path. Must be a .atlasvibe file"
+            status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
         )
-    
+
     try:
         # Find the blueprint block directory
         blueprint_path = find_blueprint_path(request.blueprint_key)
-        
+
         if not blueprint_path:
             raise HTTPException(
                 status_code=404,
-                detail=f"Blueprint block '{request.blueprint_key}' not found"
+                detail=f"Blueprint block '{request.blueprint_key}' not found",
             )
-        
+
         # Copy the blueprint to the project
         new_block_path = copy_blueprint_to_project(
-            str(blueprint_path),
-            request.project_path,
-            request.new_block_name
+            str(blueprint_path), request.project_path, request.new_block_name
         )
-        
+
         # Generate manifest for the new block
-        block_manifest = create_manifest(str(Path(new_block_path) / f"{request.new_block_name}.py"))
-        
+        block_manifest = create_manifest(
+            str(Path(new_block_path) / f"{request.new_block_name}.py")
+        )
+
         if not block_manifest:
             raise HTTPException(
                 status_code=500,
-                detail="Failed to generate manifest for new custom block"
+                detail="Failed to generate manifest for new custom block",
             )
-        
+
         # Add the path to the manifest
         block_manifest["path"] = new_block_path
-        
-        logger.info(f"Created custom block '{request.new_block_name}' at {new_block_path}")
-        
+
+        logger.info(
+            f"Created custom block '{request.new_block_name}' at {new_block_path}"
+        )
+
         return block_manifest
-        
+
     except ProjectStructureError as e:
         logger.error(f"Project structure error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -250,10 +261,10 @@ async def create_custom_block(request: CreateCustomBlockRequest):
 @router.post("/blocks/update-code/")
 async def update_block_code(request: UpdateBlockCodeRequest):
     """Update the code of a custom block and regenerate its metadata.
-    
+
     Args:
         request: Request containing block path, new content, and project path
-        
+
     Returns:
         Updated block manifest
     """
@@ -261,38 +272,36 @@ async def update_block_code(request: UpdateBlockCodeRequest):
     if "atlasvibe_blocks" not in request.block_path:
         raise HTTPException(
             status_code=403,
-            detail="Can only edit custom project blocks, not blueprints"
+            detail="Can only edit custom project blocks, not blueprints",
         )
-    
+
     # Validate project path
-    if not request.project_path or not request.project_path.endswith('.atlasvibe'):
+    if not request.project_path or not request.project_path.endswith(".atlasvibe"):
         raise HTTPException(
-            status_code=422,
-            detail="Invalid project path. Must be a .atlasvibe file"
+            status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
         )
-    
+
     try:
         # Write the new content to the file
         block_file = Path(request.block_path)
         if not block_file.exists():
             raise HTTPException(
-                status_code=404,
-                detail=f"Block file not found: {request.block_path}"
+                status_code=404, detail=f"Block file not found: {request.block_path}"
             )
-        
+
         # Backup the original content
         original_content = block_file.read_text()
-        
+
         try:
             # Write new content
             block_file.write_text(request.content)
-            
+
             # Extract block name from path
             block_name = block_file.parent.name
-            
+
             # Get WebSocket manager instance
             ws_manager = ConnectionManager.get_instance()
-            
+
             # Broadcast regeneration start event
             start_msg = RegenerationMessage(
                 type="regeneration_start",
@@ -300,24 +309,30 @@ async def update_block_code(request: UpdateBlockCodeRequest):
                 block_path=str(block_file.parent),
                 status="regenerating",
                 success=None,
-                error=None
+                error=None,
             )
             await ws_manager.broadcast(start_msg)
-            
+
             # Regenerate block_data.json from the updated docstring
             regeneration_success = False
             regeneration_error = None
-            
+
             try:
-                regeneration_success = regenerate_block_data_json(str(block_file.parent))
+                regeneration_success = regenerate_block_data_json(
+                    str(block_file.parent)
+                )
                 if not regeneration_success:
                     regeneration_error = "Failed to regenerate block_data.json"
-                    logger.warning(f"Failed to regenerate block_data.json for '{block_name}'")
+                    logger.warning(
+                        f"Failed to regenerate block_data.json for '{block_name}'"
+                    )
             except Exception as e:
                 regeneration_success = False
                 regeneration_error = str(e)
-                logger.error(f"Error regenerating block_data.json for '{block_name}': {e}")
-            
+                logger.error(
+                    f"Error regenerating block_data.json for '{block_name}': {e}"
+                )
+
             # Broadcast regeneration complete/error event
             if regeneration_success:
                 complete_msg = RegenerationMessage(
@@ -326,7 +341,7 @@ async def update_block_code(request: UpdateBlockCodeRequest):
                     block_path=str(block_file.parent),
                     status="completed",
                     success=True,
-                    error=None
+                    error=None,
                 )
                 await ws_manager.broadcast(complete_msg)
             else:
@@ -336,33 +351,35 @@ async def update_block_code(request: UpdateBlockCodeRequest):
                     block_path=str(block_file.parent),
                     status="error",
                     success=False,
-                    error=regeneration_error
+                    error=regeneration_error,
                 )
                 await ws_manager.broadcast(error_msg)
-            
+
             # Regenerate manifest for the updated block
             block_manifest = create_manifest(str(block_file))
-            
+
             if not block_manifest:
                 # Restore original content if manifest generation fails
                 block_file.write_text(original_content)
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to regenerate manifest after code update"
+                    detail="Failed to regenerate manifest after code update",
                 )
-            
+
             # Add the path to the manifest
             block_manifest["path"] = str(block_file.parent)
-            
-            logger.info(f"Updated code for block '{block_name}' at {request.block_path}")
-            
+
+            logger.info(
+                f"Updated code for block '{block_name}' at {request.block_path}"
+            )
+
             return block_manifest
-            
+
         except Exception:
             # Restore original content on any error
             block_file.write_text(original_content)
             raise
-            
+
     except HTTPException:
         raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
@@ -372,18 +389,16 @@ async def update_block_code(request: UpdateBlockCodeRequest):
 @router.post("/blocks/validate-code/")
 async def validate_code(request: ValidateCodeRequest):
     """Validate Python code and return errors/warnings.
-    
+
     Args:
         request: Request containing code to validate
-        
+
     Returns:
         Validation results with errors, warnings, and suggestions
     """
     try:
         result = validate_python_code(
-            request.code,
-            request.filename,
-            request.project_path
+            request.code, request.filename, request.project_path
         )
         return result
     except Exception as e:
@@ -394,10 +409,10 @@ async def validate_code(request: ValidateCodeRequest):
 @router.post("/blocks/get-completions/")
 async def get_code_completions(request: GetCompletionsRequest):
     """Get context-aware code completions.
-    
+
     Args:
         request: Request containing code context
-        
+
     Returns:
         List of completion suggestions
     """
@@ -407,7 +422,7 @@ async def get_code_completions(request: GetCompletionsRequest):
             request.line,
             request.column,
             request.trigger_char,
-            request.project_path
+            request.project_path,
         )
         return {"completions": completions}
     except Exception as e:
@@ -418,19 +433,16 @@ async def get_code_completions(request: GetCompletionsRequest):
 @router.post("/blocks/get-hover/")
 async def get_hover_information(request: GetHoverRequest):
     """Get hover information for symbol at position.
-    
+
     Args:
         request: Request containing code and position
-        
+
     Returns:
         Hover information or null
     """
     try:
         info = get_hover_info(
-            request.code,
-            request.line,
-            request.column,
-            request.project_path
+            request.code, request.line, request.column, request.project_path
         )
         return {"hover": info}
     except Exception as e:
@@ -441,22 +453,21 @@ async def get_hover_information(request: GetHoverRequest):
 @router.post("/blocks/format-code/")
 async def format_code(request: FormatCodeRequest):
     """Format Python code using Black.
-    
+
     Args:
         request: Request containing code to format
-        
+
     Returns:
         Formatted code
     """
     try:
         import black
-        
+
         # Format the code
         formatted = black.format_str(
-            request.code,
-            mode=black.Mode(line_length=request.line_length)
+            request.code, mode=black.Mode(line_length=request.line_length)
         )
-        
+
         return {"formatted": formatted, "changed": formatted != request.code}
     except black.InvalidInput as e:
         # Return original code if it can't be formatted
@@ -470,42 +481,40 @@ async def format_code(request: FormatCodeRequest):
 @router.post("/blocks/regenerate-venv/")
 async def regenerate_block_venv(request: RegenerateVenvRequest):
     """Regenerate virtual environment for a block.
-    
+
     Args:
         request: Request containing block path and options
-        
+
     Returns:
         Regeneration results and log path
     """
     try:
         # Get WebSocket manager instance
         ws_manager = ConnectionManager.get_instance()
-        
+
         # Extract block name from path
         block_name = Path(request.block_path).name
-        
+
         # Broadcast venv regeneration start
         start_msg = {
             "type": "venv_regeneration_start",
             "block_name": block_name,
-            "block_path": request.block_path
+            "block_path": request.block_path,
         }
         await ws_manager.broadcast(start_msg)
-        
+
         # Regenerate venv
         result = regenerate_venv(
-            request.block_path,
-            request.dependencies,
-            request.python_version
+            request.block_path, request.dependencies, request.python_version
         )
-        
+
         # Broadcast completion or error
         if result["success"]:
             complete_msg = {
                 "type": "venv_regeneration_complete",
                 "block_name": block_name,
                 "block_path": request.block_path,
-                "log_path": result["log_path"]
+                "log_path": result["log_path"],
             }
             await ws_manager.broadcast(complete_msg)
         else:
@@ -513,10 +522,10 @@ async def regenerate_block_venv(request: RegenerateVenvRequest):
                 "type": "venv_regeneration_error",
                 "block_name": block_name,
                 "block_path": request.block_path,
-                "error": result.get("error")
+                "error": result.get("error"),
             }
             await ws_manager.broadcast(error_msg)
-        
+
         return result
     except Exception as e:
         logger.error(f"Error regenerating venv: {e}")
@@ -526,10 +535,10 @@ async def regenerate_block_venv(request: RegenerateVenvRequest):
 @router.get("/blocks/venv-status/")
 async def get_block_venv_status(block_path: str):
     """Get virtual environment status for a block.
-    
+
     Args:
         block_path: Path to the block directory
-        
+
     Returns:
         Virtual environment status
     """
@@ -544,10 +553,10 @@ async def get_block_venv_status(block_path: str):
 @router.post("/blocks/venv-logs/")
 async def get_block_venv_logs(request: GetVenvLogsRequest):
     """Get virtual environment regeneration logs.
-    
+
     Args:
         request: Request containing block path and limit
-        
+
     Returns:
         List of log entries
     """

@@ -18,7 +18,7 @@ def get_manifest(filename: str):
     return create_manifest(os.path.join(TEST_NODES_PATH, filename))
 
 
-@pytest.mark.usefixtures("reload_atlasvibe_node_module") # CHANGED fixture name
+@pytest.mark.usefixtures("reload_atlasvibe_node_module")  # CHANGED fixture name
 class ManifestGenerationTest(unittest.TestCase):
     def test_basic_node_manifest(self):
         manifest = get_manifest("basic.py")

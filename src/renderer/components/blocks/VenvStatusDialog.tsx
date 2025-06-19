@@ -5,12 +5,12 @@ import { Badge } from "@/renderer/components/ui/badge";
 import { ScrollArea } from "@/renderer/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/renderer/components/ui/tabs";
 import { Alert, AlertDescription } from "@/renderer/components/ui/alert";
-import { 
-  Package, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle, 
-  Clock, 
+import {
+  Package,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Clock,
   RefreshCw,
   FileText,
   Loader2,
@@ -46,11 +46,11 @@ interface VenvLog {
   log_file?: string;
 }
 
-export const VenvStatusDialog = ({ 
-  open, 
-  onOpenChange, 
+export const VenvStatusDialog = ({
+  open,
+  onOpenChange,
   blockPath,
-  blockName 
+  blockName
 }: VenvStatusDialogProps) => {
   const [status, setStatus] = useState<any>(null);
   const [logs, setLogs] = useState<VenvLog[]>([]);

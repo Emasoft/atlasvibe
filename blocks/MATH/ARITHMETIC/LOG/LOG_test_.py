@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
 
+
 def test_LOG_Vector_Vector(mock_atlasvibe_decorator):
     import LOG
 
@@ -12,6 +13,7 @@ def test_LOG_Vector_Vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.v, test)
 
+
 def test_LOG_Vector_Scalar(mock_atlasvibe_decorator):
     import LOG
 
@@ -21,6 +23,7 @@ def test_LOG_Vector_Scalar(mock_atlasvibe_decorator):
     test /= np.log(2)
 
     np.testing.assert_allclose(res.v, test)
+
 
 def test_LOG_OrderedPair_Vector(mock_atlasvibe_decorator):
     import LOG

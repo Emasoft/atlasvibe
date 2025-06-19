@@ -194,7 +194,7 @@ export const openAllFilesInFolderPicker = (
 ): { filePath: string; fileContent: string }[] | undefined => {
   // Append the app root directory if the path is relative
   if (relativeToResources) {
-    const appRoot = app.isPackaged 
+    const appRoot = app.isPackaged
       ? join(app.getAppPath(), '..')  // Go up from app directory
       : process.cwd();
     folderPath = join(appRoot, folderPath);

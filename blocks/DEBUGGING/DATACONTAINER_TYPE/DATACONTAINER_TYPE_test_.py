@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_DATACONTAINER_TYPE(mock_atlasvibe_decorator):
     import DATACONTAINER_TYPE
 

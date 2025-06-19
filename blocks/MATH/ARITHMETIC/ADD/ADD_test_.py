@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector, Scalar
 
+
 def test_ADD_Vector_Vector(mock_atlasvibe_decorator):
     """Test ADD function correctly adds two vectors element-wise."""
     import ADD
@@ -11,6 +12,7 @@ def test_ADD_Vector_Vector(mock_atlasvibe_decorator):
 
     np.testing.assert_allclose(res.v, x.v + y.v)
 
+
 def test_ADD_Vector_Scalar(mock_atlasvibe_decorator):
     """Verify ADD function can add multiple scalar values to a vector."""
     import ADD
@@ -19,6 +21,7 @@ def test_ADD_Vector_Scalar(mock_atlasvibe_decorator):
     res = ADD.ADD(a=x, b=[Scalar(c=2), Scalar(c=3)])
 
     np.testing.assert_allclose(res.v, x.v + 2 + 3)
+
 
 def test_ADD_OrderedPair_Vector(mock_atlasvibe_decorator):
     """Test ADD function adds vector to y-coordinates of OrderedPair while preserving x-coordinates."""

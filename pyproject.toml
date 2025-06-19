@@ -49,8 +49,8 @@ dev = [
     "typer[all]",
     "python-frontmatter>=1.0.1,<2.0.0",
     "httpx>=0.26.0,<0.27.0",
-    "Pillow>=9.0.0,<11.0.0",      
-    "scikit-image>=0.19.0,<0.24.0", 
+    "Pillow>=9.0.0,<11.0.0",
+    "scikit-image>=0.19.0,<0.24.0",
     "scipy>=1.7.0,<2.0.0",
     "deptry>=0.23.0",
 ]
@@ -81,7 +81,7 @@ include = [
   "atlasvibe_cli/**/*",
   "atlasvibe_engine/**/*",
   "pkgs/**/*",
-  "cli/**/*", 
+  "cli/**/*",
   "captain/**/*",
   "blocks/**/*",
   "PYTHON/**/*",
@@ -105,7 +105,7 @@ python_classes = "Test*"
 python_functions = "test_*"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "skip: marks tests to skip", 
+    "skip: marks tests to skip",
     "xfail: marks tests as expected to fail",
 ]
 # To run all tests including slow ones: pytest --runslow

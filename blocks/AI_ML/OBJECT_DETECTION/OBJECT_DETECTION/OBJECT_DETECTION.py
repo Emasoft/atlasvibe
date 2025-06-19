@@ -6,6 +6,7 @@ import os
 import requests
 import cv2
 
+
 @atlasvibe(deps={"opencv-python-headless": "4.8.1.78"})
 def OBJECT_DETECTION(default: Image) -> Image:
     """Detect objects in an input image with YOLOv3, then return an image DataContainer with those objects highlighted.
@@ -57,6 +58,7 @@ def OBJECT_DETECTION(default: Image) -> Image:
         print(traceback.format_exc())
         raise
 
+
 def get_output_layers(net):
     layer_names = net.getLayerNames()
     try:
@@ -65,6 +67,7 @@ def get_output_layers(net):
         output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
     return output_layers
+
 
 def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
     classes = []
@@ -115,6 +118,7 @@ def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
         (255, 255, 255),
         thickness,
     )
+
 
 def detect_object(img_np_array):
     """

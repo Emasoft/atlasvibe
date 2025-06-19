@@ -1,6 +1,7 @@
 import os
 import pytest
 
+
 @pytest.mark.slow
 def test_OPEN_MATLAB(mock_atlasvibe_decorator):
     import OPEN_MATLAB

@@ -2,6 +2,7 @@ from numpy import concatenate
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 @atlasvibe
 def VECTOR_INSERT(default: Vector, index: int = 0, value: int = 0) -> Vector:
     """The VECTOR_INSERT node inserts a value to the Vector at the
@@ -26,9 +27,9 @@ def VECTOR_INSERT(default: Vector, index: int = 0, value: int = 0) -> Vector:
         The new vector that contains the inserted value
     """
 
-    assert (
-        len(default.v) > index
-    ), "The index parameter must be less than the length of the Vector."
+    assert len(default.v) > index, (
+        "The index parameter must be less than the length of the Vector."
+    )
     assert index >= 0, "The index parameter must be greater than zero."
 
     if index == len(default.v) - 1:

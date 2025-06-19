@@ -9,7 +9,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import {
   TextData,
-  BlockData as OriginalBlockData, 
+  BlockData as OriginalBlockData,
   positionSchema,
   EdgeData,
 } from "@/renderer/types/block";
@@ -75,7 +75,7 @@ type State = {
   hasUnsavedChanges: boolean;
   isSaving: boolean;
 
-  nodes: Node<BlockData>[]; 
+  nodes: Node<BlockData>[];
   edges: Edge<EdgeData>[];
   textNodes: Node<TextData>[];
 
@@ -152,7 +152,7 @@ type Actions = {
 
 const defaultProjectData =
   resolveProjectReference(resolveDefaultProjectReference()) ??
-  RECIPES.NOISY_SINE; 
+  RECIPES.NOISY_SINE;
 const initialNodes: Node<BlockData>[] = defaultProjectData.nodes;
 const initialEdges: Edge[] = defaultProjectData.edges;
 
@@ -488,7 +488,7 @@ export const useProjectStore = create<State & Actions>()(
 
     saveProject: async () => {
       set({ isSaving: true });
-      
+
       const project: Project = {
         version: '2.0.0', // Current format version
         name: get().name,
@@ -527,7 +527,7 @@ export const useProjectStore = create<State & Actions>()(
           .map((s) => s.toLowerCase().trim())
           .filter((s) => s !== "")
           .join("-") ?? "app";
-      const defaultFilename = `${basename}.atlasvibe`; 
+      const defaultFilename = `${basename}.atlasvibe`;
 
       return fromPromise(
         window.api.saveFileAs(defaultFilename, fileContent),
@@ -590,7 +590,7 @@ export const useLoadProject = () => {
         controlVisualizationNodes: controlVisualizationNodes ?? [],
         controlTextNodes: controlTextNodes ?? [],
         name,
-        path, 
+        path,
       });
 
       setHasUnsavedChanges(false);
@@ -632,35 +632,35 @@ export const useAddBlock = () => {
         return;
       }
 
-      let customBlockResult: CustomBlockDefinition | undefined; 
+      let customBlockResult: CustomBlockDefinition | undefined;
       try {
         toast.info(
           `Creating custom block "${newCustomBlockName}" from "${blueprintDefinition.key}"...`,
         );
-        
+
         const apiResult = await window.api.createCustomBlockFromBlueprint(
-          blueprintDefinition.key, 
+          blueprintDefinition.key,
           newCustomBlockName.trim(),
-          projectPath, 
+          projectPath,
         );
-        
+
         // Validate the response has required custom block fields
-        if (!apiResult || !apiResult.key || !apiResult.path) { 
+        if (!apiResult || !apiResult.key || !apiResult.path) {
           throw new Error("Backend failed to create custom block details or path is missing.");
         }
-        
+
         // Cast to CustomBlockDefinition after validation
         customBlockResult = {
           ...apiResult,
           path: apiResult.path,
           isCustom: true
         } as CustomBlockDefinition;
-        
+
         setManifestChanged(true);
         toast.success(
           `Custom block "${customBlockResult.key}" created successfully.`,
         );
-        
+
         const previousBlockPos = localStorage.getItem("prev_node_pos");
         const pos = tryParse(positionSchema)(previousBlockPos).unwrapOr(center);
         const nodePosition = addRandomPositionOffset(pos, 300);
@@ -685,7 +685,7 @@ export const useAddBlock = () => {
       } catch (e: any) {
         console.error("Failed to create custom block:", e);
         toast.error(`Failed to create custom block: ${e.message}`);
-        
+
         // Cleanup: If block directory was created but node creation failed,
         // we should notify the user to manually clean up
         if (customBlockResult?.path) {
@@ -695,7 +695,7 @@ export const useAddBlock = () => {
             { duration: 10000 }
           );
         }
-        
+
         return;
       }
     },
@@ -741,7 +741,7 @@ export const useDuplicateBlock = () => {
     (node: Node<BlockData>): Result<void, Error> => {
       const funcName = node.data.func;
       const takenLabels = getTakenNodeLabels(funcName);
-      
+
       const newNode = duplicateNode(node, takenLabels);
 
       try {
@@ -914,7 +914,7 @@ const getTakenNodeLabels = (func: string) => {
 function resolveDefaultProjectReference() {
   if (typeof window !== "undefined") {
     const query = new URLSearchParams(window.location.search);
-    return query.get("project"); 
+    return query.get("project");
   }
   return undefined;
 }

@@ -32,7 +32,7 @@ jobs:
           filter_mode: added
           # Optional: Working directory
           # workdir: ./
-          
+
       - name: Annotate workflow files issues
         if: failure()
         uses: reviewdog/action-actionlint@v1

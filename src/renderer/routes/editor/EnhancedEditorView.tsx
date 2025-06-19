@@ -9,11 +9,11 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/renderer/components/ui/button";
 import { Badge } from "@/renderer/components/ui/badge";
-import { 
-  AlertCircle, 
-  CheckCircle2, 
-  Info, 
-  ChevronUp, 
+import {
+  AlertCircle,
+  CheckCircle2,
+  Info,
+  ChevronUp,
   ChevronDown,
   Loader2,
   FileCode,
@@ -25,12 +25,12 @@ import {
 import useKeyboardShortcut from "@/renderer/hooks/useKeyboardShortcut";
 import invariant from "tiny-invariant";
 import { toast } from "sonner";
-import { 
-  updateBlockCode, 
-  validateCode, 
-  getCompletions, 
+import {
+  updateBlockCode,
+  validateCode,
+  getCompletions,
   formatCode,
-  getVenvStatus 
+  getVenvStatus
 } from "@/renderer/lib/api";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useManifestStore } from "@/renderer/stores/manifest";
@@ -80,11 +80,11 @@ const EnhancedEditorView = () => {
   const loadFile = async () => {
     const res = await window.api.loadFileFromFullPath(fullPath);
     setValue(res);
-    
+
     // Check if this is a custom block
     const isCustom = fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py");
     setIsCustomBlock(isCustom);
-    
+
     // Validate initial content
     if (isCustom) {
       await validateCurrentCode(res);
@@ -96,18 +96,18 @@ const EnhancedEditorView = () => {
     const res = await window.api.saveFileToFullPath(fullPath, value);
     if (res.isOk()) {
       setHasChanged(false);
-      
+
       if (isCustomBlock) {
         const projectPath = useProjectStore.getState().path;
-        
+
         if (projectPath) {
           const updateRes = await updateBlockCode(fullPath, value, projectPath);
-          
+
           if (updateRes.isOk()) {
             toast.success("Block updated successfully", {
               description: "Metadata has been regenerated"
             });
-            
+
             const { fetchManifest } = useManifestStore.getState();
             await fetchManifest();
           } else {
@@ -126,12 +126,12 @@ const EnhancedEditorView = () => {
 
   const validateCurrentCode = async (code: string) => {
     if (!isCustomBlock) return;
-    
+
     setIsValidating(true);
     try {
       const projectPath = useProjectStore.getState().path;
       const result = await validateCode(code, fullPath.split('/').pop() || "unknown.py", projectPath);
-      
+
       if (result.isOk()) {
         const validationErrors = result.value.errors.map((err: any) => ({
           ...err,
@@ -148,7 +148,7 @@ const EnhancedEditorView = () => {
 
   const loadVenvStatus = async () => {
     if (!isCustomBlock) return;
-    
+
     try {
       const blockPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
       const response = await getVenvStatus(blockPath);
@@ -191,7 +191,7 @@ const EnhancedEditorView = () => {
   const handleChange = (value: string, viewUpdate: ViewUpdate) => {
     setValue(value);
     setHasChanged(true);
-    
+
     // Trigger validation
     if (isCustomBlock) {
       debouncedValidate(value);
@@ -203,12 +203,12 @@ const EnhancedEditorView = () => {
       const doc = editorRef.current.state.doc;
       const line = doc.line(error.line);
       const pos = line.from + error.column;
-      
+
       editorRef.current.dispatch({
         selection: { anchor: pos, head: pos },
         scrollIntoView: true
       });
-      
+
       editorRef.current.focus();
     }
     setSelectedError(error);
@@ -232,7 +232,7 @@ const EnhancedEditorView = () => {
     const projectPath = useProjectStore.getState().path;
     const line = context.state.doc.lineAt(context.pos).number;
     const column = context.pos - context.state.doc.line(line).from;
-    
+
     try {
       const result = await getCompletions(
         context.state.doc.toString(),
@@ -241,7 +241,7 @@ const EnhancedEditorView = () => {
         context.matchBefore(/\w*/)?.text,
         projectPath
       );
-      
+
       if (result.isOk()) {
         return {
           from: context.pos - (context.matchBefore(/\w*/)?.text.length || 0),
@@ -257,7 +257,7 @@ const EnhancedEditorView = () => {
     } catch (error) {
       console.error("Failed to get completions:", error);
     }
-    
+
     return null;
   };
 
@@ -315,7 +315,7 @@ const EnhancedEditorView = () => {
             </Badge>
           )}
         </div>
-        
+
         <div className="flex items-center gap-4">
           {/* Error/Warning Summary */}
           {isCustomBlock && (
@@ -354,11 +354,11 @@ const EnhancedEditorView = () => {
               "Format"
             )}
           </Button>
-          
+
           <Button onClick={saveFile} disabled={!hasChanged}>
             Save
           </Button>
-          
+
           <Button variant="outline" asChild>
             <a href={`vscode://file/${fullPath}`}>Open in VSCode</a>
           </Button>
@@ -403,7 +403,7 @@ const EnhancedEditorView = () => {
             errorPanelOpen ? "h-64" : "h-10"
           )}>
             {/* Error Panel Header */}
-            <div 
+            <div
               className="flex items-center justify-between px-4 py-2 bg-muted/50 cursor-pointer"
               onClick={() => setErrorPanelOpen(!errorPanelOpen)}
             >
@@ -440,7 +440,7 @@ const EnhancedEditorView = () => {
                         {error.severity === "error" && <Bug className="w-4 h-4 text-destructive mt-0.5" />}
                         {error.severity === "warning" && <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />}
                         {error.severity === "info" && <Info className="w-4 h-4 text-blue-500 mt-0.5" />}
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{error.message}</span>
@@ -448,7 +448,7 @@ const EnhancedEditorView = () => {
                               Line {error.line}, Column {error.column}
                             </span>
                           </div>
-                          
+
                           {error.suggestion && (
                             <div className="flex items-start gap-1 mt-1">
                               <Lightbulb className="w-3 h-3 text-yellow-500 mt-0.5" />
@@ -457,7 +457,7 @@ const EnhancedEditorView = () => {
                               </span>
                             </div>
                           )}
-                          
+
                           <span className="text-xs text-muted-foreground">
                             [{error.category}]
                           </span>
@@ -480,8 +480,8 @@ const EnhancedEditorView = () => {
             <div className="flex items-center gap-2">
               <Package className="w-3 h-3" />
               <span>
-                {venvStatus.valid ? 
-                  `Python ${venvStatus.python_version || 'Unknown'}` : 
+                {venvStatus.valid ?
+                  `Python ${venvStatus.python_version || 'Unknown'}` :
                   'No venv'
                 }
               </span>

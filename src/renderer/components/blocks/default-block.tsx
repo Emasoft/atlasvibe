@@ -43,13 +43,13 @@ const DefaultBlock = ({
     useShallow((state) => state.updateBlockLabel),
   );
   const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
-  
+
   // Check if this block is regenerating based on its path
   const isRegenerating = useMemo(() => {
     if (!data.path) return false;
     return regeneratingBlocks.has(data.path);
   }, [data.path, regeneratingBlocks]);
-  
+
   const maxInputOutput = useMemo(
     () => Math.max(data.inputs?.length ?? 0, data.outputs?.length ?? 0),
     [data.inputs?.length, data.outputs?.length],

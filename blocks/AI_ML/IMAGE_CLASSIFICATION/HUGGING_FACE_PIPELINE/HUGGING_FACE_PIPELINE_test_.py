@@ -12,6 +12,7 @@ try:
 except ImportError:
     transformers = None
 
+
 @pytest.fixture
 def ada_lovelace_array_rgb():
     _image_path = os.path.join(
@@ -21,6 +22,7 @@ def ada_lovelace_array_rgb():
     )
     image = PIL_Image.open(_image_path).convert("RGB")
     return np.array(image, copy=True)
+
 
 @pytest.mark.skipif(
     transformers is None,
@@ -54,6 +56,7 @@ def test_HUGGING_FACE_PIPELINE_default(
 
     assert first_class_confidence_scores["label"] == "overskirt"
     assert first_class_confidence_scores["score"] > 0.725
+
 
 # Skip this test on Windows
 @pytest.mark.skip(reason="The test does not complete on the CI.")

@@ -3,6 +3,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair
 import warnings
 
+
 @atlasvibe
 def SAVGOL(
     default: OrderedPair, window_length: int = 50, poly_order: int = 1

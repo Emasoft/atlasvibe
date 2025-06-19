@@ -1,6 +1,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
+
 @atlasvibe(deps={"torch": "2.0.1", "torchvision": "0.15.2"})
 def DEEPLAB_V3(default: Image) -> Image:
     """Return a segmentation mask from an input image.

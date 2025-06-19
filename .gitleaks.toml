@@ -20,13 +20,13 @@ paths = [
 regexes = [
     # GitHub noreply email addresses are public and safe
     '''713559\+Emasoft@users\.noreply\.github\.com''',
-    
+
     # Generic GitHub noreply email pattern (for any GitHub noreply emails)
     '''[0-9]+\+[a-zA-Z0-9_-]+@users\.noreply\.github\.com''',
-    
+
     # Allow the username "Emasoft" when it appears in various contexts
     '''Emasoft''',
-    
+
     # Allow common test/example/placeholder patterns
     '''(test|example|demo|sample|placeholder|dummy)[-_]?(api)?[-_]?(key|token|secret)''',
     '''YOUR[-_]?API[-_]?KEY[-_]?HERE''',

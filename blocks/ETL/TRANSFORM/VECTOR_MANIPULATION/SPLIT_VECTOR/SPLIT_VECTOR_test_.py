@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_SPLIT_VECTOR(mock_atlasvibe_decorator):
     import SPLIT_VECTOR
 

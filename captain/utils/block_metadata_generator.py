@@ -210,7 +210,7 @@ def generate_test_file(block_dir: str, block_name: str) -> bool:
     params_info = []
     if docstring_data and docstring_data["docstring"]["parameters"]:
         params_info = docstring_data["docstring"]["parameters"]
-    
+
     content = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -223,41 +223,41 @@ from {block_name} import {block_name}
 
 class Test{block_name}:
     """Test suite for {block_name} block."""
-    
+
     def test_{block_name.lower()}_basic(self):
         """Test basic functionality of {block_name}."""
         # Test with default parameters
         result = {block_name}()
         assert result is not None
         assert isinstance(result, DataContainer)
-    
+
     def test_{block_name.lower()}_with_parameters(self):
         """Test {block_name} with various parameters."""
         # Test with different parameter combinations
         # Modify these tests based on your block's actual parameters
         '''
-    
+
     # Add parameter-specific tests if we have parameter info
     if params_info:
         for param in params_info:
             param_name = param["name"]
             param_type = param["type"]
-            content += f'''
+            content += f"""
         # Test with {param_name} parameter
         test_{param_name} = DataContainer({param_type}())  # Create appropriate test value
         result = {block_name}({param_name}=test_{param_name})
         assert result is not None
-        '''
-    
+        """
+
     content += f'''
-    
+
     def test_{block_name.lower()}_error_handling(self):
         """Test {block_name} error handling."""
         # Test with invalid inputs
         with pytest.raises(Exception):
             # Add specific error case based on your block's logic
             {block_name}(invalid_param="invalid_value")
-    
+
     def test_{block_name.lower()}_output_type(self):
         """Test {block_name} output type."""
         result = {block_name}()
@@ -347,4 +347,3 @@ def regenerate_block_data_json(block_dir: str) -> bool:
     """
     block_name = os.path.basename(block_dir)
     return generate_block_data_json(block_dir, block_name)
-

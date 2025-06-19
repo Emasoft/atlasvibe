@@ -1,6 +1,7 @@
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.data_container import Vector
 
+
 def test_SHUFFLE_VECTOR(mock_atlasvibe_decorator):
     import SHUFFLE_VECTOR
 

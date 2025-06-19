@@ -67,7 +67,7 @@ jobs:
             --known-first-party cli \
             --ignore DEP003 \
             --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
-            --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> $GITHUB_ENV
+            --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> "$GITHUB_ENV"
 
       - name: Upload deptry report
         if: always()
@@ -90,33 +90,33 @@ jobs:
             } catch (e) {
               console.log('Could not read deptry report:', e);
             }
-            
+
             const output = `
             ### 📦 Dependency Analysis Results
-            
+
             deptry found some potential dependency issues. Please review:
-            
+
             **Summary:**
             - Missing dependencies (DEP001): ${report.DEP001?.length || 0} issues
             - Unused dependencies (DEP002): ${report.DEP002?.length || 0} issues
             - Transitive dependencies (DEP003): ${report.DEP003?.length || 0} issues
             - Misplaced dev dependencies (DEP004): ${report.DEP004?.length || 0} issues
-            
+
             **Note:** Many of these might be false positives due to:
             - Dynamic imports in blocks
             - Optional dependencies for specific features
             - Development tools that are used indirectly
-            
+
             To see the full report, check the workflow artifacts or run locally:
             \`\`\`bash
             uv run deptry .
             \`\`\`
-            
+
             If these are false positives, you can update the ignore lists in:
             - \`.github/workflows/dependency-check.yml\`
             - \`.git/hooks/pre-commit\`
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -133,20 +133,20 @@ jobs:
             const title = '📦 Weekly Dependency Check Found Issues';
             const body = `
             ## Dependency Analysis Report
-            
+
             The weekly dependency check found potential issues that need review.
-            
+
             **Action Required:**
             1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             2. Check if dependencies need to be added or removed
             3. Update ignore lists if these are false positives
-            
+
             Run locally to see details:
             \`\`\`bash
             uv run deptry .
             \`\`\`
             `;
-            
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
