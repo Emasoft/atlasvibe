@@ -312,6 +312,7 @@ def create_manifest(path: str) -> dict[str, Any]:
             "ParametricVector",
             "Plotly",
             "Grayscale",
+            "Boolean",
         ]:
             if hasattr(atlasvibe_module, attr):
                 module.__dict__[attr] = getattr(atlasvibe_module, attr)
