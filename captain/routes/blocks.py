@@ -120,7 +120,7 @@ class GetVenvLogsRequest(BaseModel):
     max_attempts=2,
     retry_exceptions=(ConnectionError, TimeoutError),
 )
-async def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
+def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
     """Get the manifest of all available blocks.
 
     Args:
@@ -145,7 +145,7 @@ async def get_manifest(blocks_path: str | None = None, project_path: str | None 
     error_code_prefix="METADATA",
     log_duration=True,
 )
-async def get_metadata(
+def get_metadata(
     blocks_path: str | None = None,
     custom_dir_changed: bool = False,
     project_path: str | None = None,
