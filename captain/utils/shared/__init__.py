@@ -37,6 +37,14 @@ from .error_utils import (
     create_error_handler,
 )
 
+from .text_utils import (
+    load_text_file,
+    save_text_file,
+    append_text_file,
+    update_text_file,
+    merge_text_files,
+)
+
 __all__ = [
     # JSON utilities
     "load_json_file",
@@ -64,4 +72,10 @@ __all__ = [
     "ErrorAccumulator",
     "format_exception_chain",
     "create_error_handler",
+    # Text utilities
+    "load_text_file",
+    "save_text_file",
+    "append_text_file",
+    "update_text_file",
+    "merge_text_files",
 ]

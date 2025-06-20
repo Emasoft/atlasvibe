@@ -8,7 +8,8 @@ Error handling utilities for consistent error management across the codebase.
 import functools
 import logging
 import traceback
-from typing import TypeVar, Callable, Any, Optional, Type
+import time
+from typing import TypeVar, Callable, Any, Optional, Type, cast
 from contextlib import contextmanager
 
 
@@ -84,7 +85,7 @@ def with_error_handling(
 
                 return default
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 
@@ -126,8 +127,6 @@ def with_retry(
                             logger.warning(
                                 f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
                             )
-                        import time
-
                         time.sleep(current_delay)
                         current_delay *= backoff
                     else:
@@ -139,7 +138,7 @@ def with_retry(
             if last_exception:
                 raise last_exception
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 

@@ -23,7 +23,6 @@ Python file is created or modified. It generates:
 import os
 from typing import List, Tuple
 
-from captain.utils.logger import logger
 from captain.utils.docstring_utils import extract_docstring_data
 from captain.utils.constants import (
     BLOCK_DATA_FILE,
@@ -36,6 +35,7 @@ from captain.utils.shared import (
     save_json_file,
     get_block_python_file,
     get_block_metadata_file,
+    save_text_file,
 )
 
 
@@ -166,13 +166,7 @@ Configure the block parameters according to your specific needs.
 The block will process the input data and produce the expected output based on its implementation.
 """
 
-    try:
-        with open(example_file, "w") as f:
-            f.write(content.strip())
-        return True
-    except Exception as e:
-        logger.error(f"Failed to write example.md: {e}")
-        return False
+    return save_text_file(example_file, content.strip())
 
 
 def generate_test_file(block_dir: str, block_name: str) -> bool:
@@ -259,13 +253,7 @@ if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 '''
 
-    try:
-        with open(test_file, "w") as f:
-            f.write(content)
-        return True
-    except Exception as e:
-        logger.error(f"Failed to write test file: {e}")
-        return False
+    return save_text_file(test_file, content)
 
 
 def generate_all_metadata_files(block_dir: str) -> Tuple[bool, List[str]]:

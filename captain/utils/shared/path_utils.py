@@ -6,10 +6,10 @@ Path utility functions for consistent path operations across the codebase.
 """
 
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, List
 
 
-def get_block_python_file(block_dir: Union[Path, str]) -> Path:
+def get_block_python_file(block_dir: Path | str) -> Path:
     """
     Get the Python file path for a block given its directory.
 
@@ -24,7 +24,7 @@ def get_block_python_file(block_dir: Union[Path, str]) -> Path:
     return block_dir / f"{block_name}.py"
 
 
-def get_block_metadata_file(block_dir: Union[Path, str]) -> Path:
+def get_block_metadata_file(block_dir: Path | str) -> Path:
     """
     Get the block_data.json file path for a block.
 
@@ -37,7 +37,7 @@ def get_block_metadata_file(block_dir: Union[Path, str]) -> Path:
     return Path(block_dir) / "block_data.json"
 
 
-def get_block_app_file(block_dir: Union[Path, str]) -> Path:
+def get_block_app_file(block_dir: Path | str) -> Path:
     """
     Get the app.json file path for a block.
 
@@ -50,7 +50,7 @@ def get_block_app_file(block_dir: Union[Path, str]) -> Path:
     return Path(block_dir) / "app.json"
 
 
-def get_block_example_file(block_dir: Union[Path, str]) -> Path:
+def get_block_example_file(block_dir: Path | str) -> Path:
     """
     Get the example.md file path for a block.
 
@@ -63,7 +63,7 @@ def get_block_example_file(block_dir: Union[Path, str]) -> Path:
     return Path(block_dir) / "example.md"
 
 
-def get_block_test_file(block_dir: Union[Path, str]) -> Path:
+def get_block_test_file(block_dir: Path | str) -> Path:
     """
     Get the test file path for a block.
 
@@ -78,7 +78,7 @@ def get_block_test_file(block_dir: Union[Path, str]) -> Path:
     return block_dir / f"{block_name}_test_.py"
 
 
-def get_block_venv_dir(block_dir: Union[Path, str]) -> Path:
+def get_block_venv_dir(block_dir: Path | str) -> Path:
     """
     Get the virtual environment directory for a block.
 
@@ -91,7 +91,7 @@ def get_block_venv_dir(block_dir: Union[Path, str]) -> Path:
     return Path(block_dir) / ".venv"
 
 
-def find_project_root(start_path: Optional[Union[Path, str]] = None) -> Optional[Path]:
+def find_project_root(start_path: Optional[Path | str] = None) -> Optional[Path]:
     """
     Find the project root directory by looking for pyproject.toml.
 
@@ -117,7 +117,7 @@ def find_project_root(start_path: Optional[Union[Path, str]] = None) -> Optional
 
 
 def ensure_directory_exists(
-    path: Union[Path, str], parents: bool = True, exist_ok: bool = True
+    path: Path | str, parents: bool = True, exist_ok: bool = True
 ) -> Path:
     """
     Ensure a directory exists, creating it if necessary.
@@ -135,7 +135,7 @@ def ensure_directory_exists(
     return path
 
 
-def safe_path_join(*parts: Union[str, Path]) -> Path:
+def safe_path_join(*parts: str | Path) -> Path:
     """
     Safely join path components, handling various input types.
 
@@ -156,9 +156,7 @@ def safe_path_join(*parts: Union[str, Path]) -> Path:
     return result
 
 
-def get_relative_path(
-    path: Union[Path, str], base: Optional[Union[Path, str]] = None
-) -> Path:
+def get_relative_path(path: Path | str, base: Optional[Path | str] = None) -> Path:
     """
     Get relative path from base directory.
 
@@ -184,7 +182,7 @@ def get_relative_path(
 
 
 def find_files_by_pattern(
-    directory: Union[Path, str], pattern: str, recursive: bool = True
+    directory: Path | str, pattern: str, recursive: bool = True
 ) -> List[Path]:
     """
     Find all files matching a pattern in a directory.
@@ -205,7 +203,7 @@ def find_files_by_pattern(
         return sorted(directory.glob(pattern))
 
 
-def is_valid_block_directory(path: Union[Path, str]) -> bool:
+def is_valid_block_directory(path: Path | str) -> bool:
     """
     Check if a directory is a valid block directory.
 
