@@ -136,9 +136,9 @@ export async function ensureUvEnvironment(): Promise<void> {
     await installUv();
   }
 
-  // Get the app root directory (without ASAR, resourcesPath points to app contents)
+  // Get the app root directory
   const appRoot = app.isPackaged
-    ? join(app.getAppPath(), '..')  // Go up from app.asar directory
+    ? process.resourcesPath // Resources are extracted here when asar: false
     : process.cwd();
 
   // Ensure virtual environment exists
@@ -169,23 +169,19 @@ export async function installDependencies(): Promise<string> {
 
 export async function spawnCaptain(): Promise<void> {
   return new Promise((_, reject) => {
-    // If we're in a virtual environment, use python directly
-    let pythonCommand = "python";
-    if (process.env.VIRTUAL_ENV) {
-      pythonCommand = join(process.env.VIRTUAL_ENV, "bin", "python");
-    } else if (process.env.PY_INTERPRETER) {
-      pythonCommand = process.env.PY_INTERPRETER;
-    }
-
-    const command = new Command(`"${pythonCommand}" main.py`);
+    // Use uv run to ensure proper environment
+    const command = new Command("uv run python main.py");
 
     // Get the app root directory
     const appRoot = app.isPackaged
-      ? join(app.getAppPath(), '..')  // Go up from app.asar directory
+      ? process.resourcesPath // Resources are extracted here when asar: false
       : process.cwd();
 
     log.info("execCommand: " + command.getCommand());
     log.info("Working directory: " + appRoot);
+    log.info("app.isPackaged: " + app.isPackaged);
+    log.info("app.getAppPath(): " + app.getAppPath());
+    log.info("process.resourcesPath: " + process.resourcesPath);
 
     global.captainProcess = spawn(
       command.getCommand().split(" ")[0],

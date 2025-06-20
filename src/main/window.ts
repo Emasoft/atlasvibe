@@ -69,23 +69,25 @@ export async function createWindow() {
   if (process.platform === "darwin") {
     app.dock.setIcon(nativeImage.createFromPath(getIcon()));
   }
-  if (!(await isPortFree(5392))) {
-    const choice = dialog.showMessageBoxSync(global.mainWindow, {
-      type: "question",
-      buttons: ["Exit", "Kill Process"],
-      title: "Existing Server Detected",
-      message:
-        "Seems like there is already an atlasvibe server running! Do you want to kill it?",
-      icon: getIcon(),
-    });
-    if (choice == 0) {
-      mainWindow.destroy();
-      app.quit();
-      process.exit(0);
-    } else {
-      await killProcess(5392).catch((err) => log.error(err));
-    }
-  }
+  // Commented out port check - the backend is started by the frontend after setup
+  // This was causing issues when the user manually started the backend first
+  // if (!(await isPortFree(5392))) {
+  //   const choice = dialog.showMessageBoxSync(global.mainWindow, {
+  //     type: "question",
+  //     buttons: ["Exit", "Kill Process"],
+  //     title: "Existing Server Detected",
+  //     message:
+  //       "Seems like there is already an atlasvibe server running! Do you want to kill it?",
+  //     icon: getIcon(),
+  //   });
+  //   if (choice == 0) {
+  //     mainWindow.destroy();
+  //     app.quit();
+  //     process.exit(0);
+  //   } else {
+  //     await killProcess(5392).catch((err) => log.error(err));
+  //   }
+  // }
   if (!app.isPackaged && devServerUrl) {
     await mainWindow.loadURL(devServerUrl);
   } else {
