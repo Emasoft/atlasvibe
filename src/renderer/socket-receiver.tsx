@@ -9,6 +9,7 @@ import { ServerStatus, WorkerJobResponse } from "@/renderer/types/socket";
 import { useSocketStore } from "@/renderer/stores/socket";
 import { useHardwareStore } from "@/renderer/stores/hardware";
 import { toastQueryError } from "@/renderer/utils/report-error";
+import { useProjectStore } from "@/renderer/stores/project";
 
 export const SocketReceiver = () => {
   const [socket, setSocket] = useState<WebSocket>();
@@ -22,6 +23,12 @@ export const SocketReceiver = () => {
     );
 
   const hardwareRefetch = useHardwareStore((state) => state.refresh);
+  const { setBlockPendingChanges, setBlockVersion } = useProjectStore(
+    useShallow((state) => ({
+      setBlockPendingChanges: state.setBlockPendingChanges,
+      setBlockVersion: state.setBlockVersion,
+    })),
+  );
   const { fetchManifest, importCustomBlocks, setManifestChanged, setBlockRegenerating, clearRegeneratingBlocks } =
     useManifestStore(
       useShallow((state) => ({
@@ -114,6 +121,45 @@ export const SocketReceiver = () => {
             console.error("Manifest update error:", error);
           });
           break;
+
+        // Change queue events
+        case "change_queued":
+          toast.info(`Change queued for block ${data.block_id}`, {
+            description: `Type: ${data.change_type}`
+          });
+          // Mark block as having pending changes
+          setBlockPendingChanges(data.block_id, data.has_pending > 0);
+          break;
+
+        case "block_code_updated":
+          toast.success(`Block ${data.block_id} code updated`, {
+            description: `Version ${data.version}`
+          });
+          // Update block version and clear pending status
+          setBlockVersion(data.block_id, data.version);
+          setBlockPendingChanges(data.block_id, false);
+          // Trigger manifest refresh to get updated block
+          doFetch();
+          break;
+
+        case "block_parameter_updated":
+          toast.success(`Block ${data.block_id} parameter updated`, {
+            description: `${data.parameter} = ${data.value}`
+          });
+          break;
+
+        case "transaction_applied":
+          toast.success("Changes applied successfully", {
+            description: `${data.change_count} changes`
+          });
+          break;
+
+        case "transaction_failed":
+          toast.error("Failed to apply changes", {
+            description: data.error
+          });
+          break;
+
         default:
           console.log(" default data type: ", data);
           break;
@@ -137,6 +183,10 @@ export const SocketReceiver = () => {
     setServerStatus,
     setSocketId,
     socket,
+    setBlockPendingChanges,
+    setBlockVersion,
+    setBlockRegenerating,
+    clearRegeneratingBlocks,
   ]);
 
   return <div />;

@@ -49,27 +49,34 @@ export const useLoadApp = () => {
     }
 
     // Validate and load
-    const loadRes = tryParse(Project)(migratedProject)
-      .andThen((proj) => {
-        // Validate custom block references
-        const errors = validateProjectReferences(proj);
-        if (errors.length > 0) {
-          toast.warning("Project validation warnings", {
-            description: errors.join(", ")
-          });
-        }
-        return loadProject(proj, filePath);
-      })
-      .map(() => setShowWelcomeScreen(false));
-
-    if (loadRes.isOk()) {
+    const parseRes = tryParse(Project)(migratedProject);
+    if (parseRes.isErr()) {
+      if (parseRes.error instanceof ZodError) {
+        toast.error("Project validation error", {
+          description: fromZodError(parseRes.error).toString(),
+        });
+      } else {
+        toast.error("Error parsing project", {
+          description: parseRes.error.message,
+        });
+      }
       return;
     }
 
-    if (loadRes.error instanceof ZodError) {
-      toast.error("Project validation error", {
-        description: fromZodError(loadRes.error).toString(),
+    const proj = parseRes.value;
+
+    // Validate custom block references
+    const errors = validateProjectReferences(proj);
+    if (errors.length > 0) {
+      toast.warning("Project validation warnings", {
+        description: errors.join(", ")
       });
+    }
+
+    // Load project asynchronously
+    const loadRes = await loadProject(proj, filePath);
+    if (loadRes.isOk()) {
+      setShowWelcomeScreen(false);
     } else {
       toast.error("Error loading project", {
         description: loadRes.error.message,

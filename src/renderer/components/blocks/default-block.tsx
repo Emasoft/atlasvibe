@@ -39,8 +39,11 @@ const DefaultBlock = ({
 }: DefaultBlockProps) => {
   const [isRenamingTitle, setIsRenamingTitle] = useState(false);
   const { blockRunning, blockError } = useBlockStatus(data.id);
-  const updateBlockLabel = useProjectStore(
-    useShallow((state) => state.updateBlockLabel),
+  const { updateBlockLabel, blocksWithPendingChanges } = useProjectStore(
+    useShallow((state) => ({
+      updateBlockLabel: state.updateBlockLabel,
+      blocksWithPendingChanges: state.blocksWithPendingChanges,
+    })),
   );
   const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
 
@@ -49,6 +52,11 @@ const DefaultBlock = ({
     if (!data.path) return false;
     return regeneratingBlocks.has(data.path);
   }, [data.path, regeneratingBlocks]);
+
+  // Check if this block has pending changes
+  const hasPendingChanges = useMemo(() => {
+    return blocksWithPendingChanges.has(data.id);
+  }, [data.id, blocksWithPendingChanges]);
 
   const maxInputOutput = useMemo(
     () => Math.max(data.inputs?.length ?? 0, data.outputs?.length ?? 0),
@@ -63,12 +71,17 @@ const DefaultBlock = ({
       style={wrapperStyle}
     >
       <RegeneratingIndicator visible={isRegenerating} />
+      {hasPendingChanges && !isRegenerating && (
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white animate-pulse">
+          Pending Changes
+        </div>
+      )}
       <div
         className={clsx(
-          `${isRegenerating ? 'block-regenerating' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
+          `${isRegenerating ? 'block-regenerating' : hasPendingChanges ? 'border-blue-500' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
           {
-            [`shadow-around ${isRegenerating ? 'shadow-yellow-500' : variantClassMap[variant].shadow}`]:
-              blockRunning || selected || isRegenerating,
+            [`shadow-around ${isRegenerating ? 'shadow-yellow-500' : hasPendingChanges ? 'shadow-blue-500' : variantClassMap[variant].shadow}`]:
+              blockRunning || selected || isRegenerating || hasPendingChanges,
           },
           { "shadow-around shadow-red-700": blockError },
           className,

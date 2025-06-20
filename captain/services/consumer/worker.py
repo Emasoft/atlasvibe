@@ -8,6 +8,7 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_node_venv import PipInstallThread
 from captain.types.worker import JobInfo, PoisonPill
 from captain.utils.broadcast import Signaler
 from captain.utils.logger import logger
+from captain.services.change_queue import ChangeQueueManager
 
 """
 IMPORTANT NOTE: This class mimics the RQ Worker package.
@@ -32,6 +33,7 @@ class Worker:
         self.job_service = JobService()
         self.uuid = uuid.uuid4()
         self.node_delay = node_delay
+        self.change_queue_manager = ChangeQueueManager.get_instance()
 
     async def run(self):
         logger.info(f"Worker {self.uuid} has started")
@@ -59,6 +61,9 @@ class Worker:
                 await self.signaler.signal_current_running_node(
                     job.jobset_id, job.job_id, func.__name__
                 )
+
+            # Mark block as executing in change queue
+            self.change_queue_manager.mark_block_executing(job.job_id)
 
             kwargs: dict[str, Any] = {
                 "ctrls": job.ctrls,
@@ -97,6 +102,9 @@ class Worker:
 
                     PipInstallThread.terminate_all()
                     raise Exception(response.error)
+
+            # Mark block as finished in change queue (applies pending changes)
+            self.change_queue_manager.mark_block_finished(job.job_id)
 
             # put the job result in the queue for producer to process
             self.finish_queue.put(response)

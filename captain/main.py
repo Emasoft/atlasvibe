@@ -18,6 +18,7 @@ from captain.routes import (
 from captain.utils.config import origins
 from captain.utils.logger import logger
 from captain.internal.manager import WatchManager
+from captain.services.change_queue import ChangeQueueManager
 
 
 def cleanup_mecademic_handles():
@@ -45,6 +46,11 @@ async def lifespan(app: FastAPI):
     watch_manager = WatchManager.get_instance()
     watch_manager.start_thread()
 
+    # Start change queue manager
+    change_queue_manager = ChangeQueueManager.get_instance()
+    change_queue_manager.start()
+    logger.info("Change queue manager started")
+
     # Register cleanup handlers
     atexit.register(cleanup_mecademic_handles)
 
@@ -61,6 +67,11 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Running shutdown event")
+
+    # Stop change queue manager
+    change_queue_manager.stop()
+    logger.info("Change queue manager stopped")
+
     cleanup_mecademic_handles()
 
 

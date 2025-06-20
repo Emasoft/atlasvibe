@@ -82,6 +82,10 @@ type State = {
   controlWidgetNodes: Node<WidgetData>[];
   controlVisualizationNodes: Node<VisualizationData>[];
   controlTextNodes: Node<TextData>[];
+
+  // Track blocks with pending changes
+  blocksWithPendingChanges: Set<string>;
+  blockVersions: Map<string, number>;
 };
 
 type Actions = {
@@ -148,6 +152,11 @@ type Actions = {
   deleteControlTextNode: (id: string) => void;
 
   saveProject: () => Promise<Result<string | undefined, Error>>;
+
+  // Pending changes tracking
+  setBlockPendingChanges: (blockId: string, hasPending: boolean) => void;
+  setBlockVersion: (blockId: string, version: number) => void;
+  clearPendingChanges: () => void;
 };
 
 const defaultProjectData =
@@ -174,6 +183,9 @@ export const useProjectStore = create<State & Actions>()(
     controlWidgetNodes: [],
     controlVisualizationNodes: [],
     controlTextNodes: [],
+
+    blocksWithPendingChanges: new Set(),
+    blockVersions: new Map(),
 
     handleNodeChanges: (
       blocksUpdate: (nodes: Node<BlockData>[]) => Node<BlockData>[],
@@ -547,6 +559,29 @@ export const useProjectStore = create<State & Actions>()(
         return e;
       });
     },
+
+    setBlockPendingChanges: (blockId: string, hasPending: boolean) => {
+      set((state) => {
+        if (hasPending) {
+          state.blocksWithPendingChanges.add(blockId);
+        } else {
+          state.blocksWithPendingChanges.delete(blockId);
+        }
+      });
+    },
+
+    setBlockVersion: (blockId: string, version: number) => {
+      set((state) => {
+        state.blockVersions.set(blockId, version);
+      });
+    },
+
+    clearPendingChanges: () => {
+      set((state) => {
+        state.blocksWithPendingChanges.clear();
+        state.blockVersions.clear();
+      });
+    },
   })),
 );
 
@@ -560,7 +595,7 @@ export const useLoadProject = () => {
   const fetchManifest = useManifestStore((state) => state.fetchManifest);
 
   return useCallback(
-    (project: Project, path?: string): Result<void, Error> => {
+    async (project: Project, path?: string): Promise<Result<void, Error>> => {
       if (!manifest || !metadata) {
         return err(
           new Error(
@@ -568,39 +603,82 @@ export const useLoadProject = () => {
           ),
         );
       }
-      const {
-        name,
-        rfInstance: { nodes, edges },
-        textNodes,
-        controlNodes,
-        controlVisualizationNodes,
-        controlTextNodes,
-      } = project;
-      const [syncedNodes, syncedEdges] = syncFlowchartWithManifest(
-        nodes,
-        edges,
-        manifest,
-        metadata,
-      );
 
-      useProjectStore.setState({
-        nodes: syncedNodes,
-        edges: syncedEdges,
-        textNodes: textNodes ?? [],
-        controlWidgetNodes: controlNodes ?? [],
-        controlVisualizationNodes: controlVisualizationNodes ?? [],
-        controlTextNodes: controlTextNodes ?? [],
-        name,
-        path,
-      });
+      // First, set the project path so the manifest can load project blocks
+      if (path) {
+        useProjectStore.setState({ path });
+
+        // Refresh manifest to include project-specific blocks
+        const manifestResult = await fetchManifest();
+        if (manifestResult.isErr()) {
+          return err(new Error("Failed to load project blocks: " + manifestResult.error.message));
+        }
+
+        // Get the updated manifest and metadata after loading project blocks
+        const updatedManifest = useManifestStore.getState().standardBlocksManifest;
+        const updatedMetadata = useManifestStore.getState().standardBlocksMetadata;
+
+        if (!updatedManifest || !updatedMetadata) {
+          return err(new Error("Failed to get updated manifest after loading project blocks"));
+        }
+
+        const {
+          name,
+          rfInstance: { nodes, edges },
+          textNodes,
+          controlNodes,
+          controlVisualizationNodes,
+          controlTextNodes,
+        } = project;
+
+        const [syncedNodes, syncedEdges] = syncFlowchartWithManifest(
+          nodes,
+          edges,
+          updatedManifest,
+          updatedMetadata,
+        );
+
+        useProjectStore.setState({
+          nodes: syncedNodes,
+          edges: syncedEdges,
+          textNodes: textNodes ?? [],
+          controlWidgetNodes: controlNodes ?? [],
+          controlVisualizationNodes: controlVisualizationNodes ?? [],
+          controlTextNodes: controlTextNodes ?? [],
+          name,
+        });
+      } else {
+        // No path, just load as is
+        const {
+          name,
+          rfInstance: { nodes, edges },
+          textNodes,
+          controlNodes,
+          controlVisualizationNodes,
+          controlTextNodes,
+        } = project;
+
+        const [syncedNodes, syncedEdges] = syncFlowchartWithManifest(
+          nodes,
+          edges,
+          manifest,
+          metadata,
+        );
+
+        useProjectStore.setState({
+          nodes: syncedNodes,
+          edges: syncedEdges,
+          textNodes: textNodes ?? [],
+          controlWidgetNodes: controlNodes ?? [],
+          controlVisualizationNodes: controlVisualizationNodes ?? [],
+          controlTextNodes: controlTextNodes ?? [],
+          name,
+          path,
+        });
+      }
 
       setHasUnsavedChanges(false);
       wipeBlockResults();
-
-      // Refresh manifest to include project-specific blocks
-      if (path) {
-        fetchManifest();
-      }
 
       return ok(undefined);
     },

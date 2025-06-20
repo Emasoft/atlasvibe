@@ -89,9 +89,6 @@ const BlockModal = ({
 
   const handleEditCode = async () => {
     await window.api.openEditorWindow(blockFullPath);
-    toast.info(
-      "If you edit and save the block code, you may need to manually trigger a manifest refresh or restart the application for changes to fully reflect, depending on current backend capabilities.",
-    );
   };
 
   const isDevMode = import.meta.env.DEV;

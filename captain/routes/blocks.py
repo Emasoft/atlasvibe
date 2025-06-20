@@ -38,6 +38,7 @@ from captain.utils.fastapi_error_handler import (
     managed_operation,
 )
 from captain.utils.shared.error_utils import error_context
+from captain.services.change_queue import ChangeQueueManager, BlockChange, ChangeType
 
 router = APIRouter(tags=["blocks"])
 
@@ -329,6 +330,9 @@ async def update_block_code(request: UpdateBlockCodeRequest):
         # Get WebSocket manager instance
         ws_manager = ConnectionManager.get_instance()
 
+        # Get change queue manager
+        change_queue = ChangeQueueManager.get_instance()
+
         # Use managed operation for metadata regeneration
         async with managed_operation(
             "regenerating block metadata",
@@ -380,7 +384,25 @@ async def update_block_code(request: UpdateBlockCodeRequest):
         # Add the path to the manifest
         block_manifest["path"] = str(block_file.parent)
 
-        logger.info(f"Updated code for block '{block_name}' at {request.block_path}")
+        # Queue the change for real-time application
+        change = BlockChange(
+            block_path=request.block_path,
+            block_id=block_name,  # Using block name as ID for now
+            change_type=ChangeType.CODE_UPDATE,
+            old_value=original_content,
+            new_value=request.content,
+        )
+        transaction_id = change_queue.queue_change(change)
+
+        # Add transaction ID to response
+        block_manifest["transaction_id"] = transaction_id
+        block_manifest["has_pending_changes"] = change_queue.has_pending_changes(
+            block_name
+        )
+
+        logger.info(
+            f"Updated code for block '{block_name}' at {request.block_path} - transaction {transaction_id}"
+        )
 
         return block_manifest
 
@@ -578,6 +600,82 @@ async def get_block_venv_status(block_path: str):
     with error_context("getting virtual environment status", logger):
         status = get_venv_status(block_path)
         return status
+
+
+@router.get("/blocks/pending-changes/{block_id}")
+@fastapi_error_handler(
+    operation="getting pending changes",
+    error_code_prefix="PENDING_CHANGES",
+)
+async def get_pending_changes(block_id: str):
+    """Get pending changes for a block.
+
+    Args:
+        block_id: The block identifier
+
+    Returns:
+        List of pending changes
+    """
+    change_queue = ChangeQueueManager.get_instance()
+    pending = change_queue.get_pending_changes(block_id)
+
+    return {
+        "block_id": block_id,
+        "pending_count": len(pending),
+        "has_pending": change_queue.has_pending_changes(block_id),
+        "version": change_queue.get_block_version(block_id),
+        "changes": [
+            {
+                "id": change.id,
+                "type": change.change_type.value,
+                "timestamp": change.timestamp,
+                "applied": change.applied,
+                "error": change.error,
+            }
+            for change in pending
+        ],
+    }
+
+
+@router.get("/blocks/change-history/")
+@fastapi_error_handler(
+    operation="getting change history",
+    error_code_prefix="CHANGE_HISTORY",
+)
+async def get_change_history(limit: int = 100):
+    """Get recent change history.
+
+    Args:
+        limit: Maximum number of transactions to return
+
+    Returns:
+        List of recent transactions
+    """
+    change_queue = ChangeQueueManager.get_instance()
+    history = change_queue.change_history[-limit:]
+
+    return {
+        "count": len(history),
+        "transactions": [
+            {
+                "id": transaction.id,
+                "timestamp": transaction.timestamp,
+                "change_count": len(transaction.changes),
+                "committed": transaction.committed,
+                "rolled_back": transaction.rolled_back,
+                "changes": [
+                    {
+                        "block_id": change.block_id,
+                        "type": change.change_type.value,
+                        "applied": change.applied,
+                        "error": change.error,
+                    }
+                    for change in transaction.changes
+                ],
+            }
+            for transaction in history
+        ],
+    }
 
 
 @router.post("/blocks/venv-logs/")
