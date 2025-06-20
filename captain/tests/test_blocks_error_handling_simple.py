@@ -164,20 +164,19 @@ class TestFastAPIErrorHandler:
 class TestRetryLogic:
     """Test retry functionality."""
 
-    @pytest.mark.asyncio
-    async def test_retry_on_connection_error(self):
+    def test_retry_on_connection_error(self):
         """Test retry logic for transient failures."""
         call_count = 0
 
         @with_retry(max_attempts=3, delay=0.01, exceptions=(ConnectionError,))
-        async def flaky_function():
+        def flaky_function():
             nonlocal call_count
             call_count += 1
             if call_count < 3:
                 raise ConnectionError("Transient failure")
             return "success"
 
-        result = await flaky_function()
+        result = flaky_function()
         assert result == "success"
         assert call_count == 3
 
