@@ -10,6 +10,7 @@ import { tryParse } from "@/types/result";
 import { toast } from "sonner";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { loadSampleProject, getSampleProjectPath } from "@/renderer/utils/gallery-loader";
 
 export interface AppGalleryElementProps {
   galleryApp: GalleryApp;
@@ -26,20 +27,47 @@ export const GalleryElement = ({
   const nodesInitialized = useNodesInitialized();
 
   const handleAppLoad = async () => {
-    const raw = await import(`../../data/apps/${galleryApp.appPath}.json`);
-    const res = tryParse(Project)(raw)
-      .andThen((proj) => loadProject(proj))
-      .map(() => setIsGalleryOpen(false));
+    // Show loading toast
+    const loadingToast = toast.loading(`Loading ${galleryApp.title}...`);
 
-    if (res.isOk()) return;
+    try {
+      // Load from the new folder-based structure
+      const projectResult = await loadSampleProject(galleryApp.appPath);
 
-    if (res.error instanceof ZodError) {
-      toast.error("Project validation error", {
-        description: fromZodError(res.error).toString(),
-      });
-    } else {
-      toast.error("Error loading project", {
-        description: res.error.message,
+      if (projectResult.isErr()) {
+        toast.dismiss(loadingToast);
+        toast.error("Failed to load sample project", {
+          description: projectResult.error.message,
+        });
+        return;
+      }
+
+      // Load the project with its path so it knows where to find custom blocks
+      const projectPath = getSampleProjectPath(galleryApp.appPath);
+      const res = tryParse(Project)(projectResult.value)
+        .andThen((proj) => loadProject(proj, projectPath))
+        .map(() => {
+          toast.dismiss(loadingToast);
+          toast.success(`Loaded ${galleryApp.title}`);
+          setIsGalleryOpen(false);
+        });
+
+      if (res.isErr()) {
+        toast.dismiss(loadingToast);
+        if (res.error instanceof ZodError) {
+          toast.error("Project validation error", {
+            description: fromZodError(res.error).toString(),
+          });
+        } else {
+          toast.error("Error loading project", {
+            description: res.error.message,
+          });
+        }
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Unexpected error loading project", {
+        description: error instanceof Error ? error.message : String(error),
       });
     }
   };

@@ -26,6 +26,8 @@ extraResources:
     to: "blocks"
   - from: "examples"
     to: "examples"
+  - from: "sample_projects"
+    to: "sample_projects"
 
 mac:
   icon: ./public/favicon.icns

@@ -1,0 +1,423 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "RAND-b7ff9d65-ecf0-4334-b64a-b7c854460bef",
+        "type": "DATA",
+        "data": {
+          "id": "RAND-b7ff9d65-ecf0-4334-b64a-b7c854460bef",
+          "label": "RAND_1",
+          "func": "RAND_1",
+          "type": "DATA",
+          "ctrls": {
+            "distribution": {
+              "type": "select",
+              "default": "normal",
+              "options": [
+                "normal",
+                "uniform",
+                "poisson"
+              ],
+              "desc": "the distribution over the random samples",
+              "overload": {
+                "uniform": [
+                  "size",
+                  "lower_bound",
+                  "upper_bound"
+                ],
+                "normal": [
+                  "size",
+                  "normal_mean",
+                  "normal_standard_deviation"
+                ],
+                "poisson": [
+                  "size",
+                  "poisson_events"
+                ]
+              },
+              "functionName": "RAND",
+              "param": "distribution",
+              "value": "normal"
+            },
+            "size": {
+              "type": "int",
+              "default": 1000,
+              "desc": "the size of the output. =1 outputs Scalar, >1 outputs Vector",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "size",
+              "value": 1000
+            },
+            "lower_bound": {
+              "type": "float",
+              "default": 0,
+              "desc": "the lower bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "lower_bound",
+              "value": 0
+            },
+            "upper_bound": {
+              "type": "float",
+              "default": 1,
+              "desc": "the upper bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "upper_bound",
+              "value": 1
+            },
+            "normal_mean": {
+              "type": "float",
+              "default": 0,
+              "desc": "the mean or \"center\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_mean",
+              "value": 0
+            },
+            "normal_standard_deviation": {
+              "type": "float",
+              "default": 1,
+              "desc": "the spread or \"width\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_standard_deviation",
+              "value": 1
+            },
+            "poisson_events": {
+              "type": "float",
+              "default": 1,
+              "desc": "the expected number of events occurring in a fixed time-interval when distribution is poisson",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "poisson_events",
+              "value": 1
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": "unused in this node",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|Scalar",
+              "desc": "Vector if size > 1\nv: the random samples\n\nScalar if size = 1\nc: the random number"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/RAND/RAND.py"
+        },
+        "position": {
+          "x": 420.9590488323229,
+          "y": -108.40742403783912
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 420.9590488323229,
+          "y": -108.40742403783912
+        },
+        "dragging": false
+      },
+      {
+        "id": "RAND-7fd86886-c19f-426d-9cb5-77a26e510531",
+        "type": "DATA",
+        "data": {
+          "id": "RAND-7fd86886-c19f-426d-9cb5-77a26e510531",
+          "label": "RAND 1",
+          "func": "RAND_1",
+          "type": "DATA",
+          "ctrls": {
+            "distribution": {
+              "type": "select",
+              "default": "normal",
+              "options": [
+                "normal",
+                "uniform",
+                "poisson"
+              ],
+              "desc": "the distribution over the random samples",
+              "overload": {
+                "uniform": [
+                  "size",
+                  "lower_bound",
+                  "upper_bound"
+                ],
+                "normal": [
+                  "size",
+                  "normal_mean",
+                  "normal_standard_deviation"
+                ],
+                "poisson": [
+                  "size",
+                  "poisson_events"
+                ]
+              },
+              "functionName": "RAND",
+              "param": "distribution",
+              "value": "normal"
+            },
+            "size": {
+              "type": "int",
+              "default": 1000,
+              "desc": "the size of the output. =1 outputs Scalar, >1 outputs Vector",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "size",
+              "value": 1
+            },
+            "lower_bound": {
+              "type": "float",
+              "default": 0,
+              "desc": "the lower bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "lower_bound",
+              "value": 0
+            },
+            "upper_bound": {
+              "type": "float",
+              "default": 1,
+              "desc": "the upper bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "upper_bound",
+              "value": 1
+            },
+            "normal_mean": {
+              "type": "float",
+              "default": 0,
+              "desc": "the mean or \"center\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_mean",
+              "value": 0
+            },
+            "normal_standard_deviation": {
+              "type": "float",
+              "default": 1,
+              "desc": "the spread or \"width\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_standard_deviation",
+              "value": 1
+            },
+            "poisson_events": {
+              "type": "float",
+              "default": 1,
+              "desc": "the expected number of events occurring in a fixed time-interval when distribution is poisson",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "poisson_events",
+              "value": 1
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": "unused in this node",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|Scalar",
+              "desc": "Vector if size > 1\nv: the random samples\n\nScalar if size = 1\nc: the random number"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/RAND/RAND.py"
+        },
+        "position": {
+          "x": 410.9809661319946,
+          "y": 172.0251214942109
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 410.9809661319946,
+          "y": 172.0251214942109
+        }
+      },
+      {
+        "id": "BIG_NUMBER-ba950e97-dee4-4b7d-a51c-a150404b2686",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "BIG_NUMBER-ba950e97-dee4-4b7d-a51c-a150404b2686",
+          "label": "BIG NUMBER",
+          "func": "BIG_NUMBER",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "suffix": {
+              "type": "str",
+              "default": null,
+              "desc": "any suffix to show with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "suffix",
+              "value": ""
+            },
+            "prefix": {
+              "type": "str",
+              "default": null,
+              "desc": "any prefix to show with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "prefix",
+              "value": ""
+            },
+            "title": {
+              "type": "str",
+              "default": null,
+              "desc": "title of the plot, default = \"BIG_NUMBER\"",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "title",
+              "value": ""
+            },
+            "dec_places": {
+              "type": "int",
+              "default": 0,
+              "desc": "Number of decimal places. Use 0 to not round. default = \"BIG_NUMBER\"",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "dec_places",
+              "value": 0
+            },
+            "relative_delta": {
+              "type": "bool",
+              "default": true,
+              "desc": "whether or not to show the relative delta from the last run along with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "relative_delta",
+              "value": true
+            },
+            "scientific_notation": {
+              "type": "bool",
+              "default": false,
+              "desc": "Use scientific notation? Defaults to 4 decimal places.",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "scientific_notation",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly big number visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/BIG_NUMBER/BIG_NUMBER.py"
+        },
+        "position": {
+          "x": 887.4367473796376,
+          "y": 138.28405400740797
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 887.4367473796376,
+          "y": 138.28405400740797
+        }
+      },
+      {
+        "id": "HISTOGRAM-8cc342df-5096-41dd-8143-c83b6c5f5dfb",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "HISTOGRAM-8cc342df-5096-41dd-8143-c83b6c5f5dfb",
+          "label": "HISTOGRAM",
+          "func": "HISTOGRAM",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Histogram visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/HISTOGRAM/HISTOGRAM.py"
+        },
+        "position": {
+          "x": 882.2631064598036,
+          "y": -146.04026442400794
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 882.2631064598036,
+          "y": -146.04026442400794
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "RAND-b7ff9d65-ecf0-4334-b64a-b7c854460bef->HISTOGRAM-8cc342df-5096-41dd-8143-c83b6c5f5dfb_56538d9e-5983-46fe-b08e-66308d1a8225",
+        "source": "RAND-b7ff9d65-ecf0-4334-b64a-b7c854460bef",
+        "target": "HISTOGRAM-8cc342df-5096-41dd-8143-c83b6c5f5dfb",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "RAND-7fd86886-c19f-426d-9cb5-77a26e510531->BIG_NUMBER-ba950e97-dee4-4b7d-a51c-a150404b2686_6b6a44fa-18b9-4a7a-85ee-e9653d2502b3",
+        "source": "RAND-7fd86886-c19f-426d-9cb5-77a26e510531",
+        "target": "BIG_NUMBER-ba950e97-dee4-4b7d-a51c-a150404b2686",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

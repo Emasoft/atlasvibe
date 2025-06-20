@@ -1,0 +1,116 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "TIMESERIES-b7da77ce-27c8-4986-8ca9-5f8904db7a65",
+        "type": "DATA",
+        "data": {
+          "id": "TIMESERIES-b7da77ce-27c8-4986-8ca9-5f8904db7a65",
+          "label": "TIMESERIES_1",
+          "func": "TIMESERIES_1",
+          "type": "DATA",
+          "ctrls": {
+            "start_date": {
+              "type": "str",
+              "default": "2023-01-01",
+              "desc": "The start date of the timeseries in the format 'YYYY:MM:DD'.",
+              "overload": null,
+              "functionName": "TIMESERIES",
+              "param": "start_date",
+              "value": "2023-01-01"
+            },
+            "end_date": {
+              "type": "str",
+              "default": "2023-07-20",
+              "desc": "The end date of the timeseries in the format 'YYYY:MM:DD'.",
+              "overload": null,
+              "functionName": "TIMESERIES",
+              "param": "end_date",
+              "value": "2023-07-20"
+            }
+          },
+          "initCtrls": {},
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "DataFrame",
+              "desc": "m: the resulting timeseries"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/TIMESERIES/TIMESERIES.py"
+        },
+        "position": {
+          "x": 1027.3798616774418,
+          "y": 463.30381977947343
+        },
+        "width": 218,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 1027.3798616774418,
+          "y": 463.30381977947343
+        },
+        "dragging": false
+      },
+      {
+        "id": "TABLE-9eda9e7a-4eae-4545-b78d-1feab492ec99",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "TABLE-9eda9e7a-4eae-4545-b78d-1feab492ec99",
+          "label": "TABLE",
+          "func": "TABLE",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedTriple|OrderedPair|DataFrame|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Table visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/TABLE/TABLE.py"
+        },
+        "position": {
+          "x": 1441.7350757268991,
+          "y": 426.7722252472722
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 1441.7350757268991,
+          "y": 426.7722252472722
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "TIMESERIES-b7da77ce-27c8-4986-8ca9-5f8904db7a65->TABLE-9eda9e7a-4eae-4545-b78d-1feab492ec99_a223b369-0fb3-477d-a560-229b1806167a",
+        "source": "TIMESERIES-b7da77ce-27c8-4986-8ca9-5f8904db7a65",
+        "target": "TABLE-9eda9e7a-4eae-4545-b78d-1feab492ec99",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "DataFrame"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

@@ -1,0 +1,126 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "TEXT-5baeef3e-b992-49e3-8a7a-30b659d9259b",
+        "type": "DATA",
+        "data": {
+          "id": "TEXT-5baeef3e-b992-49e3-8a7a-30b659d9259b",
+          "label": "TEXT",
+          "func": "TEXT",
+          "type": "DATA",
+          "ctrls": {
+            "value": {
+              "type": "TextArea",
+              "default": "Hello World!",
+              "desc": "The value set in Parameters.",
+              "overload": null,
+              "functionName": "TEXT",
+              "param": "value",
+              "value": "Hello World!"
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "_",
+              "id": "_",
+              "type": "Any",
+              "desc": null,
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String",
+              "desc": "Return the value being set in Parameters."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/TEXT/TEXT.py"
+        },
+        "position": {
+          "x": 60.173048978752405,
+          "y": -230.36665474856414
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 60.173048978752405,
+          "y": -230.36665474856414
+        },
+        "dragging": false
+      },
+      {
+        "id": "TEXT_VIEW-4d6f661b-ffd1-4f4b-8787-0889b0de9d59",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "TEXT_VIEW-4d6f661b-ffd1-4f4b-8787-0889b0de9d59",
+          "label": "TEXT VIEW",
+          "func": "TEXT_VIEW_1",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "prettify": {
+              "type": "bool",
+              "default": false,
+              "desc": "Whether to prettify the displayed text (defaults to True)",
+              "overload": null,
+              "functionName": "TEXT_VIEW",
+              "param": "prettify",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String|Boolean",
+              "desc": "The DataContainer to be visualized in text format",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String",
+              "desc": "The DataContainer containing text data"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/DATA_STRUCTURE/TEXT_VIEW/TEXT_VIEW.py"
+        },
+        "position": {
+          "x": 510.17454465780145,
+          "y": -266.61851312976876
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 510.17454465780145,
+          "y": -266.61851312976876
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "TEXT-5baeef3e-b992-49e3-8a7a-30b659d9259b->TEXT_VIEW-4d6f661b-ffd1-4f4b-8787-0889b0de9d59_97e3c729-770c-42ac-a9a5-d1992564d776",
+        "source": "TEXT-5baeef3e-b992-49e3-8a7a-30b659d9259b",
+        "target": "TEXT_VIEW-4d6f661b-ffd1-4f4b-8787-0889b0de9d59",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "String"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

@@ -1,0 +1,20 @@
+{
+  "docstring": {
+    "short_description": "Return a single Scalar value.",
+    "long_description": "",
+    "parameters": [
+      {
+        "name": "value",
+        "type": "float",
+        "description": "The value set in Parameters"
+      }
+    ],
+    "returns": [
+      {
+        "name": "",
+        "type": "Scalar",
+        "description": "c: return the value being set in Parameters"
+      }
+    ]
+  }
+}

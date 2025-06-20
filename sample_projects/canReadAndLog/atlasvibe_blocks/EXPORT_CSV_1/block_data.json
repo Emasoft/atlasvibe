@@ -1,0 +1,30 @@
+{
+  "docstring": {
+    "short_description": "Export a DataContainer into CSV format.",
+    "long_description": "",
+    "parameters": [
+      {
+        "name": "dc",
+        "type": "OrderedPair|OrderedTriple|DataFrame",
+        "description": "The DataContainer to export."
+      },
+      {
+        "name": "dir",
+        "type": "Directory",
+        "description": "The directory to export to."
+      },
+      {
+        "name": "filename",
+        "type": "str",
+        "description": "The name of the file to output."
+      }
+    ],
+    "returns": [
+      {
+        "name": "",
+        "type": "None",
+        "description": ""
+      }
+    ]
+  }
+}

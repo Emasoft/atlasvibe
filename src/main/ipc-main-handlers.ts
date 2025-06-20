@@ -164,8 +164,13 @@ export const registerIpcMainHandlers = () => {
     createEditorWindow(filepath);
   });
 
-  ipcMain.handle(API.loadFileFromFullPath, (_, filepath) => {
-    return loadFileFromFullPath(filepath);
+  ipcMain.handle(API.loadFileFromFullPath, async (_, filepath) => {
+    try {
+      return await loadFileFromFullPath(filepath);
+    } catch (error) {
+      console.error("Error loading file:", error);
+      throw error;
+    }
   });
 
   ipcMain.handle(API.saveFileToFullPath, (_, filepath, fileContent) => {

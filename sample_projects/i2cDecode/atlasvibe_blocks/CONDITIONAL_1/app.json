@@ -1,0 +1,426 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "width": 239,
+        "height": 198,
+        "id": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+        "type": "CONDITIONALS",
+        "data": {
+          "id": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+          "label": "CONDITIONAL_1",
+          "func": "CONDITIONAL_1",
+          "type": "CONDITIONALS",
+          "ctrls": {
+            "operator_type": {
+              "type": "select",
+              "default": ">=",
+              "options": [
+                "<=",
+                ">",
+                "<",
+                ">=",
+                "!=",
+                "=="
+              ],
+              "functionName": "CONDITIONAL",
+              "param": "operator_type",
+              "value": ">",
+              "desc": "Specifies the type of comparison to be performed between the two inputs. The default value is \">=\".",
+              "overload": null
+            }
+          },
+          "inputs": [
+            {
+              "name": "x",
+              "id": "x",
+              "type": "Scalar",
+              "desc": null,
+              "multiple": false
+            },
+            {
+              "name": "y",
+              "id": "y",
+              "type": "Scalar",
+              "desc": null,
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "true",
+              "id": "true",
+              "type": "Any",
+              "desc": "Forwards the first value to the true branch."
+            },
+            {
+              "name": "false",
+              "id": "false",
+              "type": "Any",
+              "desc": null
+            }
+          ],
+          "path": "CONTROL_FLOW/CONDITIONALS/CONDITIONAL/CONDITIONAL.py",
+          "selected": false
+        },
+        "position": {
+          "x": 259.2959843332327,
+          "y": 140.81176179304782
+        },
+        "selected": false,
+        "positionAbsolute": {
+          "x": 259.2959843332327,
+          "y": 140.81176179304782
+        },
+        "dragging": true
+      },
+      {
+        "width": 150,
+        "height": 116,
+        "id": "CONSTANT-f7e4da4a-6c7f-4d91-b4f6-b1fa0113ae52",
+        "type": "GENERATORS",
+        "data": {
+          "id": "CONSTANT-f7e4da4a-6c7f-4d91-b4f6-b1fa0113ae52",
+          "label": "8",
+          "func": "CONSTANT",
+          "type": "GENERATORS",
+          "ctrls": {
+            "dc_type": {
+              "type": "select",
+              "options": [
+                "Scalar",
+                "Vector",
+                "OrderedPair"
+              ],
+              "default": "OrderedPair",
+              "desc": "The type of DataContainer to return.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "dc_type",
+              "value": "Scalar"
+            },
+            "constant": {
+              "type": "float",
+              "default": 3,
+              "desc": "The value of the y axis output.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "constant",
+              "value": 8
+            },
+            "step": {
+              "type": "float",
+              "default": 1000,
+              "desc": "The size of the y and x axes.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "step",
+              "value": 1000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input that defines the size of the output.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Vector|Scalar",
+              "desc": "OrderedPair if selected\nx: the x axis generated with size 'step'\ny: the resulting constant with size 'step'\nVector if selected\nv: the resulting constant with size 'step'\nScalar if selected\nc: the resulting constant"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/CONSTANT/CONSTANT.py",
+          "selected": true
+        },
+        "position": {
+          "x": -239.7356522942301,
+          "y": -3.0480836903313957
+        },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -239.7356522942301,
+          "y": -3.0480836903313957
+        },
+        "dragging": false
+      },
+      {
+        "width": 150,
+        "height": 116,
+        "id": "CONSTANT-5ff1d064-b39f-4340-808a-a34b8ab85898",
+        "type": "GENERATORS",
+        "data": {
+          "id": "CONSTANT-5ff1d064-b39f-4340-808a-a34b8ab85898",
+          "label": "4",
+          "func": "CONSTANT",
+          "type": "GENERATORS",
+          "ctrls": {
+            "dc_type": {
+              "type": "select",
+              "options": [
+                "Scalar",
+                "Vector",
+                "OrderedPair"
+              ],
+              "default": "OrderedPair",
+              "desc": "The type of DataContainer to return.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "dc_type",
+              "value": "Scalar"
+            },
+            "constant": {
+              "type": "float",
+              "default": 3,
+              "desc": "The value of the y axis output.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "constant",
+              "value": 4
+            },
+            "step": {
+              "type": "float",
+              "default": 1000,
+              "desc": "The size of the y and x axes.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "step",
+              "value": 1000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input that defines the size of the output.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Vector|Scalar",
+              "desc": "OrderedPair if selected\nx: the x axis generated with size 'step'\ny: the resulting constant with size 'step'\nVector if selected\nv: the resulting constant with size 'step'\nScalar if selected\nc: the resulting constant"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/CONSTANT/CONSTANT.py",
+          "selected": false
+        },
+        "position": {
+          "x": -241.23746586941502,
+          "y": 315.4263401427761
+        },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -241.23746586941502,
+          "y": 315.4263401427761
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINE-3f261de7-06ec-4df3-b2dd-0bc64330ea85",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "LINE-3f261de7-06ec-4df3-b2dd-0bc64330ea85",
+          "label": "LINE",
+          "func": "LINE",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "xaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the x axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "xaxis_title",
+              "value": ""
+            },
+            "yaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the y axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "yaxis_title",
+              "value": ""
+            },
+            "x_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "x_log_scale",
+              "value": false
+            },
+            "y_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "y_log_scale",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Line visualization of the input data"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/LINE/LINE.py"
+        },
+        "position": {
+          "x": 710.385908601246,
+          "y": -131.69544824464106
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 710.385908601246,
+          "y": -131.69544824464106
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINE-fd78dbcd-5503-4fd4-875a-072e081c7d7b",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "LINE-fd78dbcd-5503-4fd4-875a-072e081c7d7b",
+          "label": "LINE 1",
+          "func": "LINE",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "xaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the x axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "xaxis_title",
+              "value": ""
+            },
+            "yaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the y axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "yaxis_title",
+              "value": ""
+            },
+            "x_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "x_log_scale",
+              "value": false
+            },
+            "y_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "y_log_scale",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Line visualization of the input data"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/LINE/LINE.py"
+        },
+        "position": {
+          "x": 708.1368006984686,
+          "y": 324.46438711977476
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 708.1368006984686,
+          "y": 324.46438711977476
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "source": "CONSTANT-5ff1d064-b39f-4340-808a-a34b8ab85898",
+        "sourceHandle": "default",
+        "target": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+        "targetHandle": "y",
+        "id": "reactflow__edge-CONSTANT-5ff1d064-b39f-4340-808a-a34b8ab85898default-CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62cy"
+      },
+      {
+        "source": "CONSTANT-f7e4da4a-6c7f-4d91-b4f6-b1fa0113ae52",
+        "sourceHandle": "default",
+        "target": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+        "targetHandle": "x",
+        "id": "reactflow__edge-CONSTANT-f7e4da4a-6c7f-4d91-b4f6-b1fa0113ae52default-CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62cx"
+      },
+      {
+        "id": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c->LINE-3f261de7-06ec-4df3-b2dd-0bc64330ea85_3e0352ee-4a46-465a-9540-18dd6fbf42a7",
+        "source": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+        "target": "LINE-3f261de7-06ec-4df3-b2dd-0bc64330ea85",
+        "sourceHandle": "true",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Any"
+        }
+      },
+      {
+        "id": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c->LINE-fd78dbcd-5503-4fd4-875a-072e081c7d7b_d7a4a250-0422-4a89-baf8-a08f874a3eef",
+        "source": "CONDITIONAL-c44f8006-f1fb-41be-ab39-de40becaf62c",
+        "target": "LINE-fd78dbcd-5503-4fd4-875a-072e081c7d7b",
+        "sourceHandle": "false",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Any"
+        }
+      }
+    ]
+  },
+  "textNodes": []
+}

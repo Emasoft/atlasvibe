@@ -13,6 +13,7 @@ from captain.routes import (
     ws,
     log,
     test_sequence,
+    project,
 )
 from captain.utils.config import origins
 from captain.utils.logger import logger
@@ -83,3 +84,4 @@ app.include_router(test_profile.router)
 app.include_router(blocks.router)
 app.include_router(devices.router)
 app.include_router(test_sequence.router)
+app.include_router(project.router)

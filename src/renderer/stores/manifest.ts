@@ -44,10 +44,37 @@ export const useManifestStore = create<State & Actions>()(
         // Get current project path
         const projectPath = useProjectStore.getState().path;
 
+        // Always fetch standard blocks
+        const standardManifest = yield* (await getManifest(undefined, projectPath)).safeUnwrap();
+        const standardMetadata = yield* (await getMetadata(undefined, false, projectPath)).safeUnwrap();
+
+        // If we have a project path, also fetch its custom blocks
+        let customManifest = null;
+        let customMetadata = null;
+
+        if (projectPath) {
+          // For sample projects, the path might be relative (e.g., "sample_projects/...")
+          // The backend will handle resolving the actual path
+          const customBlocksPath = projectPath.startsWith('sample_projects/')
+            ? projectPath
+            : `${projectPath}/atlasvibe_blocks`;
+
+          try {
+            customManifest = yield* (await getManifest(customBlocksPath)).safeUnwrap();
+            customMetadata = yield* (await getMetadata(customBlocksPath, false)).safeUnwrap();
+          } catch (error) {
+            // It's okay if there are no custom blocks in the project
+            console.log("No custom blocks found for project:", projectPath);
+          }
+        }
+
         set({
-          standardBlocksManifest: yield* (await getManifest(undefined, projectPath)).safeUnwrap(),
-          standardBlocksMetadata: yield* (await getMetadata(undefined, false, projectPath)).safeUnwrap(),
+          standardBlocksManifest: standardManifest,
+          standardBlocksMetadata: standardMetadata,
+          customBlocksManifest: customManifest,
+          customBlocksMetadata: customMetadata,
         });
+
         return ok(undefined);
       });
     },

@@ -1,0 +1,158 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "IMAGE-8e8d60fa-e004-4f7f-ab1d-457380f39a1b",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "IMAGE-8e8d60fa-e004-4f7f-ab1d-457380f39a1b",
+          "label": "IMAGE_1",
+          "func": "IMAGE_1",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image|Grayscale",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Image visualization of the input image"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/IMAGE/IMAGE.py"
+        },
+        "position": {
+          "x": 431.4805086131503,
+          "y": 8.138374885580191
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 431.4805086131503,
+          "y": 8.138374885580191
+        },
+        "dragging": false
+      },
+      {
+        "id": "SKIMAGE-23dabce4-5e7e-4a9d-b56b-78d66f536f70",
+        "type": "DATA",
+        "data": {
+          "id": "SKIMAGE-23dabce4-5e7e-4a9d-b56b-78d66f536f70",
+          "label": "SKIMAGE",
+          "func": "SKIMAGE",
+          "type": "DATA",
+          "ctrls": {
+            "img_key": {
+              "type": "select",
+              "default": "astronaut",
+              "options": [
+                "astronaut",
+                "binary_blobs",
+                "brain",
+                "brick",
+                "camera",
+                "cat",
+                "cell",
+                "cells3d",
+                "checkerboard",
+                "chelsea",
+                "clock",
+                "coffee",
+                "coins",
+                "colorwheel",
+                "create_image_fetcher",
+                "data_dir",
+                "download_all",
+                "eagle",
+                "file_hash",
+                "grass",
+                "gravel",
+                "horse",
+                "hubble_deep_field",
+                "human_mitosis",
+                "image_fetcher",
+                "immunohistochemistry",
+                "kidney",
+                "lbp_frontal_face_cascade_filename",
+                "lfw_subset",
+                "lily",
+                "logo",
+                "microaneurysms",
+                "moon",
+                "nickel_solidification",
+                "page",
+                "protein_transport",
+                "retina",
+                "rocket",
+                "shepp_logan_phantom",
+                "skin",
+                "stereo_motorcycle",
+                "text",
+                "vortex"
+              ],
+              "desc": "The name of the image to be loaded from scikit-image.",
+              "overload": null,
+              "functionName": "SKIMAGE",
+              "param": "img_key",
+              "value": "astronaut"
+            }
+          },
+          "initCtrls": {},
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image",
+              "desc": "DataContainer containing the image loaded from scikit-image."
+            }
+          ],
+          "pip_dependencies": [
+            {
+              "name": "scikit-image",
+              "v": "0.21.0"
+            }
+          ],
+          "path": "DATA/GENERATION/SAMPLE_IMAGES/SKIMAGE/SKIMAGE.py"
+        },
+        "position": {
+          "x": 6.962985869225605,
+          "y": 44.7719381942361
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 6.962985869225605,
+          "y": 44.7719381942361
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "SKIMAGE-23dabce4-5e7e-4a9d-b56b-78d66f536f70->IMAGE-8e8d60fa-e004-4f7f-ab1d-457380f39a1b_43fddc3c-b91c-4014-bf28-438ca795fb96",
+        "source": "SKIMAGE-23dabce4-5e7e-4a9d-b56b-78d66f536f70",
+        "target": "IMAGE-8e8d60fa-e004-4f7f-ab1d-457380f39a1b",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Image"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

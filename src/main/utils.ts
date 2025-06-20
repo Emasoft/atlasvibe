@@ -266,6 +266,24 @@ export const cleanup = async () => {
 export const loadFileFromFullPath = async (
   filePath: string,
 ): Promise<string> => {
+  // Handle sample projects by checking if the path starts with 'sample_projects/'
+  if (filePath.startsWith('sample_projects/')) {
+    // For sample projects, we need to resolve the path relative to the app's resources
+    const appRoot = app.isPackaged
+      ? join(app.getAppPath(), '..')  // Go up from app directory
+      : process.cwd();
+
+    const fullPath = join(appRoot, filePath);
+
+    // Check if the file exists
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Sample project file not found: ${filePath}`);
+    }
+
+    return fs.readFileSync(fullPath, { encoding: "utf-8" }).toString();
+  }
+
+  // For regular paths, just read the file directly
   return fs.readFileSync(filePath, { encoding: "utf-8" }).toString();
 };
 

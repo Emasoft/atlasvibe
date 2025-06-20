@@ -146,17 +146,26 @@ async def get_manifest(blocks_path: str | None = None, project_path: str | None 
     log_duration=True,
 )
 async def get_metadata(
-    blocks_path: str | None = None, custom_dir_changed: bool = False
+    blocks_path: str | None = None,
+    custom_dir_changed: bool = False,
+    project_path: str | None = None,
 ):
     """Get metadata for all blocks.
 
     Args:
         blocks_path: Optional custom blocks directory path
         custom_dir_changed: Whether the custom directory has changed
+        project_path: Optional project path for project-specific blocks
 
     Returns:
         Dictionary containing block metadata
     """
+    # If project_path is provided but blocks_path is not, derive blocks_path
+    if project_path and not blocks_path:
+        if project_path.startswith("sample_projects/"):
+            # For sample projects, append atlasvibe_blocks
+            blocks_path = f"{project_path}/atlasvibe_blocks"
+
     with error_context("generating metadata", logger):
         metadata_map = generate_metadata(custom_blocks_dir=blocks_path)
 

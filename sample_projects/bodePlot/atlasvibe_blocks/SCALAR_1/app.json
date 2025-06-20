@@ -1,0 +1,292 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "LINSPACE-e71aee1d-01d8-4582-a443-a57421468046",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-e71aee1d-01d8-4582-a443-a57421468046",
+          "label": "LINSPACE",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 0
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 10
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 200
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -162.59453580292023,
+          "y": -162.9898739585885
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -162.59453580292023,
+          "y": -162.9898739585885
+        },
+        "dragging": false
+      },
+      {
+        "id": "SCALAR-2d0b0231-763b-44d7-a7cd-20875248429c",
+        "type": "DATA",
+        "data": {
+          "id": "SCALAR-2d0b0231-763b-44d7-a7cd-20875248429c",
+          "label": "SCALAR_1",
+          "func": "SCALAR_1",
+          "type": "DATA",
+          "ctrls": {
+            "value": {
+              "type": "float",
+              "default": 3,
+              "desc": "The value set in Parameters",
+              "overload": null,
+              "functionName": "SCALAR",
+              "param": "value",
+              "value": 10
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "_",
+              "id": "_",
+              "type": "Any",
+              "desc": null,
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Scalar",
+              "desc": "c: return the value being set in Parameters"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/SCALAR/SCALAR.py"
+        },
+        "position": {
+          "x": -141.3243862614436,
+          "y": 138.08765215849297
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": -141.3243862614436,
+          "y": 138.08765215849297
+        }
+      },
+      {
+        "id": "LINE-e4c70bfe-102a-451c-8cca-71f09c1d425b",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "LINE-e4c70bfe-102a-451c-8cca-71f09c1d425b",
+          "label": "LINE",
+          "func": "LINE",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "xaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the x axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "xaxis_title",
+              "value": ""
+            },
+            "yaxis_title": {
+              "type": "str",
+              "default": "",
+              "desc": "Choose the label for the y axis.",
+              "overload": null,
+              "functionName": "LINE",
+              "param": "yaxis_title",
+              "value": ""
+            },
+            "x_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "x_log_scale",
+              "value": false
+            },
+            "y_log_scale": {
+              "type": "bool",
+              "default": false,
+              "desc": null,
+              "overload": null,
+              "functionName": "LINE",
+              "param": "y_log_scale",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Line visualization of the input data"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/LINE/LINE.py"
+        },
+        "position": {
+          "x": 585.4005342769019,
+          "y": -45.689311016881504
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 585.4005342769019,
+          "y": -45.689311016881504
+        },
+        "dragging": false
+      },
+      {
+        "id": "ADD-f614e052-fa3f-46bc-9461-205828dabf02",
+        "type": "MATH",
+        "data": {
+          "id": "ADD-f614e052-fa3f-46bc-9461-205828dabf02",
+          "label": "ADD",
+          "func": "ADD",
+          "type": "MATH",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "a",
+              "id": "a",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "The input a use to compute the sum of a and b.",
+              "multiple": false
+            },
+            {
+              "name": "b",
+              "id": "b",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "The input b use to compute the sum of a and b.",
+              "multiple": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "OrderedPair if a is an OrderedPair.\nx: the x-axis of input a.\ny: the sum of input a and input b.\n\nScalar if a is a Scalar.\nc: the sum of input a and input b.\n\nVector if a is a Vector.\nv: the sum of input a and input b."
+            }
+          ],
+          "path": "MATH/ARITHMETIC/ADD/ADD.py"
+        },
+        "position": {
+          "x": 263.5649735543143,
+          "y": -8.175478559155692
+        },
+        "width": 216,
+        "height": 198,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 263.5649735543143,
+          "y": -8.175478559155692
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "LINSPACE-e71aee1d-01d8-4582-a443-a57421468046->ADD-f614e052-fa3f-46bc-9461-205828dabf02_b5adbb10-b354-4c50-b84b-65d1d5dc85d0",
+        "source": "LINSPACE-e71aee1d-01d8-4582-a443-a57421468046",
+        "target": "ADD-f614e052-fa3f-46bc-9461-205828dabf02",
+        "sourceHandle": "default",
+        "targetHandle": "a",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "SCALAR-2d0b0231-763b-44d7-a7cd-20875248429c->ADD-f614e052-fa3f-46bc-9461-205828dabf02_92bc0d79-1f00-4bde-b178-ee1fab80b936",
+        "source": "SCALAR-2d0b0231-763b-44d7-a7cd-20875248429c",
+        "target": "ADD-f614e052-fa3f-46bc-9461-205828dabf02",
+        "sourceHandle": "default",
+        "targetHandle": "b",
+        "data": {
+          "outputType": "Scalar"
+        }
+      },
+      {
+        "id": "ADD-f614e052-fa3f-46bc-9461-205828dabf02->LINE-e4c70bfe-102a-451c-8cca-71f09c1d425b_871425ff-caa9-403b-9d36-da718b8a9441",
+        "source": "ADD-f614e052-fa3f-46bc-9461-205828dabf02",
+        "target": "LINE-e4c70bfe-102a-451c-8cca-71f09c1d425b",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

@@ -1,0 +1,718 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "LINSPACE-85529f1d-33c6-4c46-b5c1-19e54f24ad4b",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-85529f1d-33c6-4c46-b5c1-19e54f24ad4b",
+          "label": "LINSPACE 1",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 2
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 3
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 1
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -669.1200129952265,
+          "y": 245.15116358103467
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -669.1200129952265,
+          "y": 245.15116358103467
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINSPACE-0bc16760-3bc7-49d8-b972-266bb1c77672",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-0bc16760-3bc7-49d8-b972-266bb1c77672",
+          "label": "LINSPACE",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 0
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 1
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 2
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -678.6141900635907,
+          "y": -182.80711979603194
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -678.6141900635907,
+          "y": -182.80711979603194
+        },
+        "dragging": false
+      },
+      {
+        "id": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7",
+        "type": "DATA",
+        "data": {
+          "id": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7",
+          "label": "RAND 1",
+          "func": "RAND",
+          "type": "DATA",
+          "ctrls": {
+            "distribution": {
+              "type": "select",
+              "default": "normal",
+              "options": [
+                "normal",
+                "uniform",
+                "poisson"
+              ],
+              "desc": "the distribution over the random samples",
+              "overload": {
+                "uniform": [
+                  "size",
+                  "lower_bound",
+                  "upper_bound"
+                ],
+                "normal": [
+                  "size",
+                  "normal_mean",
+                  "normal_standard_deviation"
+                ],
+                "poisson": [
+                  "size",
+                  "poisson_events"
+                ]
+              },
+              "functionName": "RAND",
+              "param": "distribution",
+              "value": "normal"
+            },
+            "size": {
+              "type": "int",
+              "default": 1000,
+              "desc": "the size of the output. =1 outputs Scalar, >1 outputs Vector",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "size",
+              "value": 1000
+            },
+            "lower_bound": {
+              "type": "float",
+              "default": 0,
+              "desc": "the lower bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "lower_bound",
+              "value": 0
+            },
+            "upper_bound": {
+              "type": "float",
+              "default": 1,
+              "desc": "the upper bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "upper_bound",
+              "value": 1
+            },
+            "normal_mean": {
+              "type": "float",
+              "default": 0,
+              "desc": "the mean or \"center\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_mean",
+              "value": 0
+            },
+            "normal_standard_deviation": {
+              "type": "float",
+              "default": 1,
+              "desc": "the spread or \"width\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_standard_deviation",
+              "value": 1
+            },
+            "poisson_events": {
+              "type": "float",
+              "default": 1,
+              "desc": "the expected number of events occurring in a fixed time-interval when distribution is poisson",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "poisson_events",
+              "value": 1
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": "unused in this node",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|Scalar",
+              "desc": "Vector if size > 1\nv: the random samples\n\nScalar if size = 1\nc: the random number"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/RAND/RAND.py"
+        },
+        "position": {
+          "x": -179.98456812668138,
+          "y": -183.92299925161728
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -179.98456812668138,
+          "y": -183.92299925161728
+        },
+        "dragging": false
+      },
+      {
+        "id": "TEXT_VIEW-34df5868-25f3-4bb5-93f1-aa09d2083909",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "TEXT_VIEW-34df5868-25f3-4bb5-93f1-aa09d2083909",
+          "label": "TEXT VIEW",
+          "func": "TEXT_VIEW",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "prettify": {
+              "type": "bool",
+              "default": false,
+              "desc": "Whether to prettify the displayed text (defaults to True)",
+              "overload": null,
+              "functionName": "TEXT_VIEW",
+              "param": "prettify",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String|Boolean",
+              "desc": "The DataContainer to be visualized in text format",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String",
+              "desc": "The DataContainer containing text data"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/DATA_STRUCTURE/TEXT_VIEW/TEXT_VIEW.py"
+        },
+        "position": {
+          "x": 1248.454834486976,
+          "y": -231.52874823277728
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 1248.454834486976,
+          "y": -231.52874823277728
+        },
+        "dragging": false
+      },
+      {
+        "id": "TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10",
+        "type": "DATA",
+        "data": {
+          "id": "TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10",
+          "label": "DESCRIPTION",
+          "func": "TEXT",
+          "type": "DATA",
+          "ctrls": {
+            "value": {
+              "type": "TextArea",
+              "default": "Hello World!",
+              "desc": "The value set in Parameters.",
+              "overload": null,
+              "functionName": "TEXT",
+              "param": "value",
+              "value": "Hello World!"
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "_",
+              "id": "_",
+              "type": "Any",
+              "desc": null,
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "String",
+              "desc": "Return the value being set in Parameters."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/TEXT/TEXT.py"
+        },
+        "position": {
+          "x": 812.6020216946367,
+          "y": -194.43185527060717
+        },
+        "width": 239,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 812.6020216946367,
+          "y": -194.43185527060717
+        },
+        "dragging": false
+      },
+      {
+        "id": "SCATTER-63dc14bc-6178-449a-bfb0-0fea51cd0194",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "SCATTER-63dc14bc-6178-449a-bfb0-0fea51cd0194",
+          "label": "SCATTER",
+          "func": "SCATTER",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Scatter visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/SCATTER/SCATTER.py"
+        },
+        "position": {
+          "x": 818.6980923015489,
+          "y": 189.23744972334498
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 818.6980923015489,
+          "y": 189.23744972334498
+        },
+        "dragging": false
+      },
+      {
+        "id": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+        "type": "CONTROL_FLOW",
+        "data": {
+          "id": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+          "label": "APPEND_1",
+          "func": "APPEND_1",
+          "type": "CONTROL_FLOW",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "primary_dp",
+              "id": "primary_dp",
+              "type": "OrderedPair|Matrix|DataFrame|Scalar|Vector",
+              "desc": "Input that ends up \"on top\" of the resulting DataContainer.",
+              "multiple": false
+            },
+            {
+              "name": "secondary_dp",
+              "id": "secondary_dp",
+              "type": "OrderedPair|Matrix|DataFrame|Scalar|Vector",
+              "desc": "Input that ends up \"on the bottom\" of the resulting DataContainer.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Matrix|DataFrame|Vector|Scalar",
+              "desc": null
+            }
+          ],
+          "path": "CONTROL_FLOW/LOOPS/APPEND/APPEND.py"
+        },
+        "position": {
+          "x": 229.65363284705353,
+          "y": -7.526651243043943
+        },
+        "width": 216,
+        "height": 198,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 229.65363284705353,
+          "y": -7.526651243043943
+        },
+        "dragging": false
+      },
+      {
+        "id": "SCATTER-3453daca-5cce-4370-b578-40aadaaf8690",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "SCATTER-3453daca-5cce-4370-b578-40aadaaf8690",
+          "label": "SCATTER 1",
+          "func": "SCATTER",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Scatter visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/SCATTER/SCATTER.py"
+        },
+        "position": {
+          "x": 232.8472341249818,
+          "y": -410.7771624669483
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 232.8472341249818,
+          "y": -410.7771624669483
+        },
+        "dragging": false
+      },
+      {
+        "id": "RAND-bba8b474-ab68-470d-88d2-fc1c907b660f",
+        "type": "DATA",
+        "data": {
+          "id": "RAND-bba8b474-ab68-470d-88d2-fc1c907b660f",
+          "label": "RAND",
+          "func": "RAND",
+          "type": "DATA",
+          "ctrls": {
+            "distribution": {
+              "type": "select",
+              "default": "normal",
+              "options": [
+                "normal",
+                "uniform",
+                "poisson"
+              ],
+              "desc": "the distribution over the random samples",
+              "overload": {
+                "uniform": [
+                  "size",
+                  "lower_bound",
+                  "upper_bound"
+                ],
+                "normal": [
+                  "size",
+                  "normal_mean",
+                  "normal_standard_deviation"
+                ],
+                "poisson": [
+                  "size",
+                  "poisson_events"
+                ]
+              },
+              "functionName": "RAND",
+              "param": "distribution",
+              "value": "normal"
+            },
+            "size": {
+              "type": "int",
+              "default": 1000,
+              "desc": "the size of the output. =1 outputs Scalar, >1 outputs Vector",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "size",
+              "value": 1000
+            },
+            "lower_bound": {
+              "type": "float",
+              "default": 0,
+              "desc": "the lower bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "lower_bound",
+              "value": 0
+            },
+            "upper_bound": {
+              "type": "float",
+              "default": 1,
+              "desc": "the upper bound of the output interval",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "upper_bound",
+              "value": 1
+            },
+            "normal_mean": {
+              "type": "float",
+              "default": 0,
+              "desc": "the mean or \"center\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_mean",
+              "value": 0
+            },
+            "normal_standard_deviation": {
+              "type": "float",
+              "default": 1,
+              "desc": "the spread or \"width\" of the normal distribution",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "normal_standard_deviation",
+              "value": 1
+            },
+            "poisson_events": {
+              "type": "float",
+              "default": 1,
+              "desc": "the expected number of events occurring in a fixed time-interval when distribution is poisson",
+              "overload": null,
+              "functionName": "RAND",
+              "param": "poisson_events",
+              "value": 1
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": "unused in this node",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|Scalar",
+              "desc": "Vector if size > 1\nv: the random samples\n\nScalar if size = 1\nc: the random number"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/RAND/RAND.py"
+        },
+        "position": {
+          "x": -174.64641636214617,
+          "y": 242.91181760970096
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -174.64641636214617,
+          "y": 242.91181760970096
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10->TEXT_VIEW-34df5868-25f3-4bb5-93f1-aa09d2083909_636c3328-441e-45a9-a238-12b5a25814f9",
+        "source": "TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10",
+        "target": "TEXT_VIEW-34df5868-25f3-4bb5-93f1-aa09d2083909",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "String"
+        }
+      },
+      {
+        "id": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2->TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10_2ae5d7f7-d227-48f0-a8d2-ac5b5060cdf9",
+        "source": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+        "target": "TEXT-7b04fe80-d05b-43b1-a3d0-ad6cdf154d10",
+        "sourceHandle": "default",
+        "targetHandle": "_",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      },
+      {
+        "id": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2->SCATTER-63dc14bc-6178-449a-bfb0-0fea51cd0194_03a4b88e-f497-4a9a-9a6a-15e8f07be06a",
+        "source": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+        "target": "SCATTER-63dc14bc-6178-449a-bfb0-0fea51cd0194",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      },
+      {
+        "id": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7->SCATTER-3453daca-5cce-4370-b578-40aadaaf8690_54e29fbe-309c-4606-8739-41cf49b8a856",
+        "source": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7",
+        "target": "SCATTER-3453daca-5cce-4370-b578-40aadaaf8690",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "LINSPACE-0bc16760-3bc7-49d8-b972-266bb1c77672->RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7_24f03968-259d-4608-bcdd-7da17aa9ed40",
+        "source": "LINSPACE-0bc16760-3bc7-49d8-b972-266bb1c77672",
+        "target": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7->APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2_0837e85c-3b06-4476-9b91-d22e6e47377f",
+        "source": "RAND-a0cff23f-51a3-43b3-aa82-21e4f08e32d7",
+        "target": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+        "sourceHandle": "default",
+        "targetHandle": "primary_dp",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "LINSPACE-85529f1d-33c6-4c46-b5c1-19e54f24ad4b->RAND-bba8b474-ab68-470d-88d2-fc1c907b660f_4c9df16d-0aa1-42fe-bb60-437adfbe1b85",
+        "source": "LINSPACE-85529f1d-33c6-4c46-b5c1-19e54f24ad4b",
+        "target": "RAND-bba8b474-ab68-470d-88d2-fc1c907b660f",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "RAND-bba8b474-ab68-470d-88d2-fc1c907b660f->APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2_71fd1fe0-398a-414b-b1ee-9acdbc35c559",
+        "source": "RAND-bba8b474-ab68-470d-88d2-fc1c907b660f",
+        "target": "APPEND-1346cab1-05e9-4dbf-96e6-79f487ad30c2",
+        "sourceHandle": "default",
+        "targetHandle": "secondary_dp",
+        "data": {
+          "outputType": "Vector"
+        }
+      }
+    ]
+  },
+  "textNodes": []
+}

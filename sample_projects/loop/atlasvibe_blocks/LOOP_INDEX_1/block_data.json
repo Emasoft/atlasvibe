@@ -1,0 +1,20 @@
+{
+  "docstring": {
+    "short_description": "Load the loop index from the LOOP node.",
+    "long_description": "A loop index in Atlasvibe starts at 1 and increases by 1 for each loop.",
+    "parameters": [
+      {
+        "name": "loop_node",
+        "type": "str",
+        "description": "The LOOP node to track the loop index from."
+      }
+    ],
+    "returns": [
+      {
+        "name": "",
+        "type": "Scalar",
+        "description": "The loop index in Scalar form."
+      }
+    ]
+  }
+}

@@ -73,6 +73,9 @@ export const API = {
   logTransaction: "LOG_TRANSACTION",
   // Custom block operations
   createCustomBlock: "CREATE_CUSTOM_BLOCK",
+  // Project migration
+  checkProjectMigration: "CHECK_PROJECT_MIGRATION",
+  migrateProject: "MIGRATE_PROJECT",
   // System info
   isPackaged: "IS_PACKAGED",
 } as const;

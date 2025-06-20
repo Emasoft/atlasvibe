@@ -1,0 +1,253 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "CONSTANT-1fcd270a-cd1f-4650-bd60-1d5f3709e826",
+        "type": "DATA",
+        "data": {
+          "id": "CONSTANT-1fcd270a-cd1f-4650-bd60-1d5f3709e826",
+          "label": "3",
+          "func": "CONSTANT",
+          "type": "DATA",
+          "ctrls": {
+            "dc_type": {
+              "type": "select",
+              "default": "OrderedPair",
+              "options": [
+                "Scalar",
+                "Vector",
+                "OrderedPair"
+              ],
+              "desc": "The type of DataContainer to return.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "dc_type",
+              "value": "OrderedPair"
+            },
+            "constant": {
+              "type": "float",
+              "default": 3,
+              "desc": "The value of the y axis output.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "constant",
+              "value": 3
+            },
+            "step": {
+              "type": "float",
+              "default": 1000,
+              "desc": "The size of the y and x axes.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "step",
+              "value": 1000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input that defines the size of the output.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Vector|Scalar",
+              "desc": "OrderedPair if selected\nx: the x axis generated with size 'step'\ny: the resulting constant with size 'step'\nVector if selected\nv: the resulting constant with size 'step'\nScalar if selected\nc: the resulting constant"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/CONSTANT/CONSTANT.py"
+        },
+        "position": {
+          "x": -283.6836574794231,
+          "y": 36.10387303261399
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -283.6836574794231,
+          "y": 36.10387303261399
+        },
+        "dragging": false
+      },
+      {
+        "id": "TIMER-e04e4421-d4e0-4010-b4a3-21754e240377",
+        "type": "CONTROL_FLOW",
+        "data": {
+          "id": "TIMER-e04e4421-d4e0-4010-b4a3-21754e240377",
+          "label": "TIMER_1",
+          "func": "TIMER_1",
+          "type": "CONTROL_FLOW",
+          "ctrls": {
+            "sleep_time": {
+              "type": "float",
+              "default": 0,
+              "desc": "number of seconds to sleep",
+              "overload": null,
+              "functionName": "TIMER",
+              "param": "sleep_time",
+              "value": 1.5
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": null,
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Any",
+              "desc": "Returns the input if one was passed in."
+            }
+          ],
+          "path": "CONTROL_FLOW/TIMERS/TIMER/TIMER.py"
+        },
+        "position": {
+          "x": 110.1877177146788,
+          "y": 63.41031772968381
+        },
+        "width": 236,
+        "height": 140,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 110.1877177146788,
+          "y": 63.41031772968381
+        }
+      },
+      {
+        "id": "BIG_NUMBER-cec56d1d-e454-41a8-ae68-c8fd309af781",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "BIG_NUMBER-cec56d1d-e454-41a8-ae68-c8fd309af781",
+          "label": "BIG NUMBER",
+          "func": "BIG_NUMBER",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "suffix": {
+              "type": "str",
+              "default": null,
+              "desc": "any suffix to show with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "suffix",
+              "value": ""
+            },
+            "prefix": {
+              "type": "str",
+              "default": null,
+              "desc": "any prefix to show with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "prefix",
+              "value": ""
+            },
+            "title": {
+              "type": "str",
+              "default": null,
+              "desc": "title of the plot, default = \"BIG_NUMBER\"",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "title",
+              "value": ""
+            },
+            "dec_places": {
+              "type": "int",
+              "default": 0,
+              "desc": "Number of decimal places. Use 0 to not round. default = \"BIG_NUMBER\"",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "dec_places",
+              "value": 0
+            },
+            "relative_delta": {
+              "type": "bool",
+              "default": true,
+              "desc": "whether or not to show the relative delta from the last run along with big number",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "relative_delta",
+              "value": true
+            },
+            "scientific_notation": {
+              "type": "bool",
+              "default": false,
+              "desc": "Use scientific notation? Defaults to 4 decimal places.",
+              "overload": null,
+              "functionName": "BIG_NUMBER",
+              "param": "scientific_notation",
+              "value": false
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly big number visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/BIG_NUMBER/BIG_NUMBER.py"
+        },
+        "position": {
+          "x": 515.2519742565224,
+          "y": 0.42226680524817084
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 515.2519742565224,
+          "y": 0.42226680524817084
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "CONSTANT-1fcd270a-cd1f-4650-bd60-1d5f3709e826->TIMER-e04e4421-d4e0-4010-b4a3-21754e240377_c06939b8-311d-4400-abf8-83eeab7e205d",
+        "source": "CONSTANT-1fcd270a-cd1f-4650-bd60-1d5f3709e826",
+        "target": "TIMER-e04e4421-d4e0-4010-b4a3-21754e240377",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      },
+      {
+        "id": "TIMER-e04e4421-d4e0-4010-b4a3-21754e240377->BIG_NUMBER-cec56d1d-e454-41a8-ae68-c8fd309af781_c7b1e712-f942-4146-9e2a-3b90919b07b4",
+        "source": "TIMER-e04e4421-d4e0-4010-b4a3-21754e240377",
+        "target": "BIG_NUMBER-cec56d1d-e454-41a8-ae68-c8fd309af781",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Any"
+        }
+      }
+    ]
+  },
+  "textNodes": []
+}

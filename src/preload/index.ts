@@ -84,6 +84,19 @@ export interface ExtendedWindowApi {
     newCustomBlockName: string,
     projectPath: string,
   ) => Promise<BlockDefinition | undefined>;
+
+  // Project migration
+  checkProjectMigration: (projectPath: string, projectData?: any) => Promise<{
+    needs_migration: boolean;
+    message?: string;
+  }>;
+  migrateProject: (projectPath: string, dryRun?: boolean) => Promise<{
+    needs_migration: boolean;
+    migrated?: boolean;
+    created_blocks?: string[];
+    project_data?: any;
+    message?: string;
+  }>;
 }
 
 const extendedApi: ExtendedWindowApi = {
@@ -164,6 +177,12 @@ const extendedApi: ExtendedWindowApi = {
   // Block operations
   createCustomBlockFromBlueprint: (blueprintKey, newCustomBlockName, projectPath) =>
     ipcRenderer.invoke(API.createCustomBlock, blueprintKey, newCustomBlockName, projectPath),
+
+  // Project migration
+  checkProjectMigration: (projectPath, projectData) =>
+    ipcRenderer.invoke(API.checkProjectMigration, projectPath, projectData),
+  migrateProject: (projectPath, dryRun) =>
+    ipcRenderer.invoke(API.migrateProject, projectPath, dryRun),
 };
 
 if (process.contextIsolated) {

@@ -1,0 +1,381 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "CONSTANT-93f824bf-3b4b-44ae-8c08-becadbab4194",
+        "type": "DATA",
+        "data": {
+          "id": "CONSTANT-93f824bf-3b4b-44ae-8c08-becadbab4194",
+          "label": "2",
+          "func": "CONSTANT",
+          "type": "DATA",
+          "ctrls": {
+            "dc_type": {
+              "type": "select",
+              "default": "OrderedPair",
+              "options": [
+                "Scalar",
+                "Vector",
+                "OrderedPair"
+              ],
+              "desc": "The type of DataContainer to return.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "dc_type",
+              "value": "OrderedPair"
+            },
+            "constant": {
+              "type": "float",
+              "default": 3,
+              "desc": "The value of the y axis output.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "constant",
+              "value": 2
+            },
+            "step": {
+              "type": "float",
+              "default": 1000,
+              "desc": "The size of the y and x axes.",
+              "overload": null,
+              "functionName": "CONSTANT",
+              "param": "step",
+              "value": 1000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input that defines the size of the output.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Vector|Scalar",
+              "desc": "OrderedPair if selected\nx: the x axis generated with size 'step'\ny: the resulting constant with size 'step'\nVector if selected\nv: the resulting constant with size 'step'\nScalar if selected\nc: the resulting constant"
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/CONSTANT/CONSTANT.py"
+        },
+        "position": {
+          "x": -385.75299323142343,
+          "y": -375.76861510143465
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -385.75299323142343,
+          "y": -375.76861510143465
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINSPACE-20e441e3-ae7f-4bab-a26b-2bb2d3e58018",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-20e441e3-ae7f-4bab-a26b-2bb2d3e58018",
+          "label": "LINSPACE",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 10
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 0
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 300
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -403.57800932122353,
+          "y": -85.85628638653725
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -403.57800932122353,
+          "y": -85.85628638653725
+        },
+        "dragging": false
+      },
+      {
+        "id": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814",
+        "type": "MATH",
+        "data": {
+          "id": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814",
+          "label": "ADD",
+          "func": "ADD",
+          "type": "MATH",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "a",
+              "id": "a",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "The input a use to compute the sum of a and b.",
+              "multiple": false
+            },
+            {
+              "name": "b",
+              "id": "b",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "The input b use to compute the sum of a and b.",
+              "multiple": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|Scalar|Vector",
+              "desc": "OrderedPair if a is an OrderedPair.\nx: the x-axis of input a.\ny: the sum of input a and input b.\n\nScalar if a is a Scalar.\nc: the sum of input a and input b.\n\nVector if a is a Vector.\nv: the sum of input a and input b."
+            }
+          ],
+          "path": "MATH/ARITHMETIC/ADD/ADD.py"
+        },
+        "position": {
+          "x": 167.5928114244684,
+          "y": -233.00359078949785
+        },
+        "width": 216,
+        "height": 198,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 167.5928114244684,
+          "y": -233.00359078949785
+        },
+        "dragging": false
+      },
+      {
+        "id": "COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948",
+          "label": "COMPOSITE_1",
+          "func": "COMPOSITE_1",
+          "type": "VISUALIZATION",
+          "ctrls": {
+            "first_figure": {
+              "type": "select",
+              "default": "scatter",
+              "options": [
+                "bar",
+                "line",
+                "histogram",
+                "scatter"
+              ],
+              "desc": "plotly type to display as the first figure, default is 'scatter'",
+              "overload": null,
+              "functionName": "COMPOSITE",
+              "param": "first_figure",
+              "value": "line"
+            },
+            "second_figure": {
+              "type": "select",
+              "default": "line",
+              "options": [
+                "bar",
+                "line",
+                "histogram",
+                "scatter"
+              ],
+              "desc": "plotly type to display as the second figure, default is 'line'",
+              "overload": null,
+              "functionName": "COMPOSITE",
+              "param": "second_figure",
+              "value": "scatter"
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "primary_trace",
+              "id": "primary_trace",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized as the first figure",
+              "multiple": false
+            },
+            {
+              "name": "secondary_trace",
+              "id": "secondary_trace",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized as the second figure",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing Plotly visualization of both figures"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/COMPOSITE/COMPOSITE.py"
+        },
+        "position": {
+          "x": 674.2419698237338,
+          "y": 90.24849851791481
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 674.2419698237338,
+          "y": 90.24849851791481
+        },
+        "dragging": false
+      },
+      {
+        "id": "PLOTLY_DATASET-1770d651-73c1-462d-85b8-126dfa1db312",
+        "type": "DATA",
+        "data": {
+          "id": "PLOTLY_DATASET-1770d651-73c1-462d-85b8-126dfa1db312",
+          "label": "PLOTLY DATASET",
+          "func": "PLOTLY_DATASET",
+          "type": "DATA",
+          "ctrls": {
+            "dataset_key": {
+              "type": "select",
+              "default": "wind",
+              "options": [
+                "wind",
+                "iris",
+                "carshare",
+                "tips",
+                "election",
+                "experiment",
+                "gapminder",
+                "medals_long",
+                "medals_wide",
+                "stocks"
+              ],
+              "desc": null,
+              "overload": null,
+              "functionName": "PLOTLY_DATASET",
+              "param": "dataset_key",
+              "value": "iris"
+            }
+          },
+          "initCtrls": {},
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "DataFrame",
+              "desc": null
+            }
+          ],
+          "path": "DATA/GENERATION/SAMPLE_DATASETS/PLOTLY_DATASET/PLOTLY_DATASET.py"
+        },
+        "position": {
+          "x": -429.0308929530436,
+          "y": 157.99567619235268
+        },
+        "width": 216,
+        "height": 233,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": -429.0308929530436,
+          "y": 157.99567619235268
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "CONSTANT-93f824bf-3b4b-44ae-8c08-becadbab4194->ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814_4924259b-f5b7-4485-89a0-ebf28b3e602f",
+        "source": "CONSTANT-93f824bf-3b4b-44ae-8c08-becadbab4194",
+        "target": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814",
+        "sourceHandle": "default",
+        "targetHandle": "a",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      },
+      {
+        "id": "LINSPACE-20e441e3-ae7f-4bab-a26b-2bb2d3e58018->ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814_9c161640-37ca-461e-8b02-eaaa9747894b",
+        "source": "LINSPACE-20e441e3-ae7f-4bab-a26b-2bb2d3e58018",
+        "target": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814",
+        "sourceHandle": "default",
+        "targetHandle": "b",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "PLOTLY_DATASET-1770d651-73c1-462d-85b8-126dfa1db312->COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948_af9e914d-ef16-4873-bd26-22cc1fc7940c",
+        "source": "PLOTLY_DATASET-1770d651-73c1-462d-85b8-126dfa1db312",
+        "target": "COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948",
+        "sourceHandle": "default",
+        "targetHandle": "secondary_trace",
+        "data": {
+          "outputType": "DataFrame"
+        }
+      },
+      {
+        "id": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814->COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948_1bc99d63-d6c4-4a42-9655-6e8e0e9c5806",
+        "source": "ADD-dc37bc9b-9d64-4060-a8c3-530f332a5814",
+        "target": "COMPOSITE-1e2c0713-77ab-48ed-b5d0-64447f993948",
+        "sourceHandle": "default",
+        "targetHandle": "primary_trace",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}

@@ -40,7 +40,16 @@ def get_project_dir(project_path: str) -> Path:
     Returns:
         Path to the project directory
     """
-    project_file = Path(project_path)
+    # Handle sample projects with relative paths
+    if project_path.startswith("sample_projects/"):
+        # For sample projects, resolve relative to the application root
+        import os
+
+        app_root = os.getcwd()
+        project_file = Path(app_root) / project_path
+    else:
+        project_file = Path(project_path)
+
     if project_file.suffix != ".atlasvibe":
         raise ProjectStructureError(f"Invalid project file: {project_path}")
 
@@ -90,7 +99,15 @@ def validate_project_structure(project_path: str) -> bool:
         True if the project structure is valid, False otherwise
     """
     try:
-        project_file = Path(project_path)
+        # Handle sample projects with relative paths
+        if project_path.startswith("sample_projects/"):
+            import os
+
+            app_root = os.getcwd()
+            project_file = Path(app_root) / project_path
+        else:
+            project_file = Path(project_path)
+
         if not project_file.exists():
             logger.debug(f"Project file does not exist: {project_path}")
             return False

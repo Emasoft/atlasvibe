@@ -1,0 +1,267 @@
+{
+  "name": "Object Identification",
+  "rfInstance": {
+    "nodes": [
+      {
+        "width": 216,
+        "height": 233,
+        "id": "OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8",
+        "type": "AI_ML",
+        "data": {
+          "id": "OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8",
+          "label": "OBJECT DETECTION",
+          "func": "OBJECT_DETECTION_1",
+          "type": "AI_ML",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image",
+              "desc": "The image to analyze for object detection.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image",
+              "desc": null
+            }
+          ],
+          "pip_dependencies": [
+            {
+              "name": "opencv-python-headless",
+              "v": "4.8.1.78"
+            }
+          ],
+          "path": "AI_ML/OBJECT_DETECTION/OBJECT_DETECTION/OBJECT_DETECTION.py",
+          "selected": false
+        },
+        "position": {
+          "x": -460.81889748185466,
+          "y": -287.92466541039903
+        },
+        "selected": false,
+        "positionAbsolute": {
+          "x": -460.81889748185466,
+          "y": -287.92466541039903
+        },
+        "dragging": false
+      },
+      {
+        "id": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f",
+        "type": "DATA",
+        "data": {
+          "id": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f",
+          "label": "SKIMAGE",
+          "func": "SKIMAGE",
+          "type": "DATA",
+          "ctrls": {
+            "img_key": {
+              "type": "select",
+              "default": "astronaut",
+              "options": [
+                "astronaut",
+                "binary_blobs",
+                "brain",
+                "brick",
+                "camera",
+                "cat",
+                "cell",
+                "cells3d",
+                "checkerboard",
+                "chelsea",
+                "clock",
+                "coffee",
+                "coins",
+                "colorwheel",
+                "create_image_fetcher",
+                "data_dir",
+                "download_all",
+                "eagle",
+                "file_hash",
+                "grass",
+                "gravel",
+                "horse",
+                "hubble_deep_field",
+                "human_mitosis",
+                "image_fetcher",
+                "immunohistochemistry",
+                "kidney",
+                "lbp_frontal_face_cascade_filename",
+                "lfw_subset",
+                "lily",
+                "logo",
+                "microaneurysms",
+                "moon",
+                "nickel_solidification",
+                "page",
+                "protein_transport",
+                "retina",
+                "rocket",
+                "shepp_logan_phantom",
+                "skin",
+                "stereo_motorcycle",
+                "text",
+                "vortex"
+              ],
+              "desc": "The name of the image to be loaded from scikit-image.",
+              "overload": null,
+              "functionName": "SKIMAGE",
+              "param": "img_key",
+              "value": "coffee"
+            }
+          },
+          "initCtrls": {},
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image",
+              "desc": "DataContainer containing the image loaded from scikit-image."
+            }
+          ],
+          "pip_dependencies": [
+            {
+              "name": "scikit-image",
+              "v": "0.21.0"
+            }
+          ],
+          "path": "DATA/GENERATION/SAMPLE_IMAGES/SKIMAGE/SKIMAGE.py"
+        },
+        "position": {
+          "x": -983.2249769918607,
+          "y": -290.14679283311995
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -983.2249769918607,
+          "y": -290.14679283311995
+        },
+        "dragging": false
+      },
+      {
+        "id": "IMAGE-9866ee1d-a41e-4c47-8d9a-64ad34d8d16d",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "IMAGE-9866ee1d-a41e-4c47-8d9a-64ad34d8d16d",
+          "label": "IMAGE 1",
+          "func": "IMAGE",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image|Grayscale",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Image visualization of the input image"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/IMAGE/IMAGE.py"
+        },
+        "position": {
+          "x": 41.97514702661431,
+          "y": -318.8024773924868
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 41.97514702661431,
+          "y": -318.8024773924868
+        },
+        "dragging": false
+      },
+      {
+        "id": "IMAGE-16a9fbf1-c4ff-4315-a316-03c7c88d6b88",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "IMAGE-16a9fbf1-c4ff-4315-a316-03c7c88d6b88",
+          "label": "IMAGE",
+          "func": "IMAGE",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Image|Grayscale",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Image visualization of the input image"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/IMAGE/IMAGE.py"
+        },
+        "position": {
+          "x": -472.17943952574683,
+          "y": -613.7585533347357
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -472.17943952574683,
+          "y": -613.7585533347357
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f->OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8_30d5348e-1bec-423d-bcce-fa7db60896a0",
+        "source": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f",
+        "target": "OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Image"
+        }
+      },
+      {
+        "id": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f->IMAGE-16a9fbf1-c4ff-4315-a316-03c7c88d6b88_e52a9b9d-117e-4181-90f2-bd0cc0023440",
+        "source": "SKIMAGE-43891102-8d4e-4f9c-b352-48f3b2e9ee9f",
+        "target": "IMAGE-16a9fbf1-c4ff-4315-a316-03c7c88d6b88",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Image"
+        }
+      },
+      {
+        "id": "OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8->IMAGE-9866ee1d-a41e-4c47-8d9a-64ad34d8d16d_fd7eedb0-45ae-4084-bb0c-c39a76663e35",
+        "source": "OBJECT_DETECTION-6c83163f-0e15-4ab9-8152-92141a0fd2d8",
+        "target": "IMAGE-9866ee1d-a41e-4c47-8d9a-64ad34d8d16d",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Image"
+        }
+      }
+    ]
+  },
+  "textNodes": []
+}

@@ -27,6 +27,7 @@ from watchfiles import awatch
 from pathlib import Path
 import threading
 import os
+import time
 
 
 class BlocksWatcher:
@@ -96,6 +97,9 @@ class BlocksWatcher:
         paths_to_watch: list[str] = []
         blocks_path = get_blocks_path()
 
+        # Track when we start watching to ignore initial directory creation
+        self._watch_start_time = time.time()
+
         # Only add paths that actually exist
         if Path(blocks_path).exists():
             paths_to_watch.append(blocks_path)
@@ -116,10 +120,33 @@ class BlocksWatcher:
         logger.info(f"Starting file watcher for blocks dirs {paths_to_watch}")
 
         async for changes in awatch(*paths_to_watch, stop_event=stop_flag):
-            logger.info(f"Detected {len(changes)} file changes in {paths_to_watch}..")
+            # Filter out changes that are just directory creation without content
+            meaningful_changes = []
+            for change_type, file_path in changes:
+                path = Path(file_path)
+
+                # Skip if it's just the atlasvibe_blocks directory being created
+                if path.name == "atlasvibe_blocks" and path.is_dir():
+                    # Check if directory is empty or only has __init__.py
+                    contents = list(path.iterdir())
+                    if len(contents) == 0 or (
+                        len(contents) == 1 and contents[0].name == "__init__.py"
+                    ):
+                        logger.debug(f"Ignoring empty directory creation: {path}")
+                        continue
+
+                meaningful_changes.append((change_type, file_path))
+
+            if not meaningful_changes:
+                continue
+
+            logger.info(
+                f"Detected {len(meaningful_changes)} meaningful file changes in {paths_to_watch}.."
+            )
 
             # Extract block paths from the changed files
             block_paths = set()
+            changes = meaningful_changes  # Use filtered changes
             for change_type, file_path in changes:
                 # Convert to Path object for easier manipulation
                 path = Path(file_path)

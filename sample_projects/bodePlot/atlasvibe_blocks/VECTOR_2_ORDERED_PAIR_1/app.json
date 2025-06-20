@@ -1,0 +1,273 @@
+{
+  "rfInstance": {
+    "nodes": [
+      {
+        "id": "SCATTER-bb33091f-6c56-46b7-bdda-381e6587cea5",
+        "type": "VISUALIZATION",
+        "data": {
+          "id": "SCATTER-bb33091f-6c56-46b7-bdda-381e6587cea5",
+          "label": "SCATTER",
+          "func": "SCATTER",
+          "type": "VISUALIZATION",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair|DataFrame|Matrix|Vector",
+              "desc": "the DataContainer to be visualized",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Plotly",
+              "desc": "the DataContainer containing the Plotly Scatter visualization"
+            }
+          ],
+          "path": "DATA/VISUALIZATION/PLOTLY/SCATTER/SCATTER.py"
+        },
+        "position": {
+          "x": 287.42920862858233,
+          "y": -86.91533221163428
+        },
+        "width": 225,
+        "height": 225,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 287.42920862858233,
+          "y": -86.91533221163428
+        },
+        "dragging": false
+      },
+      {
+        "id": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed",
+        "type": "TYPE_CASTING",
+        "data": {
+          "id": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed",
+          "label": "VECTOR 2 ORDERED PAIR 1",
+          "func": "VECTOR_2_ORDERED_PAIR_1",
+          "type": "TYPE_CASTING",
+          "ctrls": {},
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "The input vector that will be the x axis of OrderedPair.",
+              "multiple": false
+            },
+            {
+              "name": "y",
+              "id": "y",
+              "type": "Vector",
+              "desc": "The input vector that will be the y axis of OrderedPair.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "OrderedPair",
+              "desc": "The OrderedPair that is generated from the input vectors"
+            }
+          ],
+          "path": "ETL/TRANSFORM/TYPE_CASTING/VECTOR_2_ORDERED_PAIR/VECTOR_2_ORDERED_PAIR.py"
+        },
+        "position": {
+          "x": -7.055223891366111,
+          "y": -48.62284675752073
+        },
+        "width": 183,
+        "height": 154,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -7.055223891366111,
+          "y": -48.62284675752073
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINSPACE-594913c1-4400-4a17-918f-4bb49c689398",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-594913c1-4400-4a17-918f-4bb49c689398",
+          "label": "LINSPACE 1",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 10
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 0
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 1000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -399.8830049673734,
+          "y": 88.35128387623661
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -399.8830049673734,
+          "y": 88.35128387623661
+        },
+        "dragging": false
+      },
+      {
+        "id": "LINSPACE-5b32ceb5-9631-4df9-b1a0-d2e652b77ecb",
+        "type": "DATA",
+        "data": {
+          "id": "LINSPACE-5b32ceb5-9631-4df9-b1a0-d2e652b77ecb",
+          "label": "LINSPACE",
+          "func": "LINSPACE",
+          "type": "DATA",
+          "ctrls": {
+            "start": {
+              "type": "float",
+              "default": 10,
+              "desc": "The start point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "start",
+              "value": 30
+            },
+            "end": {
+              "type": "float",
+              "default": 0,
+              "desc": "The end point of the data.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "end",
+              "value": 0
+            },
+            "step": {
+              "type": "int",
+              "default": 1000,
+              "desc": "The number of points in the vector.",
+              "overload": null,
+              "functionName": "LINSPACE",
+              "param": "step",
+              "value": 3000
+            }
+          },
+          "initCtrls": {},
+          "inputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector|OrderedPair",
+              "desc": "Optional input in case LINSPACE is used in a loop. Not used.",
+              "multiple": false
+            }
+          ],
+          "outputs": [
+            {
+              "name": "default",
+              "id": "default",
+              "type": "Vector",
+              "desc": "v: the vector between 'start' and 'end' with a 'step' number of points."
+            }
+          ],
+          "path": "DATA/GENERATION/SIMULATIONS/LINSPACE/LINSPACE.py"
+        },
+        "position": {
+          "x": -405.12015167413597,
+          "y": -181.1349533561371
+        },
+        "width": 216,
+        "height": 197,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -405.12015167413597,
+          "y": -181.1349533561371
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "LINSPACE-5b32ceb5-9631-4df9-b1a0-d2e652b77ecb->VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed_d534daa2-ad3f-474d-b00c-5b92b886ece9",
+        "source": "LINSPACE-5b32ceb5-9631-4df9-b1a0-d2e652b77ecb",
+        "target": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "LINSPACE-594913c1-4400-4a17-918f-4bb49c689398->VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed_e92e1e05-7de6-45b6-8e37-a15f67b33474",
+        "source": "LINSPACE-594913c1-4400-4a17-918f-4bb49c689398",
+        "target": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed",
+        "sourceHandle": "default",
+        "targetHandle": "y",
+        "data": {
+          "outputType": "Vector"
+        }
+      },
+      {
+        "id": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed->SCATTER-bb33091f-6c56-46b7-bdda-381e6587cea5_fe7a589c-01f9-431b-96c9-1880a3525645",
+        "source": "VECTOR_2_ORDERED_PAIR-6cfbff75-a56f-4075-9f2a-ff9c9184f7ed",
+        "target": "SCATTER-bb33091f-6c56-46b7-bdda-381e6587cea5",
+        "sourceHandle": "default",
+        "targetHandle": "default",
+        "data": {
+          "outputType": "OrderedPair"
+        }
+      }
+    ]
+  },
+  "textNodes": [],
+  "controlNodes": [],
+  "controlVisualizationNodes": [],
+  "controlTextNodes": []
+}
