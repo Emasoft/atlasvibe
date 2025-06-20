@@ -6,7 +6,7 @@ export const data: GalleryData = {
       title: "Intro to Loops",
       description: "Generate a random number once",
       imagePath: "assets/appGallery/introToLoops.png",
-      appPath: "loop",
+      appPath: "sample_projects/loop",
       relevantNodes: [
         {
           name: "LOOP",
@@ -19,7 +19,7 @@ export const data: GalleryData = {
       title: "Butterworth Filter",
       description: "Apply a butterworth filter to an input signal",
       imagePath: "assets/appGallery/introToSignals.png",
-      appPath: "butterworth",
+      appPath: "sample_projects/butterworth",
       relevantNodes: [],
       cloudDemoEnabled: true,
     },
@@ -27,7 +27,7 @@ export const data: GalleryData = {
       title: "Intro to Images",
       description: "Apply a butterworth filter on a sample image",
       imagePath: "assets/appGallery/introToImages.png",
-      appPath: "images",
+      appPath: "sample_projects/images",
       relevantNodes: [
         {
           name: "IMAGE",
@@ -42,7 +42,7 @@ export const data: GalleryData = {
       title: "Tektronix",
       description: "Decode I2C messages with a MSO2X oscilloscope",
       imagePath: "assets/appGallery/MS024DecodeI2C.png",
-      appPath: "MSO24DecodeI2C",
+      appPath: "sample_projects/MSO24DecodeI2C",
       relevantNodes: [
         {
           name: "DECODE_I2C_MSO2X",
@@ -55,7 +55,7 @@ export const data: GalleryData = {
       title: "Tektronix",
       description: "Extract the trace from a MDO3XXX oscilloscope",
       imagePath: "assets/appGallery/mdo3ExtractTrace.png",
-      appPath: "mdo3ExtractTrace",
+      appPath: "sample_projects/mdo3ExtractTrace",
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_MDO3XXX",
@@ -68,7 +68,7 @@ export const data: GalleryData = {
       title: "Rigol",
       description: "Extract a trace from a Rigol oscilloscope",
       imagePath: "assets/appGallery/rigolExtractTrace.png",
-      appPath: "rigolExtractTrace",
+      appPath: "sample_projects/rigolExtractTrace",
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_DS1074Z",
@@ -81,7 +81,7 @@ export const data: GalleryData = {
       title: "LeCroy",
       description: "Extract a trace from a Teledyne LeCryo T3DSO oscilloscope",
       imagePath: "assets/appGallery/LeCroyT3DSO.png",
-      appPath: "leCroyExtractTrace",
+      appPath: "sample_projects/leCroyExtractTrace",
       relevantNodes: [
         {
           name: "CONNECT_T3DSO1XXX",
@@ -94,7 +94,7 @@ export const data: GalleryData = {
       title: "PICO",
       description: "Extract the trace from a P2000 PicoScope",
       imagePath: "assets/appGallery/picoExtractTrace.png",
-      appPath: "picoExtractTrace",
+      appPath: "sample_projects/picoExtractTrace",
       relevantNodes: [
         {
           name: "EXTRACT_TRACE_2000",
@@ -111,7 +111,7 @@ export const data: GalleryData = {
         "Create a Bode plot with a function generator and an oscilloscope",
       imagePath:
         "https://res.cloudinary.com/dhopxs1y3/image/upload/v1692118735/Instruments/Function%20Generators/AFG3000/AFG3000.png",
-      appPath: "bodePlot",
+      appPath: "sample_projects/bodePlot",
       relevantNodes: [
         {
           name: "INPUT_PARAM_AFG31000",
@@ -126,7 +126,7 @@ export const data: GalleryData = {
       title: "LabJack",
       description: "Record and log temperatures",
       imagePath: "assets/appGallery/labjack.png",
-      appPath: "labjack",
+      appPath: "sample_projects/labjack",
       relevantNodes: [
         {
           name: "READ_ANALOG_LABJACKU3",
@@ -139,7 +139,7 @@ export const data: GalleryData = {
       title: "Arduino",
       description: "Read from any analog sensor",
       imagePath: "assets/appGallery/arduino.png",
-      appPath: "arduino",
+      appPath: "sample_projects/arduino",
       relevantNodes: [],
       cloudDemoEnabled: false,
     },
@@ -147,7 +147,7 @@ export const data: GalleryData = {
       title: "Read Analog value from NI CompactDAQ",
       description: "Record current value from a NI CompactDAQ",
       imagePath: "assets/appGallery/NIcDAQ.png",
-      appPath: "cDAQReadAnalog",
+      appPath: "sample_projects/cDAQReadAnalog",
       relevantNodes: [
         {
           name: "CONNECT_COMPACTDAQ",
@@ -166,7 +166,7 @@ export const data: GalleryData = {
       title: "IV Sweep",
       description: "Perform an IV sweep",
       imagePath: "assets/appGallery/2450.png",
-      appPath: "IVSweep",
+      appPath: "sample_projects/IVSweep",
       relevantNodes: [
         {
           name: "IV_SWEEP_2450",
@@ -179,7 +179,7 @@ export const data: GalleryData = {
       title: "Measure Voltage",
       description: "Read DC voltage using a digital multimeter",
       imagePath: "assets/appGallery/dmm.png",
-      appPath: "dmmRead",
+      appPath: "sample_projects/dmmRead",
       relevantNodes: [
         {
           name: "READ_MEASUREMENT_DMM7510",
@@ -195,7 +195,7 @@ export const data: GalleryData = {
       description:
         "Connect to a PEAK-USB device to capture CAN Bus messages and log them into a .mf4 file for analysis and storage",
       imagePath: "assets/appGallery/peak-usb.png",
-      appPath: "canReadAndLog",
+      appPath: "sample_projects/canReadAndLog",
       relevantNodes: [
         {
           name: "CONNECT_PCAN",
@@ -213,7 +213,7 @@ export const data: GalleryData = {
       description:
         "Connect to a CANable USB-CAN device and transmit frames onto a CAN Bus network.",
       imagePath: "assets/appGallery/canable-usb.png",
-      appPath: "canSend",
+      appPath: "sample_projects/canSend",
       relevantNodes: [
         {
           name: "CONNECT_SLCAN",
@@ -233,7 +233,7 @@ export const data: GalleryData = {
       title: "USB Camera",
       description: "Capture real-time images",
       imagePath: "assets/appGallery/usbCamera.png",
-      appPath: "webcam",
+      appPath: "sample_projects/webcam",
       relevantNodes: [
         {
           name: "OPEN_WEBCAM",
@@ -246,7 +246,7 @@ export const data: GalleryData = {
       title: "Stepper Motor",
       description: "Precisely position anything",
       imagePath: "assets/appGallery/stepperMotor.png",
-      appPath: "stepper",
+      appPath: "sample_projects/stepper",
       relevantNodes: [
         {
           name: "CONTROL_TIC_DRIVER",
@@ -261,7 +261,7 @@ export const data: GalleryData = {
       title: "PID Controller",
       description: "Solve this non-linear dynamic system",
       imagePath: "assets/appGallery/PID.png",
-      appPath: "pid",
+      appPath: "sample_projects/pid",
       relevantNodes: [],
       cloudDemoEnabled: true,
     },
@@ -269,7 +269,7 @@ export const data: GalleryData = {
       title: "FIR Filter",
       description: "Apply an FIR filter to an input signal",
       imagePath: "assets/appGallery/FIR.png",
-      appPath: "fir",
+      appPath: "sample_projects/fir",
       relevantNodes: [
         {
           name: "FIR",
@@ -282,7 +282,7 @@ export const data: GalleryData = {
       title: "FFT",
       description: "Apply a real-time FFT to an input signal",
       imagePath: "assets/appGallery/FFT.png",
-      appPath: "fft",
+      appPath: "sample_projects/fft",
       relevantNodes: [
         {
           name: "FFT",
@@ -295,7 +295,7 @@ export const data: GalleryData = {
       title: "IFFT",
       description: "Transform a signal with the IFFT algorithm",
       imagePath: "assets/appGallery/IFFT.png",
-      appPath: "ifft",
+      appPath: "sample_projects/ifft",
       relevantNodes: [
         {
           name: "IFFT",
@@ -310,7 +310,7 @@ export const data: GalleryData = {
       title: "Image Captioning",
       description: "Caption any image with this PyTorch ML model",
       imagePath: "assets/appGallery/imageCaptioning.png",
-      appPath: "imageCaptioning",
+      appPath: "sample_projects/imageCaptioning",
       relevantNodes: [
         {
           name: "NLP_CONNECT_VIT_GPT2",
@@ -323,7 +323,7 @@ export const data: GalleryData = {
       title: "Image Classification",
       description: "Classify any image using Hugging Face Transformers",
       imagePath: "assets/appGallery/imageClassification.png",
-      appPath: "imageClassification",
+      appPath: "sample_projects/imageClassification",
       relevantNodes: [
         {
           name: "HUGGING_FACE_PIPELINE",
@@ -336,7 +336,7 @@ export const data: GalleryData = {
       title: "Time Series Forecasting",
       description: "Predict future events with the Prophet node",
       imagePath: "assets/appGallery/timeSeries.png",
-      appPath: "prophet",
+      appPath: "sample_projects/prophet",
       relevantNodes: [
         {
           name: "PROPHET_PREDICT",

@@ -23,6 +23,10 @@ from typing import Optional, List
 from captain.utils.logger import logger
 from captain.utils.block_metadata_generator import regenerate_block_data_json
 from captain.utils.shared.json_utils import load_json_file, save_json_file
+from captain.utils.sample_project_paths import (
+    is_sample_project_path,
+    resolve_sample_project_path,
+)
 
 
 class ProjectStructureError(Exception):
@@ -41,12 +45,8 @@ def get_project_dir(project_path: str) -> Path:
         Path to the project directory
     """
     # Handle sample projects with relative paths
-    if project_path.startswith("sample_projects/"):
-        # For sample projects, resolve relative to the application root
-        import os
-
-        app_root = os.getcwd()
-        project_file = Path(app_root) / project_path
+    if is_sample_project_path(project_path):
+        project_file = resolve_sample_project_path(project_path)
     else:
         project_file = Path(project_path)
 
@@ -100,11 +100,8 @@ def validate_project_structure(project_path: str) -> bool:
     """
     try:
         # Handle sample projects with relative paths
-        if project_path.startswith("sample_projects/"):
-            import os
-
-            app_root = os.getcwd()
-            project_file = Path(app_root) / project_path
+        if is_sample_project_path(project_path):
+            project_file = resolve_sample_project_path(project_path)
         else:
             project_file = Path(project_path)
 

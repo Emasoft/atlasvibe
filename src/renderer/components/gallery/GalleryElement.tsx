@@ -31,8 +31,11 @@ export const GalleryElement = ({
     const loadingToast = toast.loading(`Loading ${galleryApp.title}...`);
 
     try {
+      // Extract project name from path (e.g., "sample_projects/loop" -> "loop")
+      const projectName = galleryApp.appPath.replace("sample_projects/", "");
+
       // Load from the new folder-based structure
-      const projectResult = await loadSampleProject(galleryApp.appPath);
+      const projectResult = await loadSampleProject(projectName);
 
       if (projectResult.isErr()) {
         toast.dismiss(loadingToast);

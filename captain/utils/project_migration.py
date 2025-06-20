@@ -148,8 +148,12 @@ def migrate_project_to_new_format(
             blueprint_path = find_blueprint_block(func_name)
             if not blueprint_path:
                 logger.warning(
-                    f"Could not find blueprint for block '{func_name}', skipping"
+                    f"Could not find blueprint for block '{func_name}', will mark as hardware block"
                 )
+                # For hardware blocks that don't have blueprints, just mark them
+                # They will need to be manually configured when the hardware is connected
+                node_data["isHardwareBlock"] = True
+                node_data["requiresHardware"] = True
                 continue
 
             # Generate a unique custom block name
@@ -166,7 +170,7 @@ def migrate_project_to_new_format(
             # Create the custom block if not in dry run
             if not dry_run:
                 try:
-                    custom_block_path = copy_blueprint_to_project(
+                    copy_blueprint_to_project(
                         str(blueprint_path), project_path, custom_name
                     )
                     logger.info(
