@@ -4,13 +4,15 @@
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Integrated automatic block_data.json regeneration when blocks are created/updated
 # - Added import for block_metadata_generator module
+# - Standardized error handling using FastAPI-specific error utilities
+# - Added retry logic for file operations
+# - Improved error messages and logging
 #
 
-import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from captain.internal.manager import WatchManager
@@ -27,10 +29,15 @@ from captain.utils.project_structure import (
 from captain.utils.blocks_path import get_blocks_path
 from captain.utils.manifest.build_manifest import create_manifest
 from captain.utils.block_metadata_generator import regenerate_block_data_json
-from captain.types.worker import RegenerationMessage
 from captain.utils.python_validator import validate_python_code
 from captain.utils.code_intelligence import get_completions, get_hover_info
 from captain.utils.venv_manager import regenerate_venv, get_venv_status, get_venv_logs
+from captain.utils.fastapi_error_handler import (
+    fastapi_error_handler,
+    create_error_response,
+    managed_operation,
+)
+from captain.utils.shared.error_utils import error_context
 
 router = APIRouter(tags=["blocks"])
 
@@ -100,76 +107,65 @@ class GetVenvLogsRequest(BaseModel):
     limit: int = 10
 
 
-def sanitize_error_message(error: Exception) -> str:
-    """Sanitize error messages to prevent information disclosure.
-
-    Parameters
-    ----------
-    error : Exception
-        The exception to sanitize
-
-    Returns
-    -------
-    str
-        A safe error message for client consumption
-    """
-    # Log the full error internally
-    logger.error(f"Error details: {error}", exc_info=True)
-
-    # Return generic messages for different error types
-    error_type = type(error).__name__
-
-    # Map specific exceptions to safe messages
-    safe_messages = {
-        "ProjectStructureError": str(error),  # These are user-facing validation errors
-        "FileNotFoundError": "The requested file was not found",
-        "PermissionError": "Permission denied for this operation",
-        "ValueError": "Invalid input provided",
-        "TypeError": "Invalid type provided",
-        "SyntaxError": f"Syntax error in code: {error}",  # Users need to know about syntax errors
-    }
-
-    # Return specific message if available, otherwise generic
-    return safe_messages.get(
-        error_type, "An internal error occurred. Please check logs for details."
-    )
+# Note: sanitize_error_message functionality is now provided by sanitize_error_details
+# from fastapi_error_handler module
 
 
 @router.get("/blocks/manifest/")
+@fastapi_error_handler(
+    operation="generating blocks manifest",
+    error_code_prefix="MANIFEST",
+    log_duration=True,
+    retry=True,
+    max_attempts=2,
+    retry_exceptions=(ConnectionError, TimeoutError),
+)
 async def get_manifest(blocks_path: str | None = None, project_path: str | None = None):
+    """Get the manifest of all available blocks.
+
+    Args:
+        blocks_path: Optional custom blocks directory path
+        project_path: Optional project path for project-specific blocks
+
+    Returns:
+        Dictionary containing block manifests
+    """
     # Pre-generate the blocks map to synchronize it with the manifest
-    create_map(custom_blocks_dir=blocks_path, project_path=project_path)
-    try:
+    with error_context("creating blocks map", logger):
+        create_map(custom_blocks_dir=blocks_path, project_path=project_path)
+
+    with error_context("generating manifest", logger):
         manifest = generate_manifest(blocks_path=blocks_path, project_path=project_path)
         return manifest
-    except Exception as e:
-        logger.error(
-            f"error in get_manifest(): {e} traceback: {e.with_traceback(e.__traceback__)}"
-        )
-        return Response(
-            status_code=400,
-            content=json.dumps({"success": False, "error": "\n".join(e.args)}),
-        )
 
 
 @router.get("/blocks/metadata/")
+@fastapi_error_handler(
+    operation="generating blocks metadata",
+    error_code_prefix="METADATA",
+    log_duration=True,
+)
 async def get_metadata(
     blocks_path: str | None = None, custom_dir_changed: bool = False
 ):
-    try:
+    """Get metadata for all blocks.
+
+    Args:
+        blocks_path: Optional custom blocks directory path
+        custom_dir_changed: Whether the custom directory has changed
+
+    Returns:
+        Dictionary containing block metadata
+    """
+    with error_context("generating metadata", logger):
         metadata_map = generate_metadata(custom_blocks_dir=blocks_path)
-        if custom_dir_changed:
+
+    if custom_dir_changed:
+        with error_context("restarting watch manager", logger):
             watch_manager = WatchManager.get_instance()
             watch_manager.restart()
-        return metadata_map
-    except Exception as e:
-        logger.error(
-            f"error in get_metadata(): {e}, traceback: {e.with_traceback(e.__traceback__)}"
-        )
-        return Response(
-            status_code=400,
-            content=json.dumps({"success": False, "error": "\n".join(e.args)}),
-        )
+
+    return metadata_map
 
 
 def find_blueprint_path(blueprint_key: str) -> Optional[Path]:
@@ -193,6 +189,15 @@ def find_blueprint_path(blueprint_key: str) -> Optional[Path]:
 
 
 @router.post("/blocks/create-custom/")
+@fastapi_error_handler(
+    operation="creating custom block",
+    error_code_prefix="CREATE_BLOCK",
+    log_request=True,
+    log_duration=True,
+    retry=True,
+    max_attempts=3,
+    retry_exceptions=(OSError, ConnectionError),
+)
 async def create_custom_block(request: CreateCustomBlockRequest):
     """Create a custom block from a blueprint for a specific project.
 
@@ -214,51 +219,57 @@ async def create_custom_block(request: CreateCustomBlockRequest):
             status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
         )
 
-    try:
-        # Find the blueprint block directory
+    # Find the blueprint block directory
+    with error_context("finding blueprint path", logger):
         blueprint_path = find_blueprint_path(request.blueprint_key)
 
-        if not blueprint_path:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Blueprint block '{request.blueprint_key}' not found",
-            )
+    if not blueprint_path:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Blueprint block '{request.blueprint_key}' not found",
+        )
 
-        # Copy the blueprint to the project
+    # Copy the blueprint to the project
+    with error_context("copying blueprint to project", logger):
         new_block_path = copy_blueprint_to_project(
             str(blueprint_path), request.project_path, request.new_block_name
         )
 
-        # Generate manifest for the new block
+    # Generate manifest for the new block
+    with error_context("generating manifest for new block", logger):
         block_manifest = create_manifest(
             str(Path(new_block_path) / f"{request.new_block_name}.py")
         )
 
-        if not block_manifest:
-            raise HTTPException(
+    if not block_manifest:
+        raise HTTPException(
+            status_code=500,
+            detail=create_error_response(
                 status_code=500,
-                detail="Failed to generate manifest for new custom block",
-            )
-
-        # Add the path to the manifest
-        block_manifest["path"] = new_block_path
-
-        logger.info(
-            f"Created custom block '{request.new_block_name}' at {new_block_path}"
+                error_code="CREATE_BLOCK_MANIFEST_FAILED",
+                message="Failed to generate manifest for new custom block",
+                details={"block_name": request.new_block_name},
+            ),
         )
 
-        return block_manifest
+    # Add the path to the manifest
+    block_manifest["path"] = new_block_path
 
-    except ProjectStructureError as e:
-        logger.error(f"Project structure error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+    logger.info(f"Created custom block '{request.new_block_name}' at {new_block_path}")
+
+    return block_manifest
 
 
 @router.post("/blocks/update-code/")
+@fastapi_error_handler(
+    operation="updating block code",
+    error_code_prefix="UPDATE_BLOCK",
+    log_request=True,
+    log_duration=True,
+    retry=True,
+    max_attempts=2,
+    retry_exceptions=(OSError,),
+)
 async def update_block_code(request: UpdateBlockCodeRequest):
     """Update the code of a custom block and regenerate its metadata.
 
@@ -281,112 +292,104 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
         )
 
-    try:
-        # Write the new content to the file
-        block_file = Path(request.block_path)
-        if not block_file.exists():
-            raise HTTPException(
-                status_code=404, detail=f"Block file not found: {request.block_path}"
-            )
+    # Write the new content to the file
+    block_file = Path(request.block_path)
+    if not block_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=create_error_response(
+                status_code=404,
+                error_code="UPDATE_BLOCK_FILE_NOT_FOUND",
+                message=f"Block file not found: {request.block_path}",
+                details={"block_path": request.block_path},
+            ),
+        )
 
-        # Backup the original content
+    # Backup the original content
+    with error_context("reading original content", logger):
         original_content = block_file.read_text()
 
-        try:
-            # Write new content
+    try:
+        # Write new content
+        with error_context("writing new content", logger):
             block_file.write_text(request.content)
 
-            # Extract block name from path
-            block_name = block_file.parent.name
+        # Extract block name from path
+        block_name = block_file.parent.name
 
-            # Get WebSocket manager instance
-            ws_manager = ConnectionManager.get_instance()
+        # Get WebSocket manager instance
+        ws_manager = ConnectionManager.get_instance()
 
-            # Broadcast regeneration start event
-            start_msg = RegenerationMessage(
-                type="regeneration_start",
-                block_name=block_name,
-                block_path=str(block_file.parent),
-                status="regenerating",
-                success=None,
-                error=None,
-            )
-            await ws_manager.broadcast(start_msg)
-
+        # Use managed operation for metadata regeneration
+        async with managed_operation(
+            "regenerating block metadata",
+            broadcast_start=True,
+            broadcast_complete=True,
+            ws_manager=ws_manager,
+            metadata={
+                "block_name": block_name,
+                "block_path": str(block_file.parent),
+            },
+        ) as request_id:
             # Regenerate block_data.json from the updated docstring
             regeneration_success = False
             regeneration_error = None
 
-            try:
+            with error_context("regenerating block_data.json", logger, reraise=False):
                 regeneration_success = regenerate_block_data_json(
                     str(block_file.parent)
                 )
                 if not regeneration_success:
                     regeneration_error = "Failed to regenerate block_data.json"
                     logger.warning(
-                        f"Failed to regenerate block_data.json for '{block_name}'"
+                        f"[{request_id}] Failed to regenerate block_data.json for '{block_name}'"
                     )
-            except Exception as e:
-                regeneration_success = False
-                regeneration_error = str(e)
-                logger.error(
-                    f"Error regenerating block_data.json for '{block_name}': {e}"
-                )
-
-            # Broadcast regeneration complete/error event
-            if regeneration_success:
-                complete_msg = RegenerationMessage(
-                    type="regeneration_complete",
-                    block_name=block_name,
-                    block_path=str(block_file.parent),
-                    status="completed",
-                    success=True,
-                    error=None,
-                )
-                await ws_manager.broadcast(complete_msg)
-            else:
-                error_msg = RegenerationMessage(
-                    type="regeneration_error",
-                    block_name=block_name,
-                    block_path=str(block_file.parent),
-                    status="error",
-                    success=False,
-                    error=regeneration_error,
-                )
-                await ws_manager.broadcast(error_msg)
 
             # Regenerate manifest for the updated block
-            block_manifest = create_manifest(str(block_file))
+            with error_context("regenerating manifest", logger):
+                block_manifest = create_manifest(str(block_file))
 
             if not block_manifest:
                 # Restore original content if manifest generation fails
-                block_file.write_text(original_content)
+                with error_context("restoring original content", logger):
+                    block_file.write_text(original_content)
+
                 raise HTTPException(
                     status_code=500,
-                    detail="Failed to regenerate manifest after code update",
+                    detail=create_error_response(
+                        status_code=500,
+                        error_code="UPDATE_BLOCK_MANIFEST_FAILED",
+                        message="Failed to regenerate manifest after code update",
+                        details={
+                            "block_name": block_name,
+                            "regeneration_error": regeneration_error,
+                        },
+                        request_id=request_id,
+                    ),
                 )
 
-            # Add the path to the manifest
-            block_manifest["path"] = str(block_file.parent)
+        # Add the path to the manifest
+        block_manifest["path"] = str(block_file.parent)
 
-            logger.info(
-                f"Updated code for block '{block_name}' at {request.block_path}"
-            )
+        logger.info(f"Updated code for block '{block_name}' at {request.block_path}")
 
-            return block_manifest
+        return block_manifest
 
-        except Exception:
-            # Restore original content on any error
+    except Exception:
+        # Restore original content on any error
+        with error_context(
+            "restoring original content after error", logger, reraise=False
+        ):
             block_file.write_text(original_content)
-            raise
-
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
+        raise
 
 
 @router.post("/blocks/validate-code/")
+@fastapi_error_handler(
+    operation="validating Python code",
+    error_code_prefix="VALIDATE",
+    log_request=False,  # Don't log code content
+)
 async def validate_code(request: ValidateCodeRequest):
     """Validate Python code and return errors/warnings.
 
@@ -396,17 +399,19 @@ async def validate_code(request: ValidateCodeRequest):
     Returns:
         Validation results with errors, warnings, and suggestions
     """
-    try:
+    with error_context("validating Python code", logger):
         result = validate_python_code(
             request.code, request.filename, request.project_path
         )
         return result
-    except Exception as e:
-        logger.error(f"Error validating code: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/get-completions/")
+@fastapi_error_handler(
+    operation="getting code completions",
+    error_code_prefix="COMPLETIONS",
+    log_request=False,  # Don't log code content
+)
 async def get_code_completions(request: GetCompletionsRequest):
     """Get context-aware code completions.
 
@@ -416,7 +421,7 @@ async def get_code_completions(request: GetCompletionsRequest):
     Returns:
         List of completion suggestions
     """
-    try:
+    with error_context("getting code completions", logger):
         completions = get_completions(
             request.code,
             request.line,
@@ -425,12 +430,14 @@ async def get_code_completions(request: GetCompletionsRequest):
             request.project_path,
         )
         return {"completions": completions}
-    except Exception as e:
-        logger.error(f"Error getting completions: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/get-hover/")
+@fastapi_error_handler(
+    operation="getting hover information",
+    error_code_prefix="HOVER",
+    log_request=False,  # Don't log code content
+)
 async def get_hover_information(request: GetHoverRequest):
     """Get hover information for symbol at position.
 
@@ -440,17 +447,19 @@ async def get_hover_information(request: GetHoverRequest):
     Returns:
         Hover information or null
     """
-    try:
+    with error_context("getting hover information", logger):
         info = get_hover_info(
             request.code, request.line, request.column, request.project_path
         )
         return {"hover": info}
-    except Exception as e:
-        logger.error(f"Error getting hover info: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/format-code/")
+@fastapi_error_handler(
+    operation="formatting code",
+    error_code_prefix="FORMAT",
+    log_request=False,  # Don't log code content
+)
 async def format_code(request: FormatCodeRequest):
     """Format Python code using Black.
 
@@ -463,22 +472,29 @@ async def format_code(request: FormatCodeRequest):
     try:
         import black
 
-        # Format the code
-        formatted = black.format_str(
-            request.code, mode=black.Mode(line_length=request.line_length)
-        )
+        with error_context("formatting code with Black", logger):
+            # Format the code
+            formatted = black.format_str(
+                request.code, mode=black.Mode(line_length=request.line_length)
+            )
 
         return {"formatted": formatted, "changed": formatted != request.code}
     except black.InvalidInput as e:
         # Return original code if it can't be formatted
         logger.warning(f"Code formatting failed: {e}")
         return {"formatted": request.code, "changed": False, "error": str(e)}
-    except Exception as e:
-        logger.error(f"Error formatting code: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/regenerate-venv/")
+@fastapi_error_handler(
+    operation="regenerating virtual environment",
+    error_code_prefix="VENV",
+    log_request=True,
+    log_duration=True,
+    retry=True,
+    max_attempts=2,
+    retry_exceptions=(OSError, ConnectionError),
+)
 async def regenerate_block_venv(request: RegenerateVenvRequest):
     """Regenerate virtual environment for a block.
 
@@ -488,51 +504,59 @@ async def regenerate_block_venv(request: RegenerateVenvRequest):
     Returns:
         Regeneration results and log path
     """
-    try:
-        # Get WebSocket manager instance
-        ws_manager = ConnectionManager.get_instance()
+    # Get WebSocket manager instance
+    ws_manager = ConnectionManager.get_instance()
 
-        # Extract block name from path
-        block_name = Path(request.block_path).name
+    # Extract block name from path
+    block_name = Path(request.block_path).name
 
-        # Broadcast venv regeneration start
-        start_msg = {
-            "type": "venv_regeneration_start",
+    # Use managed operation for venv regeneration
+    async with managed_operation(
+        "venv_regeneration",
+        broadcast_start=True,
+        broadcast_complete=False,  # We'll handle completion manually
+        ws_manager=ws_manager,
+        metadata={
             "block_name": block_name,
             "block_path": request.block_path,
-        }
-        await ws_manager.broadcast(start_msg)
-
+        },
+    ) as request_id:
         # Regenerate venv
-        result = regenerate_venv(
-            request.block_path, request.dependencies, request.python_version
-        )
+        with error_context("regenerating virtual environment", logger):
+            result = regenerate_venv(
+                request.block_path, request.dependencies, request.python_version
+            )
 
-        # Broadcast completion or error
+        # Broadcast completion or error based on result
         if result["success"]:
-            complete_msg = {
-                "type": "venv_regeneration_complete",
-                "block_name": block_name,
-                "block_path": request.block_path,
-                "log_path": result["log_path"],
-            }
-            await ws_manager.broadcast(complete_msg)
+            await ws_manager.broadcast(
+                {
+                    "type": "venv_regeneration_complete",
+                    "block_name": block_name,
+                    "block_path": request.block_path,
+                    "log_path": result["log_path"],
+                    "request_id": request_id,
+                }
+            )
         else:
-            error_msg = {
-                "type": "venv_regeneration_error",
-                "block_name": block_name,
-                "block_path": request.block_path,
-                "error": result.get("error"),
-            }
-            await ws_manager.broadcast(error_msg)
+            await ws_manager.broadcast(
+                {
+                    "type": "venv_regeneration_error",
+                    "block_name": block_name,
+                    "block_path": request.block_path,
+                    "error": result.get("error"),
+                    "request_id": request_id,
+                }
+            )
 
         return result
-    except Exception as e:
-        logger.error(f"Error regenerating venv: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.get("/blocks/venv-status/")
+@fastapi_error_handler(
+    operation="getting venv status",
+    error_code_prefix="VENV_STATUS",
+)
 async def get_block_venv_status(block_path: str):
     """Get virtual environment status for a block.
 
@@ -542,15 +566,16 @@ async def get_block_venv_status(block_path: str):
     Returns:
         Virtual environment status
     """
-    try:
+    with error_context("getting virtual environment status", logger):
         status = get_venv_status(block_path)
         return status
-    except Exception as e:
-        logger.error(f"Error getting venv status: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
 
 
 @router.post("/blocks/venv-logs/")
+@fastapi_error_handler(
+    operation="getting venv logs",
+    error_code_prefix="VENV_LOGS",
+)
 async def get_block_venv_logs(request: GetVenvLogsRequest):
     """Get virtual environment regeneration logs.
 
@@ -560,9 +585,6 @@ async def get_block_venv_logs(request: GetVenvLogsRequest):
     Returns:
         List of log entries
     """
-    try:
+    with error_context("getting virtual environment logs", logger):
         logs = get_venv_logs(request.block_path, request.limit)
         return {"logs": logs}
-    except Exception as e:
-        logger.error(f"Error getting venv logs: {e}")
-        raise HTTPException(status_code=500, detail=sanitize_error_message(e))
