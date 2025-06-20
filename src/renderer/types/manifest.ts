@@ -47,6 +47,7 @@ const blockDefinitionSchema = z.object({
   pip_dependencies: z.array(pipDependencySchema).optional(),
   children: z.null(),
   isBlueprint: z.boolean().optional(),
+  isCustom: z.boolean().optional(),
   category: z.string().optional(),
   path: z.string().optional(),
 });
@@ -57,12 +58,16 @@ export type Leaf = BlockDefinition;
 type BlockSection = {
   name: string;
   key?: string;
+  type?: string;
+  isCustom?: boolean;
   children: (BlockSection | BlockDefinition)[];
 };
 
 const blockSectionSchema: z.ZodType<BlockSection> = z.object({
   name: z.string(),
   key: z.string().optional(),
+  type: z.string().optional(),
+  isCustom: z.boolean().optional(),
   children: z
     .union([z.lazy(() => blockSectionSchema), blockDefinitionSchema])
     .array(),
