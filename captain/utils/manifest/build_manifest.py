@@ -302,6 +302,7 @@ def create_manifest(path: str) -> dict[str, Any]:
             "Stateful",
             "DefaultParams",
             "NodeInitContainer",
+            "NodeReference",
             "Array",
             "TextArea",
             "Secret",
@@ -313,6 +314,16 @@ def create_manifest(path: str) -> dict[str, Any]:
             "Plotly",
             "Grayscale",
             "Boolean",
+            "CameraConnection",
+            "CameraDevice",
+            "SerialConnection",
+            "SerialDevice",
+            "NIDAQmxDevice",
+            "NIDMMDevice",
+            "NIConnection",
+            "VisaConnection",
+            "VisaDevice",
+            "HardwareConnection",
         ]:
             if hasattr(atlasvibe_module, attr):
                 module.__dict__[attr] = getattr(atlasvibe_module, attr)
