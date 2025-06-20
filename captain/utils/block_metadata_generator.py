@@ -37,7 +37,6 @@ from captain.utils.shared import (
     get_block_python_file,
     get_block_metadata_file,
 )
-from captain.utils.shared.json_utils import save_json_file as save_json_util
 
 
 def generate_block_data_json(block_dir: str, block_name: str) -> bool:
@@ -118,7 +117,7 @@ def generate_app_json(block_dir: str, block_name: str) -> bool:
     }
 
     # Use save_json_file for atomic write with error handling
-    return save_json_util(app_file, app_data, indent=2)
+    return save_json_file(app_file, app_data, indent=2)
 
 
 def generate_example_md(block_dir: str, block_name: str) -> bool:
