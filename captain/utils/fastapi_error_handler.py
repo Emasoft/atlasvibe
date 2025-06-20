@@ -93,6 +93,8 @@ def sanitize_error_details(error: Exception) -> str:
     # Map specific exceptions to safe messages
     safe_messages = {
         "ProjectStructureError": str(error),  # These are user-facing validation errors
+        "GitError": str(error),  # Git errors contain user-relevant info
+        "ProfileError": str(error),  # Profile errors are user-facing
         "FileNotFoundError": "The requested file was not found",
         "PermissionError": "Permission denied for this operation",
         "ValueError": "Invalid input provided",
@@ -306,6 +308,8 @@ def _get_error_code(error: Exception) -> str:
         "ConnectionError": "CONNECTION_FAILED",
         "TimeoutError": "TIMEOUT",
         "OSError": "SYSTEM_ERROR",
+        "GitError": "GIT_OPERATION_FAILED",
+        "ProfileError": "PROFILE_ERROR",
     }
 
     return error_codes.get(error_type, "INTERNAL_ERROR")
