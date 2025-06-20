@@ -133,7 +133,8 @@ const EnhancedEditorView = () => {
       const result = await validateCode(code, fullPath.split('/').pop() || "unknown.py", projectPath);
 
       if (result.isOk()) {
-        const validationErrors = result.value.errors.map((err: any) => ({
+        const validationResult = result.value as { errors: any[] };
+        const validationErrors = validationResult.errors.map((err: any) => ({
           ...err,
           severity: err.severity as "error" | "warning" | "info"
         }));
@@ -164,15 +165,18 @@ const EnhancedEditorView = () => {
     setIsFormattingCode(true);
     try {
       const result = await formatCode(value);
-      if (result.isOk() && result.value.changed) {
-        setValue(result.value.formatted);
-        setHasChanged(true);
-        toast.success("Code formatted successfully");
-      } else if (result.isOk() && !result.value.changed) {
-        toast.info("Code is already formatted");
-      } else if (result.value?.error) {
+      if (result.isOk()) {
+        const formatResult = result.value as { changed: boolean; formatted: string; error?: string };
+        if (formatResult.changed) {
+          setValue(formatResult.formatted);
+          setHasChanged(true);
+          toast.success("Code formatted successfully");
+        } else {
+          toast.info("Code is already formatted");
+        }
+      } else {
         toast.error("Failed to format code", {
-          description: result.value.error
+          description: result.isErr() ? result.error.message : "Unknown error"
         });
       }
     } catch (error) {
@@ -245,7 +249,7 @@ const EnhancedEditorView = () => {
       if (result.isOk()) {
         return {
           from: context.pos - (context.matchBefore(/\w*/)?.text.length || 0),
-          options: result.value.completions.map((comp: any) => ({
+          options: (result.value as { completions: any[] }).completions.map((comp: any) => ({
             label: comp.label,
             type: comp.kind,
             detail: comp.detail,
@@ -267,8 +271,7 @@ const EnhancedEditorView = () => {
 
   useKeyboardShortcut("ctrl", "s", () => saveFile());
   useKeyboardShortcut("meta", "s", () => saveFile());
-  useKeyboardShortcut("ctrl", "shift", "f", () => formatCurrentCode());
-  useKeyboardShortcut("meta", "shift", "f", () => formatCurrentCode());
+  // TODO: Add support for multiple modifiers in useKeyboardShortcut hook
 
   // Configure extensions
   const extensions = useMemo(() => [

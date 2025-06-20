@@ -3,13 +3,13 @@ import os from "os";
 import { User } from "../types/auth";
 
 type TypedStore = {
-  poetryOptionalGroups: string[];
+  uvOptionalGroups: string[];
   users: User[];
 };
 
 export const store = new Store<TypedStore>({
   defaults: {
-    poetryOptionalGroups: [],
+    uvOptionalGroups: [],
     users: [
       {
         name: os.userInfo().username,

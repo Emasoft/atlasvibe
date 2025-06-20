@@ -83,7 +83,7 @@ export const VenvStatusDialog = ({
         await loadData(); // Reload data
       } else {
         toast.error("Failed to regenerate virtual environment", {
-          description: res.error.message || "Unknown error"
+          description: res.isErr() ? res.error.message : "Unknown error"
         });
       }
     } catch (error) {

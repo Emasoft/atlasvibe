@@ -173,6 +173,5 @@ if (process.contextIsolated) {
     console.error('Failed to expose "api" to main world:', error);
   }
 } else {
-  // @ts-expect-error (define global api on window)
   window.api = extendedApi;
 }

@@ -15,5 +15,4 @@ export type PythonDependency = {
   installed: boolean;
 };
 
-// Re-export for backward compatibility
-export type PoetryGroupInfo = DependencyGroupInfo;
+

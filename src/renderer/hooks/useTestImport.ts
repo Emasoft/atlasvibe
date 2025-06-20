@@ -39,7 +39,7 @@ export const useDiscoverAndImportTests = () => {
   const { openErrorModal } = useSequencerModalStore();
 
   const handleUserDepInstall = useCallback(async (depName: string) => {
-    const promise = () => window.api.poetryInstallDepUserGroup(depName);
+    const promise = () => window.api.uvInstallDepUserGroup(depName);
     toast.promise(promise, {
       loading: `Installing ${depName}...`,
       success: () => {
@@ -143,7 +143,7 @@ export const useDiscoverAndImportTests = () => {
 
 export const useDiscoverElements = () => {
   const handleUserDepInstall = useCallback(async (depName: string) => {
-    const promise = () => window.api.poetryInstallDepUserGroup(depName);
+    const promise = () => window.api.uvInstallDepUserGroup(depName);
     toast.promise(promise, {
       loading: `Installing ${depName}...`,
       success: () => {

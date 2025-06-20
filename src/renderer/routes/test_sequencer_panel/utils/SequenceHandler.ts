@@ -207,7 +207,7 @@ async function saveToDisk(
 ): Promise<Result<void, Error>> {
   // Deps
   if (sequence.interpreter.requirementsPath) {
-    const deps = await window.api.poetryShowUserGroup();
+    const deps = await window.api.uvShowUserGroup();
     const content = deps.map((dep) => dep.name + "==" + dep.version).join("\n");
     const didSave = await window.api.saveFileToDisk(
       sequence.projectPath + sequence.interpreter.requirementsPath,
@@ -233,7 +233,7 @@ async function installDeps(sequence: TestSequencerProject): Promise<boolean> {
   if (sequence.interpreter.requirementsPath === null) {
     return true;
   }
-  const success = await window.api.poetryInstallRequirementsUserGroup(
+  const success = await window.api.uvInstallRequirementsUserGroup(
     sequence.projectPath + sequence.interpreter.requirementsPath,
   );
   if (!success) {
