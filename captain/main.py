@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import asyncio
 import atexit
 import signal
 import sys
@@ -19,6 +20,9 @@ from captain.utils.config import origins
 from captain.utils.logger import logger
 from captain.internal.manager import WatchManager
 from captain.services.change_queue import ChangeQueueManager
+from captain.services.prefect_change_executor import PrefectChangeExecutor
+from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator
+from captain.internal.wsmanager import ConnectionManager
 
 
 def cleanup_mecademic_handles():
@@ -51,6 +55,18 @@ async def lifespan(app: FastAPI):
     change_queue_manager.start()
     logger.info("Change queue manager started")
 
+    # Start Prefect change executor and enable Prefect mode
+    prefect_executor = PrefectChangeExecutor.get_instance()
+    prefect_executor.start()
+    change_queue_manager.enable_prefect_mode()
+    logger.info("Prefect change executor started and enabled")
+
+    # Start WorkflowQueueCoordinator (new two-queue system)
+    ws_manager = ConnectionManager.get_instance()
+    workflow_coordinator = WorkflowQueueCoordinator(ws_manager)
+    asyncio.create_task(workflow_coordinator.run())
+    logger.info("WorkflowQueueCoordinator started")
+
     # Register cleanup handlers
     atexit.register(cleanup_mecademic_handles)
 
@@ -67,6 +83,14 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Running shutdown event")
+
+    # Stop WorkflowQueueCoordinator
+    await workflow_coordinator.stop()
+    logger.info("WorkflowQueueCoordinator stopped")
+
+    # Stop Prefect executor first
+    prefect_executor.stop()
+    logger.info("Prefect change executor stopped")
 
     # Stop change queue manager
     change_queue_manager.stop()
