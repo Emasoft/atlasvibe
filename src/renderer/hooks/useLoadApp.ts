@@ -19,7 +19,7 @@ export const useLoadApp = () => {
   );
 
   const openFilePicker = async () => {
-    const res = await fromPromise(window.api.openFilePicker(), (e) =>
+    const res = await fromPromise(window.api.openFilePicker(["atlasvibe", "json"]), (e) =>
       parseElectronError((e as Error).message),
     );
     if (res.isErr()) {
