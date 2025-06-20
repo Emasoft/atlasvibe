@@ -104,14 +104,23 @@ const EnhancedEditorView = () => {
           const updateRes = await updateBlockCode(fullPath, value, projectPath);
 
           if (updateRes.isOk()) {
-            toast.success("Block updated successfully", {
-              description: "Metadata has been regenerated"
-            });
+            const response = updateRes.value;
 
+            if (response.status === "queued") {
+              toast.info("Block update queued", {
+                description: `Block is currently executing. Changes will be applied when it finishes.`
+              });
+            } else {
+              toast.success("Block updated successfully", {
+                description: `Version ${response.version + 1}`
+              });
+            }
+
+            // Always refresh manifest to get latest state
             const { fetchManifest } = useManifestStore.getState();
             await fetchManifest();
           } else {
-            toast.error("Failed to update block metadata", {
+            toast.error("Failed to update block", {
               description: updateRes.error.message
             });
           }
