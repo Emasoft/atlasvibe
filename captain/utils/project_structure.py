@@ -16,13 +16,13 @@ This module handles the creation and management of project-centric
 directory structures where each project contains its own custom blocks.
 """
 
-import json
 import shutil
 import re
 from pathlib import Path
 from typing import Optional, List
 from captain.utils.logger import logger
 from captain.utils.block_metadata_generator import regenerate_block_data_json
+from captain.utils.shared.json_utils import load_json_file, save_json_file
 
 
 class ProjectStructureError(Exception):
@@ -292,7 +292,7 @@ def update_block_metadata(block_dir: Path, old_name: str, new_name: str) -> None
     # Update app.json if it exists
     app_json = block_dir / "app.json"
     if app_json.exists():
-        data = json.loads(app_json.read_text())
+        data = load_json_file(app_json, default={})
 
         # Update node labels and function references
         if "rfInstance" in data and "nodes" in data["rfInstance"]:
@@ -303,15 +303,15 @@ def update_block_metadata(block_dir: Path, old_name: str, new_name: str) -> None
                     if node["data"].get("label") == old_name:
                         node["data"]["label"] = new_name
 
-        app_json.write_text(json.dumps(data, indent=2))
+        save_json_file(app_json, data, indent=2)
 
     # Update block_data.json if it exists
     block_data_json = block_dir / "block_data.json"
     if block_data_json.exists():
         # The block_data.json typically doesn't contain the function name,
         # but we'll check just in case
-        data = json.loads(block_data_json.read_text())
-        block_data_json.write_text(json.dumps(data, indent=2))
+        data = load_json_file(block_data_json, default={})
+        save_json_file(block_data_json, data, indent=2)
 
 
 def get_custom_block_path(project_path: str, block_name: str) -> Optional[str]:

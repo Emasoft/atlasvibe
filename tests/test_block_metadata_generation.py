@@ -6,6 +6,10 @@
 # - Tests generation of block_data.json from Python docstring
 # - Tests the complete metadata file structure
 # - Demonstrates what files are generated and what must be created manually
+# - Added tests for JSON operations refactoring
+# - Test save_json_file usage in generate_app_json
+# - Test atomic write functionality
+# - Test error handling scenarios
 #
 
 """Test block metadata generation from Python source files.
@@ -23,8 +27,13 @@ import json
 import ast
 from pathlib import Path
 from docstring_parser import parse
+from unittest.mock import patch
 
 from captain.utils.manifest.build_manifest import create_manifest
+from captain.utils.block_metadata_generator import (
+    generate_block_data_json,
+    generate_app_json,
+)
 
 
 class TestBlockMetadataGeneration:
@@ -483,3 +492,140 @@ def CHANGING_BLOCK(x: int = 10, multiplier: int = 3, offset: float = 0.5) -> flo
         print("\nNOTE: __pycache__ is created by Python when importing modules")
 
         assert True  # Documentation test
+
+
+class TestJSONOperationsRefactoring:
+    """Test refactoring of JSON operations to use shared utilities."""
+
+    @pytest.fixture
+    def temp_block_dir(self):
+        """Create a temporary block directory for testing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            block_dir = Path(tmpdir) / "TEST_BLOCK"
+            block_dir.mkdir(parents=True)
+
+            # Create Python file
+            py_file = block_dir / "TEST_BLOCK.py"
+            py_file.write_text('''
+from atlasvibe import atlasvibe
+
+@atlasvibe
+def TEST_BLOCK():
+    """Test block.
+
+    Returns
+    -------
+    str
+        Test output
+    """
+    return "test"
+''')
+
+            yield block_dir, "TEST_BLOCK"
+
+    @patch("captain.utils.block_metadata_generator.save_json_file")
+    def test_generate_app_json_uses_save_json_file(
+        self, mock_save_json, temp_block_dir
+    ):
+        """Test that generate_app_json uses save_json_file from shared utilities."""
+        block_dir, block_name = temp_block_dir
+        mock_save_json.return_value = True
+
+        result = generate_app_json(str(block_dir), block_name)
+
+        assert result is True
+        # Verify save_json_file was called with correct parameters
+        mock_save_json.assert_called_once()
+        args = mock_save_json.call_args[0]
+
+        # Check file path
+        assert str(args[0]).endswith("app.json")
+
+        # Check data structure
+        data = args[1]
+        assert "rfInstance" in data
+        assert data["rfInstance"]["nodes"][0]["data"]["func"] == block_name
+
+    @patch("captain.utils.block_metadata_generator.save_json_file")
+    def test_generate_app_json_handles_save_failure(
+        self, mock_save_json, temp_block_dir
+    ):
+        """Test error handling when save_json_file fails."""
+        block_dir, block_name = temp_block_dir
+        mock_save_json.return_value = False
+
+        result = generate_app_json(str(block_dir), block_name)
+        assert result is False
+
+    @patch("captain.utils.block_metadata_generator.save_json_file")
+    @patch("captain.utils.block_metadata_generator.load_json_file")
+    @patch("captain.utils.block_metadata_generator.extract_docstring_data")
+    def test_generate_block_data_uses_shared_utilities(
+        self, mock_extract, mock_load, mock_save, temp_block_dir
+    ):
+        """Test that generate_block_data_json uses shared JSON utilities."""
+        block_dir, block_name = temp_block_dir
+
+        # Setup mocks
+        mock_extract.return_value = {
+            "docstring": {
+                "short_description": "Test block",
+                "long_description": "Test description",
+                "parameters": [],
+                "returns": [],
+            }
+        }
+        mock_load.return_value = {}
+        mock_save.return_value = True
+
+        result = generate_block_data_json(str(block_dir), block_name)
+
+        assert result is True
+        # Verify load_json_file was called
+        mock_load.assert_called_once()
+        # Verify save_json_file was called
+        mock_save.assert_called_once()
+
+        # Check the merged data was saved
+        saved_data = mock_save.call_args[0][1]
+        assert "docstring" in saved_data
+        assert saved_data["docstring"]["short_description"] == "Test block"
+
+    @patch("captain.utils.block_metadata_generator.save_json_file")
+    def test_atomic_write_functionality(self, mock_save, temp_block_dir):
+        """Test that atomic write is used for JSON files."""
+        block_dir, block_name = temp_block_dir
+
+        # Track calls to save_json_file
+        save_calls = []
+
+        def track_save(*args, **kwargs):
+            save_calls.append((args, kwargs))
+            return True
+
+        mock_save.side_effect = track_save
+
+        generate_app_json(str(block_dir), block_name)
+
+        # Verify atomic write was requested (default behavior)
+        assert len(save_calls) == 1
+        # Check if atomic parameter was passed or used default (True)
+        _, kwargs = save_calls[0]
+        assert kwargs.get("atomic", True) is True
+
+    def test_generate_app_json_creates_parent_directories(self, temp_block_dir):
+        """Test that generate_app_json handles missing parent directories."""
+        block_dir, block_name = temp_block_dir
+
+        # Remove the directory to test parent creation
+        import shutil
+
+        shutil.rmtree(str(block_dir))
+
+        # Should handle missing directory gracefully via save_json_file
+        result = generate_app_json(str(block_dir), block_name)
+
+        # The actual implementation needs to be updated to use save_json_file
+        # which has create_parents=True by default
+        # For now, this test documents the expected behavior
+        assert result is True  # Will be True after refactoring

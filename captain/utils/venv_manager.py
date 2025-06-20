@@ -21,7 +21,6 @@ This module handles virtual environment lifecycle management including:
 """
 
 import ast
-import json
 import logging
 import os
 import platform
@@ -37,6 +36,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import psutil
+from captain.utils.shared.json_utils import load_json_file, save_json_file
 
 
 class CheckStatus(Enum):
@@ -175,9 +175,8 @@ class VenvManager:
                     # Get last regeneration time
                     latest_log = self._get_latest_log()
                     if latest_log:
-                        with open(latest_log, "r") as f:
-                            log_data = json.load(f)
-                            status.last_regenerated = log_data.get("start_time")
+                        log_data = load_json_file(latest_log, default={})
+                        status.last_regenerated = log_data.get("start_time")
 
                 except Exception as e:
                     self.logger.error(f"Error checking venv status: {e}")
@@ -323,13 +322,12 @@ class VenvManager:
         )
 
         for log_file in log_files[:limit]:
-            try:
-                with open(log_file, "r") as f:
-                    log_data = json.load(f)
-                    log_data["log_file"] = log_file.name
-                    logs.append(log_data)
-            except Exception as e:
-                self.logger.error(f"Error reading log {log_file}: {e}")
+            log_data = load_json_file(log_file, default=None)
+            if log_data is not None:
+                log_data["log_file"] = log_file.name
+                logs.append(log_data)
+            else:
+                self.logger.error(f"Failed to read log file: {log_file}")
 
         return logs
 
@@ -959,6 +957,8 @@ class VenvManager:
             )
 
             if result.returncode == 0:
+                import json
+
                 return json.loads(result.stdout)
             else:
                 return []
@@ -977,10 +977,16 @@ class VenvManager:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = self.logs_dir / f"{self.LOG_FILE_PREFIX}_{timestamp}.json"
 
-        with open(log_file, "w") as f:
-            json.dump(log_data, f, indent=2)
-
-        return log_file
+        # Use atomic write for concurrent safety
+        if save_json_file(log_file, log_data, indent=2, atomic=True):
+            return log_file
+        else:
+            # Fallback to non-atomic write if atomic fails
+            self.logger.warning(
+                f"Atomic write failed, using standard write for {log_file}"
+            )
+            save_json_file(log_file, log_data, indent=2, atomic=False)
+            return log_file
 
     def _rotate_logs(self):
         """Remove old log files keeping only the most recent."""

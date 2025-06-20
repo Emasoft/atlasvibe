@@ -31,13 +31,13 @@ from captain.utils.constants import (
     EXAMPLE_MD_FILE,
     PYTHON_EXT,
 )
-import json
 from captain.utils.shared import (
     load_json_file,
     save_json_file,
     get_block_python_file,
     get_block_metadata_file,
 )
+from captain.utils.shared.json_utils import save_json_file as save_json_util
 
 
 def generate_block_data_json(block_dir: str, block_name: str) -> bool:
@@ -117,13 +117,8 @@ def generate_app_json(block_dir: str, block_name: str) -> bool:
         "textNodes": [],
     }
 
-    try:
-        with open(app_file, "w") as f:
-            json.dump(app_data, f, indent=2)
-        return True
-    except Exception as e:
-        logger.error(f"Failed to write app.json: {e}")
-        return False
+    # Use save_json_file for atomic write with error handling
+    return save_json_util(app_file, app_data, indent=2)
 
 
 def generate_example_md(block_dir: str, block_name: str) -> bool:
