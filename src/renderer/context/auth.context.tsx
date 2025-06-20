@@ -27,17 +27,24 @@ export const AuthContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  // Default user without authentication
+  const defaultUser: User = {
+    name: "Default User",
+    role: "Admin",
+    logged: true,
+  };
+  
+  const [user, setUser] = useState<User | null>(defaultUser);
+  const [users, setUsers] = useState<User[]>([defaultUser]);
 
   const authenticateUser = useCallback(() => {
-    const loggedUser = users.find((u) => u.logged);
-    setUser(loggedUser ?? users[0]);
-  }, [users]);
+    // Skip authentication, always use default user
+    setUser(defaultUser);
+  }, []);
 
   const refreshUsers = useCallback(async () => {
-    const users = await window.api.getUserProfiles();
-    setUsers(users);
+    // Skip fetching users from API
+    setUsers([defaultUser]);
   }, []);
 
   useEffect(() => {
@@ -46,7 +53,7 @@ export const AuthContextProvider = ({
 
   useEffect(() => {
     authenticateUser();
-  }, [authenticateUser, users]);
+  }, [authenticateUser]);
   const values = useMemo(
     () => ({
       user,
