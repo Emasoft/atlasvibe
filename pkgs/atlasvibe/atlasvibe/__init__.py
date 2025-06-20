@@ -14,7 +14,7 @@ from .job_service import *  # noqa: F403
 from .node_init import *  # noqa: F403
 from .config import *  # noqa: F403
 from .node_preflight import *  # noqa: F403
-from .instruments import *  # noqa: F403
+# from .instruments import *  # noqa: F403  # Temporarily disabled - missing qcodes dependency
 from .models import *  # noqa: F403
 from .connection_manager import *  # noqa: F403
 from .env_var import *  # noqa: F403

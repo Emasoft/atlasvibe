@@ -1,11 +1,6 @@
 import subprocess
 from sys import platform
 import os
-import nidaqmx
-import nimodinst
-import cv2
-import pyvisa
-import serial.tools.list_ports
 import logging
 from captain.types.devices import (
     CameraDevice,
@@ -15,12 +10,42 @@ from captain.types.devices import (
     NIDMMDevice,
 )
 
+# Temporarily disable hardware imports to fix startup
+try:
+    import nidaqmx
+except ImportError:
+    nidaqmx = None
+    
+try:
+    import nimodinst
+except ImportError:
+    nimodinst = None
+    
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+    
+try:
+    import pyvisa
+except ImportError:
+    pyvisa = None
+    
+try:
+    import serial.tools.list_ports
+except ImportError:
+    serial = None
+
 __all__ = ["get_device_finder"]
 
 
 class DefaultDeviceFinder:
     def get_cameras(self) -> list[CameraDevice]:
         """Returns a list of camera indices connected to the system."""
+        if cv2 is None:
+            logging.warning("cv2 not available, cannot detect cameras")
+            return []
+            
         env = os.getenv("ELECTRON_MODE", "dev")
 
         if env == "packaged" and "darwin" in platform:
@@ -44,6 +69,10 @@ class DefaultDeviceFinder:
 
     def get_serial_devices(self) -> list[SerialDevice]:
         """Returns a list of serial devices connected to the system."""
+        if serial is None:
+            logging.warning("serial not available, cannot detect serial devices")
+            return []
+            
         ports = serial.tools.list_ports.comports()
 
         return [
@@ -58,6 +87,10 @@ class DefaultDeviceFinder:
 
     def get_visa_devices(self) -> list[VISADevice]:
         """Returns a list of VISA devices connected to the system."""
+        if pyvisa is None:
+            logging.warning("pyvisa not available, cannot detect VISA devices")
+            return []
+            
         rm = pyvisa.ResourceManager("@py")
         devices = []
         used_addrs = set()
@@ -76,7 +109,7 @@ class DefaultDeviceFinder:
                     )
                 )
                 used_addrs.add(addr)
-            except (pyvisa.VisaIOError, serial.serialutil.SerialException) as e:
+            except Exception as e:  # Catch generic exception since pyvisa/serial might not be available
                 logging.debug(f"Could not open VISA device at {addr}: {e}")
             finally:
                 if device is not None:
@@ -86,6 +119,10 @@ class DefaultDeviceFinder:
 
     def get_nidaqmx_devices(self) -> list[NIDAQmxDevice]:
         """Returns a list of NI-DAQmx devices connected to the system."""
+        if nidaqmx is None:
+            logging.warning("nidaqmx not available, cannot detect NI-DAQmx devices")
+            return []
+            
         try:
             system = nidaqmx.system.System.local()
             devices = []
@@ -129,6 +166,9 @@ class DefaultDeviceFinder:
 
     def get_nidmm_devices(self) -> list[NIDMMDevice]:
         """Returns a list of NI-DAQmx devices connected to the system."""
+        if nimodinst is None:
+            logging.warning("nimodinst not available, cannot detect NI-DMM devices")
+            return []
 
         def extract_device(device) -> NIDMMDevice:
             return NIDMMDevice(
@@ -153,6 +193,10 @@ class DefaultDeviceFinder:
 
 class MacDeviceFinder(DefaultDeviceFinder):
     def get_visa_devices(self) -> list[VISADevice]:
+        if pyvisa is None:
+            logging.warning("pyvisa not available, cannot detect VISA devices")
+            return []
+            
         rm = pyvisa.ResourceManager("@py")
         devices = []
 

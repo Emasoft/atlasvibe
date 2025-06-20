@@ -265,3 +265,48 @@ export async function uvUninstallDepGroup(group: string): Promise<boolean> {
   log.warn(`Group uninstallation not directly supported. Please uninstall individual packages from group '${group}'.`);
   return true;
 }
+
+// Ensure valid optional dependency groups exist in pyproject.toml
+export async function uvGroupEnsureValid(): Promise<string[]> {
+  const pyprojectPath = "pyproject.toml";
+  const validGroups: string[] = [];
+  
+  try {
+    if (!fs.existsSync(pyprojectPath)) {
+      log.warn("pyproject.toml not found");
+      return validGroups;
+    }
+    
+    const content = fs.readFileSync(pyprojectPath, 'utf8');
+    const parsed = TOML.parse(content) as any;
+    
+    // Check for optional-dependencies (uv style)
+    if (parsed?.project?.["optional-dependencies"]) {
+      const optionalDeps = parsed.project["optional-dependencies"];
+      for (const [groupName, deps] of Object.entries(optionalDeps)) {
+        // Only include groups that have dependencies defined
+        if (Array.isArray(deps) && deps.length > 0) {
+          validGroups.push(groupName);
+        }
+      }
+    }
+    
+    // Check for dependency-groups (new uv style)
+    if (parsed?.["dependency-groups"]) {
+      const depGroups = parsed["dependency-groups"];
+      for (const [groupName, deps] of Object.entries(depGroups)) {
+        // Only include groups that have dependencies defined
+        if (Array.isArray(deps) && deps.length > 0 && !validGroups.includes(groupName)) {
+          validGroups.push(groupName);
+        }
+      }
+    }
+    
+    log.info(`Found valid dependency groups: ${validGroups.join(', ')}`);
+    return validGroups;
+    
+  } catch (error) {
+    log.error(`Error reading pyproject.toml: ${error}`);
+    return validGroups;
+  }
+}
