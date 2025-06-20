@@ -36,28 +36,23 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
     // Check each node to see if it might be a custom block
     if (project.rfInstance?.nodes) {
       project.rfInstance.nodes = project.rfInstance.nodes.map((node: Node<BlockData>) => {
-        // If node already has isCustom flag, preserve it
-        if (node.data.isCustom !== undefined) {
+        // If node already has isCustom flag and path, preserve it
+        if (node.data.isCustom !== undefined && node.data.path) {
           return node;
         }
 
-        // Try to detect custom blocks by checking if they're not in standard blocks
-        // This is a heuristic - in v1 we didn't track custom blocks properly
-        const isLikelyCustom = detectIfCustomBlock(node);
-
-        if (isLikelyCustom) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              isCustom: true,
-              // Generate path from function name if not present
-              path: node.data.path || `atlasvibe_blocks/${node.data.func}`,
-            },
-          };
-        }
-
-        return node;
+        // ALL blocks in workflows are custom blocks by definition!
+        // They are instances copied from blueprints and are editable
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            isCustom: true,
+            // Generate path from function name if not present
+            // Use the block's func name which includes the instance suffix (e.g. FFT_1)
+            path: node.data.path || `atlasvibe_blocks/${node.data.func}`,
+          },
+        };
       });
     }
   }
@@ -69,51 +64,6 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
   };
 }
 
-/**
- * Heuristic to detect if a block might be custom
- * This is used for migrating old projects that didn't track custom blocks
- */
-function detectIfCustomBlock(node: Node<BlockData>): boolean {
-  const func = node.data.func;
-
-  // If it has a path already, it's definitely custom
-  if (node.data.path && node.data.path.includes('atlasvibe_blocks/')) {
-    return true;
-  }
-
-  // Check for common patterns in standard blocks
-  // Standard blocks typically have ALL_CAPS names with underscores
-  // and belong to known categories
-  const standardPatterns = [
-    // Math operations
-    /^(ADD|SUBTRACT|MULTIPLY|DIVIDE|POWER|LOG|ABS|FLOOR_DIVIDE|REMAINDER)$/,
-    // Trigonometry
-    /^(SINE|COSINE|TANGENT|ARCSINE|ARCCOSINE|ARCTANGENT)$/,
-    // Constants and generators
-    /^(CONSTANT|LINSPACE|LOGSPACE|ARANGE|ZEROS|ONES)$/,
-    // Signal processing
-    /^(FFT|IFFT|FILTER|BUTTER|FIR|SAVGOL|PID)$/,
-    // Data structures
-    /^(MATRIX|VECTOR|SCALAR|DATAFRAME)$/,
-    // Visualization
-    /^(PLOT|IMAGE|TEXT|HISTOGRAM|SCATTER)$/,
-    // I/O
-    /^(IMPORT_|EXPORT_|LOAD_|SAVE_)/,
-    // Control flow
-    /^(LOOP|CONDITIONAL|TIMER|APPEND|BREAK)$/,
-    // Hardware/devices
-    /^(ARDUINO|LABJACK|OSCILLOSCOPE|DMM|CAMERA)/,
-  ];
-
-  // If it matches any standard pattern, it's not custom
-  const isStandard = standardPatterns.some(pattern => pattern.test(func));
-
-  // Additional check: custom blocks often have project-specific names
-  // that don't follow the ALL_CAPS_WITH_UNDERSCORES convention
-  const hasNonStandardNaming = !(/^[A-Z][A-Z0-9_]*$/.test(func));
-
-  return !isStandard || hasNonStandardNaming;
-}
 
 /**
  * Validates that all custom blocks have proper references

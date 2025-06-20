@@ -1,0 +1,235 @@
+[2025-06-20 16:20:30] - tm_devices - DEBUG - timezone==Europe/Rome
+[2025-06-20 16:20:30] - tm_devices - DEBUG - tm_devices==3.2.0
+2025-06-20 16:20:30.218031 - Opening DeviceManager
+[2025-06-20 16:20:30] - tm_devices.device_manager - INFO - Opening DeviceManager
+/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [81539]
+INFO:     Waiting for application startup.
+[2025-06-20 16:20:30] - atlasvibe - INFO - Running startup event
+[2025-06-20 16:20:30] - atlasvibe - INFO - Starting thread for startup event
+INFO:     Application startup complete.
+[2025-06-20 16:20:30] - atlasvibe - INFO - Starting file watcher for blocks dirs ['/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/blocks']
+INFO:     Uvicorn running on http://127.0.0.1:5392 (Press CTRL+C to quit)
+[2025-06-20 16:20:39] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55428 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55433 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55447 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55449 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+[2025-06-20 16:21:25] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:21:25] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55461 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/ifft HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55464 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/ifft HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55469 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/ifft HTTP/1.1" 200 OK
+INFO:     ('127.0.0.1', 55575) - "WebSocket /ws/c06a5ad2-4139-49ba-a1d4-47db70628200" [accepted]
+INFO:     connection open
+[2025-06-20 16:23:58] - atlasvibe - INFO - AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help.
+INFO:     ('127.0.0.1', 55576) - "WebSocket /ts-ws/0870cd9a-5934-4b88-b61c-4228626fb9a9" [accepted]
+[2025-06-20 16:23:58] - atlasvibe - INFO - Accepted websocket 0870cd9a-5934-4b88-b61c-4228626fb9a9
+INFO:     connection open
+[2025-06-20 16:23:58] - root - WARNING - cv2 not available, cannot detect cameras
+INFO:     127.0.0.1:55577 - "GET /devices?include_nidaqmx_drivers=false&include_nidmm_drivers=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55578 - "GET /blocks/manifest HTTP/1.1" 307 Temporary Redirect
+[2025-06-20 16:24:07] - atlasvibe - INFO - TEST SEQUENCER WS CONNECTION TEST PASSED
+[2025-06-20 16:24:07] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:24:07] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55578 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55578 - "GET /blocks/metadata?custom_dir_changed=false HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55578 - "GET /blocks/metadata/?custom_dir_changed=false HTTP/1.1" 200 OK
+[2025-06-20 16:24:28] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:24:28] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55589 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/Simple_Math_Operations HTTP/1.1" 200 OK
+[2025-06-20 16:25:02] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:25:02] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55598 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/fft HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55601 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/fft HTTP/1.1" 200 OK
+[2025-06-20 16:26:24] - atlasvibe - INFO - Received signal 15, cleaning up...
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/main.py", line 55, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 242, in run_asgi
+    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/cors.py", line 77, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 373, in handle
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 96, in app
+    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 94, in app
+    await func(session)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 348, in app
+    await dependant.call(**values)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/routes/test_sequence.py", line 30, in websocket_endpoint
+    data = await websocket.receive_text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/websockets.py", line 137, in receive_text
+    message = await self.receive()
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/websockets.py", line 49, in receive
+    message = await self._receive()
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 376, in asgi_receive
+    data = await self.recv()
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 538, in recv
+    await asyncio.wait(
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 428, in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 535, in _wait
+    await waiter
+asyncio.exceptions.CancelledError
+INFO:     connection closed
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/main.py", line 55, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 242, in run_asgi
+    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/cors.py", line 77, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 373, in handle
+    await self.app(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 96, in app
+    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 94, in app
+    await func(session)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 348, in app
+    await dependant.call(**values)
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/routes/ws.py", line 37, in websocket_endpoint
+    await websocket.receive_text()
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/websockets.py", line 137, in receive_text
+    message = await self.receive()
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/websockets.py", line 49, in receive
+    message = await self._receive()
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 376, in asgi_receive
+    data = await self.recv()
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 538, in recv
+    await asyncio.wait(
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 428, in wait
+    return await _wait(fs, timeout, return_when, loop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/tasks.py", line 535, in _wait
+    await waiter
+asyncio.exceptions.CancelledError
+ERROR:    Traceback (most recent call last):
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/main.py", line 55, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 741, in lifespan
+    await receive()
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/queues.py", line 158, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+INFO:     connection closed

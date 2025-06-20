@@ -165,6 +165,7 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
     # Add project-specific blocks if project path is provided
     if project_path and validate_project_structure(project_path):
         project_blocks_dir = get_project_blocks_dir(project_path)
+        logger.info(f"Loading project blocks from: {project_blocks_dir}")
 
         # Create a project blocks section
         project_blocks = {
@@ -178,6 +179,9 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
         for block_dir in sorted(project_blocks_dir.iterdir()):
             if block_dir.is_dir() and not block_dir.name.startswith("_"):
                 py_file = block_dir / f"{block_dir.name}.py"
+                logger.debug(
+                    f"Checking block: {block_dir.name}, py_file exists: {py_file.exists()}"
+                )
                 if py_file.exists():
                     try:
                         block_manifest = create_manifest(str(py_file))
@@ -185,6 +189,9 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
                             block_manifest["type"] = "PROJECT"
                             block_manifest["isCustom"] = True
                             project_blocks["children"].append(block_manifest)
+                            logger.debug(
+                                f"Added project block: {block_manifest['name']}"
+                            )
                     except Exception as e:
                         logger.error(
                             f"Failed to create manifest for project block {block_dir.name}: {e}"
@@ -193,5 +200,8 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
         # Add project blocks at the beginning if there are any
         if project_blocks["children"]:
             blocks_map["children"].insert(0, project_blocks)
+            logger.info(f"Added {len(project_blocks['children'])} project blocks")
+        else:
+            logger.warning("No project blocks found to add to manifest")
 
     return blocks_map

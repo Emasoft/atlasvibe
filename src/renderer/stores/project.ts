@@ -557,6 +557,7 @@ export const useLoadProject = () => {
 
   const manifest = useManifest();
   const metadata = useMetadata();
+  const fetchManifest = useManifestStore((state) => state.fetchManifest);
 
   return useCallback(
     (project: Project, path?: string): Result<void, Error> => {
@@ -596,9 +597,14 @@ export const useLoadProject = () => {
       setHasUnsavedChanges(false);
       wipeBlockResults();
 
+      // Refresh manifest to include project-specific blocks
+      if (path) {
+        fetchManifest();
+      }
+
       return ok(undefined);
     },
-    [manifest, metadata, wipeBlockResults],
+    [manifest, metadata, wipeBlockResults, fetchManifest],
   );
 };
 

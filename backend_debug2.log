@@ -1,0 +1,43 @@
+[2025-06-20 16:26:34] - tm_devices - DEBUG - timezone==Europe/Rome
+[2025-06-20 16:26:34] - tm_devices - DEBUG - tm_devices==3.2.0
+2025-06-20 16:26:34.273154 - Opening DeviceManager
+[2025-06-20 16:26:34] - tm_devices.device_manager - INFO - Opening DeviceManager
+/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [82607]
+INFO:     Waiting for application startup.
+[2025-06-20 16:26:34] - atlasvibe - INFO - Running startup event
+[2025-06-20 16:26:34] - atlasvibe - INFO - Starting thread for startup event
+INFO:     Application startup complete.
+[2025-06-20 16:26:34] - atlasvibe - INFO - Starting file watcher for blocks dirs ['/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/blocks']
+INFO:     Uvicorn running on http://127.0.0.1:5392 (Press CTRL+C to quit)
+INFO:     ('127.0.0.1', 55663) - "WebSocket /ts-ws/0870cd9a-5934-4b88-b61c-4228626fb9a9" [accepted]
+[2025-06-20 16:26:34] - atlasvibe - INFO - Accepted websocket 0870cd9a-5934-4b88-b61c-4228626fb9a9
+INFO:     connection open
+[2025-06-20 16:26:34] - atlasvibe - INFO - TEST SEQUENCER WS CONNECTION TEST PASSED
+INFO:     ('127.0.0.1', 55665) - "WebSocket /ws/7526ebbb-033c-4dd9-8c82-88d6b151263c" [accepted]
+INFO:     connection open
+[2025-06-20 16:26:38] - atlasvibe - INFO - AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help.
+[2025-06-20 16:26:38] - root - WARNING - cv2 not available, cannot detect cameras
+INFO:     127.0.0.1:55666 - "GET /devices?include_nidaqmx_drivers=false&include_nidmm_drivers=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55667 - "GET /blocks/manifest HTTP/1.1" 307 Temporary Redirect
+[2025-06-20 16:26:38] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55667 - "GET /blocks/manifest/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55667 - "GET /blocks/metadata?custom_dir_changed=false HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55667 - "GET /blocks/metadata/?custom_dir_changed=false HTTP/1.1" 200 OK
+[2025-06-20 16:26:48] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:26:48] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55672 - "GET /blocks/manifest/?project_path=/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/fft HTTP/1.1" 200 OK
+[2025-06-20 16:27:14] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:27:14] - atlasvibe - INFO - Loaded 363 blueprint blocks
+INFO:     127.0.0.1:55682 - "GET /blocks/manifest/?project_path=sample_projects/fft HTTP/1.1" 200 OK
+[2025-06-20 16:28:07] - atlasvibe - INFO - Cleared 0 project modules
+[2025-06-20 16:28:07] - atlasvibe - INFO - Loaded 363 blueprint blocks
+[2025-06-20 16:28:07] - atlasvibe - INFO - Loaded 5 project-specific blocks
+[2025-06-20 16:28:07] - atlasvibe - INFO - Loading project blocks from: /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/fft/atlasvibe_blocks
+[2025-06-20 16:28:07] - atlasvibe - INFO - Added 5 project blocks
+INFO:     127.0.0.1:55756 - "GET /blocks/manifest/?project_path=sample_projects/fft/fft.atlasvibe HTTP/1.1" 200 OK
+[2025-06-20 16:28:14] - atlasvibe - INFO - Loading project blocks from: /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/sample_projects/fft/atlasvibe_blocks
+[2025-06-20 16:28:14] - atlasvibe - INFO - Added 5 project blocks
+INFO:     127.0.0.1:55758 - "GET /blocks/manifest/?project_path=sample_projects/fft/fft.atlasvibe HTTP/1.1" 200 OK

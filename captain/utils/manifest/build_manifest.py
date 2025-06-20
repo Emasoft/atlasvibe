@@ -284,6 +284,25 @@ def create_manifest(path: str) -> dict[str, Any]:
             ]:
                 module.__dict__["__builtins__"][name] = getattr(builtins, name)
 
+        # Add commonly used Python types
+        module.__dict__["int"] = int
+        module.__dict__["float"] = float
+        module.__dict__["str"] = str
+        module.__dict__["bool"] = bool
+        module.__dict__["list"] = list
+        module.__dict__["dict"] = dict
+        module.__dict__["tuple"] = tuple
+        module.__dict__["set"] = set
+
+        # Add IPython display if available
+        try:
+            from IPython.display import display
+
+            module.__dict__["display"] = display
+        except ImportError:
+            # Create a no-op display function if IPython is not available
+            module.__dict__["display"] = lambda func: func
+
         # Pre-import and inject commonly used items
         module.__dict__["atlasvibe_node"] = atlasvibe_module.atlasvibe_node
         module.__dict__["atlasvibe"] = atlasvibe_module.atlasvibe

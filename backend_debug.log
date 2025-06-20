@@ -1,0 +1,129 @@
+[2025-06-20 16:19:35] - tm_devices - DEBUG - timezone==Europe/Rome
+[2025-06-20 16:19:35] - tm_devices - DEBUG - tm_devices==3.2.0
+2025-06-20 16:19:35.326163 - Opening DeviceManager
+[2025-06-20 16:19:35] - tm_devices.device_manager - INFO - Opening DeviceManager
+/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [81388]
+INFO:     Waiting for application startup.
+[2025-06-20 16:19:35] - atlasvibe - INFO - Running startup event
+[2025-06-20 16:19:35] - atlasvibe - INFO - Starting thread for startup event
+[2025-06-20 16:19:35] - atlasvibe - INFO - Starting file watcher for blocks dirs ['/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/blocks']
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:5392 (Press CTRL+C to quit)
+[2025-06-20 16:19:44] - atlasvibe - INFO - Loaded 363 blueprint blocks
+[2025-06-20 16:19:44] - atlasvibe - ERROR - Error while generating manifest: Failed to generate manifest from POPULATE.py, reason: name 'display' is not defined
+[2025-06-20 16:19:44] - atlasvibe - ERROR - [req-282e318e0942] Error in generating blocks manifest: ValueError: Failed to generate manifest from POPULATE.py, reason: name 'display' is not defined -> NameError: name 'display' is not defined
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 131, in browse_directories
+    result = create_manifest(n_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/build_manifest.py", line 347, in create_manifest
+    exec(code, module.__dict__)
+  File "<unknown>", line 76, in <module>
+NameError: name 'display' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/fastapi_error_handler.py", line 225, in sync_wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/shared/error_utils.py", line 122, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/routes/blocks.py", line 138, in get_manifest
+    manifest = generate_manifest(blocks_path=blocks_path, project_path=project_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 162, in generate_manifest
+    blocks_map = browse_directories(blocks_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  [Previous line repeated 1 more time]
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 133, in browse_directories
+    raise ValueError(
+ValueError: Failed to generate manifest from POPULATE.py, reason: name 'display' is not defined
+[2025-06-20 16:19:44] - atlasvibe - ERROR - Error details: Failed to generate manifest from POPULATE.py, reason: name 'display' is not defined
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 131, in browse_directories
+    result = create_manifest(n_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/build_manifest.py", line 347, in create_manifest
+    exec(code, module.__dict__)
+  File "<unknown>", line 76, in <module>
+NameError: name 'display' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/fastapi_error_handler.py", line 225, in sync_wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/shared/error_utils.py", line 122, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/routes/blocks.py", line 138, in get_manifest
+    manifest = generate_manifest(blocks_path=blocks_path, project_path=project_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 162, in generate_manifest
+    blocks_map = browse_directories(blocks_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 123, in browse_directories
+    subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  [Previous line repeated 1 more time]
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/utils/manifest/generate_manifest.py", line 133, in browse_directories
+    raise ValueError(
+ValueError: Failed to generate manifest from POPULATE.py, reason: name 'display' is not defined
+INFO:     127.0.0.1:55416 - "GET /blocks/manifest/ HTTP/1.1" 500 Internal Server Error
+[2025-06-20 16:20:21] - atlasvibe - INFO - Received signal 15, cleaning up...
+ERROR:    Traceback (most recent call last):
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/main.py", line 52, in signal_handler
+    def signal_handler(signum, frame):
+
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/main.py", line 55, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/routing.py", line 741, in lifespan
+    await receive()
+  File "/Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/emanuelesabetta/.local/share/uv/python/cpython-3.11.12-macos-aarch64-none/lib/python3.11/asyncio/queues.py", line 158, in get
+    await getter
+asyncio.exceptions.CancelledError
