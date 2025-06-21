@@ -1,0 +1,65 @@
+name: 'Setup uv Environment'
+description: 'Sets up Python with uv package manager for AtlasVibe'
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.11'
+  install-deps:
+    description: 'Whether to install dependencies'
+    required: false
+    default: 'true'
+  extras:
+    description: 'Extras to install (comma-separated)'
+    required: false
+    default: 'all'
+  cache:
+    description: 'Whether to use cache'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: ${{ inputs.cache }}
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: |
+        if [ "${{ inputs.extras }}" == "all" ]; then
+          uv sync --locked --all-extras --dev
+        elif [ "${{ inputs.extras }}" == "none" ]; then
+          uv sync --locked
+        else
+          # Split comma-separated extras and add --extra for each
+          IFS=',' read -ra EXTRAS <<< "${{ inputs.extras }}"
+          EXTRA_ARGS=""
+          for extra in "${EXTRAS[@]}"; do
+            EXTRA_ARGS="$EXTRA_ARGS --extra $extra"
+          done
+          uv sync --locked $EXTRA_ARGS --dev
+        fi
+
+    - name: Show environment info
+      shell: bash
+      run: |
+        echo "Python version:"
+        python --version
+        echo ""
+        echo "uv version:"
+        uv --version
+        echo ""
+        echo "Installed packages:"
+        uv pip list | head -20
+        echo "..."
+        echo "Total packages: $(uv pip list | wc -l)"

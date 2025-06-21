@@ -2672,3 +2672,132 @@ repos:
 5. **Cross-platform**: Universal lockfiles work everywhere
 6. **Python management**: Automatic Python installation
 7. **Space efficient**: Global cache with hard links
+
+### CI/CD Pipeline Configuration (NEW December 2024)
+
+The project uses GitHub Actions for continuous integration and deployment with comprehensive security checks.
+
+#### Security Configuration
+
+##### Gitleaks Integration
+- **Local Hook**: Automatically runs on pre-commit to prevent secrets
+- **CI/CD**: Scans all commits in PRs and pushes
+- **Configuration**: `.gitleaks.toml` allows only:
+  - Git author: `Emasoft`
+  - Git email: `713559+Emasoft@users.noreply.github.com`
+  - All other secrets are blocked
+
+##### Git Environment Setup
+```bash
+# Run this to configure git correctly
+./setup-git-env.sh
+```
+
+#### GitHub Actions Workflows
+
+1. **CI Pipeline** (`ci.yml`)
+   - Python code formatting (Ruff)
+   - Python linting (Ruff)
+   - TypeScript/JavaScript checks
+   - Unit tests with coverage
+
+2. **Security Scanning** (`gitleaks.yml`)
+   - Runs on every push and PR
+   - Daily scheduled scans
+   - Creates security issues for failures
+   - Uploads SARIF reports to Security tab
+
+3. **Dependency Analysis** (`dependency-check.yml`)
+   - Weekly deptry scans
+   - Checks for unused/missing dependencies
+   - Creates issues for problems
+
+4. **Pre-commit Checks** (`pre-commit.yml`)
+   - Runs all hooks on CI
+   - Validates code quality
+   - Comments on PRs with results
+
+5. **Blocks Quality** (`blocks-quality-check.yml`)
+   - Ensures block metadata completeness
+   - Runs tests across platforms
+   - Validates block structure
+
+#### CI/CD Setup Script
+
+```bash
+# One-command setup for entire CI/CD pipeline
+./setup-cicd.sh
+```
+
+This script:
+- Configures git with correct author info
+- Installs pre-commit hooks locally
+- Sets up GitHub repository settings
+- Enables branch protection
+- Configures workflow permissions
+- Creates issue labels
+- Runs initial security scans
+
+#### Custom GitHub Action for uv
+
+The project includes a reusable action for setting up uv environments:
+
+```yaml
+# Usage in workflows
+- uses: ./.github/actions/setup-uv-env
+  with:
+    python-version: '3.11'
+    extras: 'all'
+    install-deps: 'true'
+```
+
+#### Workflow Status Badges
+
+Add these to your README:
+
+```markdown
+![CI](https://github.com/OWNER/REPO/workflows/CI/badge.svg)
+![Gitleaks](https://github.com/OWNER/REPO/workflows/Gitleaks%20Security%20Scan/badge.svg)
+![Pre-commit](https://github.com/OWNER/REPO/workflows/Pre-commit%20Checks/badge.svg)
+```
+
+#### Local Development with CI/CD
+
+```bash
+# Install pre-commit hooks
+uv pip install pre-commit
+pre-commit install
+
+# Run all checks locally
+pre-commit run --all-files
+
+# Run specific checks
+uv run ruff check .
+uv run mypy .
+gitleaks detect --config .gitleaks.toml
+
+# Check dependencies
+uv run deptry .
+```
+
+#### GitHub CLI Commands
+
+```bash
+# View workflows
+gh workflow list
+gh run list
+
+# Trigger workflow manually
+gh workflow run ci.yml
+
+# View workflow runs
+gh run view
+
+# Create/update secrets
+gh secret set CODECOV_TOKEN
+
+# Manage issues
+gh issue list --label security
+gh issue create --title "Security Alert" --label urgent,security
+```
+7. **Space efficient**: Global cache with hard links

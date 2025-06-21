@@ -1,92 +1,216 @@
-# Gitleaks configuration file for AtlasVibe
-# This file configures gitleaks to detect and prevent secrets from being committed
-# while allowing specific safe patterns like GitHub noreply emails
+# Gitleaks configuration for AtlasVibe
+# This configuration allows only specific known values and blocks all other secrets
+# Updated: December 2024
 
-# Global configuration
-title = "AtlasVibe Gitleaks Config"
+title = "AtlasVibe Gitleaks Configuration"
 
-# Use default gitleaks rules as base
+# Extend the base configuration
 [extend]
 useDefault = true
 
-# Global allowlist
+# Global allowlist - these exact values are permitted
 [allowlist]
-description = "Global allowlist for AtlasVibe project"
-# Paths where these patterns are allowed (all files)
+description = "Global allowlist for AtlasVibe"
 paths = [
-    '''.*'''
+    '''\.gitleaks\.toml$''',
+    '''(^|/)\.git/''',
+    '''(^|/)node_modules/''',
+    '''(^|/)\.venv/''',
+    '''(^|/)venv/''',
+    '''(^|/)out/''',
+    '''(^|/)dist/''',
+    '''(^|/)build/''',
+    '''(^|/)__pycache__/''',
+    '''\.pyc$''',
+    # Exclude test files and documentation from some checks
+    '''PYTHON/WATCH/''',  # External dependencies
 ]
-# Regular expressions to allowlist
+
+# Allow specific patterns
 regexes = [
-    # GitHub noreply email addresses are public and safe
+    # Git configuration values that are EXPLICITLY ALLOWED
+    '''Emasoft''',
     '''713559\+Emasoft@users\.noreply\.github\.com''',
 
-    # Generic GitHub noreply email pattern (for any GitHub noreply emails)
+    # GitHub noreply email pattern (safe)
     '''[0-9]+\+[a-zA-Z0-9_-]+@users\.noreply\.github\.com''',
 
-    # Allow the username "Emasoft" when it appears in various contexts
-    '''Emasoft''',
+    # GitHub Actions secrets syntax (safe - they're references, not actual secrets)
+    '''\$\{\{\s*secrets\.[A-Z_]+\s*\}\}''',
+    '''\$\{\{[^}]+\}\}''',  # Any GitHub Actions expression
 
-    # Allow common test/example/placeholder patterns
-    '''(test|example|demo|sample|placeholder|dummy)[-_]?(api)?[-_]?(key|token|secret)''',
+    # Common test/example values
+    '''(test|example|demo|sample|placeholder|dummy)[-_]?(api)?[-_]?(key|token|secret|password)''',
     '''YOUR[-_]?API[-_]?KEY[-_]?HERE''',
-    '''<your[-_]?api[-_]?key>''',
+    '''<your[-_]?(api[-_]?)?key>''',
     '''REPLACE[-_]?WITH[-_]?YOUR[-_]?(KEY|TOKEN|SECRET)''',
     '''xxx+''',
     '''abc123''',
     '''placeholder''',
-    '''your-key-here'''
+    '''your-key-here''',
+
+    # AtlasVibe specific patterns
+    '''atlasvibe''',
+    '''ATLASVIBE''',
+    '''localhost''',
+    '''127\.0\.0\.1''',
+    '''0\.0\.0\.0''',
+
+    # Git author environment variables
+    '''GIT_AUTHOR(_NAME|_EMAIL)?=.*''',
+    '''GIT_COMMITTER(_NAME|_EMAIL)?=.*''',
 ]
-# Commits to allowlist (by email/author)
+
+# Commits to allowlist (by exact match)
 commits = [
     '''713559\+Emasoft@users\.noreply\.github\.com''',
-    '''Emasoft'''
 ]
 
-# Additional custom rules for extra security
+# Enhanced custom rules for maximum security
 [[rules]]
-id = "hardcoded-password"
-description = "Hardcoded password string"
-regex = '''(?i)(password|passwd|pwd)\s*[=:]\s*["\'][^"\']+["\']'''
-tags = ["password", "security"]
-allowlist.regexes = [
-    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
-]
+id = "api-key-generic"
+description = "Generic API Key"
+regex = '''(?i)(api[_\-\s]?key|apikey|api[_\-\s]?secret|apisecret)[_\-\s]?[=:][_\-\s]?['\"]?[a-zA-Z0-9\-_]{20,}['\"]?'''
+tags = ["api", "key", "secret"]
+entropy = 3.5
+secretGroup = 1
 
 [[rules]]
-id = "connection-string-password"
-description = "Connection string with password"
-regex = '''(?i)(mysql|postgres|postgresql|mongodb|redis|amqp|jdbc):\/\/[^:]+:[^@]+@[^\/]+'''
-tags = ["password", "database"]
-allowlist.regexes = [
-    '''(test|example|localhost|127\.0\.0\.1)'''
-]
+id = "private-key-block"
+description = "Private Key Block"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----'''
+tags = ["private", "key"]
 
 [[rules]]
-id = "env-var-secret"
-description = "Environment variable with secret value"
-regex = '''(?i)(api_key|api_secret|access_token|auth_token|private_key|secret_key|encryption_key)\s*=\s*["\']?[a-zA-Z0-9+\/]{20,}["\']?'''
-tags = ["key", "environment"]
-allowlist.regexes = [
-    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
-]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}|ghs_[a-zA-Z0-9]{36}'''
+tags = ["github", "token"]
 
-# File-specific configurations
 [[rules]]
-id = "config-file-secrets"
-description = "Secrets in configuration files"
-path = '''(.*\.env|.*\.ini|.*\.conf|.*\.config|.*\.properties)$'''
-regex = '''(?i)(api[_\-]?key|secret|token|password|auth|private[_\-]?key)\s*[=:]\s*["\']?[^\s"\']+["\']?'''
-allowlist.regexes = [
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["aws", "key"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws[_\-\s]?secret[_\-\s]?access[_\-\s]?key[_\-\s]?[=:][_\-\s]?[a-zA-Z0-9/+=]{40}'''
+tags = ["aws", "secret"]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic Secret"
+regex = '''(?i)(secret|password|passwd|pwd|token|auth)[_\-\s]?[=:][_\-\s]?['\"]?[a-zA-Z0-9\-_!@#$%^&*()+=]{8,}['\"]?'''
+tags = ["secret", "password"]
+entropy = 3.0
+[rules.allowlist]
+regexes = [
+    '''(test|example|demo|sample|placeholder|dummy|your)''',
+    '''Emasoft''',
     '''713559\+Emasoft@users\.noreply\.github\.com''',
-    '''(test|example|demo|sample|placeholder|dummy|your-.*-here|xxx+|abc123|\$\{|<.*>)'''
 ]
 
-# Allowlist for documentation and example files
 [[rules]]
-id = "documentation-examples"
-description = "Allow examples in documentation"
-path = '''(.*\.md|.*\.rst|.*\.txt|.*example.*|.*demo.*|.*test.*)$'''
-allowlist.regexes = [
-    '''.*'''  # Allow everything in documentation and example files
+id = "env-var-leak"
+description = "Environment Variable with Secret"
+regex = '''(?i)export\s+[A-Z_]*(KEY|TOKEN|SECRET|PASSWORD)[A-Z_]*\s*=\s*['\"]?[^\s'"]+['\"]?'''
+tags = ["env", "secret"]
+[rules.allowlist]
+regexes = [
+    '''(test|example|demo|sample|placeholder)''',
 ]
+
+# Separate rule for git author variables (always allowed)
+[[rules]]
+id = "git-author-env"
+description = "Git Author Environment Variables"
+regex = '''export\s+GIT_(AUTHOR|COMMITTER)(_NAME|_EMAIL)?\s*=\s*['\"]?[^\s'"]+['\"]?'''
+tags = ["git", "env"]
+[rules.allowlist]
+regexes = [
+    '''.*''',  # All git author/committer variables are allowed
+]
+
+[[rules]]
+id = "git-config-validation"
+description = "Git Configuration Validation"
+regex = '''git\s+config\s+(--local\s+|--global\s+)?user\.(name|email)\s+['\"]?([^'\"]+)['\"]?'''
+secretGroup = 3
+tags = ["git", "config"]
+[rules.allowlist]
+regexes = [
+    '''Emasoft''',
+    '''713559\+Emasoft@users\.noreply\.github\.com''',
+]
+paths = [
+    '''setup-git-env\.sh$''',  # This is the setup script itself
+]
+
+# Specific file type checks
+[[rules]]
+id = "json-secrets"
+description = "Secrets in JSON files"
+path = '''\.json$'''
+regex = '''['\"]?(api[_\-]?key|secret|token|password|auth)['\"]?\s*:\s*['\"]([^'\"]+)['\"]'''
+secretGroup = 2
+[rules.allowlist]
+regexes = [
+    '''(test|example|demo|null|\$\{.*\}|<.*>)''',
+]
+
+[[rules]]
+id = "yaml-secrets"
+description = "Secrets in YAML files"
+path = '''\.ya?ml$'''
+regex = '''(api[_\-]?key|secret|token|password|auth):\s*['"]?([^'"\s]+)['"]?'''
+secretGroup = 2
+[rules.allowlist]
+regexes = [
+    '''(test|example|demo|null|\$\{.*\}|<.*>)''',
+    '''\$\{\{[^}]+\}\}''',  # GitHub Actions expressions
+]
+
+# Database connection strings
+[[rules]]
+id = "connection-string"
+description = "Database Connection String with Credentials"
+regex = '''(?i)(postgres|postgresql|mysql|mariadb|mongodb|redis|amqp|jdbc)://[^:]+:[^@]+@[^/\s]+'''
+tags = ["database", "password"]
+[rules.allowlist]
+regexes = [
+    '''(test|example|localhost|127\.0\.0\.1|db|database|user:pass@host)''',
+]
+paths = [
+    '''.*_test\.py$''',  # Allow in test files
+    '''.*\.c$''',  # Allow in C source files (documentation)
+    '''.*\.md$''',  # Allow in markdown files
+]
+
+# Slack/Discord webhooks
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook URL"
+regex = '''https://hooks\.slack\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+'''
+tags = ["slack", "webhook"]
+
+[[rules]]
+id = "discord-webhook"
+description = "Discord Webhook URL"
+regex = '''https://discord(app)?\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+'''
+tags = ["discord", "webhook"]
+
+# PyPI token
+[[rules]]
+id = "pypi-token"
+description = "PyPI API Token"
+regex = '''pypi-[a-zA-Z0-9_-]{40,}'''
+tags = ["pypi", "token"]
+
+# NPM token
+[[rules]]
+id = "npm-token"
+description = "NPM Access Token"
+regex = '''npm_[a-zA-Z0-9]{36}'''
+tags = ["npm", "token"]

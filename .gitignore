@@ -46,6 +46,7 @@ yarn-error.log*
 .python-version
 .history/
 .logs/
+logs/
 bin/
 out/
 test-results/
