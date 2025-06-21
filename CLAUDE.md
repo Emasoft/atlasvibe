@@ -96,6 +96,70 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Force Run All Tests**: Use `./install_all_test_deps.sh` then `./run_all_tests.sh` to run ALL tests including slow ones
 - **Test Discovery**: Tests ending with `_test_.py` are automatically discovered
 
+### Pre-commit Hooks Configuration (NEW December 2024)
+
+The project uses pre-commit hooks to ensure code quality before every commit. All hooks are configured in `.pre-commit-config.yaml`.
+
+#### Initial Setup
+```bash
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run hooks on all files (useful for testing)
+uv run pre-commit run --all-files
+
+# Update hooks to latest versions
+uv run pre-commit autoupdate
+```
+
+#### Configured Hooks
+1. **YAML and GitHub Actions linting**
+   - `yamllint` - Validates YAML files
+   - `actionlint` - Validates GitHub Actions workflows
+
+2. **UV Package Management**
+   - `uv-lock` - Ensures uv.lock is up-to-date
+   - Runs with `--locked` to verify consistency
+
+3. **Python Code Quality**
+   - `ruff` - Linting with auto-fixes
+   - `ruff-format` - Code formatting
+
+4. **Security**
+   - `gitleaks` - Detects secrets and credentials
+
+5. **Dependency Analysis**
+   - `deptry` - Checks for unused or missing dependencies
+   - Configured to ignore dynamically loaded dependencies:
+     - DEP002 ignores: ninja, av, pytest-json-report, robotframework (and others)
+     - DEP001 ignores: Libraries used by blocks (torchvision, prophet, IPython, etc.)
+
+6. **General File Checks**
+   - Trailing whitespace removal
+   - End-of-file fixing
+   - JSON/YAML/TOML syntax validation
+   - Large file detection (>5MB)
+   - Merge conflict detection
+   - Private key detection
+
+#### Working with Pre-commit
+```bash
+# Bypass hooks temporarily (use sparingly)
+git commit --no-verify -m "Emergency fix"
+
+# Run specific hook
+uv run pre-commit run ruff --all-files
+uv run pre-commit run deptry --all-files
+
+# Show hook output in detail
+uv run pre-commit run --verbose --all-files
+```
+
+#### Troubleshooting
+- **deptry false positives**: Already configured to ignore dynamically imported modules. If new ones appear, add them to the `--per-rule-ignores` in `.pre-commit-config.yaml`
+- **Hook failures**: The hooks will auto-fix many issues. After failure, review changes and re-commit
+- **Performance**: First run installs hook environments and may be slow. Subsequent runs are fast
+
 ## Comprehensive UV Package Management for AtlasVibe
 
 ### Core UV Concepts
