@@ -15,11 +15,14 @@ logger = logging.getLogger("atlasvibe")
 
 
 def load_log_level_from_config() -> str:
-    atlasvibe_config_path = os.path.join(get_atlasvibe_dir(), "atlasvibe.yaml")
+    atlasvibe_dir = get_atlasvibe_dir()
+    atlasvibe_config_path = os.path.join(atlasvibe_dir, "atlasvibe.yaml")
     if os.path.exists(atlasvibe_config_path):
         with open(atlasvibe_config_path) as f:
             data = yaml.safe_load(f)
     else:
+        # Create directory if it doesn't exist
+        os.makedirs(atlasvibe_dir, exist_ok=True)
         with open(atlasvibe_config_path, "w") as f:
             data = {"LOG_LEVEL": "INFO"}
             f.write(yaml.dump(data))
