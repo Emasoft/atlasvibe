@@ -22,7 +22,7 @@ import traceback
 from captain.internal.wsmanager import ConnectionManager as WebSocketManager
 from captain.utils.manifest.build_manifest import create_manifest
 from captain.utils.block_metadata_generator import regenerate_block_data_json
-# from captain.utils.project_structure import update_custom_block_code  # TODO: implement this
+from captain.utils.project_structure import update_block_code
 
 logger = logging.getLogger(__name__)
 
@@ -244,8 +244,8 @@ class WorkflowChangesQueue:
         code = data.get("code", "")
         project_path = data.get("project_path")
 
-        # Update the block's Python file
-        success = await update_block_code(block_id, code, project_path)
+        # Update the block's Python file (not async)
+        success = update_block_code(block_id, code, project_path)
 
         if success:
             # Regenerate metadata after code update
@@ -264,8 +264,8 @@ class WorkflowChangesQueue:
         if not block_path:
             raise FileNotFoundError(f"Block {block_id} not found")
 
-        # Create manifest from Python file
-        manifest = await regenerate_manifest(str(block_path))
+        # Create manifest from Python file (not async)
+        manifest = create_manifest(str(block_path))
 
         # Broadcast manifest update
         await self._broadcast_status(
@@ -370,7 +370,13 @@ class WorkflowChangesQueue:
         """Find the Python file for a block."""
         # Check project blocks first
         if project_path:
-            project_blocks = Path(project_path) / "atlasvibe_blocks"
+            # Handle .atlasvibe file path
+            if project_path.endswith(".atlasvibe"):
+                project_dir = Path(project_path).parent
+            else:
+                project_dir = Path(project_path)
+
+            project_blocks = project_dir / "atlasvibe_blocks"
             if project_blocks.exists():
                 block_file = project_blocks / block_id / f"{block_id}.py"
                 if block_file.exists():
@@ -418,37 +424,3 @@ class WorkflowChangesQueue:
             else None,
             "total_processed": self._total_processed,
         }
-
-
-# Helper functions that might be imported from other modules
-async def update_block_code(
-    block_id: str, code: str, project_path: Optional[str] = None
-) -> bool:
-    """Update block code - placeholder for actual implementation."""
-    # This would typically:
-    # 1. Find the block's Python file
-    # 2. Write the new code to it
-    # 3. Regenerate metadata
-    # For now, we'll simulate it
-    logger.info(f"Updating code for block {block_id}")
-
-    if project_path:
-        # Find the block file
-        blocks_dir = Path(project_path).parent / "atlasvibe_blocks"
-        block_file = blocks_dir / block_id / f"{block_id}.py"
-        if block_file.exists():
-            block_file.write_text(code)
-            return True
-
-    return True
-
-
-async def regenerate_manifest(block_path: str) -> Dict[str, Any]:
-    """Regenerate manifest from block file."""
-    try:
-        # Use the actual create_manifest function
-        manifest = create_manifest(block_path)
-        return manifest
-    except Exception as e:
-        logger.error(f"Failed to regenerate manifest: {e}")
-        return {"inputs": [], "outputs": [], "parameters": []}

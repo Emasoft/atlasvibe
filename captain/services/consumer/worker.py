@@ -38,7 +38,9 @@ class Worker:
     async def run(self):
         logger.info(f"Worker {self.uuid} has started")
         while True:
+            logger.debug(f"Worker {self.uuid} waiting for task...")
             queue_fetch = self.task_queue.get()
+            logger.info(f"Worker {self.uuid} got task: {queue_fetch}")
 
             if isinstance(queue_fetch, PoisonPill):
                 logger.debug(f"Worker {self.uuid} got poison pill.")

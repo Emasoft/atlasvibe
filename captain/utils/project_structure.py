@@ -328,6 +328,49 @@ def update_block_metadata(block_dir: Path, old_name: str, new_name: str) -> None
         save_json_file(block_data_json, data, indent=2)
 
 
+def update_block_code(block_id: str, code: str, project_path: str) -> bool:
+    """Update the code of a custom block.
+
+    Args:
+        block_id: Block identifier/name
+        code: New Python code for the block
+        project_path: Path to the .atlasvibe project file
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        blocks_dir = get_project_blocks_dir(project_path)
+        block_dir = blocks_dir / block_id
+
+        if not block_dir.exists():
+            logger.error(f"Block directory not found: {block_dir}")
+            return False
+
+        # Find the Python file
+        py_file = block_dir / f"{block_id}.py"
+        if not py_file.exists():
+            logger.error(f"Block Python file not found: {py_file}")
+            return False
+
+        # Write the new code
+        py_file.write_text(code)
+
+        # Regenerate block_data.json from the updated docstring
+        if regenerate_block_data_json(str(block_dir)):
+            logger.info(f"Updated code and regenerated metadata for block '{block_id}'")
+        else:
+            logger.warning(
+                f"Updated code but failed to regenerate metadata for block '{block_id}'"
+            )
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to update block code: {e}")
+        return False
+
+
 def get_custom_block_path(project_path: str, block_name: str) -> Optional[str]:
     """Get the full path to a custom block in a project.
 

@@ -15,14 +15,13 @@ from captain.routes import (
     log,
     test_sequence,
     project,
+    workflow_queues,
 )
 from captain.utils.config import origins
 from captain.utils.logger import logger
 from captain.internal.manager import WatchManager
-from captain.services.change_queue import ChangeQueueManager
-from captain.services.prefect_change_executor import PrefectChangeExecutor
-from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator
 from captain.internal.wsmanager import ConnectionManager
+from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator
 
 
 def cleanup_mecademic_handles():
@@ -50,22 +49,17 @@ async def lifespan(app: FastAPI):
     watch_manager = WatchManager.get_instance()
     watch_manager.start_thread()
 
-    # Start change queue manager
-    change_queue_manager = ChangeQueueManager.get_instance()
-    change_queue_manager.start()
-    logger.info("Change queue manager started")
-
-    # Start Prefect change executor and enable Prefect mode
-    prefect_executor = PrefectChangeExecutor.get_instance()
-    prefect_executor.start()
-    change_queue_manager.enable_prefect_mode()
-    logger.info("Prefect change executor started and enabled")
-
-    # Start WorkflowQueueCoordinator (new two-queue system)
+    # Get WebSocket manager instance
     ws_manager = ConnectionManager.get_instance()
+
+    # Start Workflow Queue Coordinator (manages both WCQ and WEQ)
     workflow_coordinator = WorkflowQueueCoordinator(ws_manager)
-    asyncio.create_task(workflow_coordinator.run())
-    logger.info("WorkflowQueueCoordinator started")
+    coordinator_task = asyncio.create_task(workflow_coordinator.run())
+    logger.info("Workflow Queue Coordinator started (managing WCQ and WEQ)")
+
+    # Store references for shutdown
+    app.state.workflow_coordinator = workflow_coordinator
+    app.state.coordinator_task = coordinator_task
 
     # Register cleanup handlers
     atexit.register(cleanup_mecademic_handles)
@@ -84,17 +78,17 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Running shutdown event")
 
-    # Stop WorkflowQueueCoordinator
-    await workflow_coordinator.stop()
-    logger.info("WorkflowQueueCoordinator stopped")
+    # Stop Workflow Queue Coordinator
+    if hasattr(app.state, "workflow_coordinator"):
+        await app.state.workflow_coordinator.stop()
+        logger.info("Workflow Queue Coordinator stopped")
 
-    # Stop Prefect executor first
-    prefect_executor.stop()
-    logger.info("Prefect change executor stopped")
-
-    # Stop change queue manager
-    change_queue_manager.stop()
-    logger.info("Change queue manager stopped")
+        # Wait for coordinator task to complete
+        if hasattr(app.state, "coordinator_task"):
+            try:
+                await asyncio.wait_for(app.state.coordinator_task, timeout=5.0)
+            except asyncio.TimeoutError:
+                logger.warning("Coordinator task did not complete within timeout")
 
     cleanup_mecademic_handles()
 
@@ -120,3 +114,4 @@ app.include_router(blocks.router)
 app.include_router(devices.router)
 app.include_router(test_sequence.router)
 app.include_router(project.router)
+app.include_router(workflow_queues.router)

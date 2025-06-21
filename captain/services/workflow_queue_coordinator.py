@@ -246,9 +246,10 @@ class WorkflowQueueCoordinator:
         status = self.get_status()
 
         # Add execution history if available
-        if self.weq._last_outputs:
+        last_outputs = self.weq.get_last_outputs()
+        if last_outputs:
             status["last_execution"] = {
-                "outputs": self.weq._last_outputs,
+                "outputs": last_outputs,
                 "execution_id": self.weq._execution_id,
             }
 

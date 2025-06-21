@@ -33,7 +33,7 @@ export const AuthContextProvider = ({
     role: "Admin",
     logged: true,
   };
-  
+
   const [user, setUser] = useState<User | null>(defaultUser);
   const [users, setUsers] = useState<User[]>([defaultUser]);
 

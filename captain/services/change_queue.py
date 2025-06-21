@@ -86,9 +86,22 @@ class ChangeQueueManager:
 
     _instance = None
     _lock = Lock()
+    _initialized = False
+
+    def __new__(cls):
+        """Thread-safe singleton implementation."""
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+            return cls._instance
 
     def __init__(self):
         """Initialize the change queue manager."""
+        # Prevent re-initialization
+        if self._initialized:
+            return
+        self.__class__._initialized = True
+
         self.change_queue: Queue[ChangeTransaction] = Queue()
         self.pending_changes: Dict[str, List[BlockChange]] = defaultdict(list)
         self.executing_blocks: Set[str] = set()
@@ -285,17 +298,21 @@ class ChangeQueueManager:
                 message = self._broadcast_queue.get(timeout=0.1)
 
                 if self.ws_manager:
-                    # Create new event loop for this thread
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-
+                    # Note: Creating event loops in threads is not ideal
+                    # This should be refactored to use a dedicated async thread
+                    # or pass messages to the main event loop
                     try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
                         # Run the broadcast
                         loop.run_until_complete(self.ws_manager.broadcast(message))
                     except Exception as e:
                         logger.error(f"Broadcast error: {e}")
                     finally:
-                        loop.close()
+                        try:
+                            loop.close()
+                        except Exception:
+                            pass
 
             except Empty:
                 continue

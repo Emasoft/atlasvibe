@@ -15,22 +15,22 @@ try:
     import nidaqmx
 except ImportError:
     nidaqmx = None
-    
+
 try:
     import nimodinst
 except ImportError:
     nimodinst = None
-    
+
 try:
     import cv2
 except ImportError:
     cv2 = None
-    
+
 try:
     import pyvisa
 except ImportError:
     pyvisa = None
-    
+
 try:
     import serial.tools.list_ports
 except ImportError:
@@ -45,7 +45,7 @@ class DefaultDeviceFinder:
         if cv2 is None:
             logging.warning("cv2 not available, cannot detect cameras")
             return []
-            
+
         env = os.getenv("ELECTRON_MODE", "dev")
 
         if env == "packaged" and "darwin" in platform:
@@ -72,7 +72,7 @@ class DefaultDeviceFinder:
         if serial is None:
             logging.warning("serial not available, cannot detect serial devices")
             return []
-            
+
         ports = serial.tools.list_ports.comports()
 
         return [
@@ -90,7 +90,7 @@ class DefaultDeviceFinder:
         if pyvisa is None:
             logging.warning("pyvisa not available, cannot detect VISA devices")
             return []
-            
+
         rm = pyvisa.ResourceManager("@py")
         devices = []
         used_addrs = set()
@@ -122,7 +122,7 @@ class DefaultDeviceFinder:
         if nidaqmx is None:
             logging.warning("nidaqmx not available, cannot detect NI-DAQmx devices")
             return []
-            
+
         try:
             system = nidaqmx.system.System.local()
             devices = []
@@ -196,7 +196,7 @@ class MacDeviceFinder(DefaultDeviceFinder):
         if pyvisa is None:
             logging.warning("pyvisa not available, cannot detect VISA devices")
             return []
-            
+
         rm = pyvisa.ResourceManager("@py")
         devices = []
 

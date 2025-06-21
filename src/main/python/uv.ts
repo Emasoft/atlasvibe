@@ -270,16 +270,16 @@ export async function uvUninstallDepGroup(group: string): Promise<boolean> {
 export async function uvGroupEnsureValid(): Promise<string[]> {
   const pyprojectPath = "pyproject.toml";
   const validGroups: string[] = [];
-  
+
   try {
     if (!fs.existsSync(pyprojectPath)) {
       log.warn("pyproject.toml not found");
       return validGroups;
     }
-    
+
     const content = fs.readFileSync(pyprojectPath, 'utf8');
     const parsed = TOML.parse(content) as any;
-    
+
     // Check for optional-dependencies (uv style)
     if (parsed?.project?.["optional-dependencies"]) {
       const optionalDeps = parsed.project["optional-dependencies"];
@@ -290,7 +290,7 @@ export async function uvGroupEnsureValid(): Promise<string[]> {
         }
       }
     }
-    
+
     // Check for dependency-groups (new uv style)
     if (parsed?.["dependency-groups"]) {
       const depGroups = parsed["dependency-groups"];
@@ -301,10 +301,10 @@ export async function uvGroupEnsureValid(): Promise<string[]> {
         }
       }
     }
-    
+
     log.info(`Found valid dependency groups: ${validGroups.join(', ')}`);
     return validGroups;
-    
+
   } catch (error) {
     log.error(`Error reading pyproject.toml: ${error}`);
     return validGroups;

@@ -178,4 +178,3 @@ async def migrate_project(request: MigrateProjectRequest) -> MigrationResponse:
             status_code=500,
             detail=f"Unexpected error during migration: {str(e)}",
         )
-

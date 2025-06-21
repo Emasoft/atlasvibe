@@ -61,7 +61,7 @@ def TEST_BLOCK():
             "success": True,
         }
 
-        log_path = manager._save_log(log_data)
+        manager._save_log(log_data)
 
         # Verify json.dump was called
         mock_dump.assert_called_once()
@@ -74,8 +74,8 @@ def TEST_BLOCK():
         # This test demonstrates expected behavior after refactoring
         mock_save.return_value = True
 
-        manager = VenvManager(temp_block_dir)
-        log_data = {
+        VenvManager(temp_block_dir)
+        {
             "block_name": "TEST_BLOCK",
             "start_time": datetime.now().isoformat(),
             "success": True,
@@ -107,7 +107,7 @@ def TEST_BLOCK():
 
         mock_load.return_value = {"test": "data"}
 
-        logs = manager.get_logs(limit=1)
+        manager.get_logs(limit=1)
 
         # Verify json.load was called
         mock_load.assert_called()
@@ -138,7 +138,7 @@ def TEST_BLOCK():
 
     def test_atomic_log_writes(self, temp_block_dir):
         """Test that log writes are atomic to prevent corruption."""
-        manager = VenvManager(temp_block_dir)
+        VenvManager(temp_block_dir)
 
         # After refactoring with save_json_file:
         # 1. Log writes should be atomic
@@ -174,7 +174,7 @@ def TEST_BLOCK():
         """Test error handling when save_json_file fails."""
         mock_save.return_value = False
 
-        manager = VenvManager(temp_block_dir)
+        VenvManager(temp_block_dir)
 
         # After refactoring:
         # - Handle save_json_file returning False

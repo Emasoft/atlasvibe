@@ -14,5 +14,3 @@ export type PythonDependency = {
   description?: string;
   installed: boolean;
 };
-
-

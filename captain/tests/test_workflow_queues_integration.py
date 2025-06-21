@@ -142,6 +142,14 @@ class TestWorkflowQueuesIntegration:
         assert enqueue_broadcast["change_id"] == change_id
         assert enqueue_broadcast["change_type"] == ChangeType.CODE_UPDATE.value
 
+    async def _cleanup_coordinator(self, coordinator):
+        """Helper to cleanup coordinator after tests."""
+        if coordinator and coordinator._running:
+            try:
+                await coordinator.stop()
+            except Exception:
+                pass
+
     @pytest.mark.asyncio
     async def test_change_triggers_execution(
         self, coordinator, simple_topology, ws_manager
@@ -151,7 +159,7 @@ class TestWorkflowQueuesIntegration:
         with (
             patch.object(
                 coordinator.wcq, "_process_code_update", new_callable=AsyncMock
-            ) as mock_update,
+            ),
             patch.object(
                 coordinator.weq, "execute", new_callable=AsyncMock
             ) as mock_execute,
@@ -169,7 +177,7 @@ class TestWorkflowQueuesIntegration:
                 await asyncio.sleep(0.1)
 
                 # Enqueue a change
-                change_id = await coordinator.enqueue_change(
+                await coordinator.enqueue_change(
                     {
                         "type": ChangeType.CODE_UPDATE.value,
                         "block_id": "node2",

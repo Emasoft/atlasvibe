@@ -70,6 +70,7 @@ class Topology:
         """
         self.time_start = time.perf_counter()
         next_jobs: list[str] = self.collect_ready_jobs()  # get nodes with in-degree 0
+        logger.info(f"Starting topology with initial jobs: {next_jobs}")
         self.run_jobs(next_jobs, task_queue)
 
     def collect_ready_jobs(self):
@@ -98,15 +99,15 @@ class Topology:
         logger.debug(f"{job_id} queued at {time.time()}")
 
         # -- queue the job --
-        task_queue.put(
-            JobInfo(
-                job_id=job_id,
-                jobset_id=self.jobset_id,
-                iteration_id=job_id,
-                ctrls=node["ctrls"],
-                previous_jobs=previous_jobs,
-            )
+        job_info = JobInfo(
+            job_id=job_id,
+            jobset_id=self.jobset_id,
+            iteration_id=job_id,
+            ctrls=node["ctrls"],
+            previous_jobs=previous_jobs,
         )
+        logger.info(f"Putting job {job_id} in queue")
+        task_queue.put(job_info)
         self.queued_jobs.add(job_id)
         # -------------------
 

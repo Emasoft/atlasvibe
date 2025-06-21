@@ -137,7 +137,7 @@ def BLUEPRINT_BLOCK(x: int = 10):
         }
         mock_save.return_value = True
 
-        block_dir = Path("/test/block")
+        Path("/test/block")
 
         # After refactoring, this function should use load_json_file and save_json_file
         # update_block_metadata(block_dir, "OLD_NAME", "NEW_NAME")
@@ -152,7 +152,6 @@ def BLUEPRINT_BLOCK(x: int = 10):
     def test_copy_blueprint_atomic_operations(self, temp_project, temp_blueprint):
         """Test that copy_blueprint_to_project handles files atomically."""
         project_path, project_dir = temp_project
-        blueprint_path = temp_blueprint
 
         with patch("captain.utils.project_structure.save_json_file") as mock_save:
             mock_save.return_value = True
@@ -187,7 +186,7 @@ def BLUEPRINT_BLOCK(x: int = 10):
         """Test that parent directories are created when needed."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Test deep nested structure
-            deep_path = Path(tmpdir) / "a" / "b" / "c" / "app.json"
+            Path(tmpdir) / "a" / "b" / "c" / "app.json"
 
             # After refactoring with save_json_file (create_parents=True)
             # This should work without manually creating parent dirs
