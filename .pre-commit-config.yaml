@@ -30,6 +30,18 @@ repos:
         name: Check uv.lock is up-to-date
         args: [--locked]
 
+      # Export requirements.txt from uv.lock for compatibility
+      - id: uv-export
+        name: Export requirements.txt from uv.lock
+        args: [--frozen, --no-hashes, -o, requirements.txt]
+        files: ^(uv\.lock|pyproject\.toml)$
+
+      # Export dev requirements
+      - id: uv-export
+        name: Export dev requirements from uv.lock
+        args: [--frozen, --no-hashes, --all-extras, -o, requirements-dev.txt]
+        files: ^(uv\.lock|pyproject\.toml)$
+
   # Python code quality checks
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.3

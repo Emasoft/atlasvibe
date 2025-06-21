@@ -39,8 +39,12 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
+          version: "0.7.13"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
+
+      - name: Install Python from uv
+        run: uv python install 3.11
 
       - name: Install dependencies
         run: |
@@ -110,12 +114,12 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
+          version: "0.7.13"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install Python from uv
+        run: uv python install 3.11
 
       - name: Install Python Dependencies
         run: uv sync --locked --all-extras --dev

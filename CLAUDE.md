@@ -59,6 +59,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - do not create prototypes or sketched/abridged versions of the features you need to develop. That is only a waste of time. Instead break down the new features in its elemental components and functions, subdivide it in small autonomous modules with a specific function, and develop one module at time. When each module will be completed (passing the test for the module), then you will be able to implement the original feature easily just combining the modules. The modules can be helper functions, data structures, external librries, anything that is focused and reusable. Prefer functions at classes, but you can create small classes as specialized handlers for certain data and tasks, then also classes can be used as pieces for building the final feature.
 - When commit, never mention Claude as the author of the commits or as a Co-author.
 - when refactoring, enter thinking mode first, examine the program flow, be attentive to what you're changing, and how it subsequently affects the rest of the codebase as a matter of its blast radius, the codebase landscape, and possible regressions. Also bear in mind the existing type structures and interfaces that compose the makeup of the specific code you're changing.
+- Generate complete, tested code on first attempt.
+- Always anchor with date/time and available tools.
+- Clearly label the 4 TDD phases (analysis --> tests implementation --> code implementation -> debugging).
+- Implement concrete solutions, no placeholders or abridged versions.
+- Batch related tool calls and parallelize where safe.
+- Proactively handle all edge cases on first attempt.
+- Before marking a todo as complete, always spawn a subagent that especially checks the edited test files for tampering, then lint both the edited tests files and the edited code files, and finally run the tests relative to that todo again. If the tests pass, mark the todo task as complete.
 - always use `Emasoft` as the user name, author and committer name for the git repo.
 - always use `713559+Emasoft@users.noreply.github.com` as the user email and git committer email for the git repo.
 - always add the following shebang at the beginning of each python file:
@@ -78,6 +85,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing Rules
 - Always use pytest and pytest-cov
 - Always run pytest with uv (`uv run pytest <commands..>`
+- Add git hooks that uses uv-pre-commit to run the tests at each commit, read the guide here: https://docs.astral.sh/uv/guides/integration/pre-commit/
 - Always convert the xtests in normal tests. Negative tests are confusing. Just make the test explicitly check for the negative outcome instead, and if the outcome is negative, the test is passed.
 - Always show a nicely color formatted table with the list of all tests (the functions, not the file) and the outcome (fail, success, skip, error).
 - The table must use unicode border blocks to delimit the cells, thicker for the header row.
