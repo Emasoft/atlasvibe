@@ -19,7 +19,7 @@ import python from "react-syntax-highlighter/dist/cjs/languages/hljs/python";
 import json from "react-syntax-highlighter/dist/cjs/languages/hljs/json";
 import { JSONTree } from "react-json-tree";
 import { Node } from "reactflow";
-import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasvibeTheme";
+import { atlasvibeSyntaxTheme } from "@/renderer/assets/AtlasVibeTheme";
 import PlotlyComponent from "@/renderer/components/plotly/PlotlyComponent";
 import { makePlotlyData } from "@/renderer/components/plotly/formatPlotlyData";
 import MarkDownText from "@/renderer/components/common/MarkDownText";
