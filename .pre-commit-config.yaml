@@ -111,7 +111,7 @@ repos:
     - --ignore
     - DEP003
     - --per-rule-ignores
-    - "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry|ninja|av|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
+    - "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|pytest-asyncio|ruff|deptry|ninja|av|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
 
 # General file checks
 - repo: https://github.com/pre-commit/pre-commit-hooks
