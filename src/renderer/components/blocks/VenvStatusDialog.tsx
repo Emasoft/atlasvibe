@@ -67,13 +67,7 @@ export const VenvStatusDialog = ({
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedLog, setSelectedLog] = useState<VenvLog | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      loadData();
-    }
-  }, [open, blockPath, loadData]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Load venv status
@@ -96,7 +90,13 @@ export const VenvStatusDialog = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [blockPath]);
+
+  useEffect(() => {
+    if (open) {
+      loadData();
+    }
+  }, [open, blockPath]);
 
   const handleRegenerate = async () => {
     setIsRegenerating(true);

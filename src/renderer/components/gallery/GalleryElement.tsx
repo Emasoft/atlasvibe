@@ -60,25 +60,33 @@ export const GalleryElement = ({
 
       // Load the project with its path so it knows where to find custom blocks
       const projectPath = getSampleProjectPath(galleryApp.appPath);
-      const res = tryParse(Project)(projectResult.value)
-        .andThen((proj) => loadProject(proj, projectPath))
-        .map(() => {
-          toast.dismiss(loadingToast);
-          toast.success(`Loaded ${galleryApp.title}`);
-          setIsGalleryOpen(false);
-        });
+      const parseRes = await tryParse(Project)(projectResult.value);
 
-      if (res.isErr()) {
+      if (parseRes.isErr()) {
         toast.dismiss(loadingToast);
-        if (res.error instanceof ZodError) {
+        if (parseRes.error instanceof ZodError) {
           toast.error("Project validation error", {
-            description: fromZodError(res.error).toString(),
+            description: fromZodError(parseRes.error).toString(),
           });
         } else {
-          toast.error("Error loading project", {
-            description: res.error.message,
+          toast.error("Error parsing project", {
+            description: parseRes.error instanceof Error ? parseRes.error.message : String(parseRes.error),
           });
         }
+        return;
+      }
+
+      const loadRes = await loadProject(parseRes.value, projectPath);
+
+      if (loadRes.isOk()) {
+        toast.dismiss(loadingToast);
+        toast.success(`Loaded ${galleryApp.title}`);
+        setIsGalleryOpen(false);
+      } else {
+        toast.dismiss(loadingToast);
+        toast.error("Error loading project", {
+          description: loadRes.error.message,
+        });
       }
     } catch (error) {
       toast.dismiss(loadingToast);

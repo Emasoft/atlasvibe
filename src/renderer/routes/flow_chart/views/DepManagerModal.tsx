@@ -61,9 +61,9 @@ const DepManagerModal = () => {
     const deps = await window.api.uvShowTopLevel();
     const userDeps = await window.api.uvShowUserGroup();
     const groups = await window.api.uvGetGroupInfo();
-    setAllDependencies(deps);
-    setUserDependencies(userDeps);
-    setDepGroups(groups);
+    setAllDependencies(deps as PythonDependency[]);
+    setUserDependencies(userDeps as PythonDependency[]);
+    setDepGroups(groups as DependencyGroupInfo[]);
     setIsFetching(false);
   }, []);
 

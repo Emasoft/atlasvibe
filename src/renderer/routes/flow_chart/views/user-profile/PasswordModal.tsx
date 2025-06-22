@@ -99,7 +99,7 @@ export function PasswordModal({
       await window.api.setUserProfilePassword(user.name, data.newPassword);
       toast.message("Password set successfully!");
       const users = await window.api.getUserProfiles();
-      setUser(users.find((u) => u.name === user.name) ?? user);
+      setUser(users.find((u) => (u as any).name === user.name) ?? user);
       handleOpenChange(false);
     } catch (error) {
       toast.error("Failed to set password, reason: " + String(error));
@@ -110,7 +110,7 @@ export function PasswordModal({
     await window.api.setUserProfilePassword(user.name, "");
     toast.message("Password disabled successfully!");
     const users = await window.api.getUserProfiles();
-    setUser(users.find((u) => u.name === user.name) ?? user);
+    setUser(users.find((u) => (u as any).name === user.name) ?? user);
     refreshUsers();
     handleOpenChange(false);
   };

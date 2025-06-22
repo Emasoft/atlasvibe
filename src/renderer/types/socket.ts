@@ -42,6 +42,11 @@ export const WorkerJobResponse = z.object({
     "worker_response",
     "connection_established",
     "manifest_update",
+    "change_queued",
+    "block_code_updated",
+    "block_parameter_updated",
+    "transaction_applied",
+    "transaction_failed",
   ]),
   FAILED_NODES: z.record(z.string()).optional(),
   RUNNING_NODE: z.string().optional(),
@@ -53,6 +58,15 @@ export const WorkerJobResponse = z.object({
     })
     .optional(),
   blockPaths: z.array(z.string()).optional(), // For manifest_update messages
+  // Additional fields for change tracking events
+  block_id: z.string().optional(),
+  change_type: z.string().optional(),
+  has_pending: z.number().optional(),
+  version: z.string().optional(),
+  parameter: z.string().optional(),
+  value: z.unknown().optional(),
+  change_count: z.number().optional(),
+  error: z.string().optional(),
 });
 
 export type WorkerJobResponse = z.infer<typeof WorkerJobResponse>;

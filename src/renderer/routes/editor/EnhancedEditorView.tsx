@@ -126,13 +126,13 @@ const EnhancedEditorView = () => {
           if (updateRes.isOk()) {
             const response = updateRes.value;
 
-            if (response.status === "queued") {
+            if ((response as any).status === "queued") {
               toast.info("Block update queued", {
                 description: `Block is currently executing. Changes will be applied when it finishes.`,
               });
             } else {
               toast.success("Block updated successfully", {
-                description: `Version ${response.version + 1}`,
+                description: `Version ${(response as any).version + 1}`,
               });
             }
 

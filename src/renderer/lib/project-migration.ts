@@ -45,8 +45,9 @@ export function migrateProjectFormat(projectData: unknown): ProjectMigrationResu
     project.version = '2.0.0';
 
     // Check each node to see if it might be a custom block
-    if (project.rfInstance?.nodes) {
-      project.rfInstance.nodes = project.rfInstance.nodes.map((node: Node<BlockData>) => {
+    const rfInstance = project.rfInstance as { nodes?: Node<BlockData>[], [key: string]: any };
+    if (rfInstance?.nodes) {
+      rfInstance.nodes = rfInstance.nodes.map((node: Node<BlockData>) => {
         // If node already has isCustom flag and path, preserve it
         if (node.data.isCustom !== undefined && node.data.path) {
           return node;

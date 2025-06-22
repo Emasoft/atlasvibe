@@ -74,7 +74,7 @@ export const useLoadApp = () => {
         });
       } else {
         toast.error("Error parsing project", {
-          description: parseRes.error.message,
+          description: parseRes.error instanceof Error ? parseRes.error.message : String(parseRes.error),
         });
       }
       return;
