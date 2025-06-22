@@ -146,7 +146,7 @@ export function SaveBlueprintDialog({
     // Handle name collision
     if (nameCollision) {
       const confirmed = window.confirm(
-        `A blueprint with the name "${blueprintName}" already exists. Do you want to overwrite it?`
+        `A blueprint with the name "${blueprintName}" already exists. Do you want to overwrite it?`,
       );
 
       if (!confirmed) {
@@ -175,7 +175,9 @@ export function SaveBlueprintDialog({
       toast.success(`Blueprint "${blueprintName}" saved successfully`);
     } catch (error) {
       console.error("Save blueprint error:", error);
-      toast.error(`Failed to save blueprint: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(
+        `Failed to save blueprint: ${error instanceof Error ? error.message : String(error)}`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -220,7 +222,8 @@ export function SaveBlueprintDialog({
             {/* Collision warning */}
             {nameCollision && !nameError && (
               <p className="warning-message text-sm text-yellow-600">
-                A blueprint with this name already exists. Do you want to overwrite it?
+                A blueprint with this name already exists. Do you want to
+                overwrite it?
               </p>
             )}
           </div>
@@ -246,10 +249,7 @@ export function SaveBlueprintDialog({
           )}
 
           {!nameCollision && (
-            <Button
-              onClick={handleSave}
-              disabled={!isValid || isSaving}
-            >
+            <Button onClick={handleSave} disabled={!isValid || isSaving}>
               {isSaving ? "Saving..." : "Save"}
             </Button>
           )}

@@ -31,10 +31,7 @@ export const RegeneratingIndicator: React.FC<RegeneratingIndicatorProps> = ({
 
   return (
     <div
-      className={clsx(
-        "block-regenerating-indicator",
-        className,
-      )}
+      className={clsx("block-regenerating-indicator", className)}
       data-testid="block-regenerating-indicator"
     >
       Regenerating...

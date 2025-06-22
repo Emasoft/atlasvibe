@@ -21,23 +21,32 @@ import { useSocketStore } from "@/renderer/stores/socket";
 import { useManifestStore } from "@/renderer/stores/manifest";
 import { useShallow } from "zustand/react/shallow";
 
-export type ExecutionStatusType = "idle" | "running" | "paused" | "completed" | "error";
+export type ExecutionStatusType =
+  | "idle"
+  | "running"
+  | "paused"
+  | "completed"
+  | "error";
 
 interface ExecutionStatusProps {
   className?: string;
 }
 
-export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) => {
+export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
+  className,
+}) => {
   const [status, setStatus] = useState<ExecutionStatusType>("idle");
   const [pauseReason, setPauseReason] = useState<string>("");
 
   const { isRunning } = useSocketStore(
     useShallow((state) => ({
       isRunning: state.isRunning,
-    }))
+    })),
   );
 
-  const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
+  const regeneratingBlocks = useManifestStore(
+    (state) => state.regeneratingBlocks,
+  );
   const hasRegeneratingBlocks = regeneratingBlocks.size > 0;
 
   // Update status based on execution and regeneration state
@@ -70,7 +79,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
       case "paused":
         return {
           text: pauseReason ? `Paused - ${pauseReason}` : "Paused",
-          className: "text-yellow-500"
+          className: "text-yellow-500",
         };
       case "completed":
         return { text: "Completed", className: "text-blue-500" };
@@ -94,7 +103,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
         statusClassName,
         status === "paused" && "execution-status paused",
         status === "running" && "execution-status running",
-        className
+        className,
       )}
       data-testid="execution-status"
     >

@@ -24,9 +24,7 @@ import _ from "lodash";
 import { ResultAsync, fromPromise } from "neverthrow";
 import { Options } from "ky";
 import { DeviceInfo } from "@/renderer/types/hardware";
-import {
-  TestDiscoverContainer,
-} from "@/renderer/types/test-sequencer";
+import { TestDiscoverContainer } from "@/renderer/types/test-sequencer";
 import { useProjectStore } from "@/renderer/stores/project";
 import {
   VenvStatus,

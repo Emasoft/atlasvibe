@@ -14,9 +14,9 @@
 // - Ensures custom blocks are properly identified
 //
 
-import { Project } from '@/renderer/types/project';
-import { Node } from 'reactflow';
-import { BlockData } from '@/renderer/types/block';
+import { Project } from "@/renderer/types/project";
+import { Node } from "reactflow";
+import { BlockData } from "@/renderer/types/block";
 
 export interface ProjectMigrationResult {
   project: Project;
@@ -28,10 +28,12 @@ export interface ProjectMigrationResult {
  * Migrates project files to the latest format
  * Ensures custom blocks have proper path references
  */
-export function migrateProjectFormat(projectData: unknown): ProjectMigrationResult {
+export function migrateProjectFormat(
+  projectData: unknown,
+): ProjectMigrationResult {
   // Type guard to ensure projectData is an object
-  if (!projectData || typeof projectData !== 'object') {
-    throw new Error('Invalid project data');
+  if (!projectData || typeof projectData !== "object") {
+    throw new Error("Invalid project data");
   }
 
   const data = projectData as Record<string, unknown>;
@@ -40,12 +42,15 @@ export function migrateProjectFormat(projectData: unknown): ProjectMigrationResu
   const project = { ...data } as Record<string, unknown>;
 
   // Migrate from v1 to v2 format (add custom block support)
-  if (!project.version || project.version === '1.0.0') {
+  if (!project.version || project.version === "1.0.0") {
     migrated = true;
-    project.version = '2.0.0';
+    project.version = "2.0.0";
 
     // Check each node to see if it might be a custom block
-    const rfInstance = project.rfInstance as { nodes?: Node<BlockData>[], [key: string]: any };
+    const rfInstance = project.rfInstance as {
+      nodes?: Node<BlockData>[];
+      [key: string]: any;
+    };
     if (rfInstance?.nodes) {
       rfInstance.nodes = rfInstance.nodes.map((node: Node<BlockData>) => {
         // If node already has isCustom flag and path, preserve it
@@ -71,11 +76,10 @@ export function migrateProjectFormat(projectData: unknown): ProjectMigrationResu
 
   return {
     project: project as Project,
-    version: (project.version as string) || '2.0.0',
+    version: (project.version as string) || "2.0.0",
     migrated,
   };
 }
-
 
 /**
  * Validates that all custom blocks have proper references
@@ -86,9 +90,13 @@ export function validateProjectReferences(project: Project): string[] {
   project.rfInstance.nodes.forEach((node, index) => {
     if (node.data.isCustom) {
       if (!node.data.path) {
-        errors.push(`Custom block at index ${index} (${node.data.func}) is missing path reference`);
-      } else if (!node.data.path.includes('atlasvibe_blocks/')) {
-        errors.push(`Custom block at index ${index} (${node.data.func}) has invalid path: ${node.data.path}`);
+        errors.push(
+          `Custom block at index ${index} (${node.data.func}) is missing path reference`,
+        );
+      } else if (!node.data.path.includes("atlasvibe_blocks/")) {
+        errors.push(
+          `Custom block at index ${index} (${node.data.func}) has invalid path: ${node.data.path}`,
+        );
       }
     }
   });
@@ -99,9 +107,7 @@ export function validateProjectReferences(project: Project): string[] {
 /**
  * Updates custom block references when project is moved or renamed
  */
-export function updateCustomBlockPaths(
-  project: Project
-): Project {
+export function updateCustomBlockPaths(project: Project): Project {
   // Since paths are relative to the project directory,
   // they don't need updating when the project moves
   // This function is here for future compatibility if we switch to absolute paths

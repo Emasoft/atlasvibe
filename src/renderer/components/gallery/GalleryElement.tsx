@@ -70,7 +70,8 @@ export const GalleryElement = ({
           });
         } else {
           toast.error("Error parsing project", {
-            description: parseRes.error instanceof Error ? parseRes.error.message : String(parseRes.error),
+            description:
+              (parseRes.error as Error).message || String(parseRes.error),
           });
         }
         return;

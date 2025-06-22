@@ -14,15 +14,15 @@
 // - Handles both standard and custom blocks
 //
 
-import { Node, XYPosition } from 'reactflow';
-import { BlockDefinition } from '@/renderer/types/manifest';
-import { BlockData } from '@/renderer/stores/project';
-import { DeviceInfo } from '@/renderer/types/hardware';
+import { Node, XYPosition } from "reactflow";
+import { BlockDefinition } from "@/renderer/types/manifest";
+import { BlockData } from "@/renderer/stores/project";
+import { DeviceInfo } from "@/renderer/types/hardware";
 import {
   createBlockId,
   createBlockLabel,
-  ctrlsFromParams
-} from '@/renderer/lib/block';
+  ctrlsFromParams,
+} from "@/renderer/lib/block";
 
 export interface CreateNodeOptions {
   /** Block definition (standard or custom) */
@@ -45,7 +45,9 @@ export interface CreateNodeOptions {
  * Creates a new node from a block definition
  * Handles both standard and custom blocks
  */
-export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData> {
+export function createNodeFromBlock(
+  options: CreateNodeOptions,
+): Node<BlockData> {
   const {
     blockDefinition,
     position,
@@ -53,7 +55,7 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
     hardwareDevices,
     takenLabels = [],
     isCustom = false,
-    customPath
+    customPath,
   } = options;
 
   const {
@@ -97,7 +99,7 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
   // Add custom block properties if applicable
   if (isCustom) {
     if (!customPath) {
-      throw new Error('Custom blocks must have a path');
+      throw new Error("Custom blocks must have a path");
     }
     nodeData.path = customPath;
     nodeData.isCustom = true;
@@ -117,14 +119,15 @@ export function createNodeFromBlock(options: CreateNodeOptions): Node<BlockData>
  */
 export function duplicateNode(
   originalNode: Node<BlockData>,
-  takenLabels: RegExpMatchArray[]
+  takenLabels: RegExpMatchArray[],
 ): Node<BlockData> {
   const funcName = originalNode.data.func;
   const id = createBlockId(funcName);
 
-  const newLabel = originalNode.data.func === "CONSTANT"
-    ? originalNode.data.ctrls["constant"].value!.toString()
-    : createBlockLabel(funcName, takenLabels);
+  const newLabel =
+    originalNode.data.func === "CONSTANT"
+      ? originalNode.data.ctrls["constant"].value!.toString()
+      : createBlockLabel(funcName, takenLabels);
 
   const newNode: Node<BlockData> = {
     ...originalNode,

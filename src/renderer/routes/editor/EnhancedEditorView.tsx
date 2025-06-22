@@ -167,10 +167,12 @@ const EnhancedEditorView = () => {
 
       if (result.isOk()) {
         const validationResult = result.value as { errors: ValidationError[] };
-        const validationErrors = validationResult.errors.map((err: ValidationError) => ({
-          ...err,
-          severity: err.severity as "error" | "warning" | "info",
-        }));
+        const validationErrors = validationResult.errors.map(
+          (err: ValidationError) => ({
+            ...err,
+            severity: err.severity as "error" | "warning" | "info",
+          }),
+        );
         setErrors(validationErrors);
       }
     } catch (error) {
@@ -287,21 +289,23 @@ const EnhancedEditorView = () => {
       if (result.isOk()) {
         return {
           from: context.pos - (context.matchBefore(/\w*/)?.text.length || 0),
-          options: (result.value as { completions: Array<{
-            label: string;
-            kind: string;
-            detail?: string;
-            documentation?: string;
-            insertText?: string;
-          }> }).completions.map(
-            (comp) => ({
-              label: comp.label,
-              type: comp.kind,
-              detail: comp.detail,
-              info: comp.documentation,
-              apply: comp.insertText,
-            }),
-          ),
+          options: (
+            result.value as {
+              completions: Array<{
+                label: string;
+                kind: string;
+                detail?: string;
+                documentation?: string;
+                insertText?: string;
+              }>;
+            }
+          ).completions.map((comp) => ({
+            label: comp.label,
+            type: comp.kind,
+            detail: comp.detail,
+            info: comp.documentation,
+            apply: comp.insertText,
+          })),
         };
       }
     } catch (error) {

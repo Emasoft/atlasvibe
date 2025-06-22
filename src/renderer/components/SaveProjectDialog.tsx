@@ -185,7 +185,8 @@ export function SaveProjectDialog({
       toast.success(`Project saved to ${projectPath}`);
     } catch (error) {
       console.error("Save error:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       toast.error(`Failed to save project: ${errorMessage}`);
     } finally {
       setIsSaving(false);
@@ -253,7 +254,8 @@ export function SaveProjectDialog({
             {/* Collision warning */}
             {nameCollision && !nameError && (
               <p className="warning-message text-sm text-yellow-600">
-                A project with this name already exists in the selected folder. Do you want to overwrite it?
+                A project with this name already exists in the selected folder.
+                Do you want to overwrite it?
               </p>
             )}
           </div>
@@ -279,10 +281,7 @@ export function SaveProjectDialog({
           )}
 
           {!nameCollision && (
-            <Button
-              onClick={handleSave}
-              disabled={!isValid || isSaving}
-            >
+            <Button onClick={handleSave} disabled={!isValid || isSaving}>
               {isSaving ? "Saving..." : "Save"}
             </Button>
           )}

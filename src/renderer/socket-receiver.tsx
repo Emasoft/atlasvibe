@@ -145,7 +145,9 @@ export const SocketReceiver = () => {
             description: `Type: ${data.change_type}`,
           });
           // Mark block as having pending changes
-          setBlockPendingChanges(data.block_id, data.has_pending > 0);
+          if (data.block_id && data.has_pending !== undefined) {
+            setBlockPendingChanges(data.block_id, data.has_pending > 0);
+          }
           break;
 
         case "block_code_updated":
@@ -153,8 +155,10 @@ export const SocketReceiver = () => {
             description: `Version ${data.version}`,
           });
           // Update block version and clear pending status
-          setBlockVersion(data.block_id, data.version);
-          setBlockPendingChanges(data.block_id, false);
+          if (data.block_id && data.version) {
+            setBlockVersion(data.block_id, parseInt(data.version, 10));
+            setBlockPendingChanges(data.block_id, false);
+          }
           // Trigger manifest refresh to get updated block
           doFetch();
           break;

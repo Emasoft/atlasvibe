@@ -59,16 +59,25 @@ export function BlueprintManagerDialog({
   const manifest = useManifest();
 
   // Helper function to extract blueprints from manifest tree
-  const extractBlueprints = (node: TreeNode, category: string = ""): BlueprintItem[] => {
+  const extractBlueprints = (
+    node: TreeNode,
+    category: string = "",
+  ): BlueprintItem[] => {
     const items: BlueprintItem[] = [];
 
-    if ('children' in node && node.children) {
+    if ("children" in node && node.children) {
       // This is a section node
       node.children.forEach((child) => {
-        const childCategory = category ? `${category}/${child.name}` : child.name;
+        const childCategory = category
+          ? `${category}/${child.name}`
+          : child.name;
         items.push(...extractBlueprints(child, childCategory));
       });
-    } else if ('key' in node && node.key && (node as BlockDefinition).isBlueprint) {
+    } else if (
+      "key" in node &&
+      node.key &&
+      (node as BlockDefinition).isBlueprint
+    ) {
       // This is a leaf node (block definition)
       items.push({
         key: node.key,
@@ -102,8 +111,8 @@ export function BlueprintManagerDialog({
     }
 
     // Check for collision with other blueprints
-    const otherBlueprints = blueprints.filter(b => b.key !== editingKey);
-    if (otherBlueprints.some(b => b.name === name)) {
+    const otherBlueprints = blueprints.filter((b) => b.key !== editingKey);
+    if (otherBlueprints.some((b) => b.name === name)) {
       return "A blueprint with this name already exists";
     }
 
@@ -189,7 +198,8 @@ export function BlueprintManagerDialog({
         window.location.reload();
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       toast.error(`Failed to rename blueprint: ${errorMessage}`);
     }
   };
@@ -197,7 +207,7 @@ export function BlueprintManagerDialog({
   // Delete blueprint
   const handleDelete = async (blueprint: BlueprintItem) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete the blueprint "${blueprint.name}"? This cannot be undone.`
+      `Are you sure you want to delete the blueprint "${blueprint.name}"? This cannot be undone.`,
     );
 
     if (!confirmed) return;
@@ -214,7 +224,8 @@ export function BlueprintManagerDialog({
       // Reload blueprints
       window.location.reload();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       toast.error(`Failed to delete blueprint: ${errorMessage}`);
     }
   };
@@ -247,10 +258,7 @@ export function BlueprintManagerDialog({
                       <Input
                         value={editingName}
                         onChange={(e) => handleNameChange(e.target.value)}
-                        className={cn(
-                          "flex-1",
-                          nameError && "border-red-500"
-                        )}
+                        className={cn("flex-1", nameError && "border-red-500")}
                         placeholder="Enter new name"
                         autoFocus
                         onKeyPress={(e) => {
@@ -268,11 +276,7 @@ export function BlueprintManagerDialog({
                       >
                         {showPreview ? "Apply" : "Rename"}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={cancelEdit}
-                      >
+                      <Button size="sm" variant="ghost" onClick={cancelEdit}>
                         Cancel
                       </Button>
                     </>
@@ -311,7 +315,9 @@ export function BlueprintManagerDialog({
 
           {/* Error/preview messages */}
           {editingKey && nameError && (
-            <p className="error-message mt-2 text-sm text-red-500">{nameError}</p>
+            <p className="error-message mt-2 text-sm text-red-500">
+              {nameError}
+            </p>
           )}
           {editingKey && showPreview && (
             <p className="preview-message mt-2 text-sm text-yellow-600">

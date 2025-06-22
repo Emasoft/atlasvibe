@@ -8,7 +8,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,11 +42,7 @@ import { getVenvStatus, getVenvLogs, regenerateVenv } from "@/renderer/lib/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/renderer/lib/utils";
-import {
-  VenvStatus,
-  VenvLog,
-  CheckStatus,
-} from "@/renderer/types/venv";
+import { VenvStatus, VenvLog, CheckStatus } from "@/renderer/types/venv";
 
 interface VenvStatusDialogProps {
   open: boolean;

@@ -29,15 +29,16 @@ interface Transaction {
 }
 
 export const ProjectStatusIndicator = () => {
-  const { name, path, hasUnsavedChanges, isSaving, saveProject } = useProjectStore(
-    useShallow((state) => ({
-      name: state.name,
-      path: state.path,
-      hasUnsavedChanges: state.hasUnsavedChanges,
-      isSaving: state.isSaving,
-      saveProject: state.saveProject,
-    }))
-  );
+  const { name, path, hasUnsavedChanges, isSaving, saveProject } =
+    useProjectStore(
+      useShallow((state) => ({
+        name: state.name,
+        path: state.path,
+        hasUnsavedChanges: state.hasUnsavedChanges,
+        isSaving: state.isSaving,
+        saveProject: state.saveProject,
+      })),
+    );
 
   const [status, setStatus] = useState<ProjectStatus>("saved");
   const [transactionQueue, setTransactionQueue] = useState<Transaction[]>([]);
@@ -159,7 +160,7 @@ export const ProjectStatusIndicator = () => {
     <div
       className={cn(
         "project-status-indicator flex items-center px-3 py-1 text-sm font-medium",
-        className
+        className,
       )}
       data-testid="project-status-indicator"
     >
