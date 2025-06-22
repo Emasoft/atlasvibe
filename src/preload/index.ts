@@ -67,9 +67,9 @@ export interface ExtendedWindowApi {
   pipxEnsurepath: () => Promise<void>;
   installUv: () => Promise<void>;
   installDependencies: () => Promise<void>;
-  uvShowTopLevel: () => Promise<any[]>;
-  uvShowUserGroup: () => Promise<any[]>;
-  uvGetGroupInfo: () => Promise<any[]>;
+  uvShowTopLevel: () => Promise<unknown[]>;
+  uvShowUserGroup: () => Promise<unknown[]>;
+  uvGetGroupInfo: () => Promise<unknown[]>;
   uvInstallDepGroup: (group: string) => Promise<boolean>;
   uvUninstallDepGroup: (group: string) => Promise<boolean>;
   uvInstallDepUserGroup: (dep: string) => Promise<boolean>;
@@ -97,12 +97,12 @@ export interface ExtendedWindowApi {
   pyvisaInfo: () => Promise<string>;
 
   // Auth operations
-  getUserProfiles: () => Promise<any[]>;
+  getUserProfiles: () => Promise<unknown[]>;
   setUserProfile: (username: string) => void;
   setUserProfilePassword: (username: string, password: string) => Promise<void>;
   validatePassword: (username: string, password: string) => Promise<boolean>;
-  createUserProfile: (user: any) => Promise<void>;
-  deleteUserProfile: (username: string, currentUser: any) => Promise<void>;
+  createUserProfile: (user: unknown) => Promise<void>;
+  deleteUserProfile: (username: string, currentUser: unknown) => Promise<void>;
 
   // Block operations
   createCustomBlockFromBlueprint: (

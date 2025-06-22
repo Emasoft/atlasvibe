@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from tests.python import constants  # Absolute import for test constants
+from . import constants  # Relative import for test constants
 
 
 @pytest.fixture

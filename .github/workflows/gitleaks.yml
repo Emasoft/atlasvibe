@@ -81,14 +81,23 @@ jobs:
 
       - name: Run Gitleaks on latest commit
         run: |
-          # Check if the before commit exists
-          if git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
-            echo "Running Gitleaks on commit range: ${{ github.event.before }}..${{ github.sha }}"
-            gitleaks detect --config .gitleaks.toml --log-opts="${{ github.event.before }}..${{ github.sha }}" --verbose
+          # For push events, check what we can
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Try to check if this is the first commit
+            if git rev-list --count HEAD >/dev/null 2>&1 && [ "$(git rev-list --count HEAD)" -eq 1 ]; then
+              echo "First commit detected, scanning entire repository"
+              gitleaks detect --config .gitleaks.toml --source . --verbose
+            elif git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
+              echo "Running Gitleaks on commit range: ${{ github.event.before }}..${{ github.sha }}"
+              gitleaks detect --config .gitleaks.toml --log-opts="${{ github.event.before }}..${{ github.sha }}" --verbose
+            else
+              echo "Cannot determine commit range, scanning last commit only"
+              gitleaks detect --config .gitleaks.toml --log-opts="HEAD^..HEAD" --verbose 2>/dev/null || \
+              gitleaks detect --config .gitleaks.toml --source . --verbose
+            fi
           else
-            echo "Previous commit not found, running on single commit: ${{ github.sha }}"
-            gitleaks detect --config .gitleaks.toml --log-opts="${{ github.sha }}^..${{ github.sha }}" --verbose || \
-            gitleaks detect --config .gitleaks.toml --source . --verbose
+            echo "Not a push event, skipping"
+            exit 0
           fi
 
       - name: Create Issue on Failure

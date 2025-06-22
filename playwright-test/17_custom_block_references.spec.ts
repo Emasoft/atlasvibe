@@ -247,7 +247,7 @@ test.describe("Custom block references", () => {
   test("Should migrate v1 projects to v2 format", async () => {
     // Create a v1 format project file
     const v1ProjectPath = join(tempDir, "v1_project.atlasvibe");
-    const v1ProjectData = {
+    const v1ProjectData: ProjectData = {
       // No version field in v1
       name: "Legacy Project",
       rfInstance: {

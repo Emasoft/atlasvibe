@@ -8,8 +8,6 @@
  * See the LICENSE file for details.
  */
 
-#!/usr/bin/env node
-// -*- coding: utf-8 -*-
 
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - Completely rewritten to remove all Poetry and store references

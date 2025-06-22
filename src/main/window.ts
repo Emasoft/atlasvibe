@@ -21,11 +21,11 @@ import {
   nativeImage,
   dialog,
   nativeTheme,
-  ipcMain, // Added for handling custom events
+  // ipcMain, // Added for handling custom events
 } from "electron";
 import { update } from "./update";
-import log from "electron-log/main";
-import { cleanup, isPortFree, killProcess } from "./utils";
+// import log from "electron-log/main";
+import { cleanup } from "./utils";
 
 import { is } from "@electron-toolkit/utils";
 

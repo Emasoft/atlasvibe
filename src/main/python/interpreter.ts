@@ -8,7 +8,7 @@
  * See the LICENSE file for details.
  */
 
-import { readdir, stat, existsSync } from "fs";
+import { readdir, stat } from "fs";
 import { join } from "path";
 import os from "os";
 import { execCommand } from "@/main/executor";

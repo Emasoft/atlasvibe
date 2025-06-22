@@ -402,7 +402,7 @@ def ERROR_TEST_BLOCK(x: int = 1) -> int:
     const sidebar = window.locator('[data-testid="blocks-sidebar"]');
 
     // Look for section headers
-    const blueprintSection = sidebar.locator("text=Blueprint Blocks");
+    // const blueprintSection = sidebar.locator("text=Blueprint Blocks");
     const customSection = sidebar.locator("text=Custom Blocks");
 
     if (await customSection.isVisible({ timeout: 1000 })) {

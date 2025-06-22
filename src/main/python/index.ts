@@ -20,7 +20,7 @@ import {
   interpreterCachePath,
 } from "./interpreter";
 import * as os from "os";
-import { existsSync, mkdirSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { uvGroupEnsureValid } from "./uv";
 import { store } from "../store";
 import { join } from "path";
@@ -264,17 +264,17 @@ export async function pyvisaInfo() {
   });
 }
 
-const getUvPath = async () => {
-  const localBinPath = join(os.homedir(), ".local", "bin", "uv");
-  try {
-    await execCommand(new Command(`${localBinPath} --version`), {
-      quiet: true,
-    });
-    return localBinPath;
-  } catch (error) {
-    return "uv";
-  }
-};
+// const getUvPath = async () => {
+//   const localBinPath = join(os.homedir(), ".local", "bin", "uv");
+//   try {
+//     await execCommand(new Command(`${localBinPath} --version`), {
+//       quiet: true,
+//     });
+//     return localBinPath;
+//   } catch (error) {
+//     return "uv";
+//   }
+// };
 
 export async function restartCaptain() {
   if (!global.captainProcess?.killed) {
