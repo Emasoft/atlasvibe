@@ -91,7 +91,7 @@ test.describe("Custom block references", () => {
 
     // Verify custom block appears
     await expect(
-      window.locator("h2", { hasText: "MY_PROCESSOR" })
+      window.locator("h2", { hasText: "MY_PROCESSOR" }),
     ).toBeVisible();
 
     // Save the project
@@ -118,15 +118,15 @@ test.describe("Custom block references", () => {
 
     // Verify custom block is restored with correct reference
     await expect(
-      window.locator("h2", { hasText: "MY_PROCESSOR" })
+      window.locator("h2", { hasText: "MY_PROCESSOR" }),
     ).toBeVisible();
 
     // Verify the loaded project data contains custom block info
-    const projectData = JSON.parse(fs.readFileSync(project1Path, 'utf-8'));
+    const projectData = JSON.parse(fs.readFileSync(project1Path, "utf-8"));
     expect(projectData.version).toBe("2.0.0");
 
     const customNode = projectData.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR"
+      (n: any) => n.data.func === "MY_PROCESSOR",
     );
     expect(customNode).toBeTruthy();
     expect(customNode.data.path).toContain("atlasvibe_blocks/MY_PROCESSOR");
@@ -135,7 +135,9 @@ test.describe("Custom block references", () => {
 
   test("Should show visual indicators for custom blocks", async () => {
     // Custom blocks should have a visual indicator
-    const customBlock = window.locator("h2", { hasText: "MY_PROCESSOR" }).first();
+    const customBlock = window
+      .locator("h2", { hasText: "MY_PROCESSOR" })
+      .first();
     const blockContainer = customBlock.locator("..");
 
     // Check for custom block styling or badge
@@ -143,8 +145,10 @@ test.describe("Custom block references", () => {
     await expect(blockContainer).toHaveClass(/custom-block|project-block/);
 
     // Or check for a badge/icon
-    const customIndicator = blockContainer.locator('[data-testid="custom-block-indicator"]');
-    if (await customIndicator.count() > 0) {
+    const customIndicator = blockContainer.locator(
+      '[data-testid="custom-block-indicator"]',
+    );
+    if ((await customIndicator.count()) > 0) {
       await expect(customIndicator).toBeVisible();
     }
 
@@ -193,14 +197,14 @@ test.describe("Custom block references", () => {
     await window.waitForTimeout(1000);
 
     // Both projects should have their own MY_PROCESSOR implementations
-    const project1Data = JSON.parse(fs.readFileSync(project1Path, 'utf-8'));
-    const project2Data = JSON.parse(fs.readFileSync(project2Path, 'utf-8'));
+    const project1Data = JSON.parse(fs.readFileSync(project1Path, "utf-8"));
+    const project2Data = JSON.parse(fs.readFileSync(project2Path, "utf-8"));
 
     const customNode1 = project1Data.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR"
+      (n: any) => n.data.func === "MY_PROCESSOR",
     );
     const customNode2 = project2Data.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR"
+      (n: any) => n.data.func === "MY_PROCESSOR",
     );
 
     // Both should exist and have custom block references
@@ -221,23 +225,25 @@ test.describe("Custom block references", () => {
       // No version field in v1
       name: "Legacy Project",
       rfInstance: {
-        nodes: [{
-          id: "node-1",
-          type: "CustomBlock",
-          position: { x: 100, y: 100 },
-          data: {
+        nodes: [
+          {
             id: "node-1",
-            label: "MY_OLD_BLOCK",
-            func: "MY_OLD_BLOCK",
             type: "CustomBlock",
-            ctrls: {},
-            inputs: [],
-            outputs: []
-            // No path or isCustom in v1
-          }
-        }],
-        edges: []
-      }
+            position: { x: 100, y: 100 },
+            data: {
+              id: "node-1",
+              label: "MY_OLD_BLOCK",
+              func: "MY_OLD_BLOCK",
+              type: "CustomBlock",
+              ctrls: {},
+              inputs: [],
+              outputs: [],
+              // No path or isCustom in v1
+            },
+          },
+        ],
+        edges: [],
+      },
     };
 
     fs.writeFileSync(v1ProjectPath, JSON.stringify(v1ProjectData, null, 2));
@@ -253,7 +259,7 @@ test.describe("Custom block references", () => {
 
     // The block should be loaded
     await expect(
-      window.locator("h2", { hasText: "MY_OLD_BLOCK" })
+      window.locator("h2", { hasText: "MY_OLD_BLOCK" }),
     ).toBeVisible();
 
     // Save it (which should trigger migration)
@@ -267,7 +273,7 @@ test.describe("Custom block references", () => {
     await window.waitForTimeout(1000);
 
     // Check the saved file has v2 format
-    const migratedData = JSON.parse(fs.readFileSync(migratedPath, 'utf-8'));
+    const migratedData = JSON.parse(fs.readFileSync(migratedPath, "utf-8"));
     expect(migratedData.version).toBe("2.0.0");
 
     // Custom blocks should have default values added
@@ -303,16 +309,16 @@ test.describe("Custom block references", () => {
 
       // Block should show new name
       await expect(
-        window.locator("h2", { hasText: "RENAMED_PROCESSOR" })
+        window.locator("h2", { hasText: "RENAMED_PROCESSOR" }),
       ).toBeVisible();
 
       // Save and verify references are updated
       await window.keyboard.press("Control+S");
       await window.waitForTimeout(1000);
 
-      const updatedData = JSON.parse(fs.readFileSync(project1Path, 'utf-8'));
+      const updatedData = JSON.parse(fs.readFileSync(project1Path, "utf-8"));
       const renamedNode = updatedData.rfInstance.nodes.find(
-        (n: any) => n.data.func === "RENAMED_PROCESSOR"
+        (n: any) => n.data.func === "RENAMED_PROCESSOR",
       );
       expect(renamedNode).toBeTruthy();
       expect(renamedNode.data.path).toContain("RENAMED_PROCESSOR");
@@ -350,7 +356,11 @@ test.describe("Custom block references", () => {
 
     // Manually delete the custom block directory (simulating external deletion)
     const projectDir = path.dirname(deletionTestPath);
-    const customBlockDir = join(projectDir, "atlasvibe_blocks", "DELETABLE_BLOCK");
+    const customBlockDir = join(
+      projectDir,
+      "atlasvibe_blocks",
+      "DELETABLE_BLOCK",
+    );
     if (fs.existsSync(customBlockDir)) {
       fs.rmSync(customBlockDir, { recursive: true, force: true });
     }
@@ -387,7 +397,9 @@ test.describe("Custom block references", () => {
     await window.getByTestId(Selectors.customBlocksTabBtn).click();
 
     // Custom blocks from current project should be listed
-    const customBlocksList = window.locator('[data-testid="custom-blocks-list"]');
+    const customBlocksList = window.locator(
+      '[data-testid="custom-blocks-list"]',
+    );
 
     // Should show project custom blocks if any exist
     const projectBlocks = customBlocksList.locator("button");

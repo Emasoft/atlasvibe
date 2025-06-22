@@ -14,14 +14,16 @@ All endpoints are prefixed with `/workflow-queues`.
 ## Core Endpoints
 
 ### 1. Enqueue Change
+
 **POST** `/workflow-queues/enqueue`
 
 Enqueue a workflow change for processing. Returns immediately (milliseconds).
 
 **Request Body:**
+
 ```json
 {
-  "type": "code_update",  // ChangeType enum
+  "type": "code_update", // ChangeType enum
   "block_id": "ADDITION_1",
   "data": {
     "code": "def ADDITION_1(x, y):\n    return x + y"
@@ -30,6 +32,7 @@ Enqueue a workflow change for processing. Returns immediately (milliseconds).
 ```
 
 **Response:**
+
 ```json
 {
   "change_id": "change_123abc",
@@ -42,6 +45,7 @@ Enqueue a workflow change for processing. Returns immediately (milliseconds).
 ```
 
 **Change Types:**
+
 - `code_update` - Update block code
 - `manifest_regen` - Regenerate block manifest
 - `metadata_update` - Update block metadata
@@ -50,11 +54,13 @@ Enqueue a workflow change for processing. Returns immediately (milliseconds).
 - `parameter_update` - Update block parameters
 
 ### 2. Get Queue Status
+
 **GET** `/workflow-queues/status`
 
 Get current status of both workflow queues.
 
 **Response:**
+
 ```json
 {
   "coordinator": {
@@ -86,24 +92,26 @@ Get current status of both workflow queues.
 ```
 
 ### 3. Set Topology
+
 **POST** `/workflow-queues/topology`
 
 Set the current workflow topology for execution.
 
 **Request Body:**
+
 ```json
 {
   "job_id": "job_123",
   "name": "My Workflow",
   "graph": {
     "nodes": [
-      {"id": "INPUT_1", "type": "INPUT"},
-      {"id": "ADDITION_1", "type": "ADDITION"},
-      {"id": "OUTPUT_1", "type": "OUTPUT"}
+      { "id": "INPUT_1", "type": "INPUT" },
+      { "id": "ADDITION_1", "type": "ADDITION" },
+      { "id": "OUTPUT_1", "type": "OUTPUT" }
     ],
     "edges": [
-      {"source": "INPUT_1", "target": "ADDITION_1"},
-      {"source": "ADDITION_1", "target": "OUTPUT_1"}
+      { "source": "INPUT_1", "target": "ADDITION_1" },
+      { "source": "ADDITION_1", "target": "OUTPUT_1" }
     ]
   },
   "run_config": {
@@ -116,11 +124,13 @@ Set the current workflow topology for execution.
 ```
 
 ### 4. Get Execution Outputs
+
 **GET** `/workflow-queues/outputs`
 
 Get outputs from the last workflow execution.
 
 **Response:**
+
 ```json
 {
   "execution_id": "exec_456def",
@@ -137,11 +147,13 @@ Get outputs from the last workflow execution.
 ```
 
 ### 5. Cancel Execution
+
 **POST** `/workflow-queues/cancel`
 
 Cancel the current workflow execution.
 
 **Response:**
+
 ```json
 {
   "message": "Execution cancelled",
@@ -152,7 +164,9 @@ Cancel the current workflow execution.
 ## Convenience Endpoints
 
 ### Update Block Code
+
 **POST** `/workflow-queues/update-code`
+
 ```json
 {
   "block_id": "ADDITION_1",
@@ -161,19 +175,24 @@ Cancel the current workflow execution.
 ```
 
 ### Regenerate Manifest
+
 **POST** `/workflow-queues/regenerate-manifest/{block_id}`
 
 ### Update Metadata
+
 **POST** `/workflow-queues/update-metadata`
+
 ```json
 {
   "block_id": "ADDITION_1",
-  "metadata": {"description": "Adds two numbers"}
+  "metadata": { "description": "Adds two numbers" }
 }
 ```
 
 ### Rename Block
+
 **POST** `/workflow-queues/rename-block`
+
 ```json
 {
   "old_block_id": "ADDITION_1",
@@ -182,7 +201,9 @@ Cancel the current workflow execution.
 ```
 
 ### Update Connections
+
 **POST** `/workflow-queues/update-connections`
+
 ```json
 {
   "block_id": "ADDITION_1",
@@ -191,11 +212,13 @@ Cancel the current workflow execution.
 ```
 
 ### Update Parameters
+
 **POST** `/workflow-queues/update-parameters`
+
 ```json
 {
   "block_id": "ADDITION_1",
-  "parameters": {"default_value": 0}
+  "parameters": { "default_value": 0 }
 }
 ```
 
@@ -204,12 +227,14 @@ Cancel the current workflow execution.
 The system broadcasts various events via WebSocket for real-time status updates:
 
 ### From WCQ:
+
 - `wcq_change_enqueued` - When a change is added to the queue
 - `wcq_processing_started` - When change processing begins
 - `wcq_change_processed` - When change processing completes
 - `wcq_error` - When an error occurs processing a change
 
 ### From WEQ:
+
 - `weq_execution_started` - When workflow execution begins
 - `weq_block_started` - When a block starts executing
 - `weq_block_completed` - When a block finishes executing
@@ -217,6 +242,7 @@ The system broadcasts various events via WebSocket for real-time status updates:
 - `weq_execution_cancelled` - When execution is cancelled
 
 ### From Coordinator:
+
 - `coordinator_change_enqueued` - When change is enqueued via coordinator
 - `coordinator_topology_updated` - When topology is set/updated
 - `coordinator_execution_triggered` - When execution is triggered after changes
@@ -225,6 +251,7 @@ The system broadcasts various events via WebSocket for real-time status updates:
 ## Error Handling
 
 All endpoints return standard HTTP status codes:
+
 - `200` - Success
 - `400` - Bad Request (invalid input)
 - `500` - Internal Server Error

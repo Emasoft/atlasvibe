@@ -55,7 +55,9 @@ const DefaultBlock = ({
       blocksWithPendingChanges: state.blocksWithPendingChanges,
     })),
   );
-  const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
+  const regeneratingBlocks = useManifestStore(
+    (state) => state.regeneratingBlocks,
+  );
 
   // Check if this block is regenerating based on its path
   const isRegenerating = useMemo(() => {
@@ -82,15 +84,15 @@ const DefaultBlock = ({
     >
       <RegeneratingIndicator visible={isRegenerating} />
       {hasPendingChanges && !isRegenerating && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white animate-pulse">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 animate-pulse rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white">
           Pending Changes
         </div>
       )}
       <div
         className={clsx(
-          `${isRegenerating ? 'block-regenerating' : hasPendingChanges ? 'border-blue-500' : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
+          `${isRegenerating ? "block-regenerating" : hasPendingChanges ? "border-blue-500" : variantClassMap[variant].border} relative flex min-h-[96px] items-center justify-center rounded-lg border-2 border-solid p-2 transition-all duration-300`,
           {
-            [`shadow-around ${isRegenerating ? 'shadow-yellow-500' : hasPendingChanges ? 'shadow-blue-500' : variantClassMap[variant].shadow}`]:
+            [`shadow-around ${isRegenerating ? "shadow-yellow-500" : hasPendingChanges ? "shadow-blue-500" : variantClassMap[variant].shadow}`]:
               blockRunning || selected || isRegenerating || hasPendingChanges,
           },
           { "shadow-around shadow-red-700": blockError },

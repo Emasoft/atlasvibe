@@ -22,6 +22,7 @@ Security vulnerabilities should not be reported through public GitHub issues.
 Send an email to: 713559+Emasoft@users.noreply.github.com
 
 Include the following information:
+
 - Type of issue (e.g., buffer overflow, SQL injection, cross-site scripting, etc.)
 - Full paths of source file(s) related to the manifestation of the issue
 - The location of the affected source code (tag/branch/commit or direct URL)
@@ -65,6 +66,7 @@ Include the following information:
 ### 4. Pre-commit Checks
 
 Always run pre-commit hooks before pushing:
+
 ```bash
 pre-commit run --all-files
 ```
@@ -72,6 +74,7 @@ pre-commit run --all-files
 ### 5. CI/CD Security
 
 Our CI/CD pipeline includes:
+
 - Secret scanning with Gitleaks
 - Dependency vulnerability scanning
 - Code quality and security linting
@@ -82,16 +85,19 @@ Our CI/CD pipeline includes:
 ### Current Security Measures
 
 1. **Secret Detection**
+
    - Gitleaks integration in pre-commit and CI/CD
    - Strict allowlist configuration
    - Automatic rejection of commits with secrets
 
 2. **Dependency Management**
+
    - Using `uv` for deterministic builds
    - Weekly dependency audits
    - Automated security updates
 
 3. **Code Quality**
+
    - Static analysis with Ruff and mypy
    - Type checking enforcement
    - Security-focused linting rules
@@ -104,11 +110,13 @@ Our CI/CD pipeline includes:
 ### Planned Security Enhancements
 
 1. **Runtime Security**
+
    - Sandboxed block execution
    - Resource limits for user code
    - Input validation framework
 
 2. **Authentication**
+
    - OAuth2/OIDC support
    - API key management
    - Role-based access control
@@ -131,6 +139,7 @@ When we receive a security report, we will:
 ## Security Advisories
 
 Security advisories will be published through:
+
 - GitHub Security Advisories
 - Release notes
 - Project documentation

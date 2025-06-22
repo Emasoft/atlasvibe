@@ -56,8 +56,12 @@ export const useManifestStore = create<State & Actions>()(
 
         // Fetch manifest with project path to include project blocks
         // The backend will handle both standard blocks and project blocks in one call
-        const manifest = yield* (await getManifest(undefined, projectPath)).safeUnwrap();
-        const metadata = yield* (await getMetadata(undefined, false, projectPath)).safeUnwrap();
+        const manifest = yield* (
+          await getManifest(undefined, projectPath)
+        ).safeUnwrap();
+        const metadata = yield* (
+          await getMetadata(undefined, false, projectPath)
+        ).safeUnwrap();
 
         set({
           standardBlocksManifest: manifest,

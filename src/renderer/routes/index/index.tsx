@@ -35,7 +35,6 @@ import { InterpretersList } from "src/main/python/interpreter";
 import { useSocketStore } from "@/renderer/stores/socket";
 // Global window.api type is now handled by src/window.d.ts
 
-
 export const Index = (): JSX.Element => {
   const serverStatus = useSocketStore((state) => state.serverStatus);
   const [pyInterpreters, setPyInterpreters] = useState<InterpretersList | null>(

@@ -27,6 +27,7 @@ project_name/                              # Project folder
 ### Blueprint Blocks vs Custom Blocks
 
 1. **Blueprint Blocks** (Global)
+
    - Located in `/blocks/` at AtlasVibe root
    - Serve as templates in the global palette
    - Never directly used in workflows
@@ -41,12 +42,14 @@ project_name/                              # Project folder
 ### Workflow
 
 1. **Creating a Block Instance**
+
    - User drags blueprint from palette to workflow
    - System creates a copy in `project_folder/atlasvibe_blocks/`
    - Names it with suffix (e.g., `ADD_1`, `ADD_2`)
    - Block is now independent of blueprint
 
 2. **Editing Custom Blocks**
+
    - Changes only affect that specific instance
    - Other instances and blueprints remain unchanged
    - Each block has its own virtual environment
@@ -83,6 +86,7 @@ The `.atlasvibe` file contains:
 ## Migration from Old Format
 
 Old projects used blueprint references directly. The new format requires:
+
 1. Each block to be copied to `atlasvibe_blocks/`
 2. References updated to point to custom blocks
 3. `isCustom: true` flag added
@@ -92,6 +96,7 @@ Use the migration script: `python scripts/migrate_sample_projects.py`
 ## Loading Projects
 
 When a project is loaded:
+
 1. System validates project structure
 2. Creates `atlasvibe_blocks/` if missing
 3. Loads custom blocks from project directory

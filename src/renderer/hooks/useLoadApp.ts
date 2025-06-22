@@ -19,7 +19,10 @@ import { toast } from "sonner";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { parseElectronError } from "@/renderer/utils/parse-error";
-import { migrateProjectFormat, validateProjectReferences } from "@/renderer/lib/project-migration";
+import {
+  migrateProjectFormat,
+  validateProjectReferences,
+} from "@/renderer/lib/project-migration";
 
 export const useLoadApp = () => {
   const loadProject = useLoadProject();
@@ -29,8 +32,9 @@ export const useLoadApp = () => {
   );
 
   const openFilePicker = async () => {
-    const res = await fromPromise(window.api.openFilePicker(["atlasvibe", "json"]), (e) =>
-      parseElectronError((e as Error).message),
+    const res = await fromPromise(
+      window.api.openFilePicker(["atlasvibe", "json"]),
+      (e) => parseElectronError((e as Error).message),
     );
     if (res.isErr()) {
       toast.error("Failed to open file", { description: res.error });
@@ -46,15 +50,18 @@ export const useLoadApp = () => {
     try {
       parsedData = JSON.parse(fileContent);
     } catch (e) {
-      toast.error("Invalid JSON", { description: "Failed to parse project file" });
+      toast.error("Invalid JSON", {
+        description: "Failed to parse project file",
+      });
       return;
     }
 
-    const { project: migratedProject, migrated } = migrateProjectFormat(parsedData);
+    const { project: migratedProject, migrated } =
+      migrateProjectFormat(parsedData);
 
     if (migrated) {
       toast.info("Project migrated", {
-        description: "Project file was updated to the latest format"
+        description: "Project file was updated to the latest format",
       });
     }
 
@@ -79,7 +86,7 @@ export const useLoadApp = () => {
     const errors = validateProjectReferences(proj);
     if (errors.length > 0) {
       toast.warning("Project validation warnings", {
-        description: errors.join(", ")
+        description: errors.join(", "),
       });
     }
 

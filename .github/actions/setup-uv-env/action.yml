@@ -1,25 +1,25 @@
-name: 'Setup uv Environment'
-description: 'Sets up Python with uv package manager for AtlasVibe'
+name: "Setup uv Environment"
+description: "Sets up Python with uv package manager for AtlasVibe"
 inputs:
   python-version:
-    description: 'Python version to use'
+    description: "Python version to use"
     required: false
-    default: '3.11'
+    default: "3.11"
   install-deps:
-    description: 'Whether to install dependencies'
+    description: "Whether to install dependencies"
     required: false
-    default: 'true'
+    default: "true"
   extras:
-    description: 'Extras to install (comma-separated)'
+    description: "Extras to install (comma-separated)"
     required: false
-    default: 'all'
+    default: "all"
   cache:
-    description: 'Whether to use cache'
+    description: "Whether to use cache"
     required: false
-    default: 'true'
+    default: "true"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Set up Python
       uses: actions/setup-python@v5

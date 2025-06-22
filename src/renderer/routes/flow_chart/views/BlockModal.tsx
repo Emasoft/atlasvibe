@@ -104,7 +104,6 @@ const BlockModal = ({
   const isDevMode = import.meta.env.DEV;
   const isCustomBlock = !!selectedNode.data.isCustom;
 
-
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalOpen}>
       <DialogContent className="my-12 max-h-screen overflow-y-scroll border-muted bg-background p-12 sm:max-w-2xl md:max-w-4xl">

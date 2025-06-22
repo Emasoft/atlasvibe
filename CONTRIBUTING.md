@@ -5,6 +5,7 @@ First off, thank you for considering contributing to AtlasVibe! It's people like
 ## ⚠️ Important Note
 
 AtlasVibe is currently in **early alpha stage**. This means:
+
 - The codebase is rapidly evolving
 - APIs may change without notice
 - Documentation may be outdated
@@ -60,6 +61,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 Before creating bug reports, please check existing issues to avoid duplicates.
 
 **When reporting bugs, include:**
+
 - A clear and descriptive title
 - Steps to reproduce the issue
 - Expected behavior vs actual behavior
@@ -72,6 +74,7 @@ Before creating bug reports, please check existing issues to avoid duplicates.
 Enhancement suggestions are tracked as GitHub issues.
 
 **When suggesting enhancements, include:**
+
 - A clear and descriptive title
 - Detailed description of the proposed feature
 - Rationale for why this would be useful
@@ -81,6 +84,7 @@ Enhancement suggestions are tracked as GitHub issues.
 ### 📝 Improving Documentation
 
 Documentation improvements are always welcome! This includes:
+
 - Fixing typos or unclear explanations
 - Adding examples
 - Improving API documentation
@@ -91,6 +95,7 @@ Documentation improvements are always welcome! This includes:
 #### Your First Code Contribution
 
 Unsure where to begin? Look for issues labeled:
+
 - `good first issue` - Simple issues for newcomers
 - `help wanted` - Issues where we need community help
 - `documentation` - Documentation improvements
@@ -115,6 +120,7 @@ Unsure where to begin? Look for issues labeled:
 ### 🏗️ Architecture Overview
 
 Before contributing, familiarize yourself with:
+
 - **Frontend**: React + TypeScript + Electron
 - **Backend**: Python + FastAPI + Prefect
 - **Block System**: Modular Python functions with metadata
@@ -128,6 +134,7 @@ All code contributions must include appropriate tests:
 - **E2E**: Add Playwright tests for critical user paths
 
 Run all tests with:
+
 ```bash
 ./runtests.sh
 ```
@@ -135,6 +142,7 @@ Run all tests with:
 ### 🔍 Code Review Process
 
 All submissions require review:
+
 1. Automated checks must pass (linting, tests, security)
 2. At least one maintainer approval required
 3. All review comments must be addressed
@@ -161,6 +169,7 @@ def calculate_sum(numbers: List[float]) -> float:
 ```
 
 **Key points:**
+
 - Use type hints for all functions
 - Write docstrings for all public functions
 - Follow PEP 8 with Ruff's modern interpretations
@@ -178,6 +187,7 @@ export const calculateSum = (numbers: number[]): number => {
 ```
 
 **Key points:**
+
 - Use TypeScript for all new code
 - Prefer functional components for React
 - Use meaningful variable names
@@ -218,6 +228,7 @@ def my_block(data: pd.DataFrame) -> pd.DataFrame:
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Format
+
 ```
 <type>(<scope>): <subject>
 
@@ -227,6 +238,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -237,6 +249,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `perf`: Performance improvements
 
 ### Examples
+
 ```bash
 # Good
 feat(blocks): add CSV export block
@@ -269,20 +282,24 @@ When creating a PR, include:
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] Added new tests
 - [ ] Updated existing tests
 
 ## Checklist
+
 - [ ] My code follows the style guidelines
 - [ ] I have performed a self-review
 - [ ] I have commented my code where necessary
@@ -308,6 +325,7 @@ Brief description of changes
 ### Recognition
 
 Contributors are recognized in:
+
 - The README.md file
 - Release notes
 - Our contributors page
@@ -315,6 +333,7 @@ Contributors are recognized in:
 ### Becoming a Maintainer
 
 Active contributors may be invited to become maintainers. Maintainers:
+
 - Have write access to the repository
 - Help review and merge PRs
 - Participate in project planning

@@ -43,8 +43,9 @@ export const useSocketStore = create<State & Actions>()((set) => ({
 
   processWorkerResponse: (res) => {
     if (res.SYSTEM_STATUS) {
-      const isJobRunning = res.SYSTEM_STATUS === ServerStatus.RUNNING_PYTHON_JOB ||
-                          res.SYSTEM_STATUS === ServerStatus.RUN_IN_PROCESS;
+      const isJobRunning =
+        res.SYSTEM_STATUS === ServerStatus.RUNNING_PYTHON_JOB ||
+        res.SYSTEM_STATUS === ServerStatus.RUN_IN_PROCESS;
       set({
         serverStatus: res.SYSTEM_STATUS,
         isRunning: isJobRunning,

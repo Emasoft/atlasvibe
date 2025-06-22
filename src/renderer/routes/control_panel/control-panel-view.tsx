@@ -178,7 +178,9 @@ const ControlPanelView = () => {
       addControl(blockId, blockParameter, data.type, data);
       setWidgetConfigOpen(false);
     } catch (error) {
-      toast.error(`Failed to add control: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to add control: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -195,7 +197,9 @@ const ControlPanelView = () => {
       }
       setWidgetConfigOpen(false);
     } catch (error) {
-      toast.error(`Failed to edit control: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to edit control: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 

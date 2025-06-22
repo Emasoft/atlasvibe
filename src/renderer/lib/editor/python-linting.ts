@@ -24,7 +24,10 @@ export function hasValidDocstringFormat(docstring: string): boolean {
 /**
  * Validates NumPy-style docstrings in Python code
  */
-export function validateDocstring(docstring: string, docstringStart: number): Diagnostic[] {
+export function validateDocstring(
+  docstring: string,
+  docstringStart: number,
+): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   // Check for required sections
@@ -40,27 +43,35 @@ export function validateDocstring(docstring: string, docstringStart: number): Di
       from: docstringStart,
       to: docstringStart + docstring.length,
       severity: "warning",
-      message: "AtlasVibe blocks require NumPy-style docstrings with Parameters and Returns sections",
+      message:
+        "AtlasVibe blocks require NumPy-style docstrings with Parameters and Returns sections",
     });
   } else if (!hasParametersDashes || !hasReturnsDashes) {
     diagnostics.push({
       from: docstringStart,
       to: docstringStart + docstring.length,
       severity: "warning",
-      message: "Parameters and Returns sections must be followed by dashes (------)",
+      message:
+        "Parameters and Returns sections must be followed by dashes (------)",
     });
   }
 
   // Check parameter format (name : type)
-  const parameterSection = docstring.match(/Parameters\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*Returns|$)/);
+  const parameterSection = docstring.match(
+    /Parameters\s*\n\s*-+\s*\n([\s\S]*?)(?=\n\s*Returns|$)/,
+  );
   if (parameterSection) {
     const paramContent = parameterSection[1];
     const paramStartOffset = docstring.indexOf(paramContent);
-    const paramLines = paramContent.split('\n');
+    const paramLines = paramContent.split("\n");
 
     let currentOffset = paramStartOffset;
     paramLines.forEach((line) => {
-      if (line.trim() && !line.match(/^\s*\w+\s*:\s*[\w[\]|\s,]+/) && !line.match(/^\s*Description/)) {
+      if (
+        line.trim() &&
+        !line.match(/^\s*\w+\s*:\s*[\w[\]|\s,]+/) &&
+        !line.match(/^\s*Description/)
+      ) {
         diagnostics.push({
           from: docstringStart + currentOffset,
           to: docstringStart + currentOffset + line.length,
@@ -93,7 +104,7 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
 
         // Check for tabs vs spaces (Python is sensitive to this)
         if (node.name === "Body") {
-          const lines = text.split('\n');
+          const lines = text.split("\n");
           let usesSpaces = false;
           let usesTabs = false;
 
@@ -113,10 +124,14 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
         }
 
         // Check for missing colons after def, if, for, etc.
-        if (node.name === "FunctionDefinition" || node.name === "IfStatement" ||
-            node.name === "ForStatement" || node.name === "WhileStatement") {
+        if (
+          node.name === "FunctionDefinition" ||
+          node.name === "IfStatement" ||
+          node.name === "ForStatement" ||
+          node.name === "WhileStatement"
+        ) {
           const lastChar = text.trim().slice(-1);
-          if (lastChar !== ':') {
+          if (lastChar !== ":") {
             diagnostics.push({
               from: node.to - 1,
               to: node.to,
@@ -139,7 +154,10 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
             const hasAtlasVibeDecorator = functionText.includes("@atlasvibe");
 
             if (hasAtlasVibeDecorator) {
-              const docstringDiagnostics = validateDocstring(docstring, docstringStart);
+              const docstringDiagnostics = validateDocstring(
+                docstring,
+                docstringStart,
+              );
               diagnostics.push(...docstringDiagnostics);
             }
           } else if (functionText.includes("@atlasvibe")) {
@@ -148,13 +166,13 @@ export async function pythonLinter(view: EditorView): Promise<Diagnostic[]> {
               from: node.from,
               to: node.from + 50,
               severity: "error",
-              message: "AtlasVibe blocks require a docstring with Parameters and Returns sections",
+              message:
+                "AtlasVibe blocks require a docstring with Parameters and Returns sections",
             });
           }
         }
-      }
+      },
     });
-
   } catch (error) {
     // Silently ignore parsing errors and return diagnostics collected so far
   }

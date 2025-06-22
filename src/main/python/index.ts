@@ -36,13 +36,19 @@ export async function checkPythonInstallation(
       if (existsSync(venvPython)) {
         try {
           const version = await PythonManager.getVersion(venvPython);
-          if (version && (version.minor === 11 || version.minor === 12) && version.major === 3) {
+          if (
+            version &&
+            (version.minor === 11 || version.minor === 12) &&
+            version.major === 3
+          ) {
             log.info(`Using Python from VIRTUAL_ENV: ${venvPython}`);
-            global.pythonInterpreters = [{
-              path: venvPython,
-              version,
-              default: true,
-            }];
+            global.pythonInterpreters = [
+              {
+                path: venvPython,
+                version,
+                default: true,
+              },
+            ];
             // Also add other discovered interpreters but not as default
             const py311 = await new PythonManager().getInterpreterByVersion({
               major: 3,
@@ -52,7 +58,10 @@ export async function checkPythonInstallation(
               major: 3,
               minor: 12,
             });
-            global.pythonInterpreters.push(...py311.filter(i => i.path !== venvPython), ...py312.filter(i => i.path !== venvPython));
+            global.pythonInterpreters.push(
+              ...py311.filter((i) => i.path !== venvPython),
+              ...py312.filter((i) => i.path !== venvPython),
+            );
             return global.pythonInterpreters;
           }
         } catch (err) {
@@ -117,7 +126,7 @@ export async function installUv(): Promise<string> {
     return await execCommand(
       new Command({
         darwin: "curl -LsSf https://astral.sh/uv/install.sh | sh",
-        win32: "powershell -c \"irm https://astral.sh/uv/install.ps1 | iex\"",
+        win32: 'powershell -c "irm https://astral.sh/uv/install.ps1 | iex"',
         linux: "curl -LsSf https://astral.sh/uv/install.sh | sh",
       }),
     );
@@ -169,10 +178,8 @@ export async function installDependencies(): Promise<string> {
 
   const validGroups = await uvGroupEnsureValid();
   if (validGroups.length > 0) {
-    const extras = validGroups.map(g => `[${g}]`).join("");
-    return await execCommand(
-      new Command(`uv pip install -e .${extras}`),
-    );
+    const extras = validGroups.map((g) => `[${g}]`).join("");
+    return await execCommand(new Command(`uv pip install -e .${extras}`));
   }
   return await execCommand(new Command(`uv pip install -e .`));
 }
@@ -260,7 +267,9 @@ export async function pyvisaInfo() {
 const getUvPath = async () => {
   const localBinPath = join(os.homedir(), ".local", "bin", "uv");
   try {
-    await execCommand(new Command(`${localBinPath} --version`), { quiet: true });
+    await execCommand(new Command(`${localBinPath} --version`), {
+      quiet: true,
+    });
     return localBinPath;
   } catch (error) {
     return "uv";

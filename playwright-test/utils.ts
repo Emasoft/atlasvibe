@@ -17,7 +17,12 @@
 import { execSync } from "child_process";
 import { join } from "path";
 import fs from "fs";
-import { ElectronApplication, Page, _electron as electron, expect } from "playwright"; // Added expect
+import {
+  ElectronApplication,
+  Page,
+  _electron as electron,
+  expect,
+} from "playwright"; // Added expect
 import { Selectors } from "./selectors"; // Assuming Selectors enum is in selectors.ts
 
 export const STARTUP_TIMEOUT = 300000; // 5 mins
@@ -65,9 +70,12 @@ export const launchApp = async (): Promise<ElectronAppInfo> => {
   await page.waitForLoadState("domcontentloaded");
 
   // Example: Close welcome modal if it exists
-  const closeWelcomeBtn = page.locator(`button[data-testid='${Selectors.closeWelcomeModalBtn}']`);
-    if (await closeWelcomeBtn.isVisible({timeout: 5000}).catch(() => false)) { // Increased timeout slightly
-        await closeWelcomeBtn.click();
+  const closeWelcomeBtn = page.locator(
+    `button[data-testid='${Selectors.closeWelcomeModalBtn}']`,
+  );
+  if (await closeWelcomeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    // Increased timeout slightly
+    await closeWelcomeBtn.click();
   }
   // Handle "Existing Server Detected" dialog
   await mockDialogMessage(app);
@@ -103,7 +111,8 @@ export const mockDialogMessage = async (app: ElectronApplication) => {
       browserWindow: Electron.BrowserWindow | undefined,
       options: Electron.MessageBoxSyncOptions,
     ) => {
-      if (options.title === "Existing Server Detected") { // This title might need rebranding if it changed
+      if (options.title === "Existing Server Detected") {
+        // This title might need rebranding if it changed
         return 1; // Simulate clicking the second button (e.g., "Use Existing")
       } else {
         return browserWindow
@@ -116,34 +125,51 @@ export const mockDialogMessage = async (app: ElectronApplication) => {
   });
 };
 
-export const newProject = async (page: Page, projectName: string): Promise<void> => {
+export const newProject = async (
+  page: Page,
+  projectName: string,
+): Promise<void> => {
   // This function assumes a UI flow for creating a new project.
   // Adjust selectors and actions based on your application's actual UI.
 
   // Option 1: Direct "New Project" button if available
-  const newProjectBtn = page.locator(`button[data-testid='${Selectors.projectNewProjectButton}']`);
-  const fileMenuBtn = page.locator(`button[data-testid='${Selectors.fileBtn}']`);
+  const newProjectBtn = page.locator(
+    `button[data-testid='${Selectors.projectNewProjectButton}']`,
+  );
+  const fileMenuBtn = page.locator(
+    `button[data-testid='${Selectors.fileBtn}']`,
+  );
 
   if (await newProjectBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await newProjectBtn.click();
-  } else if (await fileMenuBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+  } else if (
+    await fileMenuBtn.isVisible({ timeout: 2000 }).catch(() => false)
+  ) {
     // Option 2: Via File menu -> New (dropdown)
     await fileMenuBtn.click();
     // Assuming 'newDropdown' is the correct selector for the "New Project" item in the dropdown.
     // This might need to be more specific, e.g., a menu item with text "New Project".
-    const newDropdownItem = page.locator(`[data-testid='${Selectors.newDropdown}']`); // Or a more specific selector for "New Project"
+    const newDropdownItem = page.locator(
+      `[data-testid='${Selectors.newDropdown}']`,
+    ); // Or a more specific selector for "New Project"
     await expect(newDropdownItem).toBeVisible();
     await newDropdownItem.click();
   } else {
-    throw new Error("Could not find a button/menu to initiate new project creation.");
+    throw new Error(
+      "Could not find a button/menu to initiate new project creation.",
+    );
   }
 
   // Modal for new project name
-  const projectNameInput = page.locator(`input[data-testid='${Selectors.projectProjectNameInput}']`);
+  const projectNameInput = page.locator(
+    `input[data-testid='${Selectors.projectProjectNameInput}']`,
+  );
   await expect(projectNameInput).toBeVisible({ timeout: 5000 }); // Wait for modal to appear
   await projectNameInput.fill(projectName);
 
-  const createButton = page.locator(`button[data-testid='${Selectors.projectCreateProjectModalButton}']`);
+  const createButton = page.locator(
+    `button[data-testid='${Selectors.projectCreateProjectModalButton}']`,
+  );
   await expect(createButton).toBeVisible();
   await createButton.click();
 

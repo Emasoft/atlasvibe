@@ -18,14 +18,30 @@ import { BlockDefinition } from "@/renderer/types/manifest";
 export interface ExtendedWindowApi {
   // File operations
   loadFileFromFullPath: (filepath: string) => Promise<string>;
-  saveFileToFullPath: (filepath: string, content: string) => Promise<{ isOk: () => boolean; error?: { message: string } }>;
+  saveFileToFullPath: (
+    filepath: string,
+    content: string,
+  ) => Promise<{ isOk: () => boolean; error?: { message: string } }>;
   saveFileToDisk: (filepath: string, content: string) => Promise<boolean>;
   getFileContent: (filePath: string) => Promise<string>;
   saveFile: (filePath: string, content: string) => Promise<void>;
-  saveFileAs: (defaultFilename: string, content: string, allowedExtensions?: string[]) => Promise<{ filePath?: string; canceled: boolean }>;
-  openFilePicker: (allowedExtensions?: string[]) => Promise<{ filePath: string; fileContent: string } | undefined>;
-  openFilesPicker: (allowedExtensions?: string[], title?: string) => Promise<{ filePath: string; fileContent: string }[] | undefined>;
-  openAllFilesInFolder: (folderPath: string, allowedExtensions?: string[], relativeToResources?: boolean) => Promise<{ filePath: string; fileContent: string }[] | undefined>;
+  saveFileAs: (
+    defaultFilename: string,
+    content: string,
+    allowedExtensions?: string[],
+  ) => Promise<{ filePath?: string; canceled: boolean }>;
+  openFilePicker: (
+    allowedExtensions?: string[],
+  ) => Promise<{ filePath: string; fileContent: string } | undefined>;
+  openFilesPicker: (
+    allowedExtensions?: string[],
+    title?: string,
+  ) => Promise<{ filePath: string; fileContent: string }[] | undefined>;
+  openAllFilesInFolder: (
+    folderPath: string,
+    allowedExtensions?: string[],
+    relativeToResources?: boolean,
+  ) => Promise<{ filePath: string; fileContent: string }[] | undefined>;
   openTestPicker: () => Promise<{ filePath: string; fileContent: string }>;
   isFileOnDisk: (filepath: string) => Promise<boolean>;
   pickDirectory: (allowDirectoryCreation: boolean) => Promise<string>;
@@ -96,11 +112,17 @@ export interface ExtendedWindowApi {
   ) => Promise<BlockDefinition | undefined>;
 
   // Project migration
-  checkProjectMigration: (projectPath: string, projectData?: any) => Promise<{
+  checkProjectMigration: (
+    projectPath: string,
+    projectData?: any,
+  ) => Promise<{
     needs_migration: boolean;
     message?: string;
   }>;
-  migrateProject: (projectPath: string, dryRun?: boolean) => Promise<{
+  migrateProject: (
+    projectPath: string,
+    dryRun?: boolean,
+  ) => Promise<{
     needs_migration: boolean;
     migrated?: boolean;
     created_blocks?: string[];
@@ -111,35 +133,68 @@ export interface ExtendedWindowApi {
 
 const extendedApi: ExtendedWindowApi = {
   // File operations
-  loadFileFromFullPath: (filepath: string) => ipcRenderer.invoke(API.loadFileFromFullPath, filepath),
-  saveFileToFullPath: (filepath: string, content: string) => ipcRenderer.invoke(API.saveFileToFullPath, filepath, content),
-  saveFileToDisk: (filepath: string, content: string) => ipcRenderer.invoke(API.writeFileSync, filepath, content),
-  getFileContent: (filePath: string) => ipcRenderer.invoke(API.getFileContent, filePath),
-  saveFile: (filePath: string, content: string) => ipcRenderer.invoke(API.writeFileSync, filePath, content),
-  saveFileAs: async (defaultFilename: string, content: string, allowedExtensions?: string[]) => {
-    const result = await ipcRenderer.invoke(API.showSaveDialog, defaultFilename, allowedExtensions);
+  loadFileFromFullPath: (filepath: string) =>
+    ipcRenderer.invoke(API.loadFileFromFullPath, filepath),
+  saveFileToFullPath: (filepath: string, content: string) =>
+    ipcRenderer.invoke(API.saveFileToFullPath, filepath, content),
+  saveFileToDisk: (filepath: string, content: string) =>
+    ipcRenderer.invoke(API.writeFileSync, filepath, content),
+  getFileContent: (filePath: string) =>
+    ipcRenderer.invoke(API.getFileContent, filePath),
+  saveFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke(API.writeFileSync, filePath, content),
+  saveFileAs: async (
+    defaultFilename: string,
+    content: string,
+    allowedExtensions?: string[],
+  ) => {
+    const result = await ipcRenderer.invoke(
+      API.showSaveDialog,
+      defaultFilename,
+      allowedExtensions,
+    );
     if (result.filePath) {
       ipcRenderer.send(API.writeFileSync, result.filePath, content);
     }
     return result;
   },
-  openFilePicker: (allowedExtensions?: string[]) => ipcRenderer.invoke(API.openFilePicker, allowedExtensions),
-  openFilesPicker: (allowedExtensions?: string[], title?: string) => ipcRenderer.invoke(API.openFilesPicker, allowedExtensions, title),
-  openAllFilesInFolder: (folderPath: string, allowedExtensions?: string[], relativeToResources?: boolean) => ipcRenderer.invoke(API.openAllFilesInFolderPicker, folderPath, allowedExtensions, relativeToResources),
+  openFilePicker: (allowedExtensions?: string[]) =>
+    ipcRenderer.invoke(API.openFilePicker, allowedExtensions),
+  openFilesPicker: (allowedExtensions?: string[], title?: string) =>
+    ipcRenderer.invoke(API.openFilesPicker, allowedExtensions, title),
+  openAllFilesInFolder: (
+    folderPath: string,
+    allowedExtensions?: string[],
+    relativeToResources?: boolean,
+  ) =>
+    ipcRenderer.invoke(
+      API.openAllFilesInFolderPicker,
+      folderPath,
+      allowedExtensions,
+      relativeToResources,
+    ),
   openTestPicker: () => ipcRenderer.invoke(API.openTestPicker),
-  isFileOnDisk: (filepath: string) => ipcRenderer.invoke(API.isFileOnDisk, filepath),
-  pickDirectory: (allowDirectoryCreation: boolean) => ipcRenderer.invoke(API.pickDirectory, allowDirectoryCreation),
+  isFileOnDisk: (filepath: string) =>
+    ipcRenderer.invoke(API.isFileOnDisk, filepath),
+  pickDirectory: (allowDirectoryCreation: boolean) =>
+    ipcRenderer.invoke(API.pickDirectory, allowDirectoryCreation),
   getCustomBlocksDir: () => ipcRenderer.invoke(API.getCustomBlocksDir),
-  cacheCustomBlocksDir: (dirPath: string) => ipcRenderer.send(API.cacheCustomBlocksDir, dirPath),
+  cacheCustomBlocksDir: (dirPath: string) =>
+    ipcRenderer.send(API.cacheCustomBlocksDir, dirPath),
   selectFolder: () => ipcRenderer.invoke(API.selectFolder),
   pathExists: (path: string) => ipcRenderer.invoke(API.pathExists, path),
-  createDirectory: (path: string) => ipcRenderer.invoke(API.createDirectory, path),
-  showConfirmDialog: (options) => ipcRenderer.invoke(API.showConfirmDialog, options),
-  logTransaction: (transaction: string) => ipcRenderer.send(API.logTransaction, transaction),
+  createDirectory: (path: string) =>
+    ipcRenderer.invoke(API.createDirectory, path),
+  showConfirmDialog: (options) =>
+    ipcRenderer.invoke(API.showConfirmDialog, options),
+  logTransaction: (transaction: string) =>
+    ipcRenderer.send(API.logTransaction, transaction),
 
   // Python/UV operations
-  checkPythonInstallation: (force?: boolean) => ipcRenderer.invoke(API.checkPythonInstallation, force),
-  setPythonInterpreter: (path: string) => ipcRenderer.invoke(API.setPythonInterpreter, path),
+  checkPythonInstallation: (force?: boolean) =>
+    ipcRenderer.invoke(API.checkPythonInstallation, force),
+  setPythonInterpreter: (path: string) =>
+    ipcRenderer.invoke(API.setPythonInterpreter, path),
   browsePyInterpreter: () => ipcRenderer.invoke(API.browsePythonInterpreter),
   installPipx: () => ipcRenderer.invoke(API.installPipx),
   pipxEnsurepath: () => ipcRenderer.invoke(API.pipxEnsurepath),
@@ -148,11 +203,16 @@ const extendedApi: ExtendedWindowApi = {
   uvShowTopLevel: () => ipcRenderer.invoke(API.uvShowTopLevel),
   uvShowUserGroup: () => ipcRenderer.invoke(API.uvShowUserGroup),
   uvGetGroupInfo: () => ipcRenderer.invoke(API.uvGetGroupInfo),
-  uvInstallDepGroup: (group: string) => ipcRenderer.invoke(API.uvInstallDepGroup, group),
-  uvUninstallDepGroup: (group: string) => ipcRenderer.invoke(API.uvUninstallDepGroup, group),
-  uvInstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.uvInstallDepUserGroup, dep),
-  uvUninstallDepUserGroup: (dep: string) => ipcRenderer.invoke(API.uvUninstallDepUserGroup, dep),
-  uvInstallRequirementsUserGroup: (filePath: string) => ipcRenderer.invoke(API.uvInstallRequirementsUserGroup, filePath),
+  uvInstallDepGroup: (group: string) =>
+    ipcRenderer.invoke(API.uvInstallDepGroup, group),
+  uvUninstallDepGroup: (group: string) =>
+    ipcRenderer.invoke(API.uvUninstallDepGroup, group),
+  uvInstallDepUserGroup: (dep: string) =>
+    ipcRenderer.invoke(API.uvInstallDepUserGroup, dep),
+  uvUninstallDepUserGroup: (dep: string) =>
+    ipcRenderer.invoke(API.uvUninstallDepUserGroup, dep),
+  uvInstallRequirementsUserGroup: (filePath: string) =>
+    ipcRenderer.invoke(API.uvInstallRequirementsUserGroup, filePath),
 
   // System operations
   spawnCaptain: () => ipcRenderer.invoke(API.spawnCaptain),
@@ -161,9 +221,11 @@ const extendedApi: ExtendedWindowApi = {
   openLogFolder: () => ipcRenderer.invoke(API.openLogFolder),
   downloadLogs: () => ipcRenderer.send(API.downloadLogs),
   isPackaged: () => ipcRenderer.invoke(API.isPackaged),
-  openEditorWindow: (filePath: string) => ipcRenderer.invoke(API.openEditorWindow, filePath),
+  openEditorWindow: (filePath: string) =>
+    ipcRenderer.invoke(API.openEditorWindow, filePath),
   openLink: (url: string) => ipcRenderer.invoke(API.openLink, url),
-  setUnsavedChanges: (hasChanges: boolean) => ipcRenderer.send(API.setUnsavedChanges, hasChanges),
+  setUnsavedChanges: (hasChanges: boolean) =>
+    ipcRenderer.send(API.setUnsavedChanges, hasChanges),
   subscribeToElectronLogs: (func: (arg: string) => void) => {
     ipcRenderer.on(API.statusBarLogging, (event, data: string) => func(data));
   },
@@ -178,15 +240,29 @@ const extendedApi: ExtendedWindowApi = {
 
   // Auth operations
   getUserProfiles: () => ipcRenderer.invoke(API.getUserProfiles),
-  setUserProfile: (username: string) => ipcRenderer.send(API.setUserProfile, username),
-  setUserProfilePassword: (username: string, password: string) => ipcRenderer.invoke(API.setUserProfilePassword, username, password),
-  validatePassword: (username: string, password: string) => ipcRenderer.invoke(API.validatePassword, username, password),
-  createUserProfile: (user: any) => ipcRenderer.invoke(API.createUserProfile, user),
-  deleteUserProfile: (username: string, currentUser: any) => ipcRenderer.invoke(API.deleteUserProfile, username, currentUser),
+  setUserProfile: (username: string) =>
+    ipcRenderer.send(API.setUserProfile, username),
+  setUserProfilePassword: (username: string, password: string) =>
+    ipcRenderer.invoke(API.setUserProfilePassword, username, password),
+  validatePassword: (username: string, password: string) =>
+    ipcRenderer.invoke(API.validatePassword, username, password),
+  createUserProfile: (user: any) =>
+    ipcRenderer.invoke(API.createUserProfile, user),
+  deleteUserProfile: (username: string, currentUser: any) =>
+    ipcRenderer.invoke(API.deleteUserProfile, username, currentUser),
 
   // Block operations
-  createCustomBlockFromBlueprint: (blueprintKey, newCustomBlockName, projectPath) =>
-    ipcRenderer.invoke(API.createCustomBlock, blueprintKey, newCustomBlockName, projectPath),
+  createCustomBlockFromBlueprint: (
+    blueprintKey,
+    newCustomBlockName,
+    projectPath,
+  ) =>
+    ipcRenderer.invoke(
+      API.createCustomBlock,
+      blueprintKey,
+      newCustomBlockName,
+      projectPath,
+    ),
 
   // Project migration
   checkProjectMigration: (projectPath, projectData) =>

@@ -168,12 +168,7 @@
             "file_type": {
               "type": "select",
               "default": "Image",
-              "options": [
-                "Image",
-                "Grayscale",
-                "JSON",
-                "CSV"
-              ],
+              "options": ["Image", "Grayscale", "JSON", "CSV"],
               "desc": "Type of file to load, default = image.\nIf both 'file_path' and 'default' are not specified when 'file_type=\"Image\"',\na default image will be loaded.\nIf the file path is not specified and the default input is not connected,\na ValueError is raised.",
               "overload": null,
               "functionName": "LOCAL_FILE",

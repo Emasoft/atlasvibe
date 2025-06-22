@@ -118,10 +118,13 @@ export function update(cleanupFunc: () => Promise<void>) {
 
 export const checkForUpdates = () => {
   sendToStatusBar("Checking for updates...");
-  autoUpdater.checkForUpdates()
+  autoUpdater
+    .checkForUpdates()
     .then((res) => {
       if (res?.updateInfo.version) {
-        const removeV = res.updateInfo.version.replace("v", "").replace("V", "");
+        const removeV = res.updateInfo.version
+          .replace("v", "")
+          .replace("V", "");
         const [remoteMajor, remoteMinor, remotePatch] = removeV.split(".");
 
         const appVersion = app.getVersion().replace("v", "").replace("V", "");

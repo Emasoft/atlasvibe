@@ -100,6 +100,8 @@ export const blockPaletteSelectors = {
 };
 
 export const flowchartSelectors = {
-  nodeByName: (name: string) => `div[data-testid='node'][data-node-name='${name}']`,
-  nodeLabelByName: (name: string) => `div[data-testid='node-label'][data-node-name='${name}']`,
+  nodeByName: (name: string) =>
+    `div[data-testid='node'][data-node-name='${name}']`,
+  nodeLabelByName: (name: string) =>
+    `div[data-testid='node-label'][data-node-name='${name}']`,
 };

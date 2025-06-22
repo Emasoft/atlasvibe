@@ -177,7 +177,8 @@ const EnvVarModal = () => {
             target="_blank"
             className="text-xs underline"
           >
-            Get your Atlasvibe Cloud workspace secret (in your workspace settings)
+            Get your Atlasvibe Cloud workspace secret (in your workspace
+            settings)
           </a>
           <div className="py-1" />
           <div className="flex w-full items-center space-x-2">

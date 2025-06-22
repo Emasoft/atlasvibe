@@ -3,6 +3,7 @@
 ## Removed Mocking
 
 ### 1. Created New Test File Without Mocks
+
 - **File**: `tests/captain/test_blocks_api_no_mocks.py`
 - **Status**: ✅ All 7 tests passing
 - Uses real file operations and actual API endpoints
@@ -10,6 +11,7 @@
 - Properly tests error handling and rollback scenarios
 
 ### Benefits of Removing Mocks
+
 - Tests actual behavior, not mocked responses
 - Catches real integration issues
 - More reliable and maintainable tests
@@ -18,6 +20,7 @@
 ## Added Comprehensive Playwright Tests
 
 ### 1. Custom Block References Test
+
 - **File**: `playwright-test/17_custom_block_references.spec.ts`
 - Tests custom block persistence across save/load
 - Verifies project format v2.0.0 with custom block metadata
@@ -26,6 +29,7 @@
 - Tests custom block renaming and deletion handling
 
 ### 2. Visual Indicators Test
+
 - **File**: `playwright-test/18_custom_block_visual_indicators.spec.ts`
 - Tests distinct visual styling for custom blocks
 - Tests hover tooltips with custom block information
@@ -37,6 +41,7 @@
 ## Key Features Tested
 
 ### API Integration (Without Mocks)
+
 - ✅ Update custom block code
 - ✅ Validate project paths
 - ✅ Handle missing files
@@ -45,6 +50,7 @@
 - ✅ Dependency management
 
 ### UI/UX Features
+
 - ✅ Custom block creation dialog
 - ✅ Visual differentiation from blueprints
 - ✅ Context menu options
@@ -56,11 +62,13 @@
 ## Running the Tests
 
 ### Python Tests (No Mocks)
+
 ```bash
 uv run pytest tests/captain/test_blocks_api_no_mocks.py -v
 ```
 
 ### Playwright E2E Tests
+
 ```bash
 # Build the app first
 pnpm run build

@@ -46,9 +46,8 @@ import {
 } from "@/renderer/components/common/clickables";
 
 const mapTypesToVisualizations = () => {
-  const res: Record<AtlasvibeType, VisualizationType[]> = typedObjectFromEntries(
-    ATLASVIBE_TYPES.map((t) => [t, []]),
-  );
+  const res: Record<AtlasvibeType, VisualizationType[]> =
+    typedObjectFromEntries(ATLASVIBE_TYPES.map((t) => [t, []]));
 
   for (const k of typedObjectKeys(VISUALIZATIONS)) {
     for (const type of VISUALIZATIONS[k].allowedTypes) {

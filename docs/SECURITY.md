@@ -15,6 +15,7 @@ AtlasVibe uses [Gitleaks](https://github.com/gitleaks/gitleaks) to prevent secre
 ### Allowed Patterns
 
 The following patterns are explicitly allowed:
+
 - GitHub noreply email: `713559+Emasoft@users.noreply.github.com`
 - Test/example patterns: `test-api-key`, `YOUR_API_KEY_HERE`, etc.
 - Placeholder values in documentation
@@ -35,10 +36,12 @@ gitleaks detect --config .gitleaks.toml --source path/to/directory
 ## Git Configuration
 
 All commits must use the following identity:
+
 - **Name**: Emasoft
 - **Email**: 713559+Emasoft@users.noreply.github.com
 
 This is enforced by:
+
 1. Pre-commit hook verification
 2. Shell environment variables
 3. Git configuration
@@ -46,13 +49,16 @@ This is enforced by:
 ## GitHub Actions Security
 
 ### Workflows
+
 - **Gitleaks Security Scan**: Runs on every push and PR
 - **SARIF Upload**: Security findings uploaded to GitHub Security tab
 - **PR Comments**: Automatic comments on security failures
 - **Issue Creation**: Creates issues for secrets in pushed commits
 
 ### Permissions
+
 All workflows use minimal required permissions:
+
 - `contents: read`
 - `security-events: write` (for SARIF upload)
 - `pull-requests: write` (for PR comments)
@@ -60,7 +66,9 @@ All workflows use minimal required permissions:
 ## Development Environment
 
 ### Environment Variables
+
 Set in `.envrc` (for direnv) or shell config:
+
 ```bash
 export GIT_AUTHOR_NAME="Emasoft"
 export GIT_AUTHOR_EMAIL="713559+Emasoft@users.noreply.github.com"
@@ -69,7 +77,9 @@ export GIT_COMMITTER_EMAIL="713559+Emasoft@users.noreply.github.com"
 ```
 
 ### Virtual Environment Management
+
 All Python environments are managed by `uv`:
+
 - No direct use of `venv` module
 - Automatic environment creation per block
 - Secure dependency installation
@@ -85,6 +95,7 @@ All Python environments are managed by `uv`:
 ## Incident Response
 
 If secrets are detected:
+
 1. **Don't push**: The pre-commit hook will block you
 2. **Remove secrets**: From your staged changes
 3. **Check history**: Ensure secrets aren't in previous commits
@@ -94,6 +105,7 @@ If secrets are detected:
 ## GitHub Repository Settings
 
 Run `./scripts/github-setup.sh` to verify:
+
 - Branch protection rules
 - Security scanning enabled
 - Automated security fixes

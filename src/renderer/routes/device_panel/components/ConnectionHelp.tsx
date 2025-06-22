@@ -142,10 +142,10 @@ export const ConnectionHelp = () => {
                 <div className="text-xs">
                   After your instrument is physically connected to your computer
                   via a USB or ethernet cable (see Step 1), then it should be
-                  discoverable by Atlasvibe and listed under the “Hardware Devices”
-                  tab. You may have to click the “Refresh” button for it to
-                  appear. Devices connected by Ethernet will show up under VISA;
-                  deviced connected by USB will show up under Serial.
+                  discoverable by Atlasvibe and listed under the “Hardware
+                  Devices” tab. You may have to click the “Refresh” button for
+                  it to appear. Devices connected by Ethernet will show up under
+                  VISA; deviced connected by USB will show up under Serial.
                 </div>
               </div>
             </TabsContent>
@@ -162,8 +162,8 @@ export const ConnectionHelp = () => {
                 <div className="py-4" />
                 <div className="text-xs">
                   If your connected device does not show up under the Hardware
-                  Devices tab, then click the “Debug” button to troubleshoot.
-                  If you encounter any issues, please check the GitHub repository
+                  Devices tab, then click the “Debug” button to troubleshoot. If
+                  you encounter any issues, please check the GitHub repository
                   for troubleshooting tips or open an issue for support.
                 </div>
               </div>

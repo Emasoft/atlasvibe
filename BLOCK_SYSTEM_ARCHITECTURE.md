@@ -56,6 +56,7 @@ def ADD(
 ### Decorator Functionality
 
 The `@atlasvibe` decorator:
+
 - Wraps the function to handle data flow between blocks
 - Manages input fetching from previous blocks
 - Handles parameter injection from the UI
@@ -65,6 +66,7 @@ The `@atlasvibe` decorator:
 ### Data Containers
 
 Blocks communicate using DataContainer types:
+
 - **OrderedPair**: x,y data pairs
 - **Scalar**: Single numeric values
 - **Vector**: 1D arrays
@@ -88,6 +90,7 @@ The `captain/utils/import_blocks.py` module manages block discovery:
 ### Block Registration
 
 When a block is imported:
+
 1. The module is loaded and the decorated function is retrieved
 2. Any preflight functions are executed
 3. Node initialization functions are called if present
@@ -123,6 +126,7 @@ When a block is imported:
 ### app.json Structure
 
 The `app.json` file contains a complete React Flow graph definition showing how to use the block:
+
 - Node definitions with positions and parameters
 - Edge connections between nodes
 - Default parameter values
@@ -142,6 +146,7 @@ The `app.json` file contains a complete React Flow graph definition showing how 
 ### Multiple Inputs
 
 Blocks can accept multiple inputs on a single port:
+
 ```python
 def BLOCK(a: DataContainer, b: list[DataContainer]) -> DataContainer:
     # 'b' receives multiple connections

@@ -73,6 +73,7 @@ AtlasVibe is an open-source visual programming IDE for Python that enables users
 ### 🌟 Vision
 
 Our goal is to create a visual development environment where:
+
 - 🔗 Complex Python workflows can be built by connecting visual nodes
 - 🤖 AI capabilities enhance node creation and modification
 - 🎨 The interface is intuitive for beginners yet powerful for experts
@@ -81,6 +82,7 @@ Our goal is to create a visual development environment where:
 ## ✨ Features
 
 ### Current Features (Alpha)
+
 - ✅ **Visual Node Editor** - Drag-and-drop interface with ReactFlow
 - ✅ **Python Block System** - Modular Python execution units
 - ✅ **Real-time Execution** - See results as you build
@@ -88,6 +90,7 @@ Our goal is to create a visual development environment where:
 - ✅ **Cross-platform** - Works on Windows, macOS, and Linux
 
 ### Planned Features
+
 - 🔄 **AI-Powered Nodes** - Self-modifying blocks based on intent
 - 📦 **Block Marketplace** - Share and discover community blocks
 - 🔌 **Plugin System** - Extend functionality with plugins
@@ -98,18 +101,19 @@ Our goal is to create a visual development environment where:
 
 <div align="center">
 
-| Component | Status | Progress |
-|-----------|--------|----------|
-| Core Engine | 🟡 Alpha | ![70%](https://progress-bar.dev/70) |
-| Block System | 🟡 Alpha | ![65%](https://progress-bar.dev/65) |
-| UI/UX | 🟡 Alpha | ![60%](https://progress-bar.dev/60) |
+| Component     | Status         | Progress                            |
+| ------------- | -------------- | ----------------------------------- |
+| Core Engine   | 🟡 Alpha       | ![70%](https://progress-bar.dev/70) |
+| Block System  | 🟡 Alpha       | ![65%](https://progress-bar.dev/65) |
+| UI/UX         | 🟡 Alpha       | ![60%](https://progress-bar.dev/60) |
 | Documentation | 🟠 In Progress | ![40%](https://progress-bar.dev/40) |
-| Testing | 🟠 In Progress | ![50%](https://progress-bar.dev/50) |
-| CI/CD | 🟢 Operational | ![90%](https://progress-bar.dev/90) |
+| Testing       | 🟠 In Progress | ![50%](https://progress-bar.dev/50) |
+| CI/CD         | 🟢 Operational | ![90%](https://progress-bar.dev/90) |
 
 </div>
 
 ### Current Focus
+
 1. 🔨 Refactoring core architecture from Flojoy Studio base
 2. 🎯 Implementing project-centric block management
 3. 🧪 Expanding test coverage
@@ -118,6 +122,7 @@ Our goal is to create a visual development environment where:
 ## 💻 System Requirements
 
 ### Minimum Requirements
+
 - **OS**: Windows 10+, macOS 10.15+, Ubuntu 20.04+
 - **Python**: 3.11 or higher
 - **Node.js**: 20.x or higher
@@ -125,11 +130,13 @@ Our goal is to create a visual development environment where:
 - **Storage**: 2GB free space
 
 ### Recommended Requirements
+
 - **RAM**: 8GB or more
 - **Storage**: 5GB free space
 - **Display**: 1920x1080 or higher
 
 ### Development Requirements
+
 - **Git**: 2.x or higher
 - **GitHub CLI**: For automated setup (optional)
 - **Docker**: For containerized development (optional)
@@ -153,6 +160,7 @@ atlasvibe run
 ```
 
 The installation script will:
+
 - ✅ Check system requirements
 - ✅ Install uv package manager
 - ✅ Set up Python environment
@@ -295,12 +303,12 @@ atlasvibe --help  # Show all available commands
 
 #### Core Commands
 
-| Command | Description | Options |
-|---------|-------------|---------|
-| `run` | Start full application (default) | - |
-| `server` | Run backend server only | `--port`, `--log-level` |
-| `ui` | Run frontend UI only | `--dev` |
-| `init` | Create new project | `PATH` (required) |
+| Command  | Description                      | Options                 |
+| -------- | -------------------------------- | ----------------------- |
+| `run`    | Start full application (default) | -                       |
+| `server` | Run backend server only          | `--port`, `--log-level` |
+| `ui`     | Run frontend UI only             | `--dev`                 |
+| `init`   | Create new project               | `PATH` (required)       |
 
 #### Examples
 
@@ -321,6 +329,7 @@ atlasvibe init ~/projects/my-workflow
 ### API Documentation
 
 When running the server, API documentation is available at:
+
 - **Swagger UI**: http://localhost:5392/docs
 - **ReDoc**: http://localhost:5392/redoc
 
@@ -385,6 +394,7 @@ pnpm run e2e
 #### Test Coverage
 
 We aim for high test coverage:
+
 - Python backend: >80%
 - Frontend components: >70%
 - E2E scenarios: Critical paths
@@ -395,13 +405,13 @@ Our CI/CD pipeline ensures code quality and reliability:
 
 #### Workflows
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| **CI** | Push/PR | Code quality, tests |
-| **CD** | Tags `v*` | Build releases |
-| **Security** | Push/PR/Schedule | Secret scanning |
-| **Dependencies** | Weekly | Dependency analysis |
-| **Pre-commit** | PR | Code formatting |
+| Workflow         | Trigger          | Purpose             |
+| ---------------- | ---------------- | ------------------- |
+| **CI**           | Push/PR          | Code quality, tests |
+| **CD**           | Tags `v*`        | Build releases      |
+| **Security**     | Push/PR/Schedule | Secret scanning     |
+| **Dependencies** | Weekly           | Dependency analysis |
+| **Pre-commit**   | PR               | Code formatting     |
 
 #### Local CI Simulation
 
@@ -430,6 +440,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ### Commit Convention
 
 We use [Conventional Commits](https://www.conventionalcommits.org/):
+
 - `feat:` New features
 - `fix:` Bug fixes
 - `docs:` Documentation changes
@@ -470,6 +481,7 @@ For third-party licenses and dependencies, see [THIRD-PARTY-LICENSES.md](THIRD-P
 AtlasVibe is built upon the foundation of [**Flojoy Studio**](https://github.com/flojoy-ai/studio), an open-source test sequencer for hardware validation. We are deeply grateful to the Flojoy team for their excellent work and for making it available under the MIT license.
 
 Special thanks to:
+
 - The Flojoy Studio team for the original codebase
 - All contributors who have helped shape this project
 - The open-source community for invaluable tools and libraries

@@ -117,10 +117,10 @@ repos:
         name: Fix end of files
       - id: check-yaml
         name: Check YAML syntax
-        exclude: '^\.github/workflows/.*\.(yml|yaml)$'  # Actionlint handles these
+        exclude: '^\.github/workflows/.*\.(yml|yaml)$' # Actionlint handles these
       - id: check-added-large-files
         name: Check for large files
-        args: ['--maxkb=5000']
+        args: ["--maxkb=5000"]
       - id: check-merge-conflict
         name: Check for merge conflicts
       - id: check-json

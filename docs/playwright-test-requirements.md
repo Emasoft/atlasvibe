@@ -9,17 +9,21 @@ This document outlines the comprehensive Playwright tests created following TDD 
 **Purpose**: Tests visual feedback during block code regeneration
 
 **Key Requirements**:
+
 - **Blinking Indicator**: A `.block-regenerating-indicator` element should appear above blocks during regeneration with:
+
   - Text: "Regenerating..."
   - CSS animation: `blink`
   - Automatically disappears when regeneration completes
 
 - **Workflow Pause**: During regeneration:
+
   - Execution status shows "Paused - Block Regenerating"
   - Play button becomes disabled
   - Execution resumes automatically after regeneration
 
 - **Header Color Change**: Block headers should:
+
   - Change border color to orange (rgb(250-255, xxx, 0)) during regeneration
   - Have a `pulse` animation
   - Return to original color after completion
@@ -35,23 +39,28 @@ This document outlines the comprehensive Playwright tests created following TDD 
 **Purpose**: Tests blueprint creation and management functionality
 
 **Key Requirements**:
+
 - **Save as Blueprint**:
+
   - Right-click context menu option "Save as Blueprint"
   - Dialog for entering blueprint name
   - Blueprint appears in global palette with `.blueprint-badge`
 
 - **Name Validation**:
+
   - Only letters (A-Z, a-z) and underscores allowed
   - Must start with a letter
   - Cannot be empty
   - Real-time validation with error messages
 
 - **Name Collision Detection**:
+
   - Warning when blueprint name already exists
   - Option to overwrite or cancel
   - Clear user messaging
 
 - **Space Replacement**:
+
   - First click: Preview cleaned name (spaces → underscores)
   - Leading/trailing spaces removed
   - Multiple spaces collapsed to single underscore
@@ -68,7 +77,9 @@ This document outlines the comprehensive Playwright tests created following TDD 
 **Purpose**: Tests project saving and status indicators
 
 **Key Requirements**:
+
 - **Status Indicator** (`.project-status-indicator`):
+
   - States: "Saved", "Unsaved changes", "Saving", "Autosaving"
   - Colors must be readable on black background:
     - Saved: Green (rgb(100-200, 200-255, 100-200))
@@ -78,12 +89,14 @@ This document outlines the comprehensive Playwright tests created following TDD 
   - Minimum luminance: 0.3 for contrast
 
 - **Save to Any Folder**:
+
   - Custom save dialog with folder browser
   - Project name validation (same rules as blocks)
   - Creates project directory structure
   - Updates status with project name
 
 - **Project Name Validation**:
+
   - Same rules as block names
   - Space replacement with preview
   - Collision detection for existing projects
@@ -99,6 +112,7 @@ This document outlines the comprehensive Playwright tests created following TDD 
 ### Frontend Components Needed
 
 1. **Block Regeneration UI**:
+
    - [ ] Add regenerating indicator component
    - [ ] Implement blink animation in CSS
    - [ ] Add border color states to block components
@@ -106,12 +120,14 @@ This document outlines the comprehensive Playwright tests created following TDD 
    - [ ] Hook into WebSocket for regeneration events
 
 2. **Execution Status**:
+
    - [ ] Add execution status component
    - [ ] Implement pause logic during regeneration
    - [ ] Disable play button when regenerating
    - [ ] Auto-resume after regeneration
 
 3. **Blueprint Management**:
+
    - [ ] Add "Save as Blueprint" to context menu
    - [ ] Create blueprint name dialog
    - [ ] Add blueprint badge component
@@ -119,18 +135,21 @@ This document outlines the comprehensive Playwright tests created following TDD 
    - [ ] Implement rename functionality
 
 4. **Name Validation**:
+
    - [ ] Create reusable name validator
    - [ ] Pattern: `/^[A-Za-z][A-Za-z_]*$/`
    - [ ] Space cleaning function
    - [ ] Two-step preview system
 
 5. **Project Status**:
+
    - [ ] Create status indicator component
    - [ ] Define color scheme for states
    - [ ] Position in header or status bar
    - [ ] Connect to project store
 
 6. **Save Dialog**:
+
    - [ ] Custom save dialog component
    - [ ] Folder browser integration
    - [ ] Name validation integration
@@ -145,11 +164,13 @@ This document outlines the comprehensive Playwright tests created following TDD 
 ### Backend Requirements
 
 1. **Block Regeneration**:
+
    - [ ] WebSocket events for regeneration status
    - [ ] Metadata generation on code change
    - [ ] Manifest update endpoints
 
 2. **Blueprint Management**:
+
    - [ ] Blueprint save endpoint
    - [ ] Blueprint rename endpoint
    - [ ] Blueprint list endpoint
@@ -168,8 +189,13 @@ This document outlines the comprehensive Playwright tests created following TDD 
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* Pulse animation for block border */
@@ -179,15 +205,28 @@ This document outlines the comprehensive Playwright tests created following TDD 
 }
 
 @keyframes pulse {
-  0%, 100% { border-width: 2px; }
-  50% { border-width: 4px; }
+  0%,
+  100% {
+    border-width: 2px;
+  }
+  50% {
+    border-width: 4px;
+  }
 }
 
 /* Status colors */
-.status-saved { color: rgb(150, 230, 150); }
-.status-unsaved { color: rgb(240, 200, 50); }
-.status-saving { color: rgb(240, 210, 100); }
-.status-autosaving { color: rgb(240, 230, 150); }
+.status-saved {
+  color: rgb(150, 230, 150);
+}
+.status-unsaved {
+  color: rgb(240, 200, 50);
+}
+.status-saving {
+  color: rgb(240, 210, 100);
+}
+.status-autosaving {
+  color: rgb(240, 230, 150);
+}
 ```
 
 ## Testing Strategy

@@ -18,7 +18,7 @@ export enum CheckStatus {
   SUCCESS = "success",
   WARNING = "warning",
   ERROR = "error",
-  SKIPPED = "skipped"
+  SKIPPED = "skipped",
 }
 
 export interface CheckResult {

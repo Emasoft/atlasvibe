@@ -27,7 +27,10 @@ export const env = createEnv({
       .string()
       .url()
       .default("https://github.com/Emasoft/atlasvibe/blob/main"),
-    VITE_DOCS_LINK: z.string().url().default("https://github.com/Emasoft/atlasvibe"),
+    VITE_DOCS_LINK: z
+      .string()
+      .url()
+      .default("https://github.com/Emasoft/atlasvibe"),
     VITE_REQUEST_BLOCK_URL: z
       .string()
       .url()

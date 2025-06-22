@@ -1,9 +1,9 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: '[BUG] '
+title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 **Describe the bug**
@@ -11,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Drag block '....'
@@ -23,15 +24,17 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment:**
- - OS: [e.g. macOS 14.0]
- - Python version: [e.g. 3.11.5]
- - Node.js version: [e.g. 20.5.0]
- - AtlasVibe version: [e.g. 0.1.0]
+
+- OS: [e.g. macOS 14.0]
+- Python version: [e.g. 3.11.5]
+- Node.js version: [e.g. 20.5.0]
+- AtlasVibe version: [e.g. 0.1.0]
 
 **Additional context**
 Add any other context about the problem here.
 
 **Logs**
+
 ```
 Paste any relevant logs here
 ```

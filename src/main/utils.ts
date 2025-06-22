@@ -131,7 +131,10 @@ export const pickDirectory = async (
 };
 
 export const getCustomBlocksDir = async () => {
-  const filePath = join(app.getPath("home"), ".atlasvibe/custom_blocks_path.txt");
+  const filePath = join(
+    app.getPath("home"),
+    ".atlasvibe/custom_blocks_path.txt",
+  );
 
   if (!fs.existsSync(filePath)) {
     return undefined;
@@ -226,7 +229,7 @@ export const openAllFilesInFolderPicker = (
   // Append the app root directory if the path is relative
   if (relativeToResources) {
     const appRoot = app.isPackaged
-      ? join(app.getAppPath(), '..')  // Go up from app directory
+      ? join(app.getAppPath(), "..") // Go up from app directory
       : process.cwd();
     folderPath = join(appRoot, folderPath);
   }
@@ -277,10 +280,10 @@ export const loadFileFromFullPath = async (
   filePath: string,
 ): Promise<string> => {
   // Handle sample projects by checking if the path starts with 'sample_projects/'
-  if (filePath.startsWith('sample_projects/')) {
+  if (filePath.startsWith("sample_projects/")) {
     // For sample projects, we need to resolve the path relative to the app's resources
     const appRoot = app.isPackaged
-      ? join(app.getAppPath(), '..')  // Go up from app directory
+      ? join(app.getAppPath(), "..") // Go up from app directory
       : process.cwd();
 
     const fullPath = join(appRoot, filePath);

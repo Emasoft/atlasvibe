@@ -5,10 +5,12 @@ This guide explains how to test GitHub Actions workflows locally using `act` wit
 ## Prerequisites
 
 1. **Install Docker Desktop**
+
    - Download from: https://www.docker.com/products/docker-desktop/
    - Ensure Docker is running before using act
 
 2. **Install act**
+
    ```bash
    brew install act
    ```
@@ -22,6 +24,7 @@ This guide explains how to test GitHub Actions workflows locally using `act` wit
 ## Configuration
 
 The project includes `.actrc` configuration file that:
+
 - Uses larger runner images with more tools pre-installed
 - Sets up environment variables for uv compatibility
 - Enables container reuse for faster runs
@@ -72,6 +75,7 @@ act -n push
 For workflows that require secrets (like CD workflow):
 
 1. Create `.env.secrets` file (gitignored):
+
    ```
    AZURE_KEY_VAULT_URI=your-value
    AZURE_CLIENT_ID=your-value
@@ -88,23 +92,29 @@ For workflows that require secrets (like CD workflow):
 ## Troubleshooting
 
 ### Docker Not Running
+
 ```
 Error: Docker is not running. Please start Docker Desktop.
 ```
+
 **Solution**: Start Docker Desktop application
 
 ### Container Architecture Issues
+
 The `.actrc` file sets `--container-architecture linux/amd64` for compatibility.
 If you have issues on Apple Silicon, you may need to adjust this.
 
 ### Missing Tools in Container
+
 The project uses `catthehacker/ubuntu:act-latest` images which include most tools.
 If a tool is missing, you can:
+
 1. Install it in the workflow step
 2. Use a custom Docker image
 3. Mount local tools into the container
 
 ### uv-specific Issues
+
 - The `.actrc` sets `UV_SYSTEM_PYTHON=1` to use system Python
 - `UV_NO_CACHE=1` prevents caching issues in containers
 - Ensure Python 3.11 is available in the runner image
@@ -131,10 +141,12 @@ If a tool is missing, you can:
 ## Integration with pre-commit
 
 The project uses pre-commit hooks that include:
+
 - yamllint: Validates YAML syntax and style
 - actionlint: Validates GitHub Actions workflow syntax
 
 These run automatically on commit but can be run manually:
+
 ```bash
 pre-commit run yamllint --all-files
 pre-commit run actionlint --all-files

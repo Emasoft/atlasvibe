@@ -71,11 +71,7 @@
             "dc_type": {
               "type": "select",
               "default": "OrderedPair",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "desc": "The type of DataContainer to return.",
               "overload": null,
               "functionName": "CONSTANT",
@@ -146,11 +142,7 @@
             "dc_type": {
               "type": "select",
               "default": "OrderedPair",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "desc": "The type of DataContainer to return.",
               "overload": null,
               "functionName": "CONSTANT",

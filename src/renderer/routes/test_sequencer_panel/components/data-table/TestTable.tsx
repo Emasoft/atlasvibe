@@ -218,7 +218,6 @@ export function TestTable() {
       },
     },
 
-
     {
       id: "Completion Time",
       accessorFn: (elem) => {
@@ -665,9 +664,7 @@ export function TestTable() {
                     if (isAdmin()) {
                       setIsImportTestModalOpen(true);
                     } else {
-                      toast.info(
-                        "You need admin permissions to add tests",
-                      );
+                      toast.info("You need admin permissions to add tests");
                     }
                   }}
                 >

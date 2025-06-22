@@ -9,11 +9,22 @@
  */
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/renderer/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/renderer/components/ui/dialog";
 import { Button } from "@/renderer/components/ui/button";
 import { Badge } from "@/renderer/components/ui/badge";
 import { ScrollArea } from "@/renderer/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/renderer/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/renderer/components/ui/tabs";
 import { Alert, AlertDescription } from "@/renderer/components/ui/alert";
 import {
   Package,
@@ -26,13 +37,18 @@ import {
   Loader2,
   Info,
   Bug,
-  Download
+  Download,
 } from "lucide-react";
 import { getVenvStatus, getVenvLogs, regenerateVenv } from "@/renderer/lib/api";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/renderer/lib/utils";
-import { VenvStatus, VenvLog, CheckStatus, CheckResult } from "@/renderer/types/venv";
+import {
+  VenvStatus,
+  VenvLog,
+  CheckStatus,
+  CheckResult,
+} from "@/renderer/types/venv";
 
 interface VenvStatusDialogProps {
   open: boolean;
@@ -45,7 +61,7 @@ export const VenvStatusDialog = ({
   open,
   onOpenChange,
   blockPath,
-  blockName
+  blockName,
 }: VenvStatusDialogProps) => {
   const [status, setStatus] = useState<VenvStatus | null>(null);
   const [logs, setLogs] = useState<VenvLog[]>([]);
@@ -93,7 +109,7 @@ export const VenvStatusDialog = ({
         await loadData(); // Reload data
       } else {
         toast.error("Failed to regenerate virtual environment", {
-          description: res.isErr() ? res.error.message : "Unknown error"
+          description: res.isErr() ? res.error.message : "Unknown error",
         });
       }
     } catch (error) {
@@ -107,41 +123,45 @@ export const VenvStatusDialog = ({
   const getStatusIcon = (status: CheckStatus) => {
     switch (status) {
       case CheckStatus.SUCCESS:
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case CheckStatus.ERROR:
-        return <XCircle className="w-4 h-4 text-destructive" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case CheckStatus.WARNING:
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case CheckStatus.PENDING:
-        return <Clock className="w-4 h-4 text-muted-foreground" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
       case CheckStatus.RUNNING:
-        return <Loader2 className="w-4 h-4 text-primary animate-spin" />;
+        return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
       case CheckStatus.SKIPPED:
-        return <Info className="w-4 h-4 text-muted-foreground" />;
+        return <Info className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <Info className="w-4 h-4 text-muted-foreground" />;
+        return <Info className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusBadge = (valid: boolean) => {
     if (valid) {
-      return <Badge variant="outline" className="gap-1 text-green-600">
-        <CheckCircle2 className="w-3 h-3" />
-        Healthy
-      </Badge>;
+      return (
+        <Badge variant="outline" className="gap-1 text-green-600">
+          <CheckCircle2 className="h-3 w-3" />
+          Healthy
+        </Badge>
+      );
     }
-    return <Badge variant="destructive" className="gap-1">
-      <XCircle className="w-3 h-3" />
-      Invalid
-    </Badge>;
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <XCircle className="h-3 w-3" />
+        Invalid
+      </Badge>
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-h-[80vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
+            <Package className="h-5 w-5" />
             Virtual Environment: {blockName}
           </DialogTitle>
           <DialogDescription>
@@ -151,7 +171,7 @@ export const VenvStatusDialog = ({
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin" />
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
           <Tabs defaultValue="status" className="flex-1">
@@ -162,7 +182,7 @@ export const VenvStatusDialog = ({
 
             <TabsContent value="status" className="space-y-4">
               {/* Status Overview */}
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Environment Status</p>
                   <div className="flex items-center gap-4">
@@ -177,14 +197,18 @@ export const VenvStatusDialog = ({
                       </>
                     ) : (
                       <Badge variant="outline" className="gap-1">
-                        <AlertCircle className="w-3 h-3" />
+                        <AlertCircle className="h-3 w-3" />
                         Not Created
                       </Badge>
                     )}
                   </div>
                   {status?.last_regenerated && (
                     <p className="text-xs text-muted-foreground">
-                      Last regenerated: {format(new Date(status.last_regenerated), "MMM d, yyyy HH:mm")}
+                      Last regenerated:{" "}
+                      {format(
+                        new Date(status.last_regenerated),
+                        "MMM d, yyyy HH:mm",
+                      )}
                     </p>
                   )}
                 </div>
@@ -195,12 +219,12 @@ export const VenvStatusDialog = ({
                 >
                   {isRegenerating ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Regenerating...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
+                      <RefreshCw className="mr-2 h-4 w-4" />
                       Regenerate
                     </>
                   )}
@@ -208,21 +232,29 @@ export const VenvStatusDialog = ({
               </div>
 
               {/* Installed Packages */}
-              {status?.installed_packages && status.installed_packages.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Installed Packages ({status.installed_packages.length})</h4>
-                  <ScrollArea className="h-[200px] border rounded-lg p-4">
-                    <div className="space-y-1">
-                      {status.installed_packages.map((pkg, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span className="font-mono">{pkg.name}</span>
-                          <span className="text-muted-foreground">{pkg.version}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
+              {status?.installed_packages &&
+                status.installed_packages.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">
+                      Installed Packages ({status.installed_packages.length})
+                    </h4>
+                    <ScrollArea className="h-[200px] rounded-lg border p-4">
+                      <div className="space-y-1">
+                        {status.installed_packages.map((pkg, idx) => (
+                          <div
+                            key={idx}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="font-mono">{pkg.name}</span>
+                            <span className="text-muted-foreground">
+                              {pkg.version}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
 
               {/* Health Checks */}
               {status?.health_checks && status.health_checks.length > 0 && (
@@ -230,11 +262,16 @@ export const VenvStatusDialog = ({
                   <h4 className="text-sm font-medium">Health Checks</h4>
                   <div className="space-y-2">
                     {status.health_checks.map((check, idx) => (
-                      <div key={idx} className="flex items-start gap-2 p-2 border rounded">
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 rounded border p-2"
+                      >
                         {getStatusIcon(check.status)}
                         <div className="flex-1">
                           <p className="text-sm font-medium">{check.name}</p>
-                          <p className="text-sm text-muted-foreground">{check.message}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {check.message}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -246,39 +283,44 @@ export const VenvStatusDialog = ({
             <TabsContent value="logs" className="space-y-4">
               {logs.length === 0 ? (
                 <Alert>
-                  <Info className="w-4 h-4" />
+                  <Info className="h-4 w-4" />
                   <AlertDescription>
                     No regeneration logs available yet.
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div className="flex gap-4 h-[400px]">
+                <div className="flex h-[400px] gap-4">
                   {/* Log List */}
-                  <div className="w-1/3 border rounded-lg">
+                  <div className="w-1/3 rounded-lg border">
                     <ScrollArea className="h-full">
-                      <div className="p-2 space-y-1">
+                      <div className="space-y-1 p-2">
                         {logs.map((log, idx) => (
                           <button
                             key={idx}
                             onClick={() => setSelectedLog(log)}
                             className={cn(
-                              "w-full text-left p-3 rounded-lg transition-colors",
+                              "w-full rounded-lg p-3 text-left transition-colors",
                               "hover:bg-muted/50",
-                              selectedLog === log && "bg-muted"
+                              selectedLog === log && "bg-muted",
                             )}
                           >
                             <div className="flex items-start gap-2">
                               {log.success ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5" />
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-500" />
                               ) : (
-                                <XCircle className="w-4 h-4 text-destructive mt-0.5" />
+                                <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
                               )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">
-                                  {format(new Date(log.start_time), "MMM d, HH:mm")}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium">
+                                  {format(
+                                    new Date(log.start_time),
+                                    "MMM d, HH:mm",
+                                  )}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {log.duration ? `${log.duration.toFixed(1)}s` : "In progress"}
+                                  {log.duration
+                                    ? `${log.duration.toFixed(1)}s`
+                                    : "In progress"}
                                 </p>
                               </div>
                             </div>
@@ -289,25 +331,36 @@ export const VenvStatusDialog = ({
                   </div>
 
                   {/* Log Details */}
-                  <div className="flex-1 border rounded-lg">
+                  <div className="flex-1 rounded-lg border">
                     {selectedLog ? (
                       <ScrollArea className="h-full">
-                        <div className="p-4 space-y-4">
+                        <div className="space-y-4 p-4">
                           {/* Log Header */}
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <FileText className="w-4 h-4" />
+                              <FileText className="h-4 w-4" />
                               <h4 className="font-medium">Regeneration Log</h4>
                             </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <p>Started: {format(new Date(selectedLog.start_time), "PPpp")}</p>
+                            <div className="space-y-1 text-sm text-muted-foreground">
+                              <p>
+                                Started:{" "}
+                                {format(
+                                  new Date(selectedLog.start_time),
+                                  "PPpp",
+                                )}
+                              </p>
                               {selectedLog.duration && (
-                                <p>Duration: {selectedLog.duration.toFixed(2)} seconds</p>
+                                <p>
+                                  Duration: {selectedLog.duration.toFixed(2)}{" "}
+                                  seconds
+                                </p>
                               )}
                               {selectedLog.error && (
                                 <Alert variant="destructive" className="mt-2">
-                                  <Bug className="w-4 h-4" />
-                                  <AlertDescription>{selectedLog.error}</AlertDescription>
+                                  <Bug className="h-4 w-4" />
+                                  <AlertDescription>
+                                    {selectedLog.error}
+                                  </AlertDescription>
                                 </Alert>
                               )}
                             </div>
@@ -315,22 +368,32 @@ export const VenvStatusDialog = ({
 
                           {/* Checks */}
                           <div className="space-y-2">
-                            <h5 className="text-sm font-medium">Checks Performed</h5>
+                            <h5 className="text-sm font-medium">
+                              Checks Performed
+                            </h5>
                             <div className="space-y-2">
                               {selectedLog.checks.map((check, idx) => (
-                                <div key={idx} className="border rounded-lg p-3 space-y-1">
+                                <div
+                                  key={idx}
+                                  className="space-y-1 rounded-lg border p-3"
+                                >
                                   <div className="flex items-start gap-2">
                                     {getStatusIcon(check.status)}
                                     <div className="flex-1">
-                                      <p className="text-sm font-medium">{check.name}</p>
-                                      <p className="text-sm text-muted-foreground">{check.message}</p>
+                                      <p className="text-sm font-medium">
+                                        {check.name}
+                                      </p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {check.message}
+                                      </p>
                                       {check.recovery_action && (
-                                        <div className="mt-1 p-2 bg-muted rounded text-xs">
-                                          <strong>Action:</strong> {check.recovery_action}
+                                        <div className="mt-1 rounded bg-muted p-2 text-xs">
+                                          <strong>Action:</strong>{" "}
+                                          {check.recovery_action}
                                         </div>
                                       )}
                                       {check.duration && (
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                        <p className="mt-1 text-xs text-muted-foreground">
                                           Took {check.duration.toFixed(3)}s
                                         </p>
                                       )}
@@ -343,7 +406,7 @@ export const VenvStatusDialog = ({
                         </div>
                       </ScrollArea>
                     ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
                         Select a log to view details
                       </div>
                     )}

@@ -352,11 +352,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,
@@ -479,11 +475,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,
@@ -554,11 +546,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,

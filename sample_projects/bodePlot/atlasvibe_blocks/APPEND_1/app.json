@@ -153,27 +153,12 @@
             "distribution": {
               "type": "select",
               "default": "normal",
-              "options": [
-                "normal",
-                "uniform",
-                "poisson"
-              ],
+              "options": ["normal", "uniform", "poisson"],
               "desc": "the distribution over the random samples",
               "overload": {
-                "uniform": [
-                  "size",
-                  "lower_bound",
-                  "upper_bound"
-                ],
-                "normal": [
-                  "size",
-                  "normal_mean",
-                  "normal_standard_deviation"
-                ],
-                "poisson": [
-                  "size",
-                  "poisson_events"
-                ]
+                "uniform": ["size", "lower_bound", "upper_bound"],
+                "normal": ["size", "normal_mean", "normal_standard_deviation"],
+                "poisson": ["size", "poisson_events"]
               },
               "functionName": "RAND",
               "param": "distribution",
@@ -516,27 +501,12 @@
             "distribution": {
               "type": "select",
               "default": "normal",
-              "options": [
-                "normal",
-                "uniform",
-                "poisson"
-              ],
+              "options": ["normal", "uniform", "poisson"],
               "desc": "the distribution over the random samples",
               "overload": {
-                "uniform": [
-                  "size",
-                  "lower_bound",
-                  "upper_bound"
-                ],
-                "normal": [
-                  "size",
-                  "normal_mean",
-                  "normal_standard_deviation"
-                ],
-                "poisson": [
-                  "size",
-                  "poisson_events"
-                ]
+                "uniform": ["size", "lower_bound", "upper_bound"],
+                "normal": ["size", "normal_mean", "normal_standard_deviation"],
+                "poisson": ["size", "poisson_events"]
               },
               "functionName": "RAND",
               "param": "distribution",

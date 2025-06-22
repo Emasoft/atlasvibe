@@ -32,7 +32,7 @@ import { useProjectStore } from "@/renderer/stores/project";
 import {
   VenvStatus,
   GetVenvLogsResponse,
-  RegenerateVenvResult
+  RegenerateVenvResult,
 } from "@/renderer/types/venv";
 
 const get = <Z extends z.ZodTypeAny>(
@@ -52,7 +52,8 @@ export const getManifest = (blocksPath?: string, projectPath?: string) => {
   if (projectPath) searchParams.project_path = projectPath;
 
   return get("blocks/manifest", blockManifestSchema, {
-    searchParams: Object.keys(searchParams).length > 0 ? searchParams : undefined
+    searchParams:
+      Object.keys(searchParams).length > 0 ? searchParams : undefined,
   });
 };
 
@@ -62,13 +63,15 @@ export const saveBlueprintFromBlock = (params: {
   overwrite?: boolean;
 }) => {
   return fromPromise(
-    captain.post("blocks/save-as-blueprint", {
-      json: {
-        block_path: params.blockPath,
-        blueprint_name: params.blueprintName,
-        overwrite: params.overwrite || false,
-      },
-    }).json(),
+    captain
+      .post("blocks/save-as-blueprint", {
+        json: {
+          block_path: params.blockPath,
+          blueprint_name: params.blueprintName,
+          overwrite: params.overwrite || false,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -78,19 +81,19 @@ export const renameBlueprint = (params: {
   newName: string;
 }) => {
   return fromPromise(
-    captain.put("blocks/rename-blueprint", {
-      json: {
-        old_name: params.oldName,
-        new_name: params.newName,
-      },
-    }).json(),
+    captain
+      .put("blocks/rename-blueprint", {
+        json: {
+          old_name: params.oldName,
+          new_name: params.newName,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
 
-export const deleteBlueprint = (params: {
-  blueprintName: string;
-}) => {
+export const deleteBlueprint = (params: { blueprintName: string }) => {
   return fromPromise(
     captain.delete(`blocks/blueprint/${params.blueprintName}`).json(),
     (e) => e as HTTPError,
@@ -213,13 +216,15 @@ export const createCustomBlock = async (
   projectPath: string,
 ) => {
   return fromPromise(
-    captain.post("blocks/create-custom", {
-      json: {
-        blueprint_key: blueprintKey,
-        new_block_name: newBlockName,
-        project_path: projectPath,
-      },
-    }).json(),
+    captain
+      .post("blocks/create-custom", {
+        json: {
+          blueprint_key: blueprintKey,
+          new_block_name: newBlockName,
+          project_path: projectPath,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -230,13 +235,15 @@ export const updateBlockCode = async (
   projectPath: string,
 ) => {
   return fromPromise(
-    captain.post("blocks/update-code", {
-      json: {
-        block_path: blockPath,
-        content: content,
-        project_path: projectPath,
-      },
-    }).json(),
+    captain
+      .post("blocks/update-code", {
+        json: {
+          block_path: blockPath,
+          content: content,
+          project_path: projectPath,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -249,7 +256,6 @@ export const discoverRobot = async (path: string, oneFile: boolean) => {
     },
   });
 };
-
 
 const TestProfile = z.object({
   profile_root: z.string(),
@@ -269,13 +275,15 @@ export const validateCode = async (
   projectPath?: string | null,
 ) => {
   return fromPromise(
-    captain.post("blocks/validate-code", {
-      json: {
-        code,
-        filename,
-        project_path: projectPath,
-      },
-    }).json(),
+    captain
+      .post("blocks/validate-code", {
+        json: {
+          code,
+          filename,
+          project_path: projectPath,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -289,15 +297,17 @@ export const getCompletions = async (
   projectPath?: string | null,
 ) => {
   return fromPromise(
-    captain.post("blocks/get-completions", {
-      json: {
-        code,
-        line,
-        column,
-        trigger_char: triggerChar,
-        project_path: projectPath,
-      },
-    }).json(),
+    captain
+      .post("blocks/get-completions", {
+        json: {
+          code,
+          line,
+          column,
+          trigger_char: triggerChar,
+          project_path: projectPath,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -310,30 +320,31 @@ export const getHoverInfo = async (
   projectPath?: string | null,
 ) => {
   return fromPromise(
-    captain.post("blocks/get-hover", {
-      json: {
-        code,
-        line,
-        column,
-        project_path: projectPath,
-      },
-    }).json(),
+    captain
+      .post("blocks/get-hover", {
+        json: {
+          code,
+          line,
+          column,
+          project_path: projectPath,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
 
 // Code formatting API
-export const formatCode = async (
-  code: string,
-  lineLength: number = 88,
-) => {
+export const formatCode = async (code: string, lineLength: number = 88) => {
   return fromPromise(
-    captain.post("blocks/format-code", {
-      json: {
-        code,
-        line_length: lineLength,
-      },
-    }).json(),
+    captain
+      .post("blocks/format-code", {
+        json: {
+          code,
+          line_length: lineLength,
+        },
+      })
+      .json(),
     (e) => e as HTTPError,
   );
 };
@@ -345,25 +356,31 @@ export const regenerateVenv = (
   pythonVersion?: string | null,
 ): ResultAsync<RegenerateVenvResult, HTTPError> => {
   return fromPromise(
-    captain.post("blocks/regenerate-venv", {
-      json: {
-        block_path: blockPath,
-        dependencies,
-        python_version: pythonVersion,
-      },
-    }).json<RegenerateVenvResult>(),
+    captain
+      .post("blocks/regenerate-venv", {
+        json: {
+          block_path: blockPath,
+          dependencies,
+          python_version: pythonVersion,
+        },
+      })
+      .json<RegenerateVenvResult>(),
     (e) => e as HTTPError,
   );
 };
 
 // Virtual environment status API
-export const getVenvStatus = (blockPath: string): ResultAsync<VenvStatus, HTTPError> => {
+export const getVenvStatus = (
+  blockPath: string,
+): ResultAsync<VenvStatus, HTTPError> => {
   return fromPromise(
-    captain.get("blocks/venv-status", {
-      searchParams: {
-        block_path: blockPath,
-      },
-    }).json<VenvStatus>(),
+    captain
+      .get("blocks/venv-status", {
+        searchParams: {
+          block_path: blockPath,
+        },
+      })
+      .json<VenvStatus>(),
     (e) => e as HTTPError,
   );
 };
@@ -374,12 +391,14 @@ export const getVenvLogs = (
   limit: number = 10,
 ): ResultAsync<GetVenvLogsResponse, HTTPError> => {
   return fromPromise(
-    captain.post("blocks/venv-logs", {
-      json: {
-        block_path: blockPath,
-        limit,
-      },
-    }).json<GetVenvLogsResponse>(),
+    captain
+      .post("blocks/venv-logs", {
+        json: {
+          block_path: blockPath,
+          limit,
+        },
+      })
+      .json<GetVenvLogsResponse>(),
     (e) => e as HTTPError,
   );
 };

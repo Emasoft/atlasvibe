@@ -1,5 +1,6 @@
 ## General Development Guidelines and Rules
-- *CRITICAL*: when reading the lines of the source files, do not read just few lines like you usually do. Instead always read all the lines of the file (until you reach the limit of available context memory). No matter what is the situation, searching or editing a file, ALWAYS OBEY TO THIS RULE!!!.
+
+- _CRITICAL_: when reading the lines of the source files, do not read just few lines like you usually do. Instead always read all the lines of the file (until you reach the limit of available context memory). No matter what is the situation, searching or editing a file, ALWAYS OBEY TO THIS RULE!!!.
 - be extremely meticulous and accurate. always check twice any line of code for errors before output the code.
 - never output code that is abridged or with parts replaced by placeholder comments like `# ... rest of the code ...`, `# ... rest of the function as before ...`, `# ... rest of the code remains the same ...`, or similar. You are not chatting. The code you output is going to be saved and linted, so omitting parts of it will cause errors and broken files.
 - Be conservative. only change the code that it is strictly necessary to change to implement a feature or fix an issue. Do not change anything else. You must report the user if there is a way to improve certain parts of the code, but do not attempt to do it unless the user explicitly asks you to.
@@ -26,6 +27,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ```
+
 - always add a short changelog before the imports in of the source code to document all the changes you made to it.
 
 ```python

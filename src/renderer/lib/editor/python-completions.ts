@@ -8,7 +8,11 @@
  * See the LICENSE file for details.
  */
 
-import { CompletionContext, CompletionResult, Completion } from "@codemirror/autocomplete";
+import {
+  CompletionContext,
+  CompletionResult,
+  Completion,
+} from "@codemirror/autocomplete";
 
 // Common AtlasVibe imports and patterns
 const ATLASVIBE_IMPORTS = [
@@ -20,8 +24,16 @@ const ATLASVIBE_IMPORTS = [
 ];
 
 const ATLASVIBE_DECORATORS = [
-  { label: "@atlasvibe", type: "function", detail: "AtlasVibe block decorator" },
-  { label: "@atlasvibe_node", type: "function", detail: "AtlasVibe node decorator" },
+  {
+    label: "@atlasvibe",
+    type: "function",
+    detail: "AtlasVibe block decorator",
+  },
+  {
+    label: "@atlasvibe_node",
+    type: "function",
+    detail: "AtlasVibe node decorator",
+  },
 ];
 
 const DATA_CONTAINER_TYPES = [
@@ -34,17 +46,49 @@ const DATA_CONTAINER_TYPES = [
 ];
 
 const PYTHON_KEYWORDS = [
-  "def", "class", "if", "else", "elif", "for", "while", "return", "import", "from",
-  "try", "except", "finally", "with", "as", "pass", "break", "continue",
-  "lambda", "yield", "global", "nonlocal", "assert", "del", "in", "is", "not",
-  "and", "or", "True", "False", "None"
-].map(kw => ({ label: kw, type: "keyword" }));
+  "def",
+  "class",
+  "if",
+  "else",
+  "elif",
+  "for",
+  "while",
+  "return",
+  "import",
+  "from",
+  "try",
+  "except",
+  "finally",
+  "with",
+  "as",
+  "pass",
+  "break",
+  "continue",
+  "lambda",
+  "yield",
+  "global",
+  "nonlocal",
+  "assert",
+  "del",
+  "in",
+  "is",
+  "not",
+  "and",
+  "or",
+  "True",
+  "False",
+  "None",
+].map((kw) => ({ label: kw, type: "keyword" }));
 
 const NUMPY_COMPLETIONS = [
   { label: "np.array", type: "function", detail: "Create numpy array" },
   { label: "np.zeros", type: "function", detail: "Array of zeros" },
   { label: "np.ones", type: "function", detail: "Array of ones" },
-  { label: "np.arange", type: "function", detail: "Array with range of values" },
+  {
+    label: "np.arange",
+    type: "function",
+    detail: "Array with range of values",
+  },
   { label: "np.linspace", type: "function", detail: "Evenly spaced values" },
   { label: "np.random.rand", type: "function", detail: "Random values [0,1)" },
   { label: "np.mean", type: "function", detail: "Compute mean" },
@@ -55,28 +99,34 @@ const NUMPY_COMPLETIONS = [
 /**
  * Docstring template generator
  */
-function generateDocstringTemplate(context: CompletionContext): Completion | null {
+function generateDocstringTemplate(
+  context: CompletionContext,
+): Completion | null {
   const line = context.state.doc.lineAt(context.pos);
   const beforeCursor = line.text.slice(0, context.pos - line.from);
 
   // Check if we're right after a function definition
-  if (beforeCursor.trim().endsWith(':')) {
+  if (beforeCursor.trim().endsWith(":")) {
     const match = beforeCursor.match(/def\s+(\w+)\s*\((.*?)\)/);
     if (match) {
       const [, , params] = match;
-      const paramList = params.split(',').map(p => p.trim().split(':')[0].trim()).filter(p => p && p !== 'self');
+      const paramList = params
+        .split(",")
+        .map((p) => p.trim().split(":")[0].trim())
+        .filter((p) => p && p !== "self");
 
       let docstring = '"""\n    Brief description.\n    \n';
 
       if (paramList.length > 0) {
-        docstring += '    Parameters\n    ----------\n';
-        paramList.forEach(param => {
+        docstring += "    Parameters\n    ----------\n";
+        paramList.forEach((param) => {
           docstring += `    ${param} : type\n        Description of ${param}.\n`;
         });
-        docstring += '    \n';
+        docstring += "    \n";
       }
 
-      docstring += '    Returns\n    -------\n    type\n        Description of return value.\n    """';
+      docstring +=
+        '    Returns\n    -------\n    type\n        Description of return value.\n    """';
 
       return {
         label: '"""docstring"""',
@@ -93,7 +143,9 @@ function generateDocstringTemplate(context: CompletionContext): Completion | nul
 /**
  * Python autocompletion provider
  */
-export function pythonCompletions(context: CompletionContext): CompletionResult | null {
+export function pythonCompletions(
+  context: CompletionContext,
+): CompletionResult | null {
   const word = context.matchBefore(/\w*/);
   if (!word || (word.from === word.to && !context.explicit)) {
     return null;
@@ -113,7 +165,7 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
 
   // Import completions
   if (beforeCursor.match(/^(from|import)\s+/)) {
-    ATLASVIBE_IMPORTS.forEach(imp => {
+    ATLASVIBE_IMPORTS.forEach((imp) => {
       completions.push({
         label: imp,
         type: "text",
@@ -128,7 +180,7 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
   }
 
   // Type hints after colon
-  if (beforeCursor.includes(':') && beforeCursor.match(/\w+\s*:\s*$/)) {
+  if (beforeCursor.includes(":") && beforeCursor.match(/\w+\s*:\s*$/)) {
     completions.push(...DATA_CONTAINER_TYPES);
     completions.push(
       { label: "list", type: "class" },
@@ -146,7 +198,7 @@ export function pythonCompletions(context: CompletionContext): CompletionResult 
   }
 
   // NumPy completions after np.
-  if (beforeCursor.endsWith('np.')) {
+  if (beforeCursor.endsWith("np.")) {
     completions.push(...NUMPY_COMPLETIONS);
   }
 
@@ -212,5 +264,5 @@ def BLOCK_NAME(input_a: Scalar | Vector, input_b: Scalar | Vector) -> Scalar | V
     type
         Description of return value.
     """`,
-  }
+  },
 ];

@@ -35,7 +35,7 @@ export function execCommand(
 
     // Get the app root directory
     const appRoot = app.isPackaged
-      ? path.join(app.getAppPath(), '..')  // Go up from app directory
+      ? path.join(app.getAppPath(), "..") // Go up from app directory
       : process.cwd();
 
     const child = exec(cmd, {

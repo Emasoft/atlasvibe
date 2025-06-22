@@ -39,16 +39,21 @@ export const SocketReceiver = () => {
       setBlockVersion: state.setBlockVersion,
     })),
   );
-  const { fetchManifest, importCustomBlocks, setManifestChanged, setBlockRegenerating, clearRegeneratingBlocks } =
-    useManifestStore(
-      useShallow((state) => ({
-        fetchManifest: state.fetchManifest,
-        importCustomBlocks: state.importCustomBlocks,
-        setManifestChanged: state.setManifestChanged,
-        setBlockRegenerating: state.setBlockRegenerating,
-        clearRegeneratingBlocks: state.clearRegeneratingBlocks,
-      })),
-    );
+  const {
+    fetchManifest,
+    importCustomBlocks,
+    setManifestChanged,
+    setBlockRegenerating,
+    clearRegeneratingBlocks,
+  } = useManifestStore(
+    useShallow((state) => ({
+      fetchManifest: state.fetchManifest,
+      importCustomBlocks: state.importCustomBlocks,
+      setManifestChanged: state.setManifestChanged,
+      setBlockRegenerating: state.setBlockRegenerating,
+      clearRegeneratingBlocks: state.clearRegeneratingBlocks,
+    })),
+  );
 
   const doFetch = useCallback(async () => {
     const res = await fetchManifest();
@@ -114,28 +119,30 @@ export const SocketReceiver = () => {
           toast("Changes detected, regenerating block metadata...");
 
           // Fetch updated manifest and import custom blocks
-          Promise.all([doFetch(), doImport()]).then(() => {
-            // Clear regenerating state after successful update
-            if (data.blockPaths && Array.isArray(data.blockPaths)) {
-              data.blockPaths.forEach((path: string) => {
-                setBlockRegenerating(path, false);
-              });
-            } else {
+          Promise.all([doFetch(), doImport()])
+            .then(() => {
+              // Clear regenerating state after successful update
+              if (data.blockPaths && Array.isArray(data.blockPaths)) {
+                data.blockPaths.forEach((path: string) => {
+                  setBlockRegenerating(path, false);
+                });
+              } else {
+                clearRegeneratingBlocks();
+              }
+              setManifestChanged(true);
+              toast.success("Blocks updated successfully!");
+            })
+            .catch((error) => {
               clearRegeneratingBlocks();
-            }
-            setManifestChanged(true);
-            toast.success("Blocks updated successfully!");
-          }).catch((error) => {
-            clearRegeneratingBlocks();
-            toast.error("Failed to update blocks");
-            console.error("Manifest update error:", error);
-          });
+              toast.error("Failed to update blocks");
+              console.error("Manifest update error:", error);
+            });
           break;
 
         // Change queue events
         case "change_queued":
           toast.info(`Change queued for block ${data.block_id}`, {
-            description: `Type: ${data.change_type}`
+            description: `Type: ${data.change_type}`,
           });
           // Mark block as having pending changes
           setBlockPendingChanges(data.block_id, data.has_pending > 0);
@@ -143,7 +150,7 @@ export const SocketReceiver = () => {
 
         case "block_code_updated":
           toast.success(`Block ${data.block_id} code updated`, {
-            description: `Version ${data.version}`
+            description: `Version ${data.version}`,
           });
           // Update block version and clear pending status
           setBlockVersion(data.block_id, data.version);
@@ -154,19 +161,19 @@ export const SocketReceiver = () => {
 
         case "block_parameter_updated":
           toast.success(`Block ${data.block_id} parameter updated`, {
-            description: `${data.parameter} = ${data.value}`
+            description: `${data.parameter} = ${data.value}`,
           });
           break;
 
         case "transaction_applied":
           toast.success("Changes applied successfully", {
-            description: `${data.change_count} changes`
+            description: `${data.change_count} changes`,
           });
           break;
 
         case "transaction_failed":
           toast.error("Failed to apply changes", {
-            description: data.error
+            description: data.error,
           });
           break;
 

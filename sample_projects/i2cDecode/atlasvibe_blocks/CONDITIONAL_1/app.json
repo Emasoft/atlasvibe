@@ -15,14 +15,7 @@
             "operator_type": {
               "type": "select",
               "default": ">=",
-              "options": [
-                "<=",
-                ">",
-                "<",
-                ">=",
-                "!=",
-                "=="
-              ],
+              "options": ["<=", ">", "<", ">=", "!=", "=="],
               "functionName": "CONDITIONAL",
               "param": "operator_type",
               "value": ">",
@@ -87,11 +80,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,
@@ -163,11 +152,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,

@@ -9,6 +9,7 @@ AtlasVibe uses GitHub Actions for continuous integration and deployment with uv 
 ### Core Workflows
 
 1. **CI Pipeline** (`.github/workflows/ci.yml`)
+
    - **Triggers**: Push to main, Pull requests
    - **Jobs**:
      - `python-code-format`: Ruff formatting check
@@ -18,7 +19,8 @@ AtlasVibe uses GitHub Actions for continuous integration and deployment with uv 
      - `check-lockfile`: Verify uv.lock is up-to-date
 
 2. **CD Pipeline** (`.github/workflows/cd.yaml`)
-   - **Triggers**: Version tags (v*), Manual dispatch
+
+   - **Triggers**: Version tags (v\*), Manual dispatch
    - **Jobs**:
      - `pre-release-checks`: Quality gates before build
      - `buildElectron`: Multi-platform Electron builds
@@ -91,11 +93,13 @@ gh workflow view ci.yml
 ### Debugging CI Failures
 
 1. **Check workflow logs**:
+
    ```bash
    gh run view [run-id] --log
    ```
 
 2. **Re-run failed jobs**:
+
    ```bash
    gh run rerun [run-id] --failed
    ```
@@ -108,6 +112,7 @@ gh workflow view ci.yml
 ### Release Process
 
 1. **Prepare release**:
+
    ```bash
    # Update version in pyproject.toml
    # Update CHANGELOG.md
@@ -115,12 +120,14 @@ gh workflow view ci.yml
    ```
 
 2. **Create tag**:
+
    ```bash
    git tag v0.1.0
    git push origin v0.1.0
    ```
 
 3. **Monitor build**:
+
    ```bash
    gh run list --workflow cd.yaml
    gh run watch

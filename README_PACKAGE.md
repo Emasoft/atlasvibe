@@ -80,6 +80,7 @@ ls dist/
 ### No More ASAR
 
 The Electron app is no longer packaged as an ASAR archive. This simplifies:
+
 - File access and path resolution
 - Development and debugging
 - Integration with Python code
@@ -87,6 +88,7 @@ The Electron app is no longer packaged as an ASAR archive. This simplifies:
 ### Unified Package
 
 Everything is now in a single Python package:
+
 - Python backend code
 - Electron frontend (pre-built)
 - Block libraries

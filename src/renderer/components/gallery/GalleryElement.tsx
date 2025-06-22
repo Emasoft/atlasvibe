@@ -20,7 +20,10 @@ import { tryParse } from "@/types/result";
 import { toast } from "sonner";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { loadSampleProject, getSampleProjectPath } from "@/renderer/utils/gallery-loader";
+import {
+  loadSampleProject,
+  getSampleProjectPath,
+} from "@/renderer/utils/gallery-loader";
 
 export interface AppGalleryElementProps {
   galleryApp: GalleryApp;

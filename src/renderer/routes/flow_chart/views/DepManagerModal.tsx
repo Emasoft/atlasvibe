@@ -111,16 +111,19 @@ const DepManagerModal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getButtonLabel = useCallback((status: DependencyGroupInfo["status"]) => {
-    switch (status) {
-      case "installed":
-        return "Uninstall";
-      case "dne":
-        return "Install";
-      default:
-        return "Unknown";
-    }
-  }, []);
+  const getButtonLabel = useCallback(
+    (status: DependencyGroupInfo["status"]) => {
+      switch (status) {
+        case "installed":
+          return "Uninstall";
+        case "dne":
+          return "Install";
+        default:
+          return "Unknown";
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (isDepManagerModalOpen) {

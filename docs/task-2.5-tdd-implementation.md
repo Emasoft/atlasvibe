@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
+# -_- coding: utf-8 -_-
 
 # Task 2.5: In-IDE Block Code Editing and Synchronization - TDD Implementation Summary
 
@@ -14,7 +15,9 @@ This document summarizes the implementation of Task 2.5 using Test-Driven Develo
 Following the TDD methodology specified in CLAUDE.md, we created comprehensive tests BEFORE implementing the functionality:
 
 #### Backend Tests Created:
+
 - `tests/test_block_update_simple.py` - Real integration tests without mocks:
+
   - `test_block_file_update()` - Tests actual file operations and rollback
   - `test_project_structure_validation()` - Tests project path validation
   - `test_metadata_files()` - Tests metadata file handling
@@ -27,6 +30,7 @@ Following the TDD methodology specified in CLAUDE.md, we created comprehensive t
   - `test_update_nonexistent_block()` - Tests error handling
 
 #### Frontend Tests Created:
+
 - `tests/frontend/EditorView.test.tsx` - Component tests
 - `playwright-test/16_edit_custom_block_code.spec.ts` - E2E tests
 
@@ -35,6 +39,7 @@ Following the TDD methodology specified in CLAUDE.md, we created comprehensive t
 After creating tests, we discovered that the implementation already existed from previous work:
 
 #### Backend Implementation:
+
 - `/captain/routes/blocks.py` - `update_block_code()` endpoint:
   ```python
   @router.post("/blocks/update-code/")
@@ -46,6 +51,7 @@ After creating tests, we discovered that the implementation already existed from
   ```
 
 #### Frontend Implementation:
+
 - `/src/renderer/routes/editor/EditorView.tsx`:
   - Detects custom blocks (shows "Custom Block" indicator)
   - Integrates with backend API for metadata regeneration
@@ -55,12 +61,14 @@ After creating tests, we discovered that the implementation already existed from
 ### 3. Test Results
 
 #### Successful Tests:
+
 - All simple integration tests pass (4/4)
 - Real file operations work correctly
 - Concurrent access is handled safely
 - No mocks used - tests use actual file system
 
 #### Issues Encountered:
+
 1. Build system issues preventing full E2E testing
 2. Import issues with atlasvibe package (fixed by correcting class name casing)
 3. Missing `blocks_path.py` module (created)
@@ -75,6 +83,7 @@ After creating tests, we discovered that the implementation already existed from
 ## Technical Details
 
 ### API Endpoint
+
 ```python
 class UpdateBlockCodeRequest(BaseModel):
     block_path: str
@@ -83,6 +92,7 @@ class UpdateBlockCodeRequest(BaseModel):
 ```
 
 ### Validation Rules
+
 1. Only custom blocks (containing "atlasvibe_blocks" in path) can be edited
 2. Project path must end with ".atlasvibe"
 3. Block file must exist
@@ -90,6 +100,7 @@ class UpdateBlockCodeRequest(BaseModel):
 5. Manifest regeneration after successful update
 
 ### Frontend Integration
+
 - Uses CodeMirror for Python syntax highlighting
 - Keyboard shortcuts (Ctrl/Cmd+S) for saving
 - Visual indicator for custom blocks

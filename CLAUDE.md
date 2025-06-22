@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## IMPORTANT PROJECT HISTORY - MUST READ
+
 - **AtlasVibe** is THIS project, created and owned by Emasoft
 - **Flojoy Studio** is the ORIGINAL project that AtlasVibe was forked from
 - AtlasVibe is a derivative work based on Flojoy Studio (NOT the other way around!)
@@ -11,12 +12,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - When updating license headers: Copyright (c) 2024 Emasoft for AtlasVibe, with acknowledgment of Original Copyright (c) 2023-2024 Flojoy
 
 ## General Development Guidelines and Rules
-- *CRITICAL*: when reading the lines of the source files, do not read just few lines like you usually do. Instead always read all the lines of the file (until you reach the limit of available context memory). No matter what is the situation, searching or editing a file, ALWAYS OBEY TO THIS RULE!!!.
-- *CRITICAL*: do not ever do unplanned things or take decisions without asking the user first. All non trivial changes to the code must be planned first, approved by the user, and added to the tasks_checklist.md first. Unless something was specifically instructed by the user, you must not do it. Do not make changes to the codebase without duscussing those with the user first and get those approved. Be conservative and act on a strict need-to-be-changed basis.
-- *CRITICAL*: COMMIT AFTER EACH CHANGE TO THE CODE, NO MATTER HOW SMALL!!!
-- *CRITICAL*: after receiving instructions from the user, before you proceed, confirm if you understand and tell the user your plan. If instead you do not understand something, or if there are choices to make, ask the user to clarify, then tell the user your plan. Do not proceed with the plan if the user does not approve it.
-- *CRITICAL*: **Auto-Lint after changes**: Always run the linters (like ruff, shellcheck, mypy, yamllint, eslint, etc.) after any changes to the code files! ALWAYS DO IT BEFORE COMMITTING!!
-- *CRITICAL*: **Ultrathink before acting**: always ultrathink! Your thinking capabilities are not just for show. USE THEM!!!
+
+- _CRITICAL_: when reading the lines of the source files, do not read just few lines like you usually do. Instead always read all the lines of the file (until you reach the limit of available context memory). No matter what is the situation, searching or editing a file, ALWAYS OBEY TO THIS RULE!!!.
+- _CRITICAL_: do not ever do unplanned things or take decisions without asking the user first. All non trivial changes to the code must be planned first, approved by the user, and added to the tasks_checklist.md first. Unless something was specifically instructed by the user, you must not do it. Do not make changes to the codebase without duscussing those with the user first and get those approved. Be conservative and act on a strict need-to-be-changed basis.
+- _CRITICAL_: COMMIT AFTER EACH CHANGE TO THE CODE, NO MATTER HOW SMALL!!!
+- _CRITICAL_: after receiving instructions from the user, before you proceed, confirm if you understand and tell the user your plan. If instead you do not understand something, or if there are choices to make, ask the user to clarify, then tell the user your plan. Do not proceed with the plan if the user does not approve it.
+- _CRITICAL_: **Auto-Lint after changes**: Always run the linters (like ruff, shellcheck, mypy, yamllint, eslint, etc.) after any changes to the code files! ALWAYS DO IT BEFORE COMMITTING!!
+- _CRITICAL_: **Ultrathink before acting**: always ultrathink! Your thinking capabilities are not just for show. USE THEM!!!
 - Never use pip. Use `uv pip <commands>` instead. Consider pip deprecated in favor of uv pip.
 - be extremely meticulous and accurate. always check twice any line of code for errors when you edit it.
 - never output code that is abridged or with parts replaced by placeholder comments like `# ... rest of the code ...`, `# ... rest of the function as before ...`, `# ... rest of the code remains the same ...`, or similar. You are not chatting. The code you output is going to be saved and linted, so omitting parts of it will cause errors and broken files.
@@ -46,7 +48,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - always write the docstrings of all functions and improve the existing ones. Use Google-style docstrings with Args/Returns sections, but do not use markdown.
 - never use markdown in comments.
 - when using the Bash tool, always set the timeout parameter to 1800000 (30 minutes).
-- always tabulate the tests result in a nice table.
+  - always tabulate the tests result in a nice table.
 - do not use mockup tests or mocked behaviours unless it is absolutely impossible to do otherwise. If you need to use a service, local or remote, do not mock it, just ask the user to activate it for the duration of the tests. Results of mocked tests are completely useless. Only real tests can discover issues with the codebase.
 - always use a **Test-Driven Development (TDD)** methodology (write tests first, the implementation later) when implementing new features or change the existing ones. But first check that the existing tests are written correctly.
 - always plan in advance your actions, and break down your plan into very small tasks. Save a file named `DEVELOPMENT_PLAN.md` and write all tasks inside it. Update it with the status of each tasks after any changes.
@@ -82,6 +84,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ```
+
 - always add a short changelog before the imports in of the source code to document all the changes you made to it.
 
 ```python
@@ -91,6 +94,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 
 ### Testing Rules
+
 - Always use pytest and pytest-cov
 - Always run pytest with uv (`uv run pytest <commands..>`
 - Add git hooks that uses uv-pre-commit to run the tests at each commit, read the guide here: https://docs.astral.sh/uv/guides/integration/pre-commit/
@@ -104,6 +108,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Mark the slow tests (those usually skipped when running tests on GitHub, or that need some extra big dependencies installed) with the emoji of a snail 🐌. Be sure to account for the extra character in the table formatting.
 
 ### Test Infrastructure (NEW December 2024)
+
 - **Test Fixtures**: Common fixtures in `/blocks/conftest.py`:
   - `mock_atlasvibe_decorator` - Mocks the @atlasvibe decorator to avoid virtual environment creation
   - `mock_atlasvibe_venv_cache_directory` - Provides temporary cache directory
@@ -117,6 +122,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The project uses pre-commit hooks to ensure code quality before every commit. All hooks are configured in `.pre-commit-config.yaml`.
 
 #### Initial Setup
+
 ```bash
 # Install pre-commit hooks
 uv run pre-commit install
@@ -129,22 +135,28 @@ uv run pre-commit autoupdate
 ```
 
 #### Configured Hooks
+
 1. **YAML and GitHub Actions linting**
+
    - `yamllint` - Validates YAML files
    - `actionlint` - Validates GitHub Actions workflows
 
 2. **UV Package Management**
+
    - `uv-lock` - Ensures uv.lock is up-to-date
    - Runs with `--locked` to verify consistency
 
 3. **Python Code Quality**
+
    - `ruff` - Linting with auto-fixes
    - `ruff-format` - Code formatting
 
 4. **Security**
+
    - `gitleaks` - Detects secrets and credentials
 
 5. **Dependency Analysis**
+
    - `deptry` - Checks for unused or missing dependencies
    - Configured to ignore dynamically loaded dependencies:
      - DEP002 ignores: ninja, av, pytest-json-report, robotframework (and others)
@@ -159,6 +171,7 @@ uv run pre-commit autoupdate
    - Private key detection
 
 #### Working with Pre-commit
+
 ```bash
 # Bypass hooks temporarily (use sparingly)
 git commit --no-verify -m "Emergency fix"
@@ -172,6 +185,7 @@ uv run pre-commit run --verbose --all-files
 ```
 
 #### Troubleshooting
+
 - **deptry false positives**: Already configured to ignore dynamically imported modules. If new ones appear, add them to the `--per-rule-ignores` in `.pre-commit-config.yaml`
 - **Hook failures**: The hooks will auto-fix many issues. After failure, review changes and re-commit
 - **Performance**: First run installs hook environments and may be slow. Subsequent runs are fast
@@ -181,11 +195,13 @@ uv run pre-commit run --verbose --all-files
 ### Core UV Concepts
 
 1. **Environment Management Philosophy**
+
    - Always use virtual environments (UV enforces this by default)
    - Never modify system Python (requires explicit `--system` flag)
    - Environments are disposable - recreate rather than repair
 
 2. **Environment Discovery Order**
+
    - Active `VIRTUAL_ENV` environment variable
    - Active Conda environment
    - `.venv` in current or parent directories
@@ -477,6 +493,7 @@ uv pip install dist/*.whl     # Install built package
 ### UV Compilation and Resolution
 
 #### 1. **Compile Dependencies**
+
 ```bash
 # Compile from pyproject.toml
 uv pip compile pyproject.toml -o requirements.txt
@@ -495,6 +512,7 @@ uv pip compile --python-platform linux --python-version 3.11
 ```
 
 #### 2. **Resolution Strategies**
+
 ```bash
 # Different resolution modes
 uv lock --resolution highest        # Latest versions (default)
@@ -513,6 +531,7 @@ uv lock --exclude-newer 2024-01-01  # Only packages before date
 ### Publishing Packages
 
 #### 1. **Build for Publishing**
+
 ```bash
 # Build distributions
 uv build
@@ -523,6 +542,7 @@ unzip -l dist/*.whl
 ```
 
 #### 2. **Upload to PyPI**
+
 ```bash
 # Using twine (install first)
 uv pip install twine
@@ -544,6 +564,7 @@ uv publish
 ### CI/CD Integration
 
 #### GitHub Actions
+
 ```yaml
 # .github/workflows/ci.yml
 - uses: astral-sh/setup-uv@v5
@@ -559,6 +580,7 @@ uv publish
 ```
 
 #### Pre-commit Hooks
+
 ```yaml
 # .pre-commit-config.yaml
 repos:
@@ -575,6 +597,7 @@ repos:
 #### Common Issues and Solutions
 
 1. **uv not found**
+
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    # Or via pip
@@ -582,12 +605,14 @@ repos:
    ```
 
 2. **Python version not available**
+
    ```bash
    uv python install 3.11
    uv python list --all-versions
    ```
 
 3. **Dependency conflicts**
+
    ```bash
    # Show resolution details
    uv pip compile --verbose pyproject.toml
@@ -596,6 +621,7 @@ repos:
    ```
 
 4. **Module not found errors**
+
    ```bash
    # Ensure environment is synced
    uv sync
@@ -604,6 +630,7 @@ repos:
    ```
 
 5. **Build failures**
+
    ```bash
    # Build with verbose output
    uv build -v
@@ -612,6 +639,7 @@ repos:
    ```
 
 6. **Platform-specific problems**
+
    ```bash
    # Resolve for specific platform
    uv lock --python-platform linux --python-version 3.11
@@ -626,6 +654,7 @@ repos:
 ## Examples Of Development Commands
 
 ### Environment Setup
+
 ```bash
 # Python environment (using uv)
 uv venv <...options...>    # Create the venv
@@ -642,6 +671,7 @@ uv run pnpm install
 ```
 
 ### Running the Application
+
 ```bash
 # Full stack (frontend + backend)
 uv run pnpm run start-project            # macOS/Linux
@@ -661,7 +691,9 @@ SOURCE: https://github.com/astral-sh/uv/blob/main/docs/pip/environments.md#_snip
 LANGUAGE: console
 CODE:
 ```
+
 $ uv venv --python 3.11 --app
+
 ```
 
 ----------------------------------------
@@ -673,47 +705,48 @@ SOURCE: https://github.com/astral-sh/uv/blob/main/README.md#_snippet_14
 LANGUAGE: console
 CODE:
 ```
+
 $ uv venv
 Using Python 3.12.3
 Creating virtual environment at: .venv
 Activate with: source .venv/bin/activate
 
-------------------------------------------
+---
 
 ## Managed and system Python installations
+
 Since it is common for a system to have an existing Python installation, uv supports discovering Python versions. However, uv also supports installing Python versions itself. To distinguish between these two types of Python installations, uv refers to Python versions it installs as managed Python installations and all other Python installations as system Python installations.
 
 Note
 uv does not distinguish between Python versions installed by the operating system vs those installed and managed by other tools. For example, if a Python installation is managed with pyenv, it would still be considered a system Python version in uv.
 
-
 ## Requesting a version
-A specific Python version can be requested with the --python flag in most uv commands. For example, when creating a virtual environment:
 
+A specific Python version can be requested with the --python flag in most uv commands. For example, when creating a virtual environment:
 
 $ uv venv --python 3.11.6
 
 uv will ensure that Python 3.11.6 is available — downloading and installing it if necessary — then create the virtual environment with it.
 The following Python version request formats are supported:
 
-	•	<version> (e.g., 3, 3.12, 3.12.3)
-	•	<version-specifier> (e.g., >=3.12,<3.13)
-	•	<implementation> (e.g., cpython or cp)
-	•	<implementation>@<version> (e.g., cpython@3.12)
-	•	<implementation><version> (e.g., cpython3.12 or cp312)
-	•	<implementation><version-specifier> (e.g., cpython>=3.12,<3.13)
-	•	<implementation>-<version>-<os>-<arch>-<libc> (e.g., cpython-3.12.3-macos-aarch64-none)
+    •	<version> (e.g., 3, 3.12, 3.12.3)
+    •	<version-specifier> (e.g., >=3.12,<3.13)
+    •	<implementation> (e.g., cpython or cp)
+    •	<implementation>@<version> (e.g., cpython@3.12)
+    •	<implementation><version> (e.g., cpython3.12 or cp312)
+    •	<implementation><version-specifier> (e.g., cpython>=3.12,<3.13)
+    •	<implementation>-<version>-<os>-<arch>-<libc> (e.g., cpython-3.12.3-macos-aarch64-none)
 
 Additionally, a specific system Python interpreter can be requested with:
 
-	•	<executable-path> (e.g., /opt/homebrew/bin/python3)
-	•	<executable-name> (e.g., mypython3)
-	•	<install-dir> (e.g., /some/environment/)
+    •	<executable-path> (e.g., /opt/homebrew/bin/python3)
+    •	<executable-name> (e.g., mypython3)
+    •	<install-dir> (e.g., /some/environment/)
 
 By default, uv will automatically download Python versions if they cannot be found on the system. This behavior can be disabled with the python-downloads option.
 
-
 ## Python version files
+
 The .python-version file can be used to create a default Python version request. uv searches for a .python-version file in the working directory and each of its parents. If none is found, uv will check the user-level configuration directory. Any of the request formats described above can be used, though use of a version number is recommended for interoperability with other tools.
 A .python-version file can be created in the current directory with the uv python pin command:
 
@@ -728,9 +761,11 @@ Pinned `.python-version` to `3.11`
 A global .python-version file can be created in the user configuration directory with the uv python pin --global command. (not reccomended)
 
 ## Discovery of .python-version files can be disabled with --no-config.
+
 uv will not search for .python-version files beyond project or workspace boundaries (with the exception of the user configuration directory).
 
 ## Installing a Python version
+
 uv bundles a list of downloadable CPython and PyPy distributions for macOS, Linux, and Windows.
 
 Tip
@@ -738,26 +773,21 @@ By default, Python versions are automatically downloaded as needed without using
 
 To install a Python version at a specific version:
 
-
 $ uv python install 3.12.3
 
 To install the latest patch version:
-
 
 $ uv python install 3.12
 
 To install a version that satisfies constraints:
 
-
 $ uv python install '>=3.8,<3.10'
 
 To install multiple versions:
 
-
 $ uv python install 3.9 3.10 3.11
 
 To install a specific implementation:
-
 
 $ uv python install pypy
 
@@ -771,7 +801,6 @@ The available Python versions are frozen for each uv release. To install new Pyt
 
 To install Python executables into your PATH, provide the --preview option:
 
-
 $ uv python install 3.12 --preview
 This will install a Python executable for the requested version into ~/.local/bin, e.g., as python3.12.
 
@@ -780,29 +809,28 @@ If ~/.local/bin is not in your PATH, you can add it with uv tool update-shell.
 
 To install python and python3 executables, include the --default option:
 
-
 $ uv python install 3.12 --default --preview
 
 When installing Python executables, uv will only overwrite an existing executable if it is managed by uv — e.g., if ~/.local/bin/python3.12 exists already uv will not overwrite it without the --force flag.
 uv will update executables that it manages. However, it will prefer the latest patch version of each Python minor version by default. For example:
 
+$ uv python install 3.12.7 --preview # Adds `python3.12` to `~/.local/bin`
 
-$ uv python install 3.12.7 --preview  # Adds `python3.12` to `~/.local/bin`
+$ uv python install 3.12.6 --preview # Does not update `python3.12`
 
-$ uv python install 3.12.6 --preview  # Does not update `python3.12`
-
-$ uv python install 3.12.8 --preview  # Updates `python3.12` to point to 3.12.8
+$ uv python install 3.12.8 --preview # Updates `python3.12` to point to 3.12.8
 
 ## Project Python versions
+
 uv will respect Python requirements defined in requires-python in the pyproject.toml file during project command invocations. The first Python version that is compatible with the requirement will be used, unless a version is otherwise requested, e.g., via a .python-version file or the --python flag.
 
 ## Viewing available Python versions
+
 To list installed and available Python versions:
 
 $ uv python list
 
 To filter the Python versions, provide a request, e.g., to show all Python 3.13 interpreters:
-
 
 $ uv python list 3.13
 
@@ -817,17 +845,16 @@ $ uv python list --all-versions
 
 To view Python versions for other platforms:
 
-
 $ uv python list --all-platforms
 
 To exclude downloads and only show installed Python versions:
-
 
 $ uv python list --only-installed
 
 See the uv python list reference for more details.
 
 ## Finding a Python executable
+
 To find a Python executable, use the uv python find command:
 
 $ uv python find
@@ -846,10 +873,11 @@ $ uv python find --system
 But it is not reccomended.
 
 ## Discovery of Python versions
+
 When searching for a Python version, the following locations are checked:
-	•	Managed Python installations in the UV_PYTHON_INSTALL_DIR.
-	•	A Python interpreter on the PATH as python, python3, or python3.x on macOS and Linux, or python.exe on Windows.
-	•	On Windows, the Python interpreters in the Windows registry and Microsoft Store Python interpreters (see py --list-paths) that match the requested version.
+• Managed Python installations in the UV_PYTHON_INSTALL_DIR.
+• A Python interpreter on the PATH as python, python3, or python3.x on macOS and Linux, or python.exe on Windows.
+• On Windows, the Python interpreters in the Windows registry and Microsoft Store Python interpreters (see py --list-paths) that match the requested version.
 
 In some cases, uv allows using a Python version from a virtual environment. In this case, the virtual environment's interpreter will be checked for compatibility with the request before searching for an installation as described above. See the pip-compatible virtual environment discovery documentation for details.
 When performing discovery, non-executable files will be ignored. Each discovered executable is queried for metadata to ensure it meets the requested Python version. If the query fails, the executable will be skipped. If the executable satisfies the request, it is used without inspecting additional executables.
@@ -876,7 +904,7 @@ Installed 3 versions in 3.42s
  + cpython-3.11.9-macos-aarch64-none
 
  + cpython-3.12.4-macos-aarch64-none
- ```
+```
 
 ## Download Python versions as needed:
 
@@ -907,91 +935,105 @@ $ uv python pin 3.11
 Pinned `.python-version` to `3.11`
 ```
 
-------------------------------------------
+---
 
 # Frontend only
-uv run pnpm run dev
 
+uv run pnpm run dev
 
 ### Testing
 
 # All tests (if no dhtl present)
+
 uv run bash runtests.sh
 
 # Python tests only
+
 uv run pytest .
-uv run pytest ./tests/test_file.py         # Specific file
-uv run pytest ./tests/test_file.py::test_function  # Specific test
-uv run pytest -k "test_name"               # By test name pattern
-uv run pytest -m "not slow"                # Skip slow tests
+uv run pytest ./tests/test_file.py # Specific file
+uv run pytest ./tests/test_file.py::test_function # Specific test
+uv run pytest -k "test_name" # By test name pattern
+uv run pytest -m "not slow" # Skip slow tests
 
 # Run ALL tests locally (no skipping)
-./install_all_test_deps.sh                 # Install all optional deps first
-uv run pytest -v --runxfail                # Run all including xfail
-./run_all_tests.sh                         # Or use convenience script
-uv run python force_run_all_tests.py       # Or force run even without deps
+
+./install_all_test_deps.sh # Install all optional deps first
+uv run pytest -v --runxfail # Run all including xfail
+./run_all_tests.sh # Or use convenience script
+uv run python force_run_all_tests.py # Or force run even without deps
+
 # See RUNNING_ALL_TESTS.md for detailed instructions
 
 # Frontend E2E tests
-uv run pnpm run e2e
-uv run npx playwright test                        # Alternative
-uv run npx playwright test --ui                   # With UI mode
 
+uv run pnpm run e2e
+uv run npx playwright test # Alternative
+uv run npx playwright test --ui # With UI mode
 
 ### Code Quality
 
 # Run all linters (pre-commit, ruff, black, mypy, shellcheck, yamllint)
+
 dhtl lint
 
 # Lint with automatic fixes
+
 dhtl lint --fix
 
 # Format all code (uses ruff format, black, isort)
+
 dhtl format
 
 # Check formatting without changes
+
 dhtl format --check
 
 ### Code Quality
 
 # Python formatting and linting commands syntax to use internally in dhtl:
-uv run ruff format       # format with ruff
+
+uv run ruff format # format with ruff
 uv run ruff check --ignore E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291 --isolated --fix --output-format full
 COLUMNS=400 uv run mypy --strict --show-error-context --pretty --install-types --no-color-output --non-interactive --show-error-codes --show-error-code-links --no-error-summary --follow-imports=normal cli_translator.py >mypy_lint_log.txt
 
 # TypeScript/JavaScript formatting and linting commands syntax to use internally in dhtl:
-uv run pnpm run lint            # ESLint
-uv run pnpm run format          # Prettier
-uv run pnpm run check           # Check formatting without fixing
+
+uv run pnpm run lint # ESLint
+uv run pnpm run format # Prettier
+uv run pnpm run check # Check formatting without fixing
 
 # Bash scripts linting commands syntax to use internally in dhtl:
-uv run shellcheck --severity=error --extended-analysis=true  # Shellcheck (always use severity=error!)
+
+uv run shellcheck --severity=error --extended-analysis=true # Shellcheck (always use severity=error!)
 
 # YAML scripts linting
-uv run yamllint
 
+uv run yamllint
 
 ### Building and Packaging
 
 # Frontend build
+
 uv run pnpm run build
 
 # Build Python package (includes Electron app)
-uv run bash ./install.sh              # Full installation from source
-uv init                   # Init package with uv, creating pyproject.toml file, git and others
-uv init --python 3.10     # Init package with a specific python version
-uv init --app             # Init package with app configuration
-uv init --lib             # Init package with library module configuration
-uv python install 3.10    # Download and install a specific version of Python runtime
-uv python pin 3.10        # Change python version for current venv
-uv add <..module..>       # Add module to pyproject.toml dependencies
+
+uv run bash ./install.sh # Full installation from source
+uv init # Init package with uv, creating pyproject.toml file, git and others
+uv init --python 3.10 # Init package with a specific python version
+uv init --app # Init package with app configuration
+uv init --lib # Init package with library module configuration
+uv python install 3.10 # Download and install a specific version of Python runtime
+uv python pin 3.10 # Change python version for current venv
+uv add <..module..> # Add module to pyproject.toml dependencies
 uv add -r requirements.txt # Add requirements from requirements.txt to pyproject.toml
 uv pip install -r requirements.txt # Install dependencies from requirements.txt
 uv pip compile <..arguments..> # compile requirement file
-uv build                  # Build with uv
-uv run python -m build    # Build wheel only
+uv build # Build with uv
+uv run python -m build # Build wheel only
 
 # What uv init generates:
+
 ```
 .
 ├── .venv
@@ -1019,20 +1061,25 @@ dependencies = []
 ```
 
 # What the file .python-version contains
+
 The .python-version file contains the project's default Python version. This file tells uv which Python version to use when creating the project's virtual environment.
 
 # What the .venv folder contains
+
 The .venv folder contains your project's virtual environment, a Python environment that is isolated from the rest of your system. This is where uv will install your project's dependencies and binaries.
 
 # What the file uv.lock contains:
+
 uv.lock is a cross-platform lockfile that contains exact information about your project's dependencies. Unlike the pyproject.toml which is used to specify the broad requirements of your project, the lockfile contains the exact resolved versions that are installed in the project environment. This file should be checked into version control, allowing for consistent and reproducible installations across machines.
 uv.lock is a human-readable TOML file but is managed by uv and should not be edited manually.
 
 # Install package
-uv pip install dist/*.whl    # Install built wheel
-uv pip install -e .         # Development install
+
+uv pip install dist/\*.whl # Install built wheel
+uv pip install -e . # Development install
 
 # Install global uv tools
+
 uv tools install ruff
 uv tools install mypy
 uv tools install yamllint
@@ -1040,526 +1087,525 @@ uv tools install bump_my_version
 ...etc.
 
 # Execute globally installed uv tools
+
 uv tools run ruff <..arguments..>
 uv tools run mypy <..arguments..>
 uv tools run yamllint <..arguments..>
 uv tools run bump_my_version <..arguments..>
 ...etc.
 
-
 ## More detailed list of options for the uv venv command:
+
 Create a virtual environment
 
 Usage: uv venv [OPTIONS] [PATH]
 
 Arguments:
-  [PATH]  The path to the virtual environment to create
+[PATH] The path to the virtual environment to create
 
 Options:
-      --no-project                           Avoid discovering a project or workspace
-      --seed                                 Install seed packages (one or more of: `pip`, `setuptools`, and `wheel`) into the virtual environment [env:
-                                             UV_VENV_SEED=]
-      --allow-existing                       Preserve any existing files or directories at the target path
-      --prompt <PROMPT>                      Provide an alternative prompt prefix for the virtual environment.
-      --system-site-packages                 Give the virtual environment access to the system site packages directory
-      --relocatable                          Make the virtual environment relocatable
-      --index-strategy <INDEX_STRATEGY>      The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
-                                             first-index, unsafe-first-match, unsafe-best-match]
-      --keyring-provider <KEYRING_PROVIDER>  Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
-                                             subprocess]
-      --exclude-newer <EXCLUDE_NEWER>        Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
-      --link-mode <LINK_MODE>                The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
-                                             hardlink, symlink]
+--no-project Avoid discovering a project or workspace
+--seed Install seed packages (one or more of: `pip`, `setuptools`, and `wheel`) into the virtual environment [env:
+UV_VENV_SEED=]
+--allow-existing Preserve any existing files or directories at the target path
+--prompt <PROMPT> Provide an alternative prompt prefix for the virtual environment.
+--system-site-packages Give the virtual environment access to the system site packages directory
+--relocatable Make the virtual environment relocatable
+--index-strategy <INDEX_STRATEGY> The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
+first-index, unsafe-first-match, unsafe-best-match]
+--keyring-provider <KEYRING_PROVIDER> Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
+subprocess]
+--exclude-newer <EXCLUDE_NEWER> Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
+--link-mode <LINK_MODE> The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
+hardlink, symlink]
 
 Python options:
-  -p, --python <PYTHON>      The Python interpreter to use for the virtual environment. [env: UV_PYTHON=]
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+-p, --python <PYTHON> The Python interpreter to use for the virtual environment. [env: UV_PYTHON=]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Index options:
-      --index <INDEX>                      The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
-      --default-index <DEFAULT_INDEX>      The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
-  -i, --index-url <INDEX_URL>              (Deprecated: use `--default-index` instead) The URL of the Python package index (by default: <https://pypi.org/simple>)
-                                           [env: UV_INDEX_URL=]
-      --extra-index-url <EXTRA_INDEX_URL>  (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
-                                           UV_EXTRA_INDEX_URL=]
-  -f, --find-links <FIND_LINKS>            Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
-                                           UV_FIND_LINKS=]
-      --no-index                           Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via `--find-links`
+--index <INDEX> The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
+--default-index <DEFAULT_INDEX> The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
+-i, --index-url <INDEX_URL> (Deprecated: use `--default-index` instead) The URL of the Python package index (by default: <https://pypi.org/simple>)
+[env: UV_INDEX_URL=]
+--extra-index-url <EXTRA_INDEX_URL> (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
+UV_EXTRA_INDEX_URL=]
+-f, --find-links <FIND_LINKS> Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
+UV_FIND_LINKS=]
+--no-index Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via `--find-links`
 
 Cache options:
-      --refresh                            Refresh all cached data
-  -n, --no-cache                           Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                                           UV_NO_CACHE=]
-      --refresh-package <REFRESH_PACKAGE>  Refresh cached data for a specific package
-      --cache-dir <CACHE_DIR>              Path to the cache directory [env: UV_CACHE_DIR=]
+--refresh Refresh all cached data
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--refresh-package <REFRESH_PACKAGE> Refresh cached data for a specific package
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help venv` for more details.
 
-
 ## More detailed list of options for the uv init command:
+
 Create a new project
 
 Usage: uv init [OPTIONS] [PATH]
 
 Arguments:
-  [PATH]  The path to use for the project/script
+[PATH] The path to use for the project/script
 
 Options:
-      --name <NAME>                    The name of the project
-      --bare                           Only create a `pyproject.toml`
-      --package                        Set up the project to be built as a Python package
-      --no-package                     Do not set up the project to be built as a Python package
-      --app                            Create a project for an application
-      --lib                            Create a project for a library
-      --script                         Create a script
-      --description <DESCRIPTION>      Set the project description
-      --no-description                 Disable the description for the project
-      --vcs <VCS>                      Initialize a version control system for the project [possible values: git, none]
-      --build-backend <BUILD_BACKEND>  Initialize a build-backend of choice for the project [possible values: hatch, flit, pdm, poetry, setuptools, maturin,
-                                       scikit]
-      --no-readme                      Do not create a `README.md` file
-      --author-from <AUTHOR_FROM>      Fill in the `authors` field in the `pyproject.toml` [possible values: auto, git, none]
-      --no-pin-python                  Do not create a `.python-version` file for the project
-      --no-workspace                   Avoid discovering a workspace and create a standalone project
+--name <NAME> The name of the project
+--bare Only create a `pyproject.toml`
+--package Set up the project to be built as a Python package
+--no-package Do not set up the project to be built as a Python package
+--app Create a project for an application
+--lib Create a project for a library
+--script Create a script
+--description <DESCRIPTION> Set the project description
+--no-description Disable the description for the project
+--vcs <VCS> Initialize a version control system for the project [possible values: git, none]
+--build-backend <BUILD_BACKEND> Initialize a build-backend of choice for the project [possible values: hatch, flit, pdm, poetry, setuptools, maturin,
+scikit]
+--no-readme Do not create a `README.md` file
+--author-from <AUTHOR_FROM> Fill in the `authors` field in the `pyproject.toml` [possible values: auto, git, none]
+--no-pin-python Do not create a `.python-version` file for the project
+--no-workspace Avoid discovering a workspace and create a standalone project
 
 Python options:
-  -p, --python <PYTHON>      The Python interpreter to use to determine the minimum supported Python version. [env: UV_PYTHON=]
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+-p, --python <PYTHON> The Python interpreter to use to determine the minimum supported Python version. [env: UV_PYTHON=]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Cache options:
-  -n, --no-cache               Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                               UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>  Path to the cache directory [env: UV_CACHE_DIR=]
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
-
-
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 ## More detailed list of options for uv sync command:
+
 Update the project's environment
 
 Usage: uv sync [OPTIONS]
 
 Options:
-      --extra <EXTRA>                            Include optional dependencies from the specified extra name
-      --all-extras                               Include all optional dependencies
-      --no-extra <NO_EXTRA>                      Exclude the specified optional dependencies, if `--all-extras` is supplied
-      --no-dev                                   Disable the development dependency group
-      --only-dev                                 Only include the development dependency group
-      --group <GROUP>                            Include dependencies from the specified dependency group
-      --no-group <NO_GROUP>                      Disable the specified dependency group
-      --no-default-groups                        Ignore the default dependency groups
-      --only-group <ONLY_GROUP>                  Only include dependencies from the specified dependency group
-      --all-groups                               Include dependencies from all dependency groups
-      --no-editable                              Install any editable dependencies, including the project and any workspace members, as non-editable [env:
-                                                 UV_NO_EDITABLE=]
-      --inexact                                  Do not remove extraneous packages present in the environment
-      --active                                   Sync dependencies to the active virtual environment
-      --no-install-project                       Do not install the current project
-      --no-install-workspace                     Do not install any workspace members, including the root project
-      --no-install-package <NO_INSTALL_PACKAGE>  Do not install the given package(s)
-      --locked                                   Assert that the `uv.lock` will remain unchanged [env: UV_LOCKED=]
-      --frozen                                   Sync without updating the `uv.lock` file [env: UV_FROZEN=]
-      --dry-run                                  Perform a dry run, without writing the lockfile or modifying the project environment
-      --all-packages                             Sync all packages in the workspace
-      --package <PACKAGE>                        Sync for a specific package in the workspace
-      --script <SCRIPT>                          Sync the environment for a Python script, rather than the current project
-      --check                                    Check if the Python environment is synchronized with the project
+--extra <EXTRA> Include optional dependencies from the specified extra name
+--all-extras Include all optional dependencies
+--no-extra <NO_EXTRA> Exclude the specified optional dependencies, if `--all-extras` is supplied
+--no-dev Disable the development dependency group
+--only-dev Only include the development dependency group
+--group <GROUP> Include dependencies from the specified dependency group
+--no-group <NO_GROUP> Disable the specified dependency group
+--no-default-groups Ignore the default dependency groups
+--only-group <ONLY_GROUP> Only include dependencies from the specified dependency group
+--all-groups Include dependencies from all dependency groups
+--no-editable Install any editable dependencies, including the project and any workspace members, as non-editable [env:
+UV_NO_EDITABLE=]
+--inexact Do not remove extraneous packages present in the environment
+--active Sync dependencies to the active virtual environment
+--no-install-project Do not install the current project
+--no-install-workspace Do not install any workspace members, including the root project
+--no-install-package <NO_INSTALL_PACKAGE> Do not install the given package(s)
+--locked Assert that the `uv.lock` will remain unchanged [env: UV_LOCKED=]
+--frozen Sync without updating the `uv.lock` file [env: UV_FROZEN=]
+--dry-run Perform a dry run, without writing the lockfile or modifying the project environment
+--all-packages Sync all packages in the workspace
+--package <PACKAGE> Sync for a specific package in the workspace
+--script <SCRIPT> Sync the environment for a Python script, rather than the current project
+--check Check if the Python environment is synchronized with the project
 
 Index options:
-      --index <INDEX>                        The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
-      --default-index <DEFAULT_INDEX>        The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
-  -i, --index-url <INDEX_URL>                (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
-                                             <https://pypi.org/simple>) [env: UV_INDEX_URL=]
-      --extra-index-url <EXTRA_INDEX_URL>    (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
-                                             UV_EXTRA_INDEX_URL=]
-  -f, --find-links <FIND_LINKS>              Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
-                                             UV_FIND_LINKS=]
-      --no-index                             Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
-                                             `--find-links`
-      --index-strategy <INDEX_STRATEGY>      The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
-                                             first-index, unsafe-first-match, unsafe-best-match]
-      --keyring-provider <KEYRING_PROVIDER>  Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
-                                             subprocess]
+--index <INDEX> The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
+--default-index <DEFAULT_INDEX> The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
+-i, --index-url <INDEX_URL> (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
+<https://pypi.org/simple>) [env: UV_INDEX_URL=]
+--extra-index-url <EXTRA_INDEX_URL> (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
+UV_EXTRA_INDEX_URL=]
+-f, --find-links <FIND_LINKS> Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
+UV_FIND_LINKS=]
+--no-index Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
+`--find-links`
+--index-strategy <INDEX_STRATEGY> The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
+first-index, unsafe-first-match, unsafe-best-match]
+--keyring-provider <KEYRING_PROVIDER> Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
+subprocess]
 
 Resolver options:
-  -U, --upgrade                            Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
-  -P, --upgrade-package <UPGRADE_PACKAGE>  Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
-      --resolution <RESOLUTION>            The strategy to use when selecting between the different compatible versions for a given package requirement [env:
-                                           UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
-      --prerelease <PRERELEASE>            The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
-                                           if-necessary, explicit, if-necessary-or-explicit]
-      --fork-strategy <FORK_STRATEGY>      The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
-                                           UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
-      --exclude-newer <EXCLUDE_NEWER>      Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
-      --no-sources                         Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
-                                           publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
+-U, --upgrade Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
+-P, --upgrade-package <UPGRADE_PACKAGE> Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
+--resolution <RESOLUTION> The strategy to use when selecting between the different compatible versions for a given package requirement [env:
+UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
+--prerelease <PRERELEASE> The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
+if-necessary, explicit, if-necessary-or-explicit]
+--fork-strategy <FORK_STRATEGY> The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
+UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
+--exclude-newer <EXCLUDE_NEWER> Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
+--no-sources Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
+publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
 
 Installer options:
-      --reinstall                              Reinstall all packages, regardless of whether they're already installed. Implies `--refresh`
-      --reinstall-package <REINSTALL_PACKAGE>  Reinstall a specific package, regardless of whether it's already installed. Implies `--refresh-package`
-      --link-mode <LINK_MODE>                  The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
-                                               hardlink, symlink]
-      --compile-bytecode                       Compile Python files to bytecode after installation [env: UV_COMPILE_BYTECODE=]
+--reinstall Reinstall all packages, regardless of whether they're already installed. Implies `--refresh`
+--reinstall-package <REINSTALL_PACKAGE> Reinstall a specific package, regardless of whether it's already installed. Implies `--refresh-package`
+--link-mode <LINK_MODE> The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
+hardlink, symlink]
+--compile-bytecode Compile Python files to bytecode after installation [env: UV_COMPILE_BYTECODE=]
 
 Build options:
-  -C, --config-setting <CONFIG_SETTING>                          Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
-      --no-build-isolation                                       Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
-      --no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE>  Disable isolation when building source distributions for a specific package
-      --no-build                                                 Don't build source distributions [env: UV_NO_BUILD=]
-      --no-build-package <NO_BUILD_PACKAGE>                      Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
-      --no-binary                                                Don't install pre-built wheels [env: UV_NO_BINARY=]
-      --no-binary-package <NO_BINARY_PACKAGE>                    Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
+-C, --config-setting <CONFIG_SETTING> Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
+--no-build-isolation Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
+--no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE> Disable isolation when building source distributions for a specific package
+--no-build Don't build source distributions [env: UV_NO_BUILD=]
+--no-build-package <NO_BUILD_PACKAGE> Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
+--no-binary Don't install pre-built wheels [env: UV_NO_BINARY=]
+--no-binary-package <NO_BINARY_PACKAGE> Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
 
 Cache options:
-  -n, --no-cache                           Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                                           UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>              Path to the cache directory [env: UV_CACHE_DIR=]
-      --refresh                            Refresh all cached data
-      --refresh-package <REFRESH_PACKAGE>  Refresh cached data for a specific package
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
+--refresh Refresh all cached data
+--refresh-package <REFRESH_PACKAGE> Refresh cached data for a specific package
 
 Python options:
-  -p, --python <PYTHON>      The Python interpreter to use for the project environment. [env: UV_PYTHON=]
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+-p, --python <PYTHON> The Python interpreter to use for the project environment. [env: UV_PYTHON=]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help sync` for more details.
 
-
 ## More detailed list of options for the uv python command:
+
 Manage Python versions and installations
 
 Usage: uv python [OPTIONS] <COMMAND>
 
 Commands:
-  list       List the available Python installations
-  install    Download and install Python versions
-  find       Search for a Python installation
-  pin        Pin to a specific Python version
-  dir        Show the uv Python installation directory
-  uninstall  Uninstall Python versions
+list List the available Python installations
+install Download and install Python versions
+find Search for a Python installation
+pin Pin to a specific Python version
+dir Show the uv Python installation directory
+uninstall Uninstall Python versions
 
 Cache options:
-  -n, --no-cache               Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                               UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>  Path to the cache directory [env: UV_CACHE_DIR=]
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
 
 Python options:
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help python` for more details.
 
-
 ## More detailed list of options for the uv pip command:
+
 Manage Python packages with a pip-compatible interface
 
 Usage: uv pip [OPTIONS] <COMMAND>
 
 Commands:
-  compile    Compile a `requirements.in` file to a `requirements.txt` or `pylock.toml` file
-  sync       Sync an environment with a `requirements.txt` or `pylock.toml` file
-  install    Install packages into an environment
-  uninstall  Uninstall packages from an environment
-  freeze     List, in requirements format, packages installed in an environment
-  list       List, in tabular format, packages installed in an environment
-  show       Show information about one or more installed packages
-  tree       Display the dependency tree for an environment
-  check      Verify installed packages have compatible dependencies
+compile Compile a `requirements.in` file to a `requirements.txt` or `pylock.toml` file
+sync Sync an environment with a `requirements.txt` or `pylock.toml` file
+install Install packages into an environment
+uninstall Uninstall packages from an environment
+freeze List, in requirements format, packages installed in an environment
+list List, in tabular format, packages installed in an environment
+show Show information about one or more installed packages
+tree Display the dependency tree for an environment
+check Verify installed packages have compatible dependencies
 
 Cache options:
-  -n, --no-cache               Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                               UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>  Path to the cache directory [env: UV_CACHE_DIR=]
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
 
 Python options:
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help pip` for more details.
 
-
-
 ## More detailed list of options for uv build command:
+
 Build Python packages into source distributions and wheels
 
 Usage: uv build [OPTIONS] [SRC]
 
 Arguments:
-  [SRC]  The directory from which distributions should be built, or a source distribution archive to build into a wheel
+[SRC] The directory from which distributions should be built, or a source distribution archive to build into a wheel
 
 Options:
-      --package <PACKAGE>                      Build a specific package in the workspace
-      --all-packages                           Builds all packages in the workspace
-  -o, --out-dir <OUT_DIR>                      The output directory to which distributions should be written
-      --sdist                                  Build a source distribution ("sdist") from the given directory
-      --wheel                                  Build a binary distribution ("wheel") from the given directory
-      --no-build-logs                          Hide logs from the build backend
-      --force-pep517                           Always build through PEP 517, don't use the fast path for the uv build backend
-  -b, --build-constraints <BUILD_CONSTRAINTS>  Constrain build dependencies using the given requirements files when building distributions [env:
-                                               UV_BUILD_CONSTRAINT=]
-      --require-hashes                         Require a matching hash for each requirement [env: UV_REQUIRE_HASHES=]
-      --no-verify-hashes                       Disable validation of hashes in the requirements file [env: UV_NO_VERIFY_HASHES=]
+--package <PACKAGE> Build a specific package in the workspace
+--all-packages Builds all packages in the workspace
+-o, --out-dir <OUT_DIR> The output directory to which distributions should be written
+--sdist Build a source distribution ("sdist") from the given directory
+--wheel Build a binary distribution ("wheel") from the given directory
+--no-build-logs Hide logs from the build backend
+--force-pep517 Always build through PEP 517, don't use the fast path for the uv build backend
+-b, --build-constraints <BUILD_CONSTRAINTS> Constrain build dependencies using the given requirements files when building distributions [env:
+UV_BUILD_CONSTRAINT=]
+--require-hashes Require a matching hash for each requirement [env: UV_REQUIRE_HASHES=]
+--no-verify-hashes Disable validation of hashes in the requirements file [env: UV_NO_VERIFY_HASHES=]
 
 Python options:
-  -p, --python <PYTHON>      The Python interpreter to use for the build environment. [env: UV_PYTHON=]
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+-p, --python <PYTHON> The Python interpreter to use for the build environment. [env: UV_PYTHON=]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Index options:
-      --index <INDEX>                        The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
-      --default-index <DEFAULT_INDEX>        The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
-  -i, --index-url <INDEX_URL>                (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
-                                             <https://pypi.org/simple>) [env: UV_INDEX_URL=]
-      --extra-index-url <EXTRA_INDEX_URL>    (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
-                                             UV_EXTRA_INDEX_URL=]
-  -f, --find-links <FIND_LINKS>              Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
-                                             UV_FIND_LINKS=]
-      --no-index                             Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
-                                             `--find-links`
-      --index-strategy <INDEX_STRATEGY>      The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
-                                             first-index, unsafe-first-match, unsafe-best-match]
-      --keyring-provider <KEYRING_PROVIDER>  Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
-                                             subprocess]
+--index <INDEX> The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
+--default-index <DEFAULT_INDEX> The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
+-i, --index-url <INDEX_URL> (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
+<https://pypi.org/simple>) [env: UV_INDEX_URL=]
+--extra-index-url <EXTRA_INDEX_URL> (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
+UV_EXTRA_INDEX_URL=]
+-f, --find-links <FIND_LINKS> Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
+UV_FIND_LINKS=]
+--no-index Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
+`--find-links`
+--index-strategy <INDEX_STRATEGY> The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
+first-index, unsafe-first-match, unsafe-best-match]
+--keyring-provider <KEYRING_PROVIDER> Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
+subprocess]
 
 Resolver options:
-  -U, --upgrade                            Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
-  -P, --upgrade-package <UPGRADE_PACKAGE>  Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
-      --resolution <RESOLUTION>            The strategy to use when selecting between the different compatible versions for a given package requirement [env:
-                                           UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
-      --prerelease <PRERELEASE>            The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
-                                           if-necessary, explicit, if-necessary-or-explicit]
-      --fork-strategy <FORK_STRATEGY>      The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
-                                           UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
-      --exclude-newer <EXCLUDE_NEWER>      Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
-      --no-sources                         Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
-                                           publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
+-U, --upgrade Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
+-P, --upgrade-package <UPGRADE_PACKAGE> Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
+--resolution <RESOLUTION> The strategy to use when selecting between the different compatible versions for a given package requirement [env:
+UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
+--prerelease <PRERELEASE> The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
+if-necessary, explicit, if-necessary-or-explicit]
+--fork-strategy <FORK_STRATEGY> The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
+UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
+--exclude-newer <EXCLUDE_NEWER> Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
+--no-sources Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
+publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
 
 Build options:
-  -C, --config-setting <CONFIG_SETTING>                          Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
-      --no-build-isolation                                       Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
-      --no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE>  Disable isolation when building source distributions for a specific package
-      --no-build                                                 Don't build source distributions [env: UV_NO_BUILD=]
-      --no-build-package <NO_BUILD_PACKAGE>                      Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
-      --no-binary                                                Don't install pre-built wheels [env: UV_NO_BINARY=]
-      --no-binary-package <NO_BINARY_PACKAGE>                    Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
+-C, --config-setting <CONFIG_SETTING> Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
+--no-build-isolation Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
+--no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE> Disable isolation when building source distributions for a specific package
+--no-build Don't build source distributions [env: UV_NO_BUILD=]
+--no-build-package <NO_BUILD_PACKAGE> Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
+--no-binary Don't install pre-built wheels [env: UV_NO_BINARY=]
+--no-binary-package <NO_BINARY_PACKAGE> Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
 
 Installer options:
-      --link-mode <LINK_MODE>  The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy, hardlink,
-                               symlink]
+--link-mode <LINK_MODE> The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy, hardlink,
+symlink]
 
 Cache options:
-  -n, --no-cache                           Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                                           UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>              Path to the cache directory [env: UV_CACHE_DIR=]
-      --refresh                            Refresh all cached data
-      --refresh-package <REFRESH_PACKAGE>  Refresh cached data for a specific package
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
+--refresh Refresh all cached data
+--refresh-package <REFRESH_PACKAGE> Refresh cached data for a specific package
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help build` for more details.
 
-
 ## More detailed list of options for the uv run command:
+
 Run a command or script
 
 Usage: uv run [OPTIONS] [COMMAND]
 
 Options:
-      --extra <EXTRA>                          Include optional dependencies from the specified extra name
-      --all-extras                             Include all optional dependencies
-      --no-extra <NO_EXTRA>                    Exclude the specified optional dependencies, if `--all-extras` is supplied
-      --no-dev                                 Disable the development dependency group
-      --group <GROUP>                          Include dependencies from the specified dependency group
-      --no-group <NO_GROUP>                    Disable the specified dependency group
-      --no-default-groups                      Ignore the default dependency groups
-      --only-group <ONLY_GROUP>                Only include dependencies from the specified dependency group
-      --all-groups                             Include dependencies from all dependency groups
-  -m, --module                                 Run a Python module
-      --only-dev                               Only include the development dependency group
-      --no-editable                            Install any editable dependencies, including the project and any workspace members, as non-editable [env:
-                                               UV_NO_EDITABLE=]
-      --exact                                  Perform an exact sync, removing extraneous packages
-      --env-file <ENV_FILE>                    Load environment variables from a `.env` file [env: UV_ENV_FILE=]
-      --no-env-file                            Avoid reading environment variables from a `.env` file [env: UV_NO_ENV_FILE=]
-      --with <WITH>                            Run with the given packages installed
-      --with-editable <WITH_EDITABLE>          Run with the given packages installed in editable mode
-      --with-requirements <WITH_REQUIREMENTS>  Run with all packages listed in the given `requirements.txt` files
-      --isolated                               Run the command in an isolated virtual environment
-      --active                                 Prefer the active virtual environment over the project's virtual environment
-      --no-sync                                Avoid syncing the virtual environment [env: UV_NO_SYNC=]
-      --locked                                 Assert that the `uv.lock` will remain unchanged [env: UV_LOCKED=]
-      --frozen                                 Run without updating the `uv.lock` file [env: UV_FROZEN=]
-  -s, --script                                 Run the given path as a Python script
-      --gui-script                             Run the given path as a Python GUI script
-      --all-packages                           Run the command with all workspace members installed
-      --package <PACKAGE>                      Run the command in a specific package in the workspace
-      --no-project                             Avoid discovering the project or workspace
+--extra <EXTRA> Include optional dependencies from the specified extra name
+--all-extras Include all optional dependencies
+--no-extra <NO_EXTRA> Exclude the specified optional dependencies, if `--all-extras` is supplied
+--no-dev Disable the development dependency group
+--group <GROUP> Include dependencies from the specified dependency group
+--no-group <NO_GROUP> Disable the specified dependency group
+--no-default-groups Ignore the default dependency groups
+--only-group <ONLY_GROUP> Only include dependencies from the specified dependency group
+--all-groups Include dependencies from all dependency groups
+-m, --module Run a Python module
+--only-dev Only include the development dependency group
+--no-editable Install any editable dependencies, including the project and any workspace members, as non-editable [env:
+UV_NO_EDITABLE=]
+--exact Perform an exact sync, removing extraneous packages
+--env-file <ENV_FILE> Load environment variables from a `.env` file [env: UV_ENV_FILE=]
+--no-env-file Avoid reading environment variables from a `.env` file [env: UV_NO_ENV_FILE=]
+--with <WITH> Run with the given packages installed
+--with-editable <WITH_EDITABLE> Run with the given packages installed in editable mode
+--with-requirements <WITH_REQUIREMENTS> Run with all packages listed in the given `requirements.txt` files
+--isolated Run the command in an isolated virtual environment
+--active Prefer the active virtual environment over the project's virtual environment
+--no-sync Avoid syncing the virtual environment [env: UV_NO_SYNC=]
+--locked Assert that the `uv.lock` will remain unchanged [env: UV_LOCKED=]
+--frozen Run without updating the `uv.lock` file [env: UV_FROZEN=]
+-s, --script Run the given path as a Python script
+--gui-script Run the given path as a Python GUI script
+--all-packages Run the command with all workspace members installed
+--package <PACKAGE> Run the command in a specific package in the workspace
+--no-project Avoid discovering the project or workspace
 
 Index options:
-      --index <INDEX>                        The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
-      --default-index <DEFAULT_INDEX>        The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
-  -i, --index-url <INDEX_URL>                (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
-                                             <https://pypi.org/simple>) [env: UV_INDEX_URL=]
-      --extra-index-url <EXTRA_INDEX_URL>    (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
-                                             UV_EXTRA_INDEX_URL=]
-  -f, --find-links <FIND_LINKS>              Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
-                                             UV_FIND_LINKS=]
-      --no-index                             Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
-                                             `--find-links`
-      --index-strategy <INDEX_STRATEGY>      The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
-                                             first-index, unsafe-first-match, unsafe-best-match]
-      --keyring-provider <KEYRING_PROVIDER>  Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
-                                             subprocess]
+--index <INDEX> The URLs to use when resolving dependencies, in addition to the default index [env: UV_INDEX=]
+--default-index <DEFAULT_INDEX> The URL of the default package index (by default: <https://pypi.org/simple>) [env: UV_DEFAULT_INDEX=]
+-i, --index-url <INDEX_URL> (Deprecated: use `--default-index` instead) The URL of the Python package index (by default:
+<https://pypi.org/simple>) [env: UV_INDEX_URL=]
+--extra-index-url <EXTRA_INDEX_URL> (Deprecated: use `--index` instead) Extra URLs of package indexes to use, in addition to `--index-url` [env:
+UV_EXTRA_INDEX_URL=]
+-f, --find-links <FIND_LINKS> Locations to search for candidate distributions, in addition to those found in the registry indexes [env:
+UV_FIND_LINKS=]
+--no-index Ignore the registry index (e.g., PyPI), instead relying on direct URL dependencies and those provided via
+`--find-links`
+--index-strategy <INDEX_STRATEGY> The strategy to use when resolving against multiple index URLs [env: UV_INDEX_STRATEGY=] [possible values:
+first-index, unsafe-first-match, unsafe-best-match]
+--keyring-provider <KEYRING_PROVIDER> Attempt to use `keyring` for authentication for index URLs [env: UV_KEYRING_PROVIDER=] [possible values: disabled,
+subprocess]
 
 Resolver options:
-  -U, --upgrade                            Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
-  -P, --upgrade-package <UPGRADE_PACKAGE>  Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
-      --resolution <RESOLUTION>            The strategy to use when selecting between the different compatible versions for a given package requirement [env:
-                                           UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
-      --prerelease <PRERELEASE>            The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
-                                           if-necessary, explicit, if-necessary-or-explicit]
-      --fork-strategy <FORK_STRATEGY>      The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
-                                           UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
-      --exclude-newer <EXCLUDE_NEWER>      Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
-      --no-sources                         Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
-                                           publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
+-U, --upgrade Allow package upgrades, ignoring pinned versions in any existing output file. Implies `--refresh`
+-P, --upgrade-package <UPGRADE_PACKAGE> Allow upgrades for a specific package, ignoring pinned versions in any existing output file. Implies `--refresh-package`
+--resolution <RESOLUTION> The strategy to use when selecting between the different compatible versions for a given package requirement [env:
+UV_RESOLUTION=] [possible values: highest, lowest, lowest-direct]
+--prerelease <PRERELEASE> The strategy to use when considering pre-release versions [env: UV_PRERELEASE=] [possible values: disallow, allow,
+if-necessary, explicit, if-necessary-or-explicit]
+--fork-strategy <FORK_STRATEGY> The strategy to use when selecting multiple versions of a given package across Python versions and platforms [env:
+UV_FORK_STRATEGY=] [possible values: fewest, requires-python]
+--exclude-newer <EXCLUDE_NEWER> Limit candidate packages to those that were uploaded prior to the given date [env: UV_EXCLUDE_NEWER=]
+--no-sources Ignore the `tool.uv.sources` table when resolving dependencies. Used to lock against the standards-compliant,
+publishable package metadata, as opposed to using any workspace, Git, URL, or local path sources
 
 Installer options:
-      --reinstall                              Reinstall all packages, regardless of whether they're already installed. Implies `--refresh`
-      --reinstall-package <REINSTALL_PACKAGE>  Reinstall a specific package, regardless of whether it's already installed. Implies `--refresh-package`
-      --link-mode <LINK_MODE>                  The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
-                                               hardlink, symlink]
-      --compile-bytecode                       Compile Python files to bytecode after installation [env: UV_COMPILE_BYTECODE=]
+--reinstall Reinstall all packages, regardless of whether they're already installed. Implies `--refresh`
+--reinstall-package <REINSTALL_PACKAGE> Reinstall a specific package, regardless of whether it's already installed. Implies `--refresh-package`
+--link-mode <LINK_MODE> The method to use when installing packages from the global cache [env: UV_LINK_MODE=] [possible values: clone, copy,
+hardlink, symlink]
+--compile-bytecode Compile Python files to bytecode after installation [env: UV_COMPILE_BYTECODE=]
 
 Build options:
-  -C, --config-setting <CONFIG_SETTING>                          Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
-      --no-build-isolation                                       Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
-      --no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE>  Disable isolation when building source distributions for a specific package
-      --no-build                                                 Don't build source distributions [env: UV_NO_BUILD=]
-      --no-build-package <NO_BUILD_PACKAGE>                      Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
-      --no-binary                                                Don't install pre-built wheels [env: UV_NO_BINARY=]
-      --no-binary-package <NO_BINARY_PACKAGE>                    Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
+-C, --config-setting <CONFIG_SETTING> Settings to pass to the PEP 517 build backend, specified as `KEY=VALUE` pairs
+--no-build-isolation Disable isolation when building source distributions [env: UV_NO_BUILD_ISOLATION=]
+--no-build-isolation-package <NO_BUILD_ISOLATION_PACKAGE> Disable isolation when building source distributions for a specific package
+--no-build Don't build source distributions [env: UV_NO_BUILD=]
+--no-build-package <NO_BUILD_PACKAGE> Don't build source distributions for a specific package [env: UV_NO_BUILD_PACKAGE=]
+--no-binary Don't install pre-built wheels [env: UV_NO_BINARY=]
+--no-binary-package <NO_BINARY_PACKAGE> Don't install pre-built wheels for a specific package [env: UV_NO_BINARY_PACKAGE=]
 
 Cache options:
-  -n, --no-cache                           Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
-                                           UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>              Path to the cache directory [env: UV_CACHE_DIR=]
-      --refresh                            Refresh all cached data
-      --refresh-package <REFRESH_PACKAGE>  Refresh cached data for a specific package
+-n, --no-cache Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env:
+UV_NO_CACHE=]
+--cache-dir <CACHE_DIR> Path to the cache directory [env: UV_CACHE_DIR=]
+--refresh Refresh all cached data
+--refresh-package <REFRESH_PACKAGE> Refresh cached data for a specific package
 
 Python options:
-  -p, --python <PYTHON>      The Python interpreter to use for the run environment. [env: UV_PYTHON=]
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+-p, --python <PYTHON> The Python interpreter to use for the run environment. [env: UV_PYTHON=]
+--managed-python Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
+--no-managed-python Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
+--no-python-downloads Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
 
 Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
+-q, --quiet... Use quiet output
+-v, --verbose... Use verbose output
+--color <COLOR_CHOICE> Control the use of color in output [possible values: auto, always, never]
+--native-tls Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
+--offline Disable network access [env: UV_OFFLINE=]
+--allow-insecure-host <ALLOW_INSECURE_HOST> Allow insecure connections to a host [env: UV_INSECURE_HOST=]
+--no-progress Hide all progress outputs [env: UV_NO_PROGRESS=]
+--directory <DIRECTORY> Change to the given directory prior to running the command
+--project <PROJECT> Run the command within the given project directory [env: UV_PROJECT=]
+--config-file <CONFIG_FILE> The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
+--no-config Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
+-h, --help Display the concise help for this command
 
 Use `uv help run` for more details.
 
-
 ### Running AtlasVibe
+
 ```bash
 # After installation via uv pip
 atlasvibe                    # Run full application
@@ -1574,6 +1620,7 @@ uv run pnpm run dev                 # Run frontend (separate terminal)
 ```
 
 ### Block Management
+
 ```bash
 # Sync Python blocks (regenerate manifests)
 just sync                # or: uv run python3 fjblock.py sync
@@ -1590,23 +1637,27 @@ just init
 AtlasVibe is now distributed as a standard Python package that includes both backend and frontend:
 
 ### No More ASAR Packaging
+
 - Electron app is distributed unpacked (asar: false)
 - Simplifies file access and debugging
 - No more path resolution issues with process.resourcesPath
 - All files are directly accessible in the installed package
 
 ### Unified Distribution
+
 - Single `pip install atlasvibe` installs everything
 - No need for platform-specific Electron builds
 - Python backend and Electron frontend in same package
 - Simplified deployment and version management
 
 ### Installation Methods
+
 1. **From Source**: `./install.sh` - builds and installs complete package
 2. **From PyPI**: `pip install atlasvibe` (when published)
 3. **Development**: `pip install -e .` for editable install
 
 ### Package Management Migration (December 2024)
+
 - **Migrated from Poetry to uv**: All dependencies now managed by uv
 - **pyproject.toml**: Uses standard Python packaging with uv extensions
 - **uv.lock**: Lockfile for reproducible installations
@@ -1617,6 +1668,7 @@ AtlasVibe is now distributed as a standard Python package that includes both bac
 AtlasVibe is a visual programming IDE for Python, consisting of three main components:
 
 ### 1. Frontend (Electron + React + TypeScript)
+
 - **Entry Point**: `/src/main/index.ts` (Electron main process)
 - **UI Components**: `/src/renderer/` (React application)
   - `/components/` - Reusable UI components
@@ -1631,6 +1683,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
   - Zustand for state management
 
 ### 2. Backend (Python FastAPI Server)
+
 - **Entry Point**: `/main.py`
 - **Application Code**: `/captain/`
   - `/routes/` - API endpoints (blocks, flowchart, devices, etc.)
@@ -1645,6 +1698,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
   - Pydantic for data validation
 
 ### 3. Block System
+
 - **Blueprint Blocks**: `/blocks/` - Organized by category (AI_ML, DSP, MATH, etc.)
 - **Block Structure**:
   ```
@@ -1663,6 +1717,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 ## Key Architectural Patterns
 
 ### Block Execution Flow
+
 1. User creates visual flow in ReactFlow canvas
 2. Frontend sends topology to backend via `/blocks/run` API
 3. Backend creates Prefect flow from topology
@@ -1671,18 +1726,21 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 6. Frontend renders results using appropriate visualizations
 
 ### Data Flow Between Blocks
+
 - Blocks communicate via `DataContainer` objects
 - DataContainer wraps various data types (scalar, vector, matrix, dataframe, etc.)
 - Serialization handled automatically between processes
 - Results cached using joblib for performance
 
 ### Dynamic Block Discovery
+
 - On startup, `captain/utils/import_blocks.py` scans `/blocks/` directory
 - Manifest generator (`captain/utils/manifest/`) extracts metadata from Python decorators
 - Block registry maintained in memory for fast lookup
 - Frontend fetches available blocks via `/blocks` API
 
 ### WebSocket Communication Protocol
+
 - Connection established at `/ws`
 - Message types: WORKER_STARTED, BLOCK_STARTED, BLOCK_FINISHED, JOB_STARTED, etc.
 - Enables real-time progress tracking and result streaming
@@ -1690,12 +1748,14 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 ## Important Development Patterns
 
 ### Adding New API Endpoints
+
 1. Define Pydantic models in `/captain/models/`
 2. Create TypeScript types in `/captain/types/`
 3. Implement endpoint in `/captain/routes/`
 4. Update frontend API client in `/src/lib/api.ts`
 
 ### Creating New Blocks
+
 1. Create directory structure under appropriate category in `/blocks/`
 2. Implement block function with `@atlasvibe` decorator
 3. Define parameters in docstring and decorator
@@ -1703,6 +1763,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 5. Block automatically appears in UI
 
 ### State Management
+
 - Zustand stores in `/src/renderer/stores/`:
   - `app.ts` - Application-wide state
   - `flowchart.ts` - Visual flow editor state
@@ -1711,6 +1772,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 - Follow pattern of actions as methods, state as properties
 
 ### Testing Patterns
+
 - Python blocks: Place `*_test_.py` files alongside block implementation
 - Backend API: Tests in `/captain/tests/`
 - Frontend components: Tests in `/tests/`
@@ -1719,6 +1781,7 @@ AtlasVibe is a visual programming IDE for Python, consisting of three main compo
 ## Current Development Focus
 
 The project is transitioning from hardware test sequencer to general-purpose visual IDE:
+
 1. **Project-Centric Blocks**: Moving from global blocks to per-project custom blocks
 2. **In-IDE Editing**: Enabling code editing within the application
 3. **AI Agent Capabilities**: Future goal for self-modifying blocks
@@ -1728,6 +1791,7 @@ See DEVELOPMENT_PLAN.md for detailed roadmap.
 ## Testing Best Practices
 
 ### Avoid Unnecessary Mocks
+
 - **CRITICAL**: Mocks should be used ONLY when it is impossible to test otherwise (e.g., external services, hardware dependencies)
 - Mocks can mask real functionality and hide bugs - prefer real integration tests
 - When testing file operations, use real temporary directories and files instead of mocking the filesystem
@@ -1735,6 +1799,7 @@ See DEVELOPMENT_PLAN.md for detailed roadmap.
 - For database operations, use a test database or in-memory database instead of mocking
 
 ### Building and Running Tests
+
 - **Before running Playwright tests**: The application MUST be built first
   ```bash
   pnpm run build
@@ -1751,12 +1816,14 @@ See DEVELOPMENT_PLAN.md for detailed roadmap.
   ```
 
 ### Test Organization
+
 - Unit tests: Test individual functions with minimal dependencies
 - Integration tests: Test complete workflows with real components
 - E2E tests: Test the full application behavior from user perspective
 - Always prefer integration tests over unit tests with heavy mocking
 
 ### Example of Good Testing Practice
+
 ```python
 # GOOD: Real file operations
 def test_update_file():
@@ -1779,6 +1846,7 @@ def test_update_file_with_mock():
 ```
 
 ### Running Tests in CI/CD
+
 - Set up environment variables properly
 - Ensure all dependencies are installed
 - Build the application before E2E tests
@@ -1787,9 +1855,11 @@ def test_update_file_with_mock():
 ## Block Metadata Generation and Regeneration
 
 ### Overview
+
 AtlasVibe blocks require metadata files for proper functioning. When a block's Python file is created or modified, various metadata files are generated or must be created manually.
 
 ### Block File Structure
+
 ```
 blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 ├── BLOCK_NAME.py          # Python implementation (required)
@@ -1803,6 +1873,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 ### Automatic Metadata Generation
 
 #### 1. Manifest Generation (In-Memory)
+
 - **Function**: `captain/utils/manifest/build_manifest.py::create_manifest()`
 - **Trigger**: Called when blocks are loaded or updated
 - **Process**:
@@ -1813,6 +1884,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
   5. Returns manifest with inputs, outputs, parameters, and dependencies
 
 #### 2. Automatic File Generation for Custom Blocks (NEW)
+
 - **Module**: `captain/utils/block_metadata_generator.py`
 - **Integration Points**:
   - `/blocks/create-custom/` API (when cloning blueprints)
@@ -1825,6 +1897,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 - **Integration**: Seamlessly integrated into AtlasVibe's clone-and-edit workflow
 
 #### 3. block_data.json Generation
+
 - **Function**: `captain/utils/block_metadata_generator.py::generate_block_data_json()`
 - **Trigger**:
   - Automatically when Python file is created/modified
@@ -1837,6 +1910,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
   5. Writes structured JSON with descriptions, parameters, and returns
 
 **Example block_data.json structure**:
+
 ```json
 {
   "docstring": {
@@ -1863,24 +1937,28 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 ### Metadata File Details
 
 #### 1. app.json
+
 - **Purpose**: Contains a complete example workflow demonstrating the block
 - **Content**: ReactFlow nodes and edges showing how to use the block
 - **Generation**: Auto-generated with basic template when block is created
 - **Customization**: Should be manually updated to show meaningful examples
 
 #### 2. example.md
+
 - **Purpose**: Human-readable description of what the example does
 - **Content**: Markdown explaining the example workflow
 - **Generation**: Auto-generated with template based on docstring
 - **Customization**: Should be manually enhanced with detailed examples
 
-#### 3. *_test_.py
+#### 3. \*_test_.py
+
 - **Purpose**: Unit tests for the block
 - **Content**: Test file with basic structure and TODOs
 - **Generation**: Auto-generated with test template
 - **Customization**: Must be manually implemented with actual tests
 
 #### 4. block_data.json
+
 - **Purpose**: Structured metadata from docstring
 - **Content**: Parameters, returns, and descriptions
 - **Generation**: Fully automatic from docstring
@@ -1889,6 +1967,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 ### File Watching and Regeneration
 
 #### Backend File Watcher
+
 - **Service**: `captain/services/consumer/blocks_watcher.py::BlocksWatcher`
 - **Technology**: Uses `watchfiles` library for async file monitoring
 - **Monitors**:
@@ -1897,6 +1976,7 @@ blocks/CATEGORY/SUBCATEGORY/BLOCK_NAME/
 - **On Change**: Broadcasts `{"type": "manifest_update"}` via WebSocket
 
 #### Frontend Response
+
 - **Handler**: `src/renderer/socket-receiver.tsx`
 - **Actions on `manifest_update`**:
   1. Shows toast: "Changes detected, syncing blocks with changes..."
@@ -1911,6 +1991,7 @@ AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exi
 #### Key Concepts:
 
 1. **Blueprint Blocks** (Global Palette):
+
    - Original blocks in `/blocks/` directory
    - User-created blueprints (saved via "Save this block as a blueprint")
    - **Global and shared across all projects/workflows**
@@ -1928,6 +2009,7 @@ AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exi
 #### Block Creation Workflow:
 
 1. **Create Instance from Blueprint** (UI Drag & Drop):
+
    - User drags blueprint from global palette to workflow
    - System automatically:
      - Clones blueprint to project's `atlasvibe_blocks/` folder
@@ -1937,6 +2019,7 @@ AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exi
    - API: `/blocks/create-custom/`
 
 2. **Edit Block Instance** (Integrated UI Editor):
+
    - User opens instance editor in UI
    - Modifies Python code directly (only affects this instance)
    - Saves changes via `/blocks/update-code/` API
@@ -1954,12 +2037,14 @@ AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exi
    - **Creates/updates global blueprint, instance remains unchanged**
 
 #### Independence and Decoupling:
+
 - **Delete Blueprint**: Instances continue to exist as custom blocks
 - **Edit Instance**: Blueprint and other instances remain unchanged
 - **Delete Instance**: Blueprint and other instances remain unchanged
 - **Rename Instance**: Only affects that specific instance
 
 #### Virtual Environment Management (Per Block):
+
 - Each block runs in its own virtual environment managed by `uv`
 - Environments are automatically created/updated when:
   - Block is first created
@@ -1969,7 +2054,9 @@ AtlasVibe uses a sophisticated **blueprint → instance** model where blocks exi
 - No dependency conflicts between blocks
 
 #### Automatic Metadata Generation:
+
 When a custom block is created or modified:
+
 1. `block_data.json` - Generated from docstring
 2. `app.json` - Copied/updated from original
 3. `example.md` - Copied/updated from original
@@ -1977,6 +2064,7 @@ When a custom block is created or modified:
 5. Virtual environment - Created/updated as needed
 
 #### Important Notes:
+
 - **No "empty" blocks**: Every instance starts as a clone of a blueprint
 - **No manual file creation**: Everything is done through the UI
 - **Real-time updates**: Changes are reflected immediately in the workflow
@@ -1987,9 +2075,11 @@ When a custom block is created or modified:
 **Status**: Planned but not yet implemented
 
 ### Concept
+
 Matrioskas solve the problem of managing multiple similar blocks without manual synchronization. Instead of editing dozens of similar instances individually, users can group blocks into reusable sub-workflows.
 
 ### Features:
+
 - **Group Definition**: Select multiple blocks and their connections to create a Matrioska
 - **Input/Output Mapping**: Define inputs and outputs for the entire group
 - **Loop/Cron Behavior**: Configure the group to repeat until a condition ("Matrioska Yield") is met
@@ -1997,11 +2087,13 @@ Matrioskas solve the problem of managing multiple similar blocks without manual 
 - **Instance Management**: Once defined, Matrioskas can be instanced multiple times like blocks
 
 ### Examples:
+
 1. **Single Block Matrioska**: Wrap a single XOR block, instance it multiple times in a chain
 2. **Complex Workflow Matrioska**: Entire image upscaling workflow becomes a single reusable node
 3. **Nested Matrioskas**: Workflows containing other workflows with no nesting limits
 
 ### User Experience:
+
 - **Creation**: Select blocks → "Create Matrioska" → Define I/O and behavior
 - **Usage**: Drag Matrioska from palette like a regular block
 - **Editing**: Double-click Matrioska → Editor shows internal workflow
@@ -2012,12 +2104,14 @@ This feature will provide the scalability needed for complex workflows while mai
 ### What's NOT Implemented (Visual Feedback)
 
 The following visual feedback features are **missing**:
+
 1. **No border color change** during regeneration
 2. **No "regenerating" label** above blocks
 3. **No blinking animation**
 4. **No isRegenerating state tracking**
 
 To implement visual feedback, you would need:
+
 ```typescript
 // In block store
 interface BlockState {
@@ -2071,17 +2165,19 @@ await watcher.run(stop_flag)  # Monitors for changes
 1. **Decorator Compatibility**: Both `@atlasvibe` and `@atlasvibe_node` are recognized
 2. **Docstring Format**: Must use NumPy-style docstrings (not Google style for blocks)
 3. **File Naming**: Python file must match the folder name exactly
-4. **__init__.py**: Required in each block directory
+4. ****init**.py**: Required in each block directory
 5. **Manifest vs Metadata**: Manifest is generated on-the-fly, block_data.json is persisted
 
 ## GitHub Actions Workflows
 
 ### Overview
+
 The project uses GitHub Actions for continuous integration and deployment. All workflows have been updated to use `uv` for Python package management instead of Poetry.
 
 ### Active Workflows
 
 #### 1. **actionlint.yml** - Workflow Validation
+
 - **Purpose**: Validates all GitHub Actions workflow files for syntax errors and best practices
 - **Triggers**: Push/PR changes to workflow files, manual dispatch
 - **Tasks**:
@@ -2091,6 +2187,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 - **Uses**: reviewdog/action-actionlint@v1
 
 #### 2. **blocks-quality-check.yml** - Block System Quality Assurance
+
 - **Purpose**: Ensures AtlasVibe blocks are properly formatted and tested
 - **Triggers**: Push to main, PRs to main
 - **Jobs**:
@@ -2104,8 +2201,9 @@ The project uses GitHub Actions for continuous integration and deployment. All w
   - `uv run python -m pytest -vv -m "not slow" .`
 
 #### 3. **cd.yaml** - Continuous Deployment
+
 - **Purpose**: Builds and releases Electron app packages for all platforms
-- **Triggers**: Git tags matching "v*", manual dispatch
+- **Triggers**: Git tags matching "v\*", manual dispatch
 - **Environment**: Uses Azure Key Vault for code signing credentials
 - **Matrix Build**: macos-latest-xlarge, ubuntu-latest, windows-latest
 - **Tasks**:
@@ -2118,6 +2216,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
   - Windows: Uses Azure SignTool
 
 #### 4. **ci.yml** - Continuous Integration
+
 - **Purpose**: Main CI pipeline for code quality and tests
 - **Triggers**: Push to main, PRs to main
 - **Jobs**:
@@ -2130,10 +2229,12 @@ The project uses GitHub Actions for continuous integration and deployment. All w
   - Caches pnpm and uv dependencies
 
 #### 5. **claude.yml** & **claude-code-review.yml** - Claude Code Integration
+
 - **Purpose**: Enables Claude Code GitHub app for AI-assisted development
 - **Features**: Code review assistance, PR feedback
 
 #### 6. **electron-test.yml** - End-to-End Testing
+
 - **Purpose**: Builds and tests the Electron application
 - **Triggers**: Push/PR (excludes docs changes)
 - **Matrix**: Tests on macOS, Windows, Ubuntu
@@ -2147,6 +2248,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 ### Common Patterns
 
 #### Python Setup with uv
+
 ```yaml
 - name: Install uv
   uses: astral-sh/setup-uv@v5
@@ -2163,6 +2265,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 ```
 
 #### Node.js Setup with pnpm
+
 ```yaml
 - uses: actions/setup-node@v4
   with:
@@ -2178,6 +2281,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 ```
 
 ### Migration Notes
+
 - All workflows migrated from Poetry to uv (December 2024)
 - Action versions updated to latest (v3→v4, v4→v5)
 - Shell script quoting issues fixed
@@ -2186,6 +2290,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 ## Recent Project Updates (December 2024)
 
 ### Test Infrastructure Improvements
+
 - **Fixed 177 test failures**: Updated all import paths from `atlasvibe` to `pkgs.atlasvibe.atlasvibe`
 - **Added comprehensive test fixtures**: Mock decorators, cache directories, and cleanup utilities
 - **Beautiful test reporting**: New `beautiful_test_report.py` generates formatted tables with:
@@ -2196,17 +2301,20 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 - **Force run all tests**: Scripts to install optional dependencies and run ALL tests locally
 
 ### Block System Updates
+
 - **Improved metadata generation**: Automatic `block_data.json` generation from docstrings
 - **Enhanced block discovery**: Better handling of custom blocks and blueprints
 - **Virtual environment isolation**: Each block runs in its own uv-managed environment
 
 ### Code Quality Improvements
+
 - **Removed all Poetry references**: Complete migration to uv package manager
 - **Updated GitHub Actions**: All workflows now use uv instead of Poetry
 - **Fixed import paths**: Systematic update of 346+ files to new package structure
 - **Enhanced error handling**: Better exceptions for block execution failures
 
 ### Known Issues Being Addressed
+
 - **NLP_CONNECT_VIT_GPT2**: Removed beam search to fix transformers compatibility
 - **ONNX_MODEL**: Improving error handling for invalid inputs
 - **TORCHSCRIPT_CLASSIFIER**: Fixing virtual environment creation in tests
@@ -2214,6 +2322,7 @@ The project uses GitHub Actions for continuous integration and deployment. All w
 ## Comprehensive uv Guide for AtlasVibe Development
 
 ### Overview
+
 uv is a fast Python package and project manager that replaces pip, pip-tools, pipx, poetry, pyenv, virtualenv, and more. AtlasVibe uses uv exclusively for all Python environment management, dependency resolution, and package building.
 
 ### Core Concepts
@@ -2221,13 +2330,16 @@ uv is a fast Python package and project manager that replaces pip, pip-tools, pi
 #### 1. **Virtual Environment Management**
 
 ##### Environment Discovery Order
+
 uv searches for environments in this sequence:
+
 1. Active `VIRTUAL_ENV` environment variable
 2. Active Conda environment
 3. `.venv` in current or parent directory
 4. Prompts to create environment if none found
 
 ##### Creating Environments
+
 ```bash
 # Create in default .venv directory
 uv venv
@@ -2249,6 +2361,7 @@ uv venv --python /opt/homebrew/bin/python3
 ```
 
 ##### Key Differences from Traditional venv
+
 - **No activation script needed** - Use `export VIRTUAL_ENV=.venv` or `uv run`
 - **Faster operations** - Global cache with hard links
 - **Automatic Python management** - Downloads Python versions as needed
@@ -2257,6 +2370,7 @@ uv venv --python /opt/homebrew/bin/python3
 #### 2. **Package Management with uv pip**
 
 ##### Installing Packages
+
 ```bash
 # Single package
 uv pip install flask
@@ -2283,12 +2397,14 @@ uv pip install -e "ruff @ ./project/ruff"
 ```
 
 ##### Uninstalling Packages
+
 ```bash
 uv pip uninstall flask
 uv pip uninstall flask ruff pytest
 ```
 
 ##### Inspecting Environments
+
 ```bash
 # List installed packages
 uv pip list
@@ -2310,6 +2426,7 @@ uv pip check
 #### 3. **Project Management**
 
 ##### Creating Projects
+
 ```bash
 # Create application project
 uv init --app
@@ -2325,6 +2442,7 @@ uv init --build-backend setuptools  # or hatch, flit, pdm, poetry, maturin
 ```
 
 ##### Project Structure
+
 ```
 .
 ├── .venv/              # Virtual environment (auto-created)
@@ -2340,6 +2458,7 @@ uv init --build-backend setuptools  # or hatch, flit, pdm, poetry, maturin
 ##### Configuration Files
 
 ###### pyproject.toml Structure
+
 ```toml
 [project]
 name = "atlasvibe"
@@ -2375,6 +2494,7 @@ custom-lib = { path = "./libs/custom" }
 ```
 
 ###### uv.toml (Optional, takes precedence over pyproject.toml)
+
 ```toml
 # Index configuration
 [[index]]
@@ -2392,6 +2512,7 @@ constraint-dependencies = ["numpy<2.0"]
 #### 4. **Dependency Management**
 
 ##### Adding Dependencies
+
 ```bash
 # Add to project
 uv add numpy pandas
@@ -2410,6 +2531,7 @@ uv add git+https://github.com/user/repo
 ```
 
 ##### Syncing Environment
+
 ```bash
 # Sync all dependencies
 uv sync
@@ -2430,6 +2552,7 @@ uv sync --inexact
 ```
 
 ##### Compilation and Locking
+
 ```bash
 # Compile requirements
 uv pip compile pyproject.toml -o requirements.txt
@@ -2492,6 +2615,7 @@ uv build --package my-package
 #### 7. **Workspace Management**
 
 ##### Workspace Configuration
+
 ```toml
 # In root pyproject.toml
 [tool.uv.workspace]
@@ -2500,6 +2624,7 @@ exclude = ["packages/experimental"]
 ```
 
 ##### Workspace Commands
+
 ```bash
 # Sync entire workspace
 uv sync --all-packages
@@ -2514,11 +2639,13 @@ uv run --package backend pytest
 #### 8. **Dependency Resolution**
 
 ##### Resolution Strategies
+
 - `highest` (default): Latest compatible versions
 - `lowest`: Minimum compatible versions
 - `lowest-direct`: Lowest for direct deps, latest for transitive
 
 ##### Platform-Specific Resolution
+
 ```bash
 # Resolve for specific platform
 uv pip compile --python-platform windows
@@ -2528,6 +2655,7 @@ uv pip compile --python-version 3.9
 ```
 
 ##### Prerelease Handling
+
 - Default: Only if no stable version exists
 - `--prerelease allow`: Consider all prereleases
 - `--prerelease disallow`: Never use prereleases
@@ -2535,6 +2663,7 @@ uv pip compile --python-version 3.9
 ### AtlasVibe-Specific Patterns
 
 #### Block Virtual Environment Management
+
 Each AtlasVibe block runs in its own isolated environment:
 
 ```python
@@ -2557,6 +2686,7 @@ class VenvManager:
 ```
 
 #### Project Development Workflow
+
 ```bash
 # Initial setup
 uv python install 3.11
@@ -2578,6 +2708,7 @@ uv build
 ### Configuration Best Practices
 
 #### 1. **Configuration Hierarchy**
+
 - Command-line arguments (highest priority)
 - Environment variables
 - Project-level config (pyproject.toml, uv.toml)
@@ -2585,6 +2716,7 @@ uv build
 - System-level config (/etc/uv/uv.toml)
 
 #### 2. **Essential Settings**
+
 ```toml
 # In pyproject.toml
 [tool.uv]
@@ -2645,6 +2777,7 @@ repos:
 #### Common Issues
 
 1. **uv not found**
+
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    # Or via pip
@@ -2652,12 +2785,14 @@ repos:
    ```
 
 2. **Python version not available**
+
    ```bash
    uv python install 3.11
    uv python list --all-versions
    ```
 
 3. **Dependency conflicts**
+
    ```bash
    # Show resolution details
    uv pip compile --verbose
@@ -2668,6 +2803,7 @@ repos:
    ```
 
 4. **Cache issues**
+
    ```bash
    uv cache clean
    uv cache prune  # Remove unused entries
@@ -2696,6 +2832,7 @@ The project uses GitHub Actions for continuous integration and deployment with c
 #### Security Configuration
 
 ##### Gitleaks Integration
+
 - **Local Hook**: Automatically runs on pre-commit to prevent secrets
 - **CI/CD**: Scans all commits in PRs and pushes
 - **Configuration**: `.gitleaks.toml` allows only:
@@ -2704,6 +2841,7 @@ The project uses GitHub Actions for continuous integration and deployment with c
   - All other secrets are blocked
 
 ##### Git Environment Setup
+
 ```bash
 # Run this to configure git correctly
 ./setup-git-env.sh
@@ -2712,23 +2850,27 @@ The project uses GitHub Actions for continuous integration and deployment with c
 #### GitHub Actions Workflows
 
 1. **CI Pipeline** (`ci.yml`)
+
    - Python code formatting (Ruff)
    - Python linting (Ruff)
    - TypeScript/JavaScript checks
    - Unit tests with coverage
 
 2. **Security Scanning** (`gitleaks.yml`)
+
    - Runs on every push and PR
    - Daily scheduled scans
    - Creates security issues for failures
    - Uploads SARIF reports to Security tab
 
 3. **Dependency Analysis** (`dependency-check.yml`)
+
    - Weekly deptry scans
    - Checks for unused/missing dependencies
    - Creates issues for problems
 
 4. **Pre-commit Checks** (`pre-commit.yml`)
+
    - Runs all hooks on CI
    - Validates code quality
    - Comments on PRs with results
@@ -2746,6 +2888,7 @@ The project uses GitHub Actions for continuous integration and deployment with c
 ```
 
 This script:
+
 - Configures git with correct author info
 - Installs pre-commit hooks locally
 - Sets up GitHub repository settings
@@ -2762,9 +2905,9 @@ The project includes a reusable action for setting up uv environments:
 # Usage in workflows
 - uses: ./.github/actions/setup-uv-env
   with:
-    python-version: '3.11'
-    extras: 'all'
-    install-deps: 'true'
+    python-version: "3.11"
+    extras: "all"
+    install-deps: "true"
 ```
 
 #### Workflow Status Badges
@@ -2816,4 +2959,5 @@ gh secret set CODECOV_TOKEN
 gh issue list --label security
 gh issue create --title "Security Alert" --label urgent,security
 ```
+
 7. **Space efficient**: Global cache with hard links

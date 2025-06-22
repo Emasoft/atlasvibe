@@ -34,7 +34,6 @@ export function WelcomeModal() {
     })),
   );
 
-
   return (
     <AlertDialog open={showWelcomeScreen}>
       <AlertDialogContent>

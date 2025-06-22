@@ -5,6 +5,7 @@ This file contains the licenses and acknowledgments for third-party software use
 ## AtlasVibe is a Fork of Flojoy Studio
 
 AtlasVibe is based on Flojoy Studio, originally developed by the Flojoy team and released under the MIT License.
+
 - Original Project: https://github.com/flojoy-ai/studio
 - License: MIT License
 - Copyright (c) 2023-2024 Flojoy
@@ -14,7 +15,9 @@ AtlasVibe is based on Flojoy Studio, originally developed by the Flojoy team and
 ### Python Dependencies
 
 #### MIT License
+
 The following dependencies are licensed under the MIT License:
+
 - **FastAPI** - https://github.com/tiangolo/fastapi
 - **Pydantic** - https://github.com/pydantic/pydantic
 - **Plotly** - https://github.com/plotly/plotly.py
@@ -26,19 +29,24 @@ The following dependencies are licensed under the MIT License:
 - **ruff** - https://github.com/astral-sh/ruff
 
 #### Apache License 2.0
+
 The following dependencies are licensed under the Apache License 2.0:
+
 - **Prefect** - https://github.com/PrefectHQ/prefect
 - **Transformers** - https://github.com/huggingface/transformers
 - **griffe** - https://github.com/mkdocstrings/griffe
 
 #### BSD 3-Clause License
+
 The following dependencies are licensed under the BSD 3-Clause License:
+
 - **NumPy** - https://github.com/numpy/numpy
 - **Pandas** - https://github.com/pandas-dev/pandas
 - **scikit-image** - https://github.com/scikit-image/scikit-image
 - **scipy** - https://github.com/scipy/scipy
 
 #### Other Licenses
+
 - **PyYAML** - MIT License - https://github.com/yaml/pyyaml
 - **Pillow** - PIL Software License - https://github.com/python-pillow/Pillow
 - **psutil** - BSD 3-Clause License - https://github.com/giampaolo/psutil
@@ -46,7 +54,9 @@ The following dependencies are licensed under the BSD 3-Clause License:
 ### JavaScript/Node Dependencies
 
 #### MIT License
+
 The following dependencies are licensed under the MIT License:
+
 - **React** - https://github.com/facebook/react
 - **Electron** - https://github.com/electron/electron
 - **ReactFlow** - https://github.com/wbkd/react-flow
@@ -63,6 +73,7 @@ The following dependencies are licensed under the MIT License:
 - **Prettier** - https://github.com/prettier/prettier
 
 #### Apache License 2.0
+
 - **TypeScript** (also listed above, dual licensed) - https://github.com/microsoft/TypeScript
 
 ## License Compatibility
@@ -80,6 +91,7 @@ When using AI models through the Transformers library, please note that individu
 ## Full License Texts
 
 For the complete text of each license, please refer to:
+
 - MIT License: https://opensource.org/licenses/MIT
 - Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
 - BSD 3-Clause License: https://opensource.org/licenses/BSD-3-Clause
@@ -89,6 +101,7 @@ For the complete text of each license, please refer to:
 This file was last updated on: 2025-01-22
 
 To update this file, run:
+
 ```bash
 # Python dependencies
 uv pip list --format json > python-deps.json

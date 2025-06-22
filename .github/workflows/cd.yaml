@@ -34,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -76,7 +76,7 @@ jobs:
             --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
 
   buildElectron:
-    needs: pre-release-checks  # Only build if checks pass
+    needs: pre-release-checks # Only build if checks pass
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

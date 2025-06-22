@@ -11,6 +11,7 @@ This document summarizes the work completed in this development session.
 **Solution**: Implemented a custom import hook that redirects `atlasvibe` imports to the correct module location during dynamic code execution.
 
 **Changes**:
+
 - Created a `custom_import` function that intercepts imports
 - Properly handles both `from atlasvibe import X` and `import atlasvibe` patterns
 - Ensures all commonly used data container types are available in the execution namespace
@@ -22,6 +23,7 @@ This document summarizes the work completed in this development session.
 **Solution**: Standardized all IPC handler registrations to use API constants.
 
 **Changes**:
+
 - Added missing constants to `API` object: `selectFolder`, `pathExists`, `createDirectory`, `showConfirmDialog`, `logTransaction`, `createCustomBlock`, `isPackaged`
 - Updated `ipc-main-handlers.ts` to use API constants
 - Updated `preload/index.ts` to use API constants
@@ -32,6 +34,7 @@ This document summarizes the work completed in this development session.
 **Status**: Already implemented! The visual indicators were found to be fully functional.
 
 **Features Found**:
+
 - `RegeneratingIndicator` component shows blinking "Regenerating..." label
 - Orange border with pulse animation on regenerating blocks
 - CSS animations in `BlockRegenerationStyles.css`
@@ -45,6 +48,7 @@ This document summarizes the work completed in this development session.
 **Solution**: Created a shared utility module `docstring_utils.py` with common functions.
 
 **New Module Features**:
+
 - `find_function_node()` - Find function in AST
 - `extract_docstring_from_node()` - Extract docstring from AST node
 - `parse_python_file()` - Parse file and extract function/docstring
@@ -56,6 +60,7 @@ This document summarizes the work completed in this development session.
 - `get_return_descriptions()` - Extract return descriptions
 
 **Refactored Files**:
+
 - `captain/utils/block_metadata_generator.py`
 - `captain/utils/manifest/build_manifest.py`
 - `cli/utils/generate_docstring_json.py`
@@ -63,6 +68,7 @@ This document summarizes the work completed in this development session.
 ## Testing
 
 All changes were tested to ensure functionality:
+
 - Import namespace fix tested with `VECTOR_2_SCALAR` block
 - Refactored docstring utilities tested with extraction and manifest creation
 - Visual indicators confirmed working in the UI
@@ -77,6 +83,7 @@ All changes were tested to ensure functionality:
 ## Next Steps
 
 All requested tasks have been completed. The codebase now has:
+
 - Robust import handling for dynamic code execution
 - Consistent IPC handler registration
 - Working visual indicators for block regeneration

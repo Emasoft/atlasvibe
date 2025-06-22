@@ -26,9 +26,16 @@ import { toast } from "sonner";
 import { updateBlockCode } from "@/renderer/lib/api";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useManifestStore } from "@/renderer/stores/manifest";
-import { pythonLinter, hasValidDocstringFormat } from "@/renderer/lib/editor/python-linting";
+import {
+  pythonLinter,
+  hasValidDocstringFormat,
+} from "@/renderer/lib/editor/python-linting";
 import { pythonCompletions } from "@/renderer/lib/editor/python-completions";
-import { Alert, AlertDescription, AlertTitle } from "@/renderer/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/renderer/components/ui/alert";
 
 const EditorView = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +56,9 @@ const EditorView = () => {
     setValue(res);
 
     // Check if this is a custom block
-    setIsCustomBlock(fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py"));
+    setIsCustomBlock(
+      fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py"),
+    );
   };
 
   const saveFile = async () => {
@@ -68,7 +77,7 @@ const EditorView = () => {
 
           if (updateRes.isOk()) {
             toast.success("Block updated successfully", {
-              description: "Metadata has been regenerated"
+              description: "Metadata has been regenerated",
             });
 
             // Refresh manifests to reflect the changes
@@ -76,7 +85,7 @@ const EditorView = () => {
             await fetchManifest();
           } else {
             toast.error("Failed to update block metadata", {
-              description: updateRes.error.message
+              description: updateRes.error.message,
             });
           }
         }
@@ -100,7 +109,9 @@ const EditorView = () => {
   };
 
   const checkDocstringFormat = (code: string): boolean => {
-    const functionMatch = code.match(/@atlasvibe[\s\S]*?def\s+\w+\([^)]*\)[\s\S]*?"""([\s\S]*?)"""/);
+    const functionMatch = code.match(
+      /@atlasvibe[\s\S]*?def\s+\w+\([^)]*\)[\s\S]*?"""([\s\S]*?)"""/,
+    );
     if (!functionMatch) return false;
 
     const docstring = functionMatch[1];
@@ -116,33 +127,27 @@ const EditorView = () => {
   useKeyboardShortcut("meta", "s", () => saveFile());
 
   // Configure extensions - memoized to avoid recreating on every render
-  const extensions = useMemo(() => [
-    python(),
-    lintGutter(),
-    linter(pythonLinter),
-    autocompletion({
-      override: [pythonCompletions],
-      defaultKeymap: true,
-    }),
-    keymap.of([
-      ...defaultKeymap,
-      ...completionKeymap,
-    ]),
-  ], []);
+  const extensions = useMemo(
+    () => [
+      python(),
+      lintGutter(),
+      linter(pythonLinter),
+      autocompletion({
+        override: [pythonCompletions],
+        defaultKeymap: true,
+      }),
+      keymap.of([...defaultKeymap, ...completionKeymap]),
+    ],
+    [],
+  );
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex h-screen flex-col">
+      <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold">
-            {fullPath.split('/').pop()}
-          </h2>
-          {isCustomBlock && (
-            <Badge variant="secondary">Custom Block</Badge>
-          )}
-          {hasChanged && (
-            <Badge variant="outline">Modified</Badge>
-          )}
+          <h2 className="text-lg font-semibold">{fullPath.split("/").pop()}</h2>
+          {isCustomBlock && <Badge variant="secondary">Custom Block</Badge>}
+          {hasChanged && <Badge variant="outline">Modified</Badge>}
         </div>
 
         <div className="flex items-center gap-4">
@@ -150,12 +155,12 @@ const EditorView = () => {
             <div className="flex items-center gap-2">
               {docstringValid ? (
                 <Badge variant="outline" className="gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
+                  <CheckCircle2 className="h-3 w-3" />
                   Docstring OK
                 </Badge>
               ) : (
                 <Badge variant="destructive" className="gap-1">
-                  <AlertCircle className="w-3 h-3" />
+                  <AlertCircle className="h-3 w-3" />
                   Invalid Docstring
                 </Badge>
               )}
@@ -176,8 +181,9 @@ const EditorView = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Invalid Docstring Format</AlertTitle>
           <AlertDescription>
-            AtlasVibe blocks require NumPy-style docstrings with <code>Parameters</code> and <code>Returns</code> sections.
-            The backend uses these docstrings to generate block metadata.
+            AtlasVibe blocks require NumPy-style docstrings with{" "}
+            <code>Parameters</code> and <code>Returns</code> sections. The
+            backend uses these docstrings to generate block metadata.
           </AlertDescription>
         </Alert>
       )}
@@ -205,17 +211,17 @@ const EditorView = () => {
         />
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2 border-t text-sm text-muted-foreground">
+      <div className="flex items-center justify-between border-t px-4 py-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-4">
           <span>Python</span>
           {syntaxErrors > 0 && (
             <span className="text-destructive">
-              {syntaxErrors} error{syntaxErrors > 1 ? 's' : ''}
+              {syntaxErrors} error{syntaxErrors > 1 ? "s" : ""}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Info className="w-3 h-3" />
+          <Info className="h-3 w-3" />
           <span>Ctrl+Space for suggestions • Ctrl+S to save</span>
         </div>
       </div>

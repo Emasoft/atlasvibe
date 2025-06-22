@@ -25,7 +25,10 @@ import {
 } from "@/renderer/types/block";
 import { useShallow } from "zustand/react/shallow";
 import { CustomBlockDefinition } from "@/renderer/types/custom-block";
-import { createNodeFromBlock, duplicateNode } from "@/renderer/lib/node-factory";
+import {
+  createNodeFromBlock,
+  duplicateNode,
+} from "@/renderer/lib/node-factory";
 
 import * as galleryItems from "@/renderer/data/apps";
 import { ExampleProjects } from "@/renderer/data/docs-example-apps";
@@ -72,12 +75,10 @@ import {
 import { EdgeVariant } from "@/renderer/types/edge";
 // Global window.api type is now handled by src/window.d.ts
 
-
 // Extend BlockData locally for this store
 export interface BlockData extends OriginalBlockData {
   isCustom?: boolean;
 }
-
 
 type State = {
   name: string | undefined;
@@ -512,7 +513,7 @@ export const useProjectStore = create<State & Actions>()(
       set({ isSaving: true });
 
       const project: Project = {
-        version: '2.0.0', // Current format version
+        version: "2.0.0", // Current format version
         name: get().name,
         rfInstance: {
           nodes: get().nodes,
@@ -533,14 +534,16 @@ export const useProjectStore = create<State & Actions>()(
           () => window.api.saveFile(projectPath, fileContent),
           (e) => e as Error,
         );
-        return save().andThen(() => {
-          setHasUnsavedChanges(false);
-          set({ isSaving: false });
-          return ok(projectPath);
-        }).mapErr((e) => {
-          set({ isSaving: false });
-          return e;
-        });
+        return save()
+          .andThen(() => {
+            setHasUnsavedChanges(false);
+            set({ isSaving: false });
+            return ok(projectPath);
+          })
+          .mapErr((e) => {
+            set({ isSaving: false });
+            return e;
+          });
       }
 
       const basename =
@@ -554,20 +557,22 @@ export const useProjectStore = create<State & Actions>()(
       return fromPromise(
         window.api.saveFileAs(defaultFilename, fileContent),
         (e) => e as Error,
-      ).map(({ filePath, canceled }) => {
-        if (canceled || filePath === undefined) {
+      )
+        .map(({ filePath, canceled }) => {
+          if (canceled || filePath === undefined) {
+            set({ isSaving: false });
+            return undefined;
+          }
+
+          set({ path: filePath, isSaving: false });
+
+          setHasUnsavedChanges(false);
+          return filePath;
+        })
+        .mapErr((e) => {
           set({ isSaving: false });
-          return undefined;
-        }
-
-        set({ path: filePath, isSaving: false });
-
-        setHasUnsavedChanges(false);
-        return filePath;
-      }).mapErr((e) => {
-        set({ isSaving: false });
-        return e;
-      });
+          return e;
+        });
     },
 
     setBlockPendingChanges: (blockId: string, hasPending: boolean) => {
@@ -621,15 +626,25 @@ export const useLoadProject = () => {
         // Refresh manifest to include project-specific blocks
         const manifestResult = await fetchManifest();
         if (manifestResult.isErr()) {
-          return err(new Error("Failed to load project blocks: " + manifestResult.error.message));
+          return err(
+            new Error(
+              "Failed to load project blocks: " + manifestResult.error.message,
+            ),
+          );
         }
 
         // Get the updated manifest and metadata after loading project blocks
-        const updatedManifest = useManifestStore.getState().standardBlocksManifest;
-        const updatedMetadata = useManifestStore.getState().standardBlocksMetadata;
+        const updatedManifest =
+          useManifestStore.getState().standardBlocksManifest;
+        const updatedMetadata =
+          useManifestStore.getState().standardBlocksMetadata;
 
         if (!updatedManifest || !updatedMetadata) {
-          return err(new Error("Failed to get updated manifest after loading project blocks"));
+          return err(
+            new Error(
+              "Failed to get updated manifest after loading project blocks",
+            ),
+          );
         }
 
         const {
@@ -740,14 +755,16 @@ export const useAddBlock = () => {
 
         // Validate the response has required custom block fields
         if (!apiResult || !apiResult.key || !apiResult.path) {
-          throw new Error("Backend failed to create custom block details or path is missing.");
+          throw new Error(
+            "Backend failed to create custom block details or path is missing.",
+          );
         }
 
         // Cast to CustomBlockDefinition after validation
         customBlockResult = {
           ...apiResult,
           path: apiResult.path,
-          isCustom: true
+          isCustom: true,
         } as CustomBlockDefinition;
 
         setManifestChanged(true);
@@ -775,7 +792,6 @@ export const useAddBlock = () => {
 
         localStorage.setItem("prev_block_pos", JSON.stringify(nodePosition));
         setHasUnsavedChanges(true);
-
       } catch (e: unknown) {
         console.error("Failed to create custom block:", e);
         const errorMessage = e instanceof Error ? e.message : String(e);
@@ -786,21 +802,15 @@ export const useAddBlock = () => {
         if (customBlockResult?.path) {
           toast.warning(
             "A custom block directory may have been created. " +
-            "Please check your project's atlasvibe_blocks folder.",
-            { duration: 10000 }
+              "Please check your project's atlasvibe_blocks folder.",
+            { duration: 10000 },
           );
         }
 
         return;
       }
     },
-    [
-      setNodes,
-      center,
-      hardwareDevices,
-      projectPath,
-      setManifestChanged,
-    ],
+    [setNodes, center, hardwareDevices, projectPath, setManifestChanged],
   );
 };
 

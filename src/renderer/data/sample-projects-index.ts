@@ -24,7 +24,8 @@ export const SAMPLE_PROJECTS: Record<string, SampleProjectInfo> = {
   default: {
     name: "default",
     displayName: "Noisy Sine",
-    description: "Basic example with sine wave, random noise, and visualization",
+    description:
+      "Basic example with sine wave, random noise, and visualization",
     path: "sample_projects/default/default.atlasvibe",
   },
   fft: {

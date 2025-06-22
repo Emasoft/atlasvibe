@@ -13,11 +13,7 @@
             "dc_type": {
               "type": "select",
               "default": "OrderedPair",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "desc": "The type of DataContainer to return.",
               "overload": null,
               "functionName": "CONSTANT",
@@ -207,12 +203,7 @@
             "first_figure": {
               "type": "select",
               "default": "scatter",
-              "options": [
-                "bar",
-                "line",
-                "histogram",
-                "scatter"
-              ],
+              "options": ["bar", "line", "histogram", "scatter"],
               "desc": "plotly type to display as the first figure, default is 'scatter'",
               "overload": null,
               "functionName": "COMPOSITE",
@@ -222,12 +213,7 @@
             "second_figure": {
               "type": "select",
               "default": "line",
-              "options": [
-                "bar",
-                "line",
-                "histogram",
-                "scatter"
-              ],
+              "options": ["bar", "line", "histogram", "scatter"],
               "desc": "plotly type to display as the second figure, default is 'line'",
               "overload": null,
               "functionName": "COMPOSITE",

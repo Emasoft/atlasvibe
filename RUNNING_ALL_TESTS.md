@@ -5,6 +5,7 @@ This guide explains how to run the complete AtlasVibe test suite locally without
 ## Why Tests Are Skipped
 
 Tests are skipped in CI for these reasons:
+
 1. **Missing optional dependencies** (PyTorch, Transformers, ONNX, etc.)
 2. **Large ML/DL libraries** that would slow down CI
 3. **Expected failures** (xfail) due to known upstream bugs
@@ -76,21 +77,25 @@ uv run pytest -v --runxfail --runslow
 If you only want to run specific test categories:
 
 ### For PyTorch/Deep Learning Tests
+
 ```bash
 uv pip install torch torchvision transformers
 ```
 
 ### For ONNX Tests
+
 ```bash
 uv pip install onnx onnxruntime
 ```
 
 ### For Prophet/Time Series Tests
+
 ```bash
 uv pip install prophet pyarrow
 ```
 
 ### For Data Processing Tests
+
 ```bash
 uv pip install sympy scikit-learn xlrd openpyxl
 ```

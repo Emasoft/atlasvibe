@@ -7,10 +7,12 @@ This document summarizes the UI features implemented following TDD methodology a
 ### 1. Project Save Status Indicators and Autosave ✅
 
 **Components Created:**
+
 - `ProjectStatusIndicator.tsx` - Shows real-time project save status
 - `SaveProjectDialog.tsx` - Custom save dialog with folder selection and name validation
 
 **Features:**
+
 - Status states: saved, unsaved changes, saving, autosaving
 - Color scheme readable on black background:
   - Saved: Green (rgb(52, 211, 153))
@@ -23,6 +25,7 @@ This document summarizes the UI features implemented following TDD methodology a
 - Two-step confirmation for space replacement in names
 
 **Integration:**
+
 - Added to Header component
 - Updated project store with isSaving state
 - Added IPC handlers for folder selection and file operations
@@ -30,11 +33,13 @@ This document summarizes the UI features implemented following TDD methodology a
 ### 2. Block Regeneration Visual Feedback ✅
 
 **Components Created:**
+
 - `BlockRegenerationStyles.css` - CSS animations for visual feedback
 - `ExecutionStatus.tsx` - Shows workflow execution state
 - Updated `RegeneratingIndicator.tsx` - Blinking indicator above blocks
 
 **Features:**
+
 - Blinking "Regenerating..." indicator above blocks during regeneration
 - Orange border with pulse animation on regenerating blocks
 - Execution status shows "Paused - Block Regenerating"
@@ -43,16 +48,19 @@ This document summarizes the UI features implemented following TDD methodology a
 - WebSocket integration for real-time updates
 
 **CSS Animations:**
+
 - `blink` animation for regenerating indicator
 - `pulse` animation for block border
 
 ### 3. Blueprint Management UI ✅
 
 **Components Created:**
+
 - `SaveBlueprintDialog.tsx` - Dialog for saving blocks as blueprints
 - `BlueprintManagerDialog.tsx` - Manager for renaming/deleting blueprints
 
 **Features:**
+
 - "Save as Blueprint" option in block context menu (custom blocks only)
 - Blueprint name validation (same rules as blocks)
 - Name collision detection with overwrite confirmation
@@ -63,6 +71,7 @@ This document summarizes the UI features implemented following TDD methodology a
 - Visual "Blueprint" badges in sidebar palette
 
 **API Functions Added:**
+
 - `saveBlueprintFromBlock`
 - `renameBlueprint`
 - `deleteBlueprint`
@@ -70,6 +79,7 @@ This document summarizes the UI features implemented following TDD methodology a
 ## Test Coverage
 
 Created comprehensive Playwright tests following TDD:
+
 - `20_block_regeneration_indicators.spec.ts`
 - `21_blueprint_management.spec.ts`
 - `22_project_save_status.spec.ts`

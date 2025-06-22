@@ -12,7 +12,6 @@ shellcheck:
 # Enable/disable pyflakes integration
 pyflakes:
   enable: true
-
 # Self-hosted runner labels configuration
 # self-hosted-runner:
 #   labels:

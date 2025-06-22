@@ -50,7 +50,9 @@ const FlowControlButtons = () => {
   );
 
   const manifest = useManifest();
-  const regeneratingBlocks = useManifestStore((state) => state.regeneratingBlocks);
+  const regeneratingBlocks = useManifestStore(
+    (state) => state.regeneratingBlocks,
+  );
   const hasRegeneratingBlocks = regeneratingBlocks.size > 0;
 
   const playBtnDisabled =
@@ -113,9 +115,15 @@ const FlowControlButtons = () => {
               variant="dotted"
               id="btn-play"
               onClick={onRun}
-              disabled={nodes.length === 0 || !manifest || hasRegeneratingBlocks}
-              className="w-28 gap-2 play-button"
-              title={hasRegeneratingBlocks ? "Cannot run while blocks are regenerating" : undefined}
+              disabled={
+                nodes.length === 0 || !manifest || hasRegeneratingBlocks
+              }
+              className="play-button w-28 gap-2"
+              title={
+                hasRegeneratingBlocks
+                  ? "Cannot run while blocks are regenerating"
+                  : undefined
+              }
             >
               <Play size={18} />
               Play

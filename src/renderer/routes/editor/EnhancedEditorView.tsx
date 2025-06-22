@@ -12,9 +12,17 @@ import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { linter, lintGutter, Diagnostic } from "@codemirror/lint";
-import { autocompletion, completionKeymap, CompletionContext } from "@codemirror/autocomplete";
+import {
+  autocompletion,
+  completionKeymap,
+  CompletionContext,
+} from "@codemirror/autocomplete";
 import { defaultKeymap } from "@codemirror/commands";
-import { keymap, ViewUpdate, EditorView as CMEditorView } from "@codemirror/view";
+import {
+  keymap,
+  ViewUpdate,
+  EditorView as CMEditorView,
+} from "@codemirror/view";
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/renderer/components/ui/button";
@@ -30,7 +38,7 @@ import {
   Bug,
   Lightbulb,
   Terminal,
-  Package
+  Package,
 } from "lucide-react";
 import useKeyboardShortcut from "@/renderer/hooks/useKeyboardShortcut";
 import invariant from "tiny-invariant";
@@ -40,11 +48,15 @@ import {
   validateCode,
   getCompletions,
   formatCode,
-  getVenvStatus
+  getVenvStatus,
 } from "@/renderer/lib/api";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useManifestStore } from "@/renderer/stores/manifest";
-import { Alert, AlertDescription, AlertTitle } from "@/renderer/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/renderer/components/ui/alert";
 import { ScrollArea } from "@/renderer/components/ui/scroll-area";
 import { cn } from "@/renderer/lib/utils";
 import { debounce } from "lodash";
@@ -83,7 +95,9 @@ const EnhancedEditorView = () => {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [isValidating, setIsValidating] = useState<boolean>(false);
   const [errorPanelOpen, setErrorPanelOpen] = useState<boolean>(true);
-  const [selectedError, setSelectedError] = useState<ValidationError | null>(null);
+  const [selectedError, setSelectedError] = useState<ValidationError | null>(
+    null,
+  );
   const [venvStatus, setVenvStatus] = useState<VenvStatus | null>(null);
   const [isFormattingCode, setIsFormattingCode] = useState<boolean>(false);
 
@@ -92,7 +106,8 @@ const EnhancedEditorView = () => {
     setValue(res);
 
     // Check if this is a custom block
-    const isCustom = fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py");
+    const isCustom =
+      fullPath.includes("atlasvibe_blocks") && fullPath.endsWith(".py");
     setIsCustomBlock(isCustom);
 
     // Validate initial content
@@ -118,11 +133,11 @@ const EnhancedEditorView = () => {
 
             if (response.status === "queued") {
               toast.info("Block update queued", {
-                description: `Block is currently executing. Changes will be applied when it finishes.`
+                description: `Block is currently executing. Changes will be applied when it finishes.`,
               });
             } else {
               toast.success("Block updated successfully", {
-                description: `Version ${response.version + 1}`
+                description: `Version ${response.version + 1}`,
               });
             }
 
@@ -131,7 +146,7 @@ const EnhancedEditorView = () => {
             await fetchManifest();
           } else {
             toast.error("Failed to update block", {
-              description: updateRes.error.message
+              description: updateRes.error.message,
             });
           }
         }
@@ -149,13 +164,17 @@ const EnhancedEditorView = () => {
     setIsValidating(true);
     try {
       const projectPath = useProjectStore.getState().path;
-      const result = await validateCode(code, fullPath.split('/').pop() || "unknown.py", projectPath);
+      const result = await validateCode(
+        code,
+        fullPath.split("/").pop() || "unknown.py",
+        projectPath,
+      );
 
       if (result.isOk()) {
         const validationResult = result.value as { errors: any[] };
         const validationErrors = validationResult.errors.map((err: any) => ({
           ...err,
-          severity: err.severity as "error" | "warning" | "info"
+          severity: err.severity as "error" | "warning" | "info",
         }));
         setErrors(validationErrors);
       }
@@ -170,7 +189,7 @@ const EnhancedEditorView = () => {
     if (!isCustomBlock) return;
 
     try {
-      const blockPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
+      const blockPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
       const response = await getVenvStatus(blockPath);
       if (response.isOk()) {
         setVenvStatus(response.value);
@@ -185,7 +204,11 @@ const EnhancedEditorView = () => {
     try {
       const result = await formatCode(value);
       if (result.isOk()) {
-        const formatResult = result.value as { changed: boolean; formatted: string; error?: string };
+        const formatResult = result.value as {
+          changed: boolean;
+          formatted: string;
+          error?: string;
+        };
         if (formatResult.changed) {
           setValue(formatResult.formatted);
           setHasChanged(true);
@@ -195,7 +218,7 @@ const EnhancedEditorView = () => {
         }
       } else {
         toast.error("Failed to format code", {
-          description: result.isErr() ? result.error.message : "Unknown error"
+          description: result.isErr() ? result.error.message : "Unknown error",
         });
       }
     } catch (error) {
@@ -208,7 +231,7 @@ const EnhancedEditorView = () => {
   // Debounced validation
   const debouncedValidate = useMemo(
     () => debounce((code: string) => validateCurrentCode(code), 500),
-    [isCustomBlock]
+    [isCustomBlock],
   );
 
   const handleChange = (value: string, viewUpdate: ViewUpdate) => {
@@ -229,7 +252,7 @@ const EnhancedEditorView = () => {
 
       editorRef.current.dispatch({
         selection: { anchor: pos, head: pos },
-        scrollIntoView: true
+        scrollIntoView: true,
       });
 
       editorRef.current.focus();
@@ -240,12 +263,12 @@ const EnhancedEditorView = () => {
   // Custom linter that uses our validation errors
   const enhancedPythonLinter = useCallback(() => {
     return (view: CMEditorView): Diagnostic[] => {
-      return errors.map(error => ({
+      return errors.map((error) => ({
         from: view.state.doc.line(error.line).from + error.column,
         to: view.state.doc.line(error.line).from + error.column + 1,
         severity: error.severity,
         message: error.message,
-        source: error.category
+        source: error.category,
       }));
     };
   }, [errors]);
@@ -262,19 +285,21 @@ const EnhancedEditorView = () => {
         line,
         column,
         context.matchBefore(/\w*/)?.text,
-        projectPath
+        projectPath,
       );
 
       if (result.isOk()) {
         return {
           from: context.pos - (context.matchBefore(/\w*/)?.text.length || 0),
-          options: (result.value as { completions: any[] }).completions.map((comp: any) => ({
-            label: comp.label,
-            type: comp.kind,
-            detail: comp.detail,
-            info: comp.documentation,
-            apply: comp.insertText
-          }))
+          options: (result.value as { completions: any[] }).completions.map(
+            (comp: any) => ({
+              label: comp.label,
+              type: comp.kind,
+              detail: comp.detail,
+              info: comp.documentation,
+              apply: comp.insertText,
+            }),
+          ),
         };
       }
     } catch (error) {
@@ -293,46 +318,40 @@ const EnhancedEditorView = () => {
   // TODO: Add support for multiple modifiers in useKeyboardShortcut hook
 
   // Configure extensions
-  const extensions = useMemo(() => [
-    python(),
-    lintGutter(),
-    linter(enhancedPythonLinter()),
-    autocompletion({
-      override: [enhancedCompletions],
-      defaultKeymap: true,
-    }),
-    keymap.of([
-      ...defaultKeymap,
-      ...completionKeymap,
-    ]),
-    CMEditorView.updateListener.of((update: ViewUpdate) => {
-      if (update.docChanged) {
-        handleChange(update.state.doc.toString(), update);
-      }
-    }),
-  ], [enhancedPythonLinter]);
+  const extensions = useMemo(
+    () => [
+      python(),
+      lintGutter(),
+      linter(enhancedPythonLinter()),
+      autocompletion({
+        override: [enhancedCompletions],
+        defaultKeymap: true,
+      }),
+      keymap.of([...defaultKeymap, ...completionKeymap]),
+      CMEditorView.updateListener.of((update: ViewUpdate) => {
+        if (update.docChanged) {
+          handleChange(update.state.doc.toString(), update);
+        }
+      }),
+    ],
+    [enhancedPythonLinter],
+  );
 
-  const errorCount = errors.filter(e => e.severity === "error").length;
-  const warningCount = errors.filter(e => e.severity === "warning").length;
+  const errorCount = errors.filter((e) => e.severity === "error").length;
+  const warningCount = errors.filter((e) => e.severity === "warning").length;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-screen flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-4">
-          <FileCode className="w-5 h-5" />
-          <h2 className="text-lg font-semibold">
-            {fullPath.split('/').pop()}
-          </h2>
-          {isCustomBlock && (
-            <Badge variant="secondary">Custom Block</Badge>
-          )}
-          {hasChanged && (
-            <Badge variant="outline">Modified</Badge>
-          )}
+          <FileCode className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">{fullPath.split("/").pop()}</h2>
+          {isCustomBlock && <Badge variant="secondary">Custom Block</Badge>}
+          {hasChanged && <Badge variant="outline">Modified</Badge>}
           {isValidating && (
             <Badge variant="outline" className="gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
               Validating...
             </Badge>
           )}
@@ -344,19 +363,19 @@ const EnhancedEditorView = () => {
             <div className="flex items-center gap-2">
               {errorCount > 0 && (
                 <Badge variant="destructive" className="gap-1">
-                  <Bug className="w-3 h-3" />
-                  {errorCount} error{errorCount !== 1 ? 's' : ''}
+                  <Bug className="h-3 w-3" />
+                  {errorCount} error{errorCount !== 1 ? "s" : ""}
                 </Badge>
               )}
               {warningCount > 0 && (
                 <Badge variant="outline" className="gap-1 text-yellow-600">
-                  <AlertCircle className="w-3 h-3" />
-                  {warningCount} warning{warningCount !== 1 ? 's' : ''}
+                  <AlertCircle className="h-3 w-3" />
+                  {warningCount} warning{warningCount !== 1 ? "s" : ""}
                 </Badge>
               )}
               {errorCount === 0 && warningCount === 0 && !isValidating && (
                 <Badge variant="outline" className="gap-1 text-green-600">
-                  <CheckCircle2 className="w-3 h-3" />
+                  <CheckCircle2 className="h-3 w-3" />
                   No issues
                 </Badge>
               )}
@@ -371,7 +390,7 @@ const EnhancedEditorView = () => {
             disabled={isFormattingCode}
           >
             {isFormattingCode ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               "Format"
             )}
@@ -388,12 +407,14 @@ const EnhancedEditorView = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Code Editor */}
-        <div className={cn(
-          "flex-1 overflow-hidden",
-          errorPanelOpen && errors.length > 0 ? "flex-1" : "flex-1"
-        )}>
+        <div
+          className={cn(
+            "flex-1 overflow-hidden",
+            errorPanelOpen && errors.length > 0 ? "flex-1" : "flex-1",
+          )}
+        >
           <CodeMirror
             value={value}
             height="100%"
@@ -420,48 +441,63 @@ const EnhancedEditorView = () => {
 
         {/* Error Panel */}
         {isCustomBlock && errors.length > 0 && (
-          <div className={cn(
-            "border-t transition-all duration-300",
-            errorPanelOpen ? "h-64" : "h-10"
-          )}>
+          <div
+            className={cn(
+              "border-t transition-all duration-300",
+              errorPanelOpen ? "h-64" : "h-10",
+            )}
+          >
             {/* Error Panel Header */}
             <div
-              className="flex items-center justify-between px-4 py-2 bg-muted/50 cursor-pointer"
+              className="flex cursor-pointer items-center justify-between bg-muted/50 px-4 py-2"
               onClick={() => setErrorPanelOpen(!errorPanelOpen)}
             >
               <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4" />
+                <Terminal className="h-4 w-4" />
                 <span className="font-medium">Problems</span>
                 <Badge variant="outline" className="ml-2">
                   {errors.length}
                 </Badge>
               </div>
               <Button variant="ghost" size="sm">
-                {errorPanelOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                {errorPanelOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
               </Button>
             </div>
 
             {/* Error List */}
             {errorPanelOpen && (
-              <ScrollArea className="flex-1 h-[calc(100%-2.5rem)]">
+              <ScrollArea className="h-[calc(100%-2.5rem)] flex-1">
                 <div className="p-2">
                   {errors.map((error, index) => (
                     <div
                       key={index}
                       className={cn(
-                        "p-3 mb-2 rounded-md cursor-pointer transition-colors",
+                        "mb-2 cursor-pointer rounded-md p-3 transition-colors",
                         "hover:bg-muted/50",
                         selectedError === error && "bg-muted",
-                        error.severity === "error" && "border-l-4 border-destructive",
-                        error.severity === "warning" && "border-l-4 border-yellow-500",
-                        error.severity === "info" && "border-l-4 border-blue-500"
+                        error.severity === "error" &&
+                          "border-l-4 border-destructive",
+                        error.severity === "warning" &&
+                          "border-l-4 border-yellow-500",
+                        error.severity === "info" &&
+                          "border-l-4 border-blue-500",
                       )}
                       onClick={() => navigateToError(error)}
                     >
                       <div className="flex items-start gap-2">
-                        {error.severity === "error" && <Bug className="w-4 h-4 text-destructive mt-0.5" />}
-                        {error.severity === "warning" && <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />}
-                        {error.severity === "info" && <Info className="w-4 h-4 text-blue-500 mt-0.5" />}
+                        {error.severity === "error" && (
+                          <Bug className="mt-0.5 h-4 w-4 text-destructive" />
+                        )}
+                        {error.severity === "warning" && (
+                          <AlertCircle className="mt-0.5 h-4 w-4 text-yellow-500" />
+                        )}
+                        {error.severity === "info" && (
+                          <Info className="mt-0.5 h-4 w-4 text-blue-500" />
+                        )}
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -472,8 +508,8 @@ const EnhancedEditorView = () => {
                           </div>
 
                           {error.suggestion && (
-                            <div className="flex items-start gap-1 mt-1">
-                              <Lightbulb className="w-3 h-3 text-yellow-500 mt-0.5" />
+                            <div className="mt-1 flex items-start gap-1">
+                              <Lightbulb className="mt-0.5 h-3 w-3 text-yellow-500" />
                               <span className="text-sm text-muted-foreground">
                                 {error.suggestion}
                               </span>
@@ -495,24 +531,25 @@ const EnhancedEditorView = () => {
       </div>
 
       {/* Status Bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-t text-sm text-muted-foreground">
+      <div className="flex items-center justify-between border-t px-4 py-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-4">
           <span>Python</span>
           {venvStatus && (
             <div className="flex items-center gap-2">
-              <Package className="w-3 h-3" />
+              <Package className="h-3 w-3" />
               <span>
-                {venvStatus.valid ?
-                  `Python ${venvStatus.python_version || 'Unknown'}` :
-                  'No venv'
-                }
+                {venvStatus.valid
+                  ? `Python ${venvStatus.python_version || "Unknown"}`
+                  : "No venv"}
               </span>
             </div>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Info className="w-3 h-3" />
-          <span>Ctrl+Space for suggestions • Ctrl+S to save • Ctrl+Shift+F to format</span>
+          <Info className="h-3 w-3" />
+          <span>
+            Ctrl+Space for suggestions • Ctrl+S to save • Ctrl+Shift+F to format
+          </span>
         </div>
       </div>
     </div>

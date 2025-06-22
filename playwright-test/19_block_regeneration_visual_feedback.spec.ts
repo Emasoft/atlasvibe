@@ -68,7 +68,7 @@ test.describe("Block regeneration visual feedback", () => {
     // Cleanup
     if (fs.existsSync(projectPath)) {
       fs.unlinkSync(projectPath);
-      const projectDir = projectPath.replace('.atlasvibe', '');
+      const projectDir = projectPath.replace(".atlasvibe", "");
       if (fs.existsSync(projectDir)) {
         fs.rmSync(projectDir, { recursive: true, force: true });
       }
@@ -97,7 +97,11 @@ test.describe("Block regeneration visual feedback", () => {
     await window.waitForTimeout(1000);
 
     // Look for the custom block
-    const customBlock = window.locator('[data-testid^="block-"]', { hasText: "REGENERATION_TEST_BLOCK" }).first();
+    const customBlock = window
+      .locator('[data-testid^="block-"]', {
+        hasText: "REGENERATION_TEST_BLOCK",
+      })
+      .first();
     await expect(customBlock).toBeVisible();
 
     // Check for regenerating visual indicators (currently NOT implemented)
@@ -106,17 +110,19 @@ test.describe("Block regeneration visual feedback", () => {
     // 1. Check for regenerating class or border color change
     const hasRegeneratingClass = await customBlock.evaluate((el) => {
       const classes = el.className;
-      return classes.includes('regenerating') ||
-             classes.includes('border-orange') ||
-             classes.includes('border-yellow');
+      return (
+        classes.includes("regenerating") ||
+        classes.includes("border-orange") ||
+        classes.includes("border-yellow")
+      );
     });
 
     // Document: This should be true but is currently false
     console.log(`Block has regenerating visual class: ${hasRegeneratingClass}`);
 
     // 2. Check for regenerating label
-    const regeneratingLabel = customBlock.locator('text=/regenerating/i');
-    const hasRegeneratingLabel = await regeneratingLabel.count() > 0;
+    const regeneratingLabel = customBlock.locator("text=/regenerating/i");
+    const hasRegeneratingLabel = (await regeneratingLabel.count()) > 0;
 
     // Document: This should be true but is currently false
     console.log(`Block shows regenerating label: ${hasRegeneratingLabel}`);
@@ -125,7 +131,7 @@ test.describe("Block regeneration visual feedback", () => {
     const hasBlinkingAnimation = await customBlock.evaluate((el) => {
       const styles = window.getComputedStyle(el);
       const anyChild = el.querySelector('[class*="blink"]');
-      return styles.animation?.includes('blink') || anyChild !== null;
+      return styles.animation?.includes("blink") || anyChild !== null;
     });
 
     // Document: This should be true but is currently false
@@ -140,7 +146,11 @@ test.describe("Block regeneration visual feedback", () => {
 
   test("Should show visual feedback when modifying custom block code", async () => {
     // Find the custom block
-    const customBlock = window.locator('[data-testid^="block-"]', { hasText: "REGENERATION_TEST_BLOCK" }).first();
+    const customBlock = window
+      .locator('[data-testid^="block-"]', {
+        hasText: "REGENERATION_TEST_BLOCK",
+      })
+      .first();
 
     // Right-click to edit
     await customBlock.click({ button: "right" });
@@ -149,7 +159,7 @@ test.describe("Block regeneration visual feedback", () => {
     if (await editOption.isVisible({ timeout: 1000 })) {
       const [editorWindow] = await Promise.all([
         app.waitForEvent("window"),
-        editOption.click()
+        editOption.click(),
       ]);
 
       await editorWindow.waitForLoadState();
@@ -161,7 +171,7 @@ test.describe("Block regeneration visual feedback", () => {
       // Add a new parameter to trigger manifest regeneration
       const newContent = content.replace(
         "def REGENERATION_TEST_BLOCK(x:",
-        "def REGENERATION_TEST_BLOCK(x:, new_param: int = 42"
+        "def REGENERATION_TEST_BLOCK(x:, new_param: int = 42",
       );
       await editor.fill(newContent);
 
@@ -175,23 +185,31 @@ test.describe("Block regeneration visual feedback", () => {
       await window.bringToFront();
 
       // Check for regenerating indicators
-      const blockDuringRegen = window.locator('[data-testid^="block-"]', { hasText: "REGENERATION_TEST_BLOCK" }).first();
+      const blockDuringRegen = window
+        .locator('[data-testid^="block-"]', {
+          hasText: "REGENERATION_TEST_BLOCK",
+        })
+        .first();
 
       // 1. Border should change color
-      const borderStyle = await blockDuringRegen.evaluate(el => {
+      const borderStyle = await blockDuringRegen.evaluate((el) => {
         const styles = window.getComputedStyle(el);
         return {
           borderColor: styles.borderColor,
           borderWidth: styles.borderWidth,
-          animation: styles.animation
+          animation: styles.animation,
         };
       });
 
       console.log("Border style during regeneration:", borderStyle);
 
       // 2. Should show regenerating label
-      const regenLabel = blockDuringRegen.locator('.regenerating-label, text=/regenerating/i');
-      const showsLabel = await regenLabel.isVisible({ timeout: 100 }).catch(() => false);
+      const regenLabel = blockDuringRegen.locator(
+        ".regenerating-label, text=/regenerating/i",
+      );
+      const showsLabel = await regenLabel
+        .isVisible({ timeout: 100 })
+        .catch(() => false);
 
       console.log(`Shows regenerating label during save: ${showsLabel}`);
 
@@ -202,7 +220,9 @@ test.describe("Block regeneration visual feedback", () => {
       await window.waitForTimeout(2000);
 
       // After regeneration, visual indicators should be gone
-      const labelAfter = await regenLabel.isVisible({ timeout: 100 }).catch(() => false);
+      const labelAfter = await regenLabel
+        .isVisible({ timeout: 100 })
+        .catch(() => false);
       console.log(`Shows regenerating label after completion: ${labelAfter}`);
     }
   });
@@ -212,20 +232,27 @@ test.describe("Block regeneration visual feedback", () => {
     // even if visual feedback is not implemented
 
     // Listen for toast notifications which are shown on manifest updates
-    const toastLocator = window.locator('text=/Changes detected, syncing blocks/i');
+    const toastLocator = window.locator(
+      "text=/Changes detected, syncing blocks/i",
+    );
 
     // Modify a block file to trigger the file watcher
-    const projectDir = projectPath.replace('.atlasvibe', '');
-    const blockFile = join(projectDir, 'atlasvibe_blocks', 'REGENERATION_TEST_BLOCK', 'REGENERATION_TEST_BLOCK.py');
+    const projectDir = projectPath.replace(".atlasvibe", "");
+    const blockFile = join(
+      projectDir,
+      "atlasvibe_blocks",
+      "REGENERATION_TEST_BLOCK",
+      "REGENERATION_TEST_BLOCK.py",
+    );
 
     if (fs.existsSync(blockFile)) {
       // Read current content
-      const currentContent = fs.readFileSync(blockFile, 'utf-8');
+      const currentContent = fs.readFileSync(blockFile, "utf-8");
 
       // Modify the file
       const modifiedContent = currentContent.replace(
-        'return x * 2',
-        'return x * 3  # Modified'
+        "return x * 2",
+        "return x * 3  # Modified",
       );
       fs.writeFileSync(blockFile, modifiedContent);
 
@@ -241,24 +268,25 @@ test.describe("Block regeneration visual feedback", () => {
     // This test documents what SHOULD be implemented
 
     const expectedImplementation = {
-      "CSS_Classes": {
+      CSS_Classes: {
         ".regenerating": "Applied to block during regeneration",
         ".border-orange-500": "Orange border during regeneration",
-        ".animate-pulse": "Pulsing animation on border"
+        ".animate-pulse": "Pulsing animation on border",
       },
-      "Regenerating_Label": {
-        "HTML": '<div class="regenerating-label">Regenerating...</div>',
-        "Position": "absolute -top-6",
-        "Animation": "animate-blink (1s infinite)"
+      Regenerating_Label: {
+        HTML: '<div class="regenerating-label">Regenerating...</div>',
+        Position: "absolute -top-6",
+        Animation: "animate-blink (1s infinite)",
       },
-      "State_Management": {
-        "Store": "Track isRegenerating state per block",
-        "Trigger": "Set on manifest_update WebSocket event",
-        "Clear": "Clear when manifest fetch completes"
+      State_Management: {
+        Store: "Track isRegenerating state per block",
+        Trigger: "Set on manifest_update WebSocket event",
+        Clear: "Clear when manifest fetch completes",
       },
-      "Animation_Keyframes": {
-        "blink": "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }"
-      }
+      Animation_Keyframes: {
+        blink:
+          "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }",
+      },
     };
 
     console.log("\n=== Expected Visual Feedback Implementation ===");
@@ -275,21 +303,21 @@ test.describe("Block regeneration visual feedback", () => {
         block.style.position = "relative";
 
         // Add mock label
-        const label = document.createElement('div');
-        label.textContent = 'Regenerating...';
-        label.style.position = 'absolute';
-        label.style.top = '-30px';
-        label.style.left = '50%';
-        label.style.transform = 'translateX(-50%)';
-        label.style.background = 'orange';
-        label.style.color = 'white';
-        label.style.padding = '4px 8px';
-        label.style.borderRadius = '4px';
-        label.style.fontSize = '12px';
-        label.style.animation = 'blink-mock 1s infinite';
+        const label = document.createElement("div");
+        label.textContent = "Regenerating...";
+        label.style.position = "absolute";
+        label.style.top = "-30px";
+        label.style.left = "50%";
+        label.style.transform = "translateX(-50%)";
+        label.style.background = "orange";
+        label.style.color = "white";
+        label.style.padding = "4px 8px";
+        label.style.borderRadius = "4px";
+        label.style.fontSize = "12px";
+        label.style.animation = "blink-mock 1s infinite";
 
         // Add keyframe animation
-        const style = document.createElement('style');
+        const style = document.createElement("style");
         style.textContent = `
           @keyframes blink-mock {
             0%, 100% { opacity: 1; }
@@ -313,7 +341,7 @@ test.describe("Block regeneration visual feedback", () => {
       const blocks = document.querySelectorAll('[data-testid^="block-"]');
       blocks.forEach((block: Element) => {
         const htmlBlock = block as HTMLElement;
-        htmlBlock.style.border = '';
+        htmlBlock.style.border = "";
         const label = htmlBlock.querySelector('div[style*="Regenerating"]');
         if (label) label.remove();
       });

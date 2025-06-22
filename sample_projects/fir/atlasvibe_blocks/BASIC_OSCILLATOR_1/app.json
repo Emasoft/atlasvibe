@@ -31,12 +31,7 @@
             "waveform": {
               "type": "select",
               "default": "sine",
-              "options": [
-                "sine",
-                "square",
-                "triangle",
-                "sawtooth"
-              ],
+              "options": ["sine", "square", "triangle", "sawtooth"],
               "desc": "The waveform type of the wave.",
               "overload": null,
               "functionName": "BASIC_OSCILLATOR",
@@ -380,12 +375,7 @@
             "waveform": {
               "type": "select",
               "default": "sine",
-              "options": [
-                "sine",
-                "square",
-                "triangle",
-                "sawtooth"
-              ],
+              "options": ["sine", "square", "triangle", "sawtooth"],
               "desc": "The waveform type of the wave.",
               "overload": null,
               "functionName": "SINE",

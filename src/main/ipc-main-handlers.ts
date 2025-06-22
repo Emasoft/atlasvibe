@@ -241,37 +241,47 @@ export const registerIpcMainHandlers = () => {
   });
 
   // Custom block creation handler
-  ipcMain.handle(API.createCustomBlock, async (_, blueprintKey: string, newCustomBlockName: string, projectPath: string) => {
-    try {
-      // Get the backend URL from environment or default
-      const backendUrl = process.env.BACKEND_URL || "http://localhost:5392";
+  ipcMain.handle(
+    API.createCustomBlock,
+    async (
+      _,
+      blueprintKey: string,
+      newCustomBlockName: string,
+      projectPath: string,
+    ) => {
+      try {
+        // Get the backend URL from environment or default
+        const backendUrl = process.env.BACKEND_URL || "http://localhost:5392";
 
-      // Call the backend API to create the custom block
-      const response = await fetch(`${backendUrl}/blocks/create-custom/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          blueprint_key: blueprintKey,
-          new_block_name: newCustomBlockName,
-          project_path: projectPath,
-        }),
-      });
+        // Call the backend API to create the custom block
+        const response = await fetch(`${backendUrl}/blocks/create-custom/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            blueprint_key: blueprintKey,
+            new_block_name: newCustomBlockName,
+            project_path: projectPath,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        const errorMessage = (error as any).detail || `Failed to create custom block (${response.status})`;
-        console.error("Custom block creation failed:", errorMessage);
-        throw new Error(errorMessage);
+        if (!response.ok) {
+          const error = await response.json();
+          const errorMessage =
+            (error as any).detail ||
+            `Failed to create custom block (${response.status})`;
+          console.error("Custom block creation failed:", errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        const blockDefinition = await response.json();
+        return blockDefinition;
+      } catch (error) {
+        console.error("Error creating custom block:", error);
+        // Re-throw to let the renderer handle the error properly
+        throw error;
       }
-
-      const blockDefinition = await response.json();
-      return blockDefinition;
-    } catch (error) {
-      console.error("Error creating custom block:", error);
-      // Re-throw to let the renderer handle the error properly
-      throw error;
-    }
-  });
+    },
+  );
 };

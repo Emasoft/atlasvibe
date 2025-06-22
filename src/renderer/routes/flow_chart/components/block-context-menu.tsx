@@ -9,7 +9,15 @@
  */
 
 import { BlockData } from "@/renderer/types/block";
-import { Code, CopyPlus, Info, Pencil, X, Package, FileText } from "lucide-react";
+import {
+  Code,
+  CopyPlus,
+  Info,
+  Pencil,
+  X,
+  Package,
+  FileText,
+} from "lucide-react";
 import { useStore, Node } from "reactflow";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { useFlowchartStore } from "@/renderer/stores/flowchart";
@@ -86,7 +94,7 @@ export default function BlockContextMenu({
 
   // Get existing blueprint names
   const existingBlueprints = manifest
-    ? Object.keys(manifest).filter(key => manifest[key].isBlueprint)
+    ? Object.keys(manifest).filter((key) => manifest[key].isBlueprint)
     : [];
 
   const saveAsBlueprint = () => {
@@ -99,91 +107,91 @@ export default function BlockContextMenu({
 
   return (
     <>
-    <div
-      style={{ top, left, right, bottom }}
-      className="absolute z-50 rounded-md border bg-background"
-      onClick={onClick}
-      data-testid={"block-context-menu"}
-    >
-      <ContextMenuAction
-        testId="context-edit-block"
-        onClick={editNode}
-        icon={Pencil}
+      <div
+        style={{ top, left, right, bottom }}
+        className="absolute z-50 rounded-md border bg-background"
+        onClick={onClick}
+        data-testid={"block-context-menu"}
       >
-        Edit Block
-      </ContextMenuAction>
-      <ContextMenuAction
-        testId="context-edit-python"
-        onClick={withPermissionCheck(editPythonCode)}
-        icon={Code}
-      >
-        Edit Python Code
-      </ContextMenuAction>
-      <ContextMenuAction
-        testId="open-in-vscode"
-        onClick={withPermissionCheck(openInVSC)}
-        icon={Code}
-      >
-        Open in VSCode
-      </ContextMenuAction>
-      <ContextMenuAction
-        testId="context-duplicate-block"
-        onClick={duplicate}
-        icon={CopyPlus}
-      >
-        Duplicate Block
-      </ContextMenuAction>
-      {node.data.isCustom && (
-        <>
-          <ContextMenuAction
-            testId="save-as-blueprint-btn"
-            onClick={saveAsBlueprint}
-            icon={Package}
-          >
-            Save as Blueprint
-          </ContextMenuAction>
-          <ContextMenuAction
-            testId="view-environment-btn"
-            onClick={viewEnvironment}
-            icon={FileText}
-          >
-            View Environment
-          </ContextMenuAction>
-        </>
-      )}
-      <hr />
-      <ContextMenuAction
-        testId="context-block-info"
-        onClick={openInfo}
-        icon={Info}
-      >
-        Block Info
-      </ContextMenuAction>
-      <hr />
-      <ContextMenuAction
-        testId="context-delete-block"
-        onClick={() => deleteBlock(node.id)}
-        icon={X}
-      >
-        Delete Block
-      </ContextMenuAction>
-    </div>
-    <SaveBlueprintDialog
-      open={blueprintDialogOpen}
-      onOpenChange={setBlueprintDialogOpen}
-      blockId={node.id}
-      blockPath={node.data.path}
-      defaultName={node.data.label}
-      existingBlueprints={existingBlueprints}
-    />
-    {node.data.isCustom && node.data.path && (
-      <VenvStatusDialog
-        open={venvDialogOpen}
-        onOpenChange={setVenvDialogOpen}
+        <ContextMenuAction
+          testId="context-edit-block"
+          onClick={editNode}
+          icon={Pencil}
+        >
+          Edit Block
+        </ContextMenuAction>
+        <ContextMenuAction
+          testId="context-edit-python"
+          onClick={withPermissionCheck(editPythonCode)}
+          icon={Code}
+        >
+          Edit Python Code
+        </ContextMenuAction>
+        <ContextMenuAction
+          testId="open-in-vscode"
+          onClick={withPermissionCheck(openInVSC)}
+          icon={Code}
+        >
+          Open in VSCode
+        </ContextMenuAction>
+        <ContextMenuAction
+          testId="context-duplicate-block"
+          onClick={duplicate}
+          icon={CopyPlus}
+        >
+          Duplicate Block
+        </ContextMenuAction>
+        {node.data.isCustom && (
+          <>
+            <ContextMenuAction
+              testId="save-as-blueprint-btn"
+              onClick={saveAsBlueprint}
+              icon={Package}
+            >
+              Save as Blueprint
+            </ContextMenuAction>
+            <ContextMenuAction
+              testId="view-environment-btn"
+              onClick={viewEnvironment}
+              icon={FileText}
+            >
+              View Environment
+            </ContextMenuAction>
+          </>
+        )}
+        <hr />
+        <ContextMenuAction
+          testId="context-block-info"
+          onClick={openInfo}
+          icon={Info}
+        >
+          Block Info
+        </ContextMenuAction>
+        <hr />
+        <ContextMenuAction
+          testId="context-delete-block"
+          onClick={() => deleteBlock(node.id)}
+          icon={X}
+        >
+          Delete Block
+        </ContextMenuAction>
+      </div>
+      <SaveBlueprintDialog
+        open={blueprintDialogOpen}
+        onOpenChange={setBlueprintDialogOpen}
+        blockId={node.id}
         blockPath={node.data.path}
-        blockName={node.data.label}
+        defaultName={node.data.label}
+        existingBlueprints={existingBlueprints}
       />
-    )}
+      {node.data.isCustom && node.data.path && (
+        <VenvStatusDialog
+          open={venvDialogOpen}
+          onOpenChange={setVenvDialogOpen}
+          blockPath={node.data.path}
+          blockName={node.data.label}
+        />
+      )}
     </>
   );
 }

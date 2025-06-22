@@ -14,11 +14,7 @@
           "ctrls": {
             "dc_type": {
               "type": "select",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "default": "OrderedPair",
               "desc": "The type of DataContainer to return.",
               "overload": null,
@@ -89,28 +85,13 @@
           "ctrls": {
             "distribution": {
               "type": "select",
-              "options": [
-                "normal",
-                "uniform",
-                "poisson"
-              ],
+              "options": ["normal", "uniform", "poisson"],
               "default": "normal",
               "desc": "the distribution over the random samples",
               "overload": {
-                "uniform": [
-                  "size",
-                  "lower_bound",
-                  "upper_bound"
-                ],
-                "normal": [
-                  "size",
-                  "normal_mean",
-                  "normal_standard_deviation"
-                ],
-                "poisson": [
-                  "size",
-                  "poisson_events"
-                ]
+                "uniform": ["size", "lower_bound", "upper_bound"],
+                "normal": ["size", "normal_mean", "normal_standard_deviation"],
+                "poisson": ["size", "poisson_events"]
               },
               "functionName": "RAND",
               "param": "distribution",
@@ -251,12 +232,7 @@
             },
             "waveform": {
               "type": "select",
-              "options": [
-                "sine",
-                "square",
-                "triangle",
-                "sawtooth"
-              ],
+              "options": ["sine", "square", "triangle", "sawtooth"],
               "default": "sine",
               "desc": "The waveform type of the wave.",
               "overload": null,

@@ -131,8 +131,10 @@ export const GalleryModal = ({
                 target="_blank"
                 className="text-accent1"
               >
-                {import.meta.env.VITE_ATLASVIBE_DOCS_LINK?.replace(/^https?:\/\//, "") ??
-                  "atlasvibe documentation"}
+                {import.meta.env.VITE_ATLASVIBE_DOCS_LINK?.replace(
+                  /^https?:\/\//,
+                  "",
+                ) ?? "atlasvibe documentation"}
               </a>{" "}
               instead?
             </div>

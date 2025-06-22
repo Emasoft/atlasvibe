@@ -120,12 +120,7 @@
             },
             "waveform": {
               "type": "select",
-              "options": [
-                "sine",
-                "square",
-                "triangle",
-                "sawtooth"
-              ],
+              "options": ["sine", "square", "triangle", "sawtooth"],
               "default": "sine",
               "desc": "The waveform type of the wave.",
               "overload": null,

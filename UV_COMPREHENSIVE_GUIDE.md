@@ -3,17 +3,20 @@
 ## Core UV Concepts
 
 ### 1. Environment Management Philosophy
+
 - **Always use virtual environments** - UV enforces this by default
 - **Never modify system Python** - Requires explicit `--system` flag
 - **Environments are disposable** - Recreate rather than repair
 
 ### 2. Environment Discovery Order
+
 1. Active `VIRTUAL_ENV` environment variable
 2. Active Conda environment
 3. `.venv` in current directory or parent directories
 4. Prompts to create if none found
 
 ### 3. Project vs Standalone Mode
+
 - **Project mode**: Has `pyproject.toml`, uses `uv sync` and `uv run`
 - **Standalone mode**: No project file, uses `uv pip` commands directly
 
@@ -337,22 +340,26 @@ no-cache = false
 ## Best Practices
 
 ### 1. Always Commit Lockfiles
+
 ```bash
 git add uv.lock
 git commit -m "Update dependencies"
 ```
 
 ### 2. Use Dependency Groups Wisely
+
 - `project.dependencies`: Runtime dependencies
 - `project.optional-dependencies`: Published extras
 - `dependency-groups`: Development dependencies
 
 ### 3. Pin Python Version
+
 ```bash
 uv python pin 3.11  # Creates .python-version
 ```
 
 ### 4. Regular Updates
+
 ```bash
 # Weekly/monthly
 uv lock --upgrade
@@ -361,6 +368,7 @@ uv run pytest  # Verify nothing broke
 ```
 
 ### 5. Reproducible Builds
+
 ```bash
 # Use --frozen in production
 uv sync --frozen
@@ -372,6 +380,7 @@ uv lock --exclude-newer 2024-01-01
 ## Troubleshooting
 
 ### Issue: Module not found
+
 ```bash
 # Ensure environment is synced
 uv sync
@@ -380,6 +389,7 @@ which python  # Should show .venv/bin/python
 ```
 
 ### Issue: Dependency conflicts
+
 ```bash
 # Show resolution details
 uv pip compile --verbose pyproject.toml
@@ -388,6 +398,7 @@ uv lock --resolution lowest-direct
 ```
 
 ### Issue: Build failures
+
 ```bash
 # Build with verbose output
 uv build -v
@@ -396,6 +407,7 @@ uv build --no-build-isolation
 ```
 
 ### Issue: Platform-specific problems
+
 ```bash
 # Resolve for specific platform
 uv lock --python-platform linux --python-version 3.11
@@ -404,12 +416,14 @@ uv lock --python-platform linux --python-version 3.11
 ## Migration from Poetry/pip
 
 ### From Poetry
+
 1. Export requirements: `poetry export -f requirements.txt > requirements.txt`
 2. Create pyproject.toml with uv structure
 3. Import deps: `uv add -r requirements.txt`
 4. Add dev deps: `uv add --group dev -r requirements-dev.txt`
 
 ### From pip
+
 1. Generate requirements: `pip freeze > requirements.txt`
 2. Create project: `uv init --app`
 3. Import deps: `uv add -r requirements.txt`

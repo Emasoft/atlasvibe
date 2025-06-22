@@ -119,12 +119,7 @@
             "waveform": {
               "type": "select",
               "default": "sine",
-              "options": [
-                "sine",
-                "square",
-                "triangle",
-                "sawtooth"
-              ],
+              "options": ["sine", "square", "triangle", "sawtooth"],
               "desc": "The waveform type of the wave.",
               "overload": null,
               "functionName": "SINE",
@@ -177,11 +172,7 @@
             "dc_type": {
               "type": "select",
               "default": "OrderedPair",
-              "options": [
-                "Scalar",
-                "Vector",
-                "OrderedPair"
-              ],
+              "options": ["Scalar", "Vector", "OrderedPair"],
               "desc": "The type of DataContainer to return.",
               "overload": null,
               "functionName": "CONSTANT",

@@ -21,7 +21,9 @@ import { Result, ok, err } from "neverthrow";
  * @param projectName Name of the sample project
  * @returns Project data or error
  */
-export async function loadSampleProject(projectName: string): Promise<Result<Project, Error>> {
+export async function loadSampleProject(
+  projectName: string,
+): Promise<Result<Project, Error>> {
   try {
     // Sample projects are now in sample_projects/<name>/<name>.atlasvibe
     const projectPath = `sample_projects/${projectName}/${projectName}.atlasvibe`;
@@ -39,7 +41,11 @@ export async function loadSampleProject(projectName: string): Promise<Result<Pro
     // The project data should already be in the new format with custom blocks
     // Check if it needs migration (shouldn't happen for pre-migrated samples)
     if (!projectData.version || projectData.version === "1.0.0") {
-      return err(new Error(`Sample project ${projectName} is in old format. Please run migration.`));
+      return err(
+        new Error(
+          `Sample project ${projectName} is in old format. Please run migration.`,
+        ),
+      );
     }
 
     return ok(projectData);
