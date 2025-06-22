@@ -26,7 +26,21 @@ try:
 except ImportError:
     # For TDD, we'll create mock implementations
     def sanitize_error_message(error):
-        return str(error)
+        from captain.utils.project_structure import ProjectStructureError
+
+        if isinstance(error, ProjectStructureError):
+            return str(error)
+        elif isinstance(error, FileNotFoundError):
+            return "The requested file was not found"
+        elif isinstance(error, PermissionError):
+            return "Permission denied for this operation"
+        elif isinstance(error, SyntaxError):
+            msg = f"Syntax error in code: {error.msg}"
+            if hasattr(error, "lineno") and error.lineno:
+                msg += f" (line {error.lineno})"
+            return msg
+        else:
+            return "An internal error occurred. Please check logs for details."
 
     class CreateCustomBlockRequest:
         pass
@@ -155,7 +169,7 @@ class TestBlocksAPIErrorHandling:
     @pytest.fixture
     def client(self):
         """Create test client with mocked dependencies."""
-        from main import app  # Assuming main.py exists with FastAPI app
+        from captain.main import app
 
         return TestClient(app)
 

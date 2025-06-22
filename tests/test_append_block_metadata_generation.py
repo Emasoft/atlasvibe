@@ -71,8 +71,9 @@ class TestAppendBlockMetadataGeneration:
             temp_py.write_text(source_py.read_text())
 
             # Generate block_data.json using the actual generation function
-            # We need to simulate what generate_docstring_json does for a single block
-            self._generate_block_data_for_append(temp_py)
+            from captain.utils.block_metadata_generator import generate_block_data_json
+
+            generate_block_data_json(str(temp_block_dir), "APPEND")
 
             # Compare generated block_data.json with existing one
             generated_block_data = temp_block_dir / "block_data.json"
@@ -173,13 +174,13 @@ class TestAppendBlockMetadataGeneration:
                             if parsed.many_returns
                             else [
                                 {
-                                    "name": None,
+                                    "name": "",
                                     "type": parsed.returns.type_name
                                     if parsed.returns
-                                    else None,
+                                    else "",
                                     "description": parsed.returns.description
                                     if parsed.returns
-                                    else None,
+                                    else "",
                                 }
                             ],
                         }

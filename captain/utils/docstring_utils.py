@@ -173,9 +173,9 @@ def create_docstring_json(
     if hasattr(parsed_docstring, "many_returns") and parsed_docstring.many_returns:
         data[RETURNS_KEY] = [
             {
-                "name": rtn.return_name or "",
-                "type": rtn.type_name or "",
-                "description": rtn.description or "",
+                "name": rtn.return_name if rtn.return_name is not None else "",
+                "type": rtn.type_name if rtn.type_name is not None else "",
+                "description": rtn.description if rtn.description is not None else "",
             }
             for rtn in parsed_docstring.many_returns
         ]
@@ -184,8 +184,12 @@ def create_docstring_json(
         data[RETURNS_KEY] = [
             {
                 "name": "",
-                "type": parsed_docstring.returns.type_name or "",
-                "description": parsed_docstring.returns.description or "",
+                "type": parsed_docstring.returns.type_name
+                if parsed_docstring.returns.type_name is not None
+                else "",
+                "description": parsed_docstring.returns.description
+                if parsed_docstring.returns.description is not None
+                else "",
             }
         ]
 
