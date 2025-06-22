@@ -137,7 +137,7 @@ etc..
 
 ```
 Then examine the log files saved in the ./logs/ subdir. Think ultrahard to find the causes. Use actionlint, yamllint and act to test and verify the workflows issues. Then report the issues causing the failings.
-  
+
 
 #### Initial Setup
 
