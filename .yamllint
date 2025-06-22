@@ -3,7 +3,7 @@ extends: default
 
 rules:
   line-length:
-    max: 200 # Increased to accommodate long deptry ignore lists
+    max: 800 # Increased to accommodate very long deptry ignore lists in GitHub workflows
     level: warning
 
   indentation:

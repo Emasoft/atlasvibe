@@ -66,7 +66,8 @@ jobs:
           --known-first-party captain \
           --known-first-party cli \
           --ignore DEP003 \
-          --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
+          --per-rule-ignores \
+            "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
           --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> "$GITHUB_ENV"
 
     - name: Upload deptry report
