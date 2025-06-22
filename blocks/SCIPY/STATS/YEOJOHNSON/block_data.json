@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Return a dataset transformed by a Yeo-Johnson power transformation.",
     "short_description": "The YEOJOHNSON node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Return a dataset transformed by a Yeo-Johnson power transformation.",
     "parameters": [
       {
         "name": "x",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

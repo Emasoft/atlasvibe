@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "The REMOVE_DUPLICATES_VECTOR node returns a vector with only unique elements.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Vector",
         "description": "Unique input vector"
       }

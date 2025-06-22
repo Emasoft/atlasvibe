@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Return the eigenvalues and eigenvectors of a complex Hermitian (conjugate symmetric) or a real symmetric matrix.",
     "short_description": "The EIGH node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Return the eigenvalues and eigenvectors of a complex Hermitian (conjugate symmetric) or a real symmetric matrix.",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

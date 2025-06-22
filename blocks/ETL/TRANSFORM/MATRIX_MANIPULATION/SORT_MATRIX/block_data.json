@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\na : Matrix\n    The input matrix to be multiplied to input b",
     "short_description": "Take an input matrix and sort it along the chosen axis.",
+    "long_description": "Inputs\n------\na : Matrix\n    The input matrix to be multiplied to input b",
     "parameters": [
       {
         "name": "axis",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Matrix",
         "description": "The matrix result from sorting."
       }

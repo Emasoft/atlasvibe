@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "It takes two dataframes of label and feature from labelled training data and a dataframe of unlabelled input data.",
     "short_description": "Train a support vector machine (SVM) model for classification tasks.",
+    "long_description": "It takes two dataframes of label and feature from labelled training data and a dataframe of unlabelled input data.",
     "parameters": [
       {
         "name": "kernel",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "The predictions for the input data."
       }

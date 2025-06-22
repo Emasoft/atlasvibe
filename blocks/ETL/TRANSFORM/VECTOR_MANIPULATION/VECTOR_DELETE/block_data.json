@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\nv : Vector\n    The input vector to delete from",
     "short_description": "The VECTOR_DELETE node returns a new Vector with elements deleted from requested indices",
+    "long_description": "Inputs\n------\nv : Vector\n    The input vector to delete from",
     "parameters": [
       {
         "name": "indices",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Vector",
         "description": "The new vector with element(s) deleted from the input vector"
       }

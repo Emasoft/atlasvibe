@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Create a one-hot encoding from a dataframe containing categorical features.",
+    "long_description": "",
     "parameters": [
       {
         "name": "data",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "The one hot encoding of the input features."
       }

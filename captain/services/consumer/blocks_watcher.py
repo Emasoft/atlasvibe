@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 # -*- coding: utf-8 -*-
 
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
@@ -9,11 +17,6 @@
 # - Regenerates block_data.json when Python files are modified
 #
 
-# Copyright (c) 2024 Emasoft (for atlasvibe modifications and derivative work)
-# Copyright (c) 2024 Atlasvibe (for the original "Atlasvibe Studio" software)
-#
-# This software is licensed under the MIT License.
-# Refer to the LICENSE file for more details.
 
 from captain.internal.wsmanager import ConnectionManager
 from captain.utils.blocks_path import get_blocks_path

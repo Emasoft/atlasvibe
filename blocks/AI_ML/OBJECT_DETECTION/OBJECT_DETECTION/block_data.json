@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Detect objects in an input image with YOLOv3, then return an image DataContainer with those objects highlighted.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -11,9 +11,9 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Image",
-        "description": null
+        "description": ""
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Integrate over an OrderedPair or Vector using the composite trapezoidal rule.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: the x-axis of the input.\ny: the result of the integral."
       }

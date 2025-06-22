@@ -460,11 +460,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 MIT License
 
 Copyright (c) 2024 Emasoft
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction...
+Copyright (c) 2023-2024 Flojoy (for the original Flojoy Studio software)
 ```
+
+For third-party licenses and dependencies, see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md).
 
 ## 🙏 Acknowledgments
 

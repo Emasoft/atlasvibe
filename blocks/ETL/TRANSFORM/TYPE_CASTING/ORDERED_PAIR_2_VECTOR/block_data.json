@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Returns the split components (x, y) of an ordered pair as Vectors.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",

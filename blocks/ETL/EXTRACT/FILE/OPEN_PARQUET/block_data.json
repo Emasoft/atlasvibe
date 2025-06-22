@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault: None",
     "short_description": "Load a local parquet file, then return the data as a dataframe.",
+    "long_description": "Inputs\n------\ndefault: None",
     "parameters": [
       {
         "name": "file_path",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "DataFrame loaded from .parquet file"
       }

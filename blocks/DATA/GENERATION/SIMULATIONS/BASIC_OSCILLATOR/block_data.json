@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "It offers a more straightforward way to generate signals, with sample rate and the time in seconds as parameters, along with all the parameters in the SINE block.",
     "short_description": "Generate an oscillator signal (a shorthand combination of the SINE and LINSPACE blocks).",
+    "long_description": "It offers a more straightforward way to generate signals, with sample rate and the time in seconds as parameters, along with all the parameters in the SINE block.",
     "parameters": [
       {
         "name": "sample_rate",
@@ -41,7 +41,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: time domain\ny: generated signal"
       }

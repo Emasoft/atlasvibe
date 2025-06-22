@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "It takes one dataframe type data and selects 3 different columns to generate the OrderedTriple type.",
     "short_description": "Convert a DataFrame DataContainer to an OrderedTriple DataContainer.",
+    "long_description": "It takes one dataframe type data and selects 3 different columns to generate the OrderedTriple type.",
     "parameters": [
       {
         "name": "default",
@@ -26,7 +26,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedTriple",
         "description": "The OrderedTriple result from the conversion of the input."
       }

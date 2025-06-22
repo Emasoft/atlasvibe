@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair\n    The data to find peaks in.",
     "short_description": "The PEAK_DETECTION block finds peaks based on peak properties.",
+    "long_description": "Inputs\n------\ndefault : OrderedPair\n    The data to find peaks in.",
     "parameters": [
       {
         "name": "height",
@@ -46,7 +46,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: x axis location for peaks\ny: peaks"
       }

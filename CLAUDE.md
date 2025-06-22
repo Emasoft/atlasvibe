@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT PROJECT HISTORY - MUST READ
+- **AtlasVibe** is THIS project, created and owned by Emasoft
+- **Flojoy Studio** is the ORIGINAL project that AtlasVibe was forked from
+- AtlasVibe is a derivative work based on Flojoy Studio (NOT the other way around!)
+- Original project: https://github.com/flojoy-ai/studio
+- Fork relationship: Flojoy Studio (original) → AtlasVibe (fork by Emasoft)
+- When updating license headers: Copyright (c) 2024 Emasoft for AtlasVibe, with acknowledgment of Original Copyright (c) 2023-2024 Flojoy
+
 ## General Development Guidelines and Rules
 - *CRITICAL*: when reading the lines of the source files, do not read just few lines like you usually do. Instead always read all the lines of the file (until you reach the limit of available context memory). No matter what is the situation, searching or editing a file, ALWAYS OBEY TO THIS RULE!!!.
 - *CRITICAL*: do not ever do unplanned things or take decisions without asking the user first. All non trivial changes to the code must be planned first, approved by the user, and added to the tasks_checklist.md first. Unless something was specifically instructed by the user, you must not do it. Do not make changes to the codebase without duscussing those with the user first and get those approved. Be conservative and act on a strict need-to-be-changed basis.

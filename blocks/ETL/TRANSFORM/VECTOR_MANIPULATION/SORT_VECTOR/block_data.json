@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : Vector\n    The input vector",
     "short_description": "The SORT_VECTOR node returns the input Vector that is sorted",
+    "long_description": "Inputs\n------\ndefault : Vector\n    The input vector",
     "parameters": [
       {
         "name": "reverse",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Vector",
         "description": "Sorted input vector"
       }

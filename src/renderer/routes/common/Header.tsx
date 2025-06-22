@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2024 Emasoft
+ *
+ * This file is part of AtlasVibe, which is based on Flojoy Studio
+ * Original Copyright (c) 2023-2024 Flojoy
+ *
+ * SPDX-License-Identifier: MIT
+ * See the LICENSE file for details.
+ */
+
 import { memo } from "react";
 import HeaderTab from "./HeaderTab";
 import ControlBar from "@/renderer/routes/flow_chart/views/ControlBar";

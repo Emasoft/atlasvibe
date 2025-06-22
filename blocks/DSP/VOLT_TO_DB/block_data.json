@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Equation: f(x) = 20 * log[10](x / ref_value)",
     "short_description": "Take voltage values and convert them to dB.",
+    "long_description": "Equation: f(x) = 20 * log[10](x / ref_value)",
     "parameters": [
       {
         "name": "data",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: the x-axis of the input.\ny: the absolute value of the input."
       }

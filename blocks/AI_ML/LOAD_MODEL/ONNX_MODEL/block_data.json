@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "This allows supporting a wide range of deep learning frameworks and hardware platforms.",
     "short_description": "Load a serialized ONNX model and uses it to make predictions using ONNX Runtime.",
+    "long_description": "This allows supporting a wide range of deep learning frameworks and hardware platforms.",
     "parameters": [
       {
         "name": "file_path",

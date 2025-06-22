@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "The VECTOR_MAX node returns the maximum value from the Vector.",
+    "long_description": "",
     "parameters": [
       {
         "name": "v",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "The maximum value found from the input vector"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\na: String\n    The input text to be concatenated to input b\n\nb: String\n    The input text to be concatenated to input a",
     "short_description": "Concatenate 2 strings given by 2 String DataContainers.",
+    "long_description": "Inputs\n------\na: String\n    The input text to be concatenated to input b\n\nb: String\n    The input text to be concatenated to input a",
     "parameters": [
       {
         "name": "delimiter",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "String",
         "description": "The text result from concatenation."
       }

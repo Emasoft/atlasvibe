@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "The SHUFFLE_VECTOR node returns a vector that is randomly shuffled.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Vector",
         "description": "Shuffled input vector"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Create a Plotly Scatter visualization for a given input DataContainer.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Plotly",
         "description": "the DataContainer containing the Plotly Scatter visualization"
       }

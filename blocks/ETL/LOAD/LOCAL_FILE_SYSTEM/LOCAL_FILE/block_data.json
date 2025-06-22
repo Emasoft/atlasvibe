@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "The LOCAL_FILE node loads a local file of a different type and converts it to a DataContainer class.",
+    "long_description": "",
     "parameters": [
       {
         "name": "file_path",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Image | DataFrame",
         "description": "Image for file_type 'image'.\nGrayscale from file_type 'Grayscale'.\nDataFrame for file_type 'json', 'csv'."
       }

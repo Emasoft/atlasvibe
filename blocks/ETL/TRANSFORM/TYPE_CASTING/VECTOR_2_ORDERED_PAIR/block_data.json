@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Convert a Vector DataContainer to an OrderedPair DataContainer.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "The OrderedPair that is generated from the input vectors"
       }

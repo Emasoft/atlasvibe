@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "It is designed to have a frequency response that is as flat as possible in the pass band.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply the butter filter to.",
     "short_description": "Apply a butterworth filter to an input signal.",
+    "long_description": "It is designed to have a frequency response that is as flat as possible in the pass band.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply the butter filter to.",
     "parameters": [
       {
         "name": "filter_order",
@@ -26,7 +26,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: time domain\ny: filtered signal"
       }

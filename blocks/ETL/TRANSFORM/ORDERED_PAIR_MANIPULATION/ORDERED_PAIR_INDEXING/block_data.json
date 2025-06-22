@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Returns the value of the OrderedPair at the requested index.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "The scalar index of the input OrderedPair."
       }

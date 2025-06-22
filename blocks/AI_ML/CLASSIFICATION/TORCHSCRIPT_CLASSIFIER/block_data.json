@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Execute a TorchScript classifier against an input image.",
+    "long_description": "",
     "parameters": [
       {
         "name": "input_image",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "A dataframe containing the class name and confidence score."
       }

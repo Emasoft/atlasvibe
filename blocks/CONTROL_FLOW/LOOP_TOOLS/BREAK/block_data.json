@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "It should be used in conjunction with conditionals to determine when to break the loop.\nIt is needed to be able to generate 'while loops' in Atlasvibe (combined with an 'infinite loop').",
     "short_description": "End the iteration of a loop.",
+    "long_description": "It should be used in conjunction with conditionals to determine when to break the loop.\nIt is needed to be able to generate 'while loops' in Atlasvibe (combined with an 'infinite loop').",
     "parameters": [
       {
         "name": "referred_node",
@@ -16,9 +16,9 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "None",
-        "description": null
+        "description": ""
       }
     ]
   }

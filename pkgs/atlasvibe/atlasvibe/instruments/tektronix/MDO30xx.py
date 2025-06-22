@@ -1,3 +1,11 @@
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 """
 Driver for the MDO4000B, MDO4000, MSO4000B, DPO4000B and
 MDO3000 series Oscilloscopes.

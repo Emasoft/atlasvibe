@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Examples can be found here:\nhttps://scikit-image.org/docs/stable/auto_examples/index.html",
     "short_description": "Load an example image from scikit-image, such as an astronaut, the moon, a horse, etc.",
+    "long_description": "Examples can be found here:\nhttps://scikit-image.org/docs/stable/auto_examples/index.html",
     "parameters": [
       {
         "name": "img_key",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Image",
         "description": "DataContainer containing the image loaded from scikit-image."
       }

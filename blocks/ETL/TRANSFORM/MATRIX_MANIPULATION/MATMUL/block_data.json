@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Take two input matrices, multiply them, and return the result.",
+    "long_description": "",
     "parameters": [
       {
         "name": "a",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Matrix",
         "description": "The matrix result from the matrix multiplication."
       }

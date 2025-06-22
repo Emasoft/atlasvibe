@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "If the entered value is a list of scalar, it returns the multiplciative inverse 1/x for each element of the list.\n\nInputs\n------\ndefault : OrderedPair|Matrix\n    The matrix or list of scalar to which we apply the invert.",
     "short_description": "Invert a Matrix or OrderedPair.",
+    "long_description": "If the entered value is a list of scalar, it returns the multiplciative inverse 1/x for each element of the list.\n\nInputs\n------\ndefault : OrderedPair|Matrix\n    The matrix or list of scalar to which we apply the invert.",
     "parameters": [
       {
         "name": "rcond",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair|Matrix",
         "description": "OrderedPair if the default input is an OrderedPair.\nx: the y input list of values.\ny: the list of inverse value of the y input.\n\nMatrix if the default input is a Matrix.\nm: the inverse matrix of the input."
       }

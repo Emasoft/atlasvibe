@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Sleep (pause program execution) for a specified number of seconds.",
+    "long_description": "",
     "parameters": [
       {
         "name": "sleep_time",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Optional[DataContainer]",
         "description": "Returns the input if one was passed in."
       }

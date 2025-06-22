@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "1 means true and 0 means false",
     "short_description": "Takes boolean type data and converts it into scalar data type.",
+    "long_description": "1 means true and 0 means false",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "The scalar result from the conversion of the input."
       }

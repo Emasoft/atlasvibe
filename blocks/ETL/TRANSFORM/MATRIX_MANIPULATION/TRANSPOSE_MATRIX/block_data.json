@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Take an input 2D matrix and transpose it.",
+    "long_description": "",
     "parameters": [
       {
         "name": "a",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Matrix",
         "description": "The transposed matrix"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Generates a random matrix with values between 0 and 1.",
+    "long_description": "",
     "parameters": [
       {
         "name": "row",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Matrix",
         "description": "Randomly generated matrix"
       }

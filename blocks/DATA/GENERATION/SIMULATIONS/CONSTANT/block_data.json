@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Optional input that defines the size of the output.",
     "short_description": "Generate a single x-y vector of numeric (floating point) constants.",
+    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Optional input that defines the size of the output.",
     "parameters": [
       {
         "name": "dc_type",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair|Vector|Scalar",
         "description": "OrderedPair if selected\nx: the x axis generated with size 'step'\ny: the resulting constant with size 'step'\nVector if selected\nv: the resulting constant with size 'step'\nScalar if selected\nc: the resulting constant"
       }

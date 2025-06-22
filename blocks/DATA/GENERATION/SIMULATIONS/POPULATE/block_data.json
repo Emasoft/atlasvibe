@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Input to use as the x-axis for the random samples.",
     "short_description": "Generate an OrderedPair of random numbers, depending on the distribution selected and the input data.",
+    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Input to use as the x-axis for the random samples.",
     "parameters": [
       {
         "name": "distribution",
@@ -36,7 +36,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: provided from input data\ny: the random samples"
       }

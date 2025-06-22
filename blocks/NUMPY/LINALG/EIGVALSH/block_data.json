@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Compute the eigenvalues of a complex Hermitian or real symmetric matrix.\n\nMain difference from eigh: the eigenvectors are not computed.",
     "short_description": "The EIGVALSH node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Compute the eigenvalues of a complex Hermitian or real symmetric matrix.\n\nMain difference from eigh: the eigenvectors are not computed.",
     "parameters": [
       {
         "name": "a",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

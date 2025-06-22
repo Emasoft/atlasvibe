@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "If a Scalar input is provided, the Scalar is returned with the timestamp as an OrderedPair.\n\nInputs\n------\ndefault : Scalar\n    A value to timestamp",
     "short_description": "Return the current UNIX timestamp as a float (Scalar) or array (Vector) with length equal to 1.",
+    "long_description": "If a Scalar input is provided, the Scalar is returned with the timestamp as an OrderedPair.\n\nInputs\n------\ndefault : Scalar\n    A value to timestamp",
     "parameters": [
       {
         "name": "dc_type",
@@ -11,9 +11,9 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar|Vector|OrderedPair",
-        "description": null
+        "description": ""
       }
     ]
   }

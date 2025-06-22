@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Calculate the relative minima of 'data'.",
     "short_description": "The ARGRELMIN node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Calculate the relative minima of 'data'.",
     "parameters": [
       {
         "name": "data",
@@ -26,7 +26,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

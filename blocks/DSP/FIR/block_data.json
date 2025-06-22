@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "This filter takes a few inputs: the sample_rate (will be passed as a parameter if the target node is not connected), the window type of the filter, the cutoff frequency, and the number of taps (or length) of the filter.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply a FIR filter to.",
     "short_description": "Apply a low-pass FIR filter to an input vector. The filter is designed with the window method.",
+    "long_description": "This filter takes a few inputs: the sample_rate (will be passed as a parameter if the target node is not connected), the window type of the filter, the cutoff frequency, and the number of taps (or length) of the filter.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply a FIR filter to.",
     "parameters": [
       {
         "name": "sample_rate",
@@ -36,7 +36,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: time domain\ny: filtered signal"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Calculated element-wise for a Vector or OrderedPair input.\n\nUse log_base \"input\" to use the bottom input as the base.",
     "short_description": "Find the logarithm of input a with base b.",
+    "long_description": "Calculated element-wise for a Vector or OrderedPair input.\n\nUse log_base \"input\" to use the bottom input as the base.",
     "parameters": [
       {
         "name": "a",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair|Scalar|Vector",
         "description": "OrderedPair if a is an OrderedPair.\nx: the x-axis of input a.\ny: the result of the logarithm.\n\nScalar if a is a Scalar.\nc: the result of the logarithm.\n\nVector if a is a Vector.\nv: the result of the logarithm."
       }

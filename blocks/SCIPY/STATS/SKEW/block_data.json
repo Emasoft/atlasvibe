@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Compute the sample skewness of a dataset.\n\n    For normally distributed data, the skewness should be about zero. \n    For unimodal continuous distributions, a skewness value greater than zero means that there is more weight in the right tail of the distribution.         The function 'skewtest' can be used to determine if the skewness value is close enough to zero, statistically speaking.",
     "short_description": "The SKEW node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Compute the sample skewness of a dataset.\n\n    For normally distributed data, the skewness should be about zero.\n    For unimodal continuous distributions, a skewness value greater than zero means that there is more weight in the right tail of the distribution.         The function 'skewtest' can be used to determine if the skewness value is close enough to zero, statistically speaking.",
     "parameters": [
       {
         "name": "a",
@@ -10,7 +10,7 @@
       },
       {
         "name": "axis",
-        "type": "int ",
+        "type": "int",
         "description": "Default = 0.\nIf an int, the axis of the input along which to compute the statistic.\nThe statistic of each axis-slice (e.g. row) of the input will appear in a\ncorresponding element of the output.\nIf None, the input will be raveled before computing the statistic."
       },
       {
@@ -31,7 +31,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

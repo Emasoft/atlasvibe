@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The \"summary_text\" column contains a summary of the text in the corresponding row of the input dataframe.",
     "short_description": "Take an input dataframe with multiple rows and a single column, then produce a dataframe with a single \"summary_text\" column.",
+    "long_description": "The \"summary_text\" column contains a summary of the text in the corresponding row of the input dataframe.",
     "parameters": [
       {
         "name": "default",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "dataframe containing the summary text in the \"summary_text\" column"
       }

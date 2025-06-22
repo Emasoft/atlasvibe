@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Export a DataContainer into CSV format.",
+    "long_description": "",
     "parameters": [
       {
         "name": "dc",
@@ -21,9 +21,9 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "None",
-        "description": null
+        "description": ""
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Split an input dataframe into test and training dataframes according to a size parameter.",
+    "long_description": "",
     "parameters": [
       {
         "name": "test_size",

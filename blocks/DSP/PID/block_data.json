@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The returned value will be modified according to the PID parameters Kp, Ki, and Kd.\n\nInputs\n------\nsingle_input : Scalar\n    The data to apply the PID function to.",
     "short_description": "Model a PID (proportional-integral-derivative) system.",
+    "long_description": "The returned value will be modified according to the PID parameters Kp, Ki, and Kd.\n\nInputs\n------\nsingle_input : Scalar\n    The data to apply the PID function to.",
     "parameters": [
       {
         "name": "Kp",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "c: The PID function output."
       }

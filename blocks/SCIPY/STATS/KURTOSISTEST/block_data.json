@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Test whether a dataset has normal kurtosis.\n\n    This function tests the null hypothesis that the kurtosis of the population from which the sample was drawn is that of the normal distribution.",
     "short_description": "The KURTOSISTEST node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Test whether a dataset has normal kurtosis.\n\n    This function tests the null hypothesis that the kurtosis of the population from which the sample was drawn is that of the normal distribution.",
     "parameters": [
       {
         "name": "select_return",
@@ -31,12 +31,12 @@
       {
         "name": ".. versionadded",
         "type": ": 1.7.0",
-        "description": null
+        "description": ""
       }
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

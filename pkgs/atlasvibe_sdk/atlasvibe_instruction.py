@@ -1,7 +1,10 @@
 # Copyright (c) 2024 Emasoft
 #
-# This software is licensed under the MIT License.
-# Refer to the LICENSE file for more details.
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
 
 
 class ATLASVIBE_INSTRUCTION:  # Renamed from ATLASVIBE_INSTRUCTION

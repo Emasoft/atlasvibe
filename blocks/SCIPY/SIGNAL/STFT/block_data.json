@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Compute the Short Time Fourier Transform (STFT).\n\n    STFTs can be used as a way of quantifying the change of a nonstationary signal's frequency and phase content over time.",
     "short_description": "The STFT node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Compute the Short Time Fourier Transform (STFT).\n\n    STFTs can be used as a way of quantifying the change of a nonstationary signal's frequency and phase content over time.",
     "parameters": [
       {
         "name": "select_return",
@@ -71,12 +71,12 @@
       {
         "name": ".. versionadded",
         "type": ": 1.9.0",
-        "description": null
+        "description": ""
       }
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

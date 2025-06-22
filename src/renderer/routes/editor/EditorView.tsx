@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2024 Emasoft
+ *
+ * This file is part of AtlasVibe, which is based on Flojoy Studio
+ * Original Copyright (c) 2023-2024 Flojoy
+ *
+ * SPDX-License-Identifier: MIT
+ * See the LICENSE file for details.
+ */
+
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";

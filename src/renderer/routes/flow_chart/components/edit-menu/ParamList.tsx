@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2024 Emasoft
+ *
+ * This file is part of AtlasVibe, which is based on Flojoy Studio
+ * Original Copyright (c) 2023-2024 Flojoy
+ *
+ * SPDX-License-Identifier: MIT
+ * See the LICENSE file for details.
+ */
+
 import { ParamValueType } from "@/renderer/routes/common/types/ParamValueType";
 import { ParamTooltip } from "@/renderer/components/common/ParamTooltip";
 import { BlockData } from "@/renderer/types/block";

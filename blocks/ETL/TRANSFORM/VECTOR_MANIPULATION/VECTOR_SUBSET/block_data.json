@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\nv : Vector\n    The input vector to return subset of values from",
     "short_description": "The VECTOR_SUBSET node returns the subset of values from requested indices",
+    "long_description": "Inputs\n------\nv : Vector\n    The input vector to return subset of values from",
     "parameters": [
       {
         "name": "indices",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Vector",
         "description": "The new vector with subset of elements extracted from the input vector"
       }

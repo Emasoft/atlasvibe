@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "This example uses the Crank-Nicolson Method to solve the 1D Schrodinger equation.\n\nFurther reading:\nhttp://staff.ustc.edu.cn/~zqj/posts/Numerical_TDSE/",
     "short_description": "Approximate the behaviour of a 1D Gaussian wavepacket in an infinite-well potential box.",
+    "long_description": "This example uses the Crank-Nicolson Method to solve the 1D Schrodinger equation.\n\nFurther reading:\nhttp://staff.ustc.edu.cn/~zqj/posts/Numerical_TDSE/",
     "parameters": [
       {
         "name": "L_box",
@@ -31,7 +31,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "The most recent wavepacket."
       }

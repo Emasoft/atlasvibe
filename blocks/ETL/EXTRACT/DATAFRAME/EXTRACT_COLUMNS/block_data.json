@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Take an input dataframe/matrix and returns a dataframe/matrix with only the specified columns.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame|Matrix",
         "description": "DataFrame or Matrix with only the specified columns"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Input that defines the x-axis values of the function and output.",
     "short_description": "Generate a waveform with a given shape (sine, sawtooth, etc).",
+    "long_description": "Inputs\n------\ndefault : OrderedPair|Vector\n    Input that defines the x-axis values of the function and output.",
     "parameters": [
       {
         "name": "waveform",
@@ -31,7 +31,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "x: the input v or x values\ny: the resulting sine function"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Iterate through the LOOP body blocks a given number of times (or -1 times for infinite looping).",
+    "long_description": "",
     "parameters": [
       {
         "name": "num_loops",

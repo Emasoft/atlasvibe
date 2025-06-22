@@ -1,24 +1,59 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair|OrderedTriple|DataFrame|Vector|Matrix|Grayscale|Surface\n    the DataContainer to be visualized",
-    "short_description": "Create a Plotly Heatmap visualization for a given input DataContainer.",
+    "short_description": "Make a heatmap from a matrix, dataframe, ordered triple, or 2D arrays.",
+    "long_description": "Data can be a Matrix, DataFrame, OrderedTriple, or OrderedPair.\nX, Y, and Z must all be the same size when OrderedTriple is used\nas the default input.\n\nFor DataFrames a heatmap will be created for columns that\ncontain continuous data (integers or floats).",
     "parameters": [
       {
-        "name": "show_text",
-        "type": "bool",
-        "description": "whether or not to show the text inside the heatmap color blocks"
+        "name": "default",
+        "type": "OrderedPair | Matrix | Grayscale | DataFrame | Vector | OrderedTriple | Surface",
+        "description": "The input to plot"
       },
       {
-        "name": "histogram",
+        "name": "x_label",
+        "type": "str",
+        "description": "x axis label"
+      },
+      {
+        "name": "y_label",
+        "type": "str",
+        "description": "y axis label"
+      },
+      {
+        "name": "z_label",
+        "type": "str",
+        "description": "z axis label"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "description": "Title of the plot"
+      },
+      {
+        "name": "show_scale",
         "type": "bool",
-        "description": "whether or not to render a histogram of the image next to the render"
+        "description": "Whether to show the scale or not"
+      },
+      {
+        "name": "reverse_y",
+        "type": "bool",
+        "description": "If true, reverse the y axis"
+      },
+      {
+        "name": "reverse_x",
+        "type": "bool",
+        "description": "If true, reverse the x axis"
+      },
+      {
+        "name": "color_scale",
+        "type": "str",
+        "description": "Sets the colorscale. The colorscale must be an array containing arrays mapping a normalized value to an rgb, rgba, hex, hsl, hsv, or named color string."
       }
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Plotly",
-        "description": "the DataContainer containing the Plotly heatmap visualization"
+        "description": "The generated Plotly heatmap"
       }
     ]
   }

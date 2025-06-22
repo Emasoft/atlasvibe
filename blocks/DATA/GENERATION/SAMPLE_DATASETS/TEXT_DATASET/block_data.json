@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The data is returned as a dataframe with one column containing the text and the other containing the category.",
     "short_description": "Load one of the 20 newsgroup sample datasets from scikit-learn.",
+    "long_description": "The data is returned as a dataframe with one column containing the text and the other containing the category.",
     "parameters": [
       {
         "name": "subset",
@@ -31,9 +31,9 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
-        "description": null
+        "description": ""
       }
     ]
   }

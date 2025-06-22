@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Through the FFT algorithm, the input vector will be transformed from a time domain into a frequency domain, which will be an ordered pair of arrays.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply FFT to.",
     "short_description": "Perform a Discrete Fourier Transform on the input vector.",
+    "long_description": "Through the FFT algorithm, the input vector will be transformed from a time domain into a frequency domain, which will be an ordered pair of arrays.\n\nInputs\n------\ndefault : OrderedPair\n    The data to apply FFT to.",
     "parameters": [
       {
         "name": "window",
@@ -26,12 +26,12 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair if display is true",
         "description": "x: frequency\ny: spectrum of the signal"
       },
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame if display is false",
         "description": "time: time domain\nfrequency: frequency domain\nreal: real section of the signal\nimag: imaginary section of the signal"
       }

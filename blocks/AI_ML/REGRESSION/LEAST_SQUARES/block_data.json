@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Perform a least squares regression on the input DataContainer (input can be a Matrix or OrderedPair).",
+    "long_description": "",
     "parameters": [
       {
         "name": "a",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair or Matrix",
         "description": "OrderedPair\nx: input matrix (data points)\ny: fitted line computed with returned regression weights\n\nMatrix\nm: fitted matrix computed with returned regression weights"
       }

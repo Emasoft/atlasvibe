@@ -1,3 +1,11 @@
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 from .atlasvibe_instruction import ATLASVIBE_INSTRUCTION
 from .plotly_utils import data_container_to_plotly
 from .data_container import DataContainer, Plotly, String, Bytes

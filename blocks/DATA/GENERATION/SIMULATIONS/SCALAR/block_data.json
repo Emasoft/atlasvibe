@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Return a single Scalar value.",
+    "long_description": "",
     "parameters": [
       {
         "name": "value",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "c: return the value being set in Parameters"
       }

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "The VECTOR_MIN node returns the minimum value from the Vector",
+    "long_description": "",
     "parameters": [
       {
         "name": "v",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Scalar",
         "description": "The minimum value found from the input vector"
       }

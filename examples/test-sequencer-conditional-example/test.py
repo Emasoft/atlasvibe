@@ -1,3 +1,11 @@
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 """
 Simple test file to demo how to build conditional tests
 - With pytest, all test files should start with 'test_' to be recognized

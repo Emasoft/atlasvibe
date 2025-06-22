@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : Matrix\n    The input Matrix",
     "short_description": "Return a matrix that is randomly shuffled by the first axis",
+    "long_description": "Inputs\n------\ndefault : Matrix\n    The input Matrix",
     "parameters": [
       {
         "name": "axis",
@@ -11,7 +11,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Matrix",
         "description": "Shuffled input Matrix"
       }

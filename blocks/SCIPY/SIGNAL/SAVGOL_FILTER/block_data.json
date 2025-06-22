@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Apply a Savitzky-Golay filter to an array.\n\n    This is a 1-D filter. If 'x'  has a dimension greater than 1, 'axis' determines the axis along which the filter is applied.",
     "short_description": "The SAVGOL_FILTER node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Apply a Savitzky-Golay filter to an array.\n\n    This is a 1-D filter. If 'x'  has a dimension greater than 1, 'axis' determines the axis along which the filter is applied.",
     "parameters": [
       {
         "name": "x",
@@ -46,7 +46,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

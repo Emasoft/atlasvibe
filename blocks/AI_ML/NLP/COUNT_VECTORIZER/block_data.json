@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Receive a collection of text documents (as a matrix, vector, or dataframe) and convert it into a matrix of token counts.",
+    "long_description": "",
     "parameters": [
       {
         "name": "default",

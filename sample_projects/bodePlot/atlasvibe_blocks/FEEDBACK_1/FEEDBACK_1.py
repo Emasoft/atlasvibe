@@ -1,3 +1,11 @@
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 from typing import Any, Optional
 from pkgs.atlasvibe.atlasvibe.parameter_types import NodeReference
 from pkgs.atlasvibe.atlasvibe.job_result_builder import JobResultBuilder

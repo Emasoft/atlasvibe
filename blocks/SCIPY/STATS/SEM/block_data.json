@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Compute the standard error of the mean.\n\n    Calculate the standard error of the mean (or standard error of measurement) of the values in the input array.",
     "short_description": "The SEM node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Compute the standard error of the mean.\n\n    Calculate the standard error of the mean (or standard error of measurement) of the values in the input array.",
     "parameters": [
       {
         "name": "a",
@@ -26,7 +26,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

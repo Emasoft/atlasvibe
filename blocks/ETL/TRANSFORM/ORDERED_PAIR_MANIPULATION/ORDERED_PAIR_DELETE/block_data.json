@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Deletes from both x and y axes.",
     "short_description": "Returns an OrderedPair with elements deleted from requested indices.",
+    "long_description": "Deletes from both x and y axes.",
     "parameters": [
       {
         "name": "default",
@@ -21,7 +21,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "OrderedPair",
         "description": "The new OrderedPair with element(s) deleted from the input OrderedPair"
       }

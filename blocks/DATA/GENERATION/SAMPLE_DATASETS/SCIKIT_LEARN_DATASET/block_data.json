@@ -1,17 +1,17 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Retrieve a pandas DataFrame from the scikit-learn sample datasets.",
+    "long_description": "",
     "parameters": [
       {
         "name": "dataset_name",
         "type": "str",
-        "description": null
+        "description": ""
       }
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "A DataContainer object containing the retrieved pandas DataFrame."
       }

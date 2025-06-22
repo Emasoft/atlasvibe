@@ -1,3 +1,11 @@
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.
+
 """
 This module provides a decorator that allows a function to be executed in a virtual environment.
 The decorator will create a virtual environment if it does not exist, and install the pip dependencies

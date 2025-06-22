@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "",
     "short_description": "Generate a timeseries with random y values between two dates.",
+    "long_description": "",
     "parameters": [
       {
         "name": "start_date",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "m: the resulting timeseries"
       }

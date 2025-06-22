@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The DataContainer input type must be a dataframe, and the first column (or index) of the dataframe must be of a datetime type.\n\nThis node always returns a DataContainer of a dataframe type. It will also always return an 'extra' field with a key 'prophet' of which the value is the JSONified Prophet model.\nThis model can be loaded as follows:",
     "short_description": "Run a Prophet time series prediction model on an incoming dataframe.",
+    "long_description": "The DataContainer input type must be a dataframe, and the first column (or index) of the dataframe must be of a datetime type.\n\nThis node always returns a DataContainer of a dataframe type. It will also always return an 'extra' field with a key 'prophet' of which the value is the JSONified Prophet model.\nThis model can be loaded as follows:",
     "parameters": [
       {
         "name": "run_forecast",
@@ -16,12 +16,12 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataFrame",
         "description": "With parameter as df.\nIndicates either the original df passed in, or the forecasted df\n(depending on if run_forecast is True)."
       },
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "With parameter as 'extra'.\nContains keys run_forecast which correspond to the input parameter,\nand potentially 'original' in the event that run_forecast is True."
       }

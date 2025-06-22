@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "We are planning to add support for more DataContainer types in the future.\n\nIt then enqueues nodes connected with a \"true\" or \"false\" output based on the comparison result.",
     "short_description": "Compare two given Scalar inputs.",
+    "long_description": "We are planning to add support for more DataContainer types in the future.\n\nIt then enqueues nodes connected with a \"true\" or \"false\" output based on the comparison result.",
     "parameters": [
       {
         "name": "operator_type",

@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "The description of that function is as follows:\n\n    Compute the eigenvalues and right eigenvectors of a square array.",
     "short_description": "The EIG node is based on a numpy or scipy function.",
+    "long_description": "The description of that function is as follows:\n\n    Compute the eigenvalues and right eigenvectors of a square array.",
     "parameters": [
       {
         "name": "select_return",
@@ -16,7 +16,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "DataContainer",
         "description": "type 'ordered pair', 'scalar', or 'matrix'"
       }

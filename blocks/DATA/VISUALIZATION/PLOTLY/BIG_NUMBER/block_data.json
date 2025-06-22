@@ -1,7 +1,7 @@
 {
   "docstring": {
-    "long_description": "Inputs\n------\ndefault : OrderedPair|Scalar|Vector\n    the DataContainer to be visualized",
     "short_description": "Generate a Plotly figure, displaying a big number with an optional prefix and suffix.",
+    "long_description": "Inputs\n------\ndefault : OrderedPair|Scalar|Vector\n    the DataContainer to be visualized",
     "parameters": [
       {
         "name": "relative_delta",
@@ -36,7 +36,7 @@
     ],
     "returns": [
       {
-        "name": null,
+        "name": "",
         "type": "Plotly",
         "description": "the DataContainer containing the Plotly big number visualization"
       }
