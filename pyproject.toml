@@ -117,6 +117,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "skip: marks tests to skip",
     "xfail: marks tests as expected to fail",
+    "asyncio: marks tests as async",
 ]
 # To run all tests including slow ones: pytest --runslow
 # To run xfail tests: pytest --runxfail
