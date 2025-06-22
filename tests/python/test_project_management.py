@@ -7,11 +7,11 @@ import os
 from unittest.mock import MagicMock
 from pathlib import Path
 
-from tests.python import constants  # Updated to absolute import
-from tests.python.mocks import (
+from . import constants  # Relative import
+from .mocks import (
     MockProjectService,
     MockBlockService,
-)  # Updated to absolute import
+)  # Relative import
 
 
 # --- Test Fixtures ---
