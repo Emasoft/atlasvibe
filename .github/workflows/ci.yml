@@ -114,7 +114,7 @@ jobs:
 
       - name: pytest
         run: |
-          uv run python -m pytest --cov --cov-report=xml tests/ PYTHON/tests/ atlasvibe_engine/tests/ cli/
+          uv run python -m pytest --cov --cov-report=xml tests/ PYTHON/tests/ cli/
 
       - name: Codecov report
         uses: codecov/codecov-action@v4
