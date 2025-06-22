@@ -127,12 +127,12 @@ After commit and pushing the project to github, always check if the push passed 
 Wait few seconds, according to the average time needed for the lint and tests to run, then use the following commands to retrieve the last logs of the last actions:
 ```
 gh run list --limit <..max number of recent actions logs to list...>
-gh run view <... run number ...> --log
+gh run view <... run number ...> --log-failed
 ```
 Example:
 ```
 > gh run list --limit 10
-> mkdir -p ./logs && gh run view 15801201757 --log > ./logs/15801201757.log
+> mkdir -p ./logs && gh run view 15801201757 --log-failed > ./logs/15801201757.log
 etc..
 
 ```

@@ -9,8 +9,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 import numpy as np
-
-import scipy.signal
+from scipy.interpolate import BSpline
 
 
 @atlasvibe
@@ -35,9 +34,16 @@ def CUBIC(
         type 'ordered pair', 'scalar', or 'matrix'
     """
 
-    result = scipy.signal.cubic(
-        x=default.y,
-    )
+    # Create a centered cubic B-spline basis element to match the old scipy.signal.cubic behavior
+    # cubic(x) is equivalent to bspline(x, 3)
+    x = default.y
+    n = 3  # cubic
+    # Create knots for a centered B-spline
+    knots = np.arange(-(n + 1) / 2, (n + 1) / 2 + 1)
+    # Create the B-spline basis element
+    basis = BSpline.basis_element(knots)
+    # Evaluate at the shifted points
+    result = basis(x + (n + 1) / 2)
 
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)

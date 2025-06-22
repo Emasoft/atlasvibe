@@ -12,7 +12,7 @@ from typing import Literal, Optional
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import DataContainer, Scalar, Vector
-from IPython.display import display
+# from IPython.display import display  # Not needed for block functionality
 
 
 @atlasvibe
@@ -84,18 +84,18 @@ def RAND(
     return Scalar(c=float(y[0]))
 
 
-@display
+# @display
 def OVERLOAD(size, lower_bound, upper_bound, distribution="uniform") -> None:
     return None
 
 
-@display
+# @display
 def OVERLOAD(  # noqa: F811
     size, normal_mean, normal_standard_deviation, distribution="normal"
 ) -> None:
     return None
 
 
-@display
+# @display
 def OVERLOAD(size, poisson_events, distribution="poisson") -> None:  # noqa: F811
     return None

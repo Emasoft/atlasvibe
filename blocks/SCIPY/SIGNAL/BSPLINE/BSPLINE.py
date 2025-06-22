@@ -7,7 +7,7 @@
 # See the LICENSE file for details.
 
 import numpy as np
-import scipy.signal
+from scipy.interpolate import BSpline
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import Matrix, OrderedPair, Scalar
 
@@ -36,10 +36,15 @@ def BSPLINE(
         type 'ordered pair', 'scalar', or 'matrix'
     """
 
-    result = scipy.signal.bspline(
-        x=default.y,
-        n=n,
-    )
+    # Create a centered B-spline basis element to match the old scipy.signal.bspline behavior
+    # The old function evaluated y_i = B^n(x_i + (n+1)/2)
+    x = default.y
+    # Create knots for a centered B-spline
+    knots = np.arange(-(n + 1) / 2, (n + 1) / 2 + 1)
+    # Create the B-spline basis element
+    basis = BSpline.basis_element(knots)
+    # Evaluate at the shifted points
+    result = basis(x + (n + 1) / 2)
 
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)

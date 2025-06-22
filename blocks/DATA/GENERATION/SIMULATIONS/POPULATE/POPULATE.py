@@ -12,7 +12,7 @@ from typing import Literal
 import numpy as np
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Vector
-from IPython.display import display
+# from IPython.display import display  # Not needed for block functionality
 
 
 @atlasvibe
@@ -81,18 +81,18 @@ def POPULATE(
     return OrderedPair(x=x, y=y)
 
 
-@display
+# @display
 def OVERLOAD(lower_bound, upper_bound, distribution="uniform") -> None:
     return None
 
 
-@display
+# @display
 def OVERLOAD(  # noqa: F811
     normal_mean, normal_standard_deviation, distribution="normal"
 ) -> None:
     return None
 
 
-@display
+# @display
 def OVERLOAD(poisson_events, distribution="poisson") -> None:  # noqa: F811
     return None

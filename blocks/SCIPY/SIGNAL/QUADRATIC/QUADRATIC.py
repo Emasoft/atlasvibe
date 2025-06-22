@@ -9,8 +9,7 @@
 from pkgs.atlasvibe.atlasvibe.atlasvibe_python import atlasvibe
 from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix, Scalar
 import numpy as np
-
-import scipy.signal
+from scipy.interpolate import BSpline
 
 
 @atlasvibe
@@ -36,9 +35,16 @@ def QUADRATIC(
         type 'ordered pair', 'scalar', or 'matrix'
     """
 
-    result = scipy.signal.quadratic(
-        x=default.y,
-    )
+    # Create a centered quadratic B-spline basis element to match the old scipy.signal.quadratic behavior
+    # quadratic(x) is equivalent to bspline(x, 2)
+    x = default.y
+    n = 2  # quadratic
+    # Create knots for a centered B-spline
+    knots = np.arange(-(n + 1) / 2, (n + 1) / 2 + 1)
+    # Create the B-spline basis element
+    basis = BSpline.basis_element(knots)
+    # Evaluate at the shifted points
+    result = basis(x + (n + 1) / 2)
 
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)

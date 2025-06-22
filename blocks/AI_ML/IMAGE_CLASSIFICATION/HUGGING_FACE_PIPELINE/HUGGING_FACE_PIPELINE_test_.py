@@ -9,8 +9,22 @@ from PIL import Image as PIL_Image
 
 try:
     import transformers
+
+    # Transformers requires either PyTorch or TensorFlow
+    try:
+        import torch  # noqa: F401
+
+        has_backend = True
+    except ImportError:
+        try:
+            import tensorflow  # noqa: F401
+
+            has_backend = True
+        except ImportError:
+            has_backend = False
 except ImportError:
     transformers = None
+    has_backend = False
 
 
 @pytest.fixture
@@ -25,8 +39,8 @@ def ada_lovelace_array_rgb():
 
 
 @pytest.mark.skipif(
-    transformers is None,
-    reason="HUGGING_FACE_PIPELINE requires transformers to be installed | Ignore this test in CI",
+    transformers is None or not has_backend,
+    reason="HUGGING_FACE_PIPELINE requires transformers and either PyTorch or TensorFlow | Ignore this test in CI",
 )
 def test_HUGGING_FACE_PIPELINE_default(
     mock_atlasvibe_decorator,
@@ -70,8 +84,8 @@ def test_HUGGING_FACE_PIPELINE_default(
 )
 @pytest.mark.slow
 @pytest.mark.skipif(
-    transformers is None,
-    reason="HUGGING_FACE_PIPELINE requires transformers to be installed | Ignore this test in CI",
+    transformers is None or not has_backend,
+    reason="HUGGING_FACE_PIPELINE requires transformers and either PyTorch or TensorFlow | Ignore this test in CI",
 )
 def test_HUGGING_FACE_PIPELINE_common_model_and_revisions(
     mock_atlasvibe_decorator,
