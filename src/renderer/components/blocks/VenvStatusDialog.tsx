@@ -37,7 +37,6 @@ import {
   Loader2,
   Info,
   Bug,
-  Download,
 } from "lucide-react";
 import { getVenvStatus, getVenvLogs, regenerateVenv } from "@/renderer/lib/api";
 import { format } from "date-fns";
@@ -47,7 +46,6 @@ import {
   VenvStatus,
   VenvLog,
   CheckStatus,
-  CheckResult,
 } from "@/renderer/types/venv";
 
 interface VenvStatusDialogProps {
@@ -73,7 +71,7 @@ export const VenvStatusDialog = ({
     if (open) {
       loadData();
     }
-  }, [open, blockPath]);
+  }, [open, blockPath, loadData]);
 
   const loadData = async () => {
     setIsLoading(true);

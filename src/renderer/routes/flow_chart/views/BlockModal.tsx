@@ -37,7 +37,6 @@ import { Button } from "@/renderer/components/ui/button";
 import useWithPermission from "@/renderer/hooks/useWithPermission";
 // import { env } from "@/env"; // Vite handles env vars via import.meta.env
 import { useBlockStatus } from "@/renderer/hooks/useBlockStatus";
-import { toast } from "sonner";
 
 const jsonTheme = {
   scheme: "atlasvibe",

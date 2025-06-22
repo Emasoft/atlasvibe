@@ -15,15 +15,13 @@
 //
 
 import { Node, XYPosition } from 'reactflow';
-import { v4 as uuidv4 } from 'uuid';
 import { BlockDefinition } from '@/renderer/types/manifest';
 import { BlockData } from '@/renderer/stores/project';
 import { DeviceInfo } from '@/renderer/types/hardware';
 import {
   createBlockId,
   createBlockLabel,
-  ctrlsFromParams,
-  addRandomPositionOffset
+  ctrlsFromParams
 } from '@/renderer/lib/block';
 
 export interface CreateNodeOptions {

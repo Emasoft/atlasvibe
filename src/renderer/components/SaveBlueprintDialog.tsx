@@ -46,7 +46,6 @@ const VALID_NAME_PATTERN = /^[A-Za-z][A-Za-z_]*$/;
 export function SaveBlueprintDialog({
   open,
   onOpenChange,
-  blockId,
   blockPath,
   defaultName = "",
   existingBlueprints = [],
@@ -55,7 +54,6 @@ export function SaveBlueprintDialog({
   const [nameError, setNameError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewName, setPreviewName] = useState("");
   const [nameCollision, setNameCollision] = useState(false);
 
   // Reset state when dialog opens/closes
@@ -64,7 +62,6 @@ export function SaveBlueprintDialog({
       setBlueprintName(defaultName);
       setNameError("");
       setShowPreview(false);
-      setPreviewName("");
       setNameCollision(false);
     }
   }, [open, defaultName]);
@@ -108,7 +105,6 @@ export function SaveBlueprintDialog({
   const handleNameChange = (value: string) => {
     setBlueprintName(value);
     setShowPreview(false);
-    setPreviewName("");
 
     const error = validateName(value);
     setNameError(error);
@@ -126,7 +122,6 @@ export function SaveBlueprintDialog({
     // First click: show preview if name needs cleaning
     if (!showPreview && blueprintName !== cleanName(blueprintName)) {
       const cleaned = cleanName(blueprintName);
-      setPreviewName(cleaned);
       setShowPreview(true);
       setBlueprintName(cleaned);
 
@@ -178,9 +173,9 @@ export function SaveBlueprintDialog({
 
       onOpenChange(false);
       toast.success(`Blueprint "${blueprintName}" saved successfully`);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Save blueprint error:", error);
-      toast.error(`Failed to save blueprint: ${error.message}`);
+      toast.error(`Failed to save blueprint: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }

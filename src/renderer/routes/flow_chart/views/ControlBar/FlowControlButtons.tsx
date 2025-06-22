@@ -21,7 +21,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/renderer/stores/settings";
 import { runFlowchart, cancelFlowchartRun } from "@/renderer/lib/api";
 import { useSocketStore } from "@/renderer/stores/socket";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useManifestStore } from "@/renderer/stores/manifest";
 import { ExecutionStatus } from "@/renderer/components/ExecutionStatus";
 
@@ -60,7 +60,7 @@ const FlowControlButtons = () => {
     serverStatus === ServerStatus.OFFLINE ||
     hasRegeneratingBlocks;
 
-  const onRun = async () => {
+  const onRun = useCallback(async () => {
     if (nodes.length === 0) {
       toast.info(
         "There is no program to send to server. \n Please add at least one node first.",
@@ -90,7 +90,7 @@ const FlowControlButtons = () => {
           description: e.message,
         }),
     );
-  };
+  }, [nodes, socketId, vizNodes, backendSettings, resetNodeParamChanged]);
 
   const watch = watchMode.value;
   useEffect(() => {
@@ -98,7 +98,7 @@ const FlowControlButtons = () => {
       cancelFlowchartRun(socketId);
       onRun();
     }
-  }, [nodeParamChanged, watch]);
+  }, [nodeParamChanged, watch, socketId, onRun]);
 
   useKeyboardShortcut("ctrl", "p", onRun);
   useKeyboardShortcut("meta", "p", onRun);

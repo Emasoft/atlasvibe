@@ -72,7 +72,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 2 # Need previous commit for comparison
+        fetch-depth: 0 # Need full history to check commit ranges
 
     - name: Install Gitleaks
       run: |

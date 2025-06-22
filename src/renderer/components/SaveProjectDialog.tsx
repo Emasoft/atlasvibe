@@ -51,10 +51,8 @@ export function SaveProjectDialog({
   const [projectName, setProjectName] = useState(defaultName);
   const [folderPath, setFolderPath] = useState("");
   const [nameError, setNameError] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewName, setPreviewName] = useState("");
   const [nameCollision, setNameCollision] = useState(false);
 
   // Reset state when dialog opens/closes
@@ -64,7 +62,6 @@ export function SaveProjectDialog({
       setFolderPath("");
       setNameError("");
       setShowPreview(false);
-      setPreviewName("");
       setNameCollision(false);
     }
   }, [open, defaultName]);
@@ -108,7 +105,6 @@ export function SaveProjectDialog({
   const handleNameChange = (value: string) => {
     setProjectName(value);
     setShowPreview(false);
-    setPreviewName("");
 
     const error = validateName(value);
     setNameError(error);
@@ -139,7 +135,6 @@ export function SaveProjectDialog({
     // First click: show preview if name needs cleaning
     if (!showPreview && projectName !== cleanName(projectName)) {
       const cleaned = cleanName(projectName);
-      setPreviewName(cleaned);
       setShowPreview(true);
       setProjectName(cleaned);
 

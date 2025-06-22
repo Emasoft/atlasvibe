@@ -23,9 +23,9 @@ import { BlockData } from '@/renderer/stores/project';
 // Mock the block utility functions
 vi.mock('@/renderer/lib/block', () => ({
   createBlockId: vi.fn((func: string) => `${func}-${Date.now()}`),
-  createBlockLabel: vi.fn((func: string, taken: any[]) => `${func} ${taken.length + 1}`),
-  ctrlsFromParams: vi.fn((params: any) => params || {}),
-  addRandomPositionOffset: vi.fn((pos: any) => pos),
+  createBlockLabel: vi.fn((func: string, taken: RegExpMatchArray[]) => `${func} ${taken.length + 1}`),
+  ctrlsFromParams: vi.fn((params: Record<string, unknown>) => params || {}),
+  addRandomPositionOffset: vi.fn((pos: { x: number; y: number }) => pos),
 }));
 
 describe('Node Factory', () => {

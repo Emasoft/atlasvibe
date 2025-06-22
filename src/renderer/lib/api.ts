@@ -26,7 +26,6 @@ import { Options } from "ky";
 import { DeviceInfo } from "@/renderer/types/hardware";
 import {
   TestDiscoverContainer,
-  TestSequenceContainer,
 } from "@/renderer/types/test-sequencer";
 import { useProjectStore } from "@/renderer/stores/project";
 import {

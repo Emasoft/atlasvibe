@@ -15,7 +15,6 @@
 //
 
 import { useState } from "react";
-import { toast } from "sonner";
 import useWithPermission from "./useWithPermission";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useShallow } from "zustand/react/shallow";

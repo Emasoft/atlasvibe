@@ -50,12 +50,12 @@ export const AuthContextProvider = ({
   const authenticateUser = useCallback(() => {
     // Skip authentication, always use default user
     setUser(defaultUser);
-  }, []);
+  }, [defaultUser]);
 
   const refreshUsers = useCallback(async () => {
     // Skip fetching users from API
     setUsers([defaultUser]);
-  }, []);
+  }, [defaultUser]);
 
   useEffect(() => {
     refreshUsers();

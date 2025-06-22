@@ -114,7 +114,7 @@ export interface ExtendedWindowApi {
   // Project migration
   checkProjectMigration: (
     projectPath: string,
-    projectData?: any,
+    projectData?: unknown,
   ) => Promise<{
     needs_migration: boolean;
     message?: string;
@@ -126,7 +126,7 @@ export interface ExtendedWindowApi {
     needs_migration: boolean;
     migrated?: boolean;
     created_blocks?: string[];
-    project_data?: any;
+    project_data?: unknown;
     message?: string;
   }>;
 }
@@ -246,9 +246,9 @@ const extendedApi: ExtendedWindowApi = {
     ipcRenderer.invoke(API.setUserProfilePassword, username, password),
   validatePassword: (username: string, password: string) =>
     ipcRenderer.invoke(API.validatePassword, username, password),
-  createUserProfile: (user: any) =>
+  createUserProfile: (user: unknown) =>
     ipcRenderer.invoke(API.createUserProfile, user),
-  deleteUserProfile: (username: string, currentUser: any) =>
+  deleteUserProfile: (username: string, currentUser: unknown) =>
     ipcRenderer.invoke(API.deleteUserProfile, username, currentUser),
 
   // Block operations

@@ -50,7 +50,7 @@ const useKeyboardShortcut = (
           break;
       }
     },
-    [shortcut],
+    [shortcut, modifier],
   );
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const useKeyboardShortcut = (
     return () => {
       document.removeEventListener("keydown", handleShortcut);
     };
-  }, []);
+  }, [handleShortcut]);
 };
 
 export default useKeyboardShortcut;

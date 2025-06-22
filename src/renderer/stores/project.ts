@@ -45,10 +45,7 @@ import {
   useMetadata,
 } from "@/renderer/stores/manifest";
 import {
-  createBlockId,
-  createBlockLabel,
   addRandomPositionOffset,
-  ctrlsFromParams,
 } from "@/renderer/lib/block";
 import { filterMap } from "@/renderer/utils/array";
 import { getEdgeTypes, isCompatibleType } from "@/renderer/lib/type-check";

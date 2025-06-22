@@ -31,10 +31,9 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({ className }) =
   const [status, setStatus] = useState<ExecutionStatusType>("idle");
   const [pauseReason, setPauseReason] = useState<string>("");
 
-  const { isRunning, serverStatus } = useSocketStore(
+  const { isRunning } = useSocketStore(
     useShallow((state) => ({
       isRunning: state.isRunning,
-      serverStatus: state.serverStatus,
     }))
   );
 

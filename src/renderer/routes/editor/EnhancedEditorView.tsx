@@ -52,11 +52,6 @@ import {
 } from "@/renderer/lib/api";
 import { useProjectStore } from "@/renderer/stores/project";
 import { useManifestStore } from "@/renderer/stores/manifest";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/renderer/components/ui/alert";
 import { ScrollArea } from "@/renderer/components/ui/scroll-area";
 import { cn } from "@/renderer/lib/utils";
 import { debounce } from "lodash";
@@ -101,7 +96,7 @@ const EnhancedEditorView = () => {
   const [venvStatus, setVenvStatus] = useState<VenvStatus | null>(null);
   const [isFormattingCode, setIsFormattingCode] = useState<boolean>(false);
 
-  const loadFile = async () => {
+  const loadFile = useCallback(async () => {
     const res = await window.api.loadFileFromFullPath(fullPath);
     setValue(res);
 
@@ -115,7 +110,7 @@ const EnhancedEditorView = () => {
       await validateCurrentCode(res);
       await loadVenvStatus();
     }
-  };
+  }, [fullPath]);
 
   const saveFile = async () => {
     const res = await window.api.saveFileToFullPath(fullPath, value);
@@ -171,8 +166,8 @@ const EnhancedEditorView = () => {
       );
 
       if (result.isOk()) {
-        const validationResult = result.value as { errors: any[] };
-        const validationErrors = validationResult.errors.map((err: any) => ({
+        const validationResult = result.value as { errors: ValidationError[] };
+        const validationErrors = validationResult.errors.map((err: ValidationError) => ({
           ...err,
           severity: err.severity as "error" | "warning" | "info",
         }));
@@ -231,10 +226,11 @@ const EnhancedEditorView = () => {
   // Debounced validation
   const debouncedValidate = useMemo(
     () => debounce((code: string) => validateCurrentCode(code), 500),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isCustomBlock],
   );
 
-  const handleChange = (value: string, viewUpdate: ViewUpdate) => {
+  const handleChange = (value: string) => {
     setValue(value);
     setHasChanged(true);
 
@@ -291,8 +287,14 @@ const EnhancedEditorView = () => {
       if (result.isOk()) {
         return {
           from: context.pos - (context.matchBefore(/\w*/)?.text.length || 0),
-          options: (result.value as { completions: any[] }).completions.map(
-            (comp: any) => ({
+          options: (result.value as { completions: Array<{
+            label: string;
+            kind: string;
+            detail?: string;
+            documentation?: string;
+            insertText?: string;
+          }> }).completions.map(
+            (comp) => ({
               label: comp.label,
               type: comp.kind,
               detail: comp.detail,
@@ -311,7 +313,7 @@ const EnhancedEditorView = () => {
 
   useEffect(() => {
     loadFile();
-  }, []);
+  }, [loadFile]);
 
   useKeyboardShortcut("ctrl", "s", () => saveFile());
   useKeyboardShortcut("meta", "s", () => saveFile());
@@ -330,11 +332,11 @@ const EnhancedEditorView = () => {
       keymap.of([...defaultKeymap, ...completionKeymap]),
       CMEditorView.updateListener.of((update: ViewUpdate) => {
         if (update.docChanged) {
-          handleChange(update.state.doc.toString(), update);
+          handleChange(update.state.doc.toString());
         }
       }),
     ],
-    [enhancedPythonLinter],
+    [enhancedPythonLinter, handleChange],
   );
 
   const errorCount = errors.filter((e) => e.severity === "error").length;

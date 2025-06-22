@@ -28,12 +28,16 @@ export interface ProjectMigrationResult {
  * Migrates project files to the latest format
  * Ensures custom blocks have proper path references
  */
-export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
-  // Detect version (old projects don't have version field)
-  const version = projectData.version || '1.0.0';
+export function migrateProjectFormat(projectData: unknown): ProjectMigrationResult {
+  // Type guard to ensure projectData is an object
+  if (!projectData || typeof projectData !== 'object') {
+    throw new Error('Invalid project data');
+  }
+
+  const data = projectData as Record<string, unknown>;
 
   let migrated = false;
-  const project = { ...projectData };
+  const project = { ...data } as Record<string, unknown>;
 
   // Migrate from v1 to v2 format (add custom block support)
   if (!project.version || project.version === '1.0.0') {
@@ -66,7 +70,7 @@ export function migrateProjectFormat(projectData: any): ProjectMigrationResult {
 
   return {
     project: project as Project,
-    version: project.version || '2.0.0',
+    version: (project.version as string) || '2.0.0',
     migrated,
   };
 }
@@ -95,9 +99,7 @@ export function validateProjectReferences(project: Project): string[] {
  * Updates custom block references when project is moved or renamed
  */
 export function updateCustomBlockPaths(
-  project: Project,
-  oldProjectPath: string,
-  newProjectPath: string
+  project: Project
 ): Project {
   // Since paths are relative to the project directory,
   // they don't need updating when the project moves

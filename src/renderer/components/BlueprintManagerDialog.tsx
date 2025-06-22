@@ -86,7 +86,7 @@ export function BlueprintManagerDialog({
       const blueprintList = extractBlueprints(manifest);
       setBlueprints(blueprintList.sort((a, b) => a.name.localeCompare(b.name)));
     }
-  }, [manifest, open]);
+  }, [manifest, open, extractBlueprints]);
 
   // Validate name
   const validateName = (name: string): string => {

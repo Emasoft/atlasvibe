@@ -30,7 +30,7 @@ global.window = {
     createCustomBlockFromBlueprint: vi.fn(),
   },
   prompt: vi.fn(),
-} as any;
+} as unknown as Window & typeof globalThis;
 
 describe('Project Store - Custom Block References', () => {
   beforeEach(() => {
@@ -104,7 +104,7 @@ describe('Project Store - Custom Block References', () => {
       });
 
       let savedContent: string = '';
-      (window.api.saveFile as any).mockImplementation((path: string, content: string) => {
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
         savedContent = content;
         return Promise.resolve();
       });
@@ -118,7 +118,7 @@ describe('Project Store - Custom Block References', () => {
         expect.any(String)
       );
 
-      const savedProject = JSON.parse(savedContent) as any;
+      const savedProject = JSON.parse(savedContent) as Project;
 
       // Check that custom block has path reference
       const savedCustomBlock = savedProject.rfInstance.nodes.find(n => n.id === 'custom-1');
@@ -175,11 +175,11 @@ describe('Project Store - Custom Block References', () => {
       });
 
       let savedContent: string = '';
-      (window.api.saveFileAs as any).mockResolvedValue({
+      (window.api.saveFileAs as ReturnType<typeof vi.fn>).mockResolvedValue({
         filePath: '/path/to/multi-custom.atlasvibe',
         canceled: false,
       });
-      (window.api.saveFile as any).mockImplementation((path: string, content: string) => {
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
         savedContent = content;
         return Promise.resolve();
       });
@@ -188,7 +188,7 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject = JSON.parse(savedContent) as any;
+      const savedProject = JSON.parse(savedContent) as Project;
 
       // Each custom block should have its unique path
       savedProject.rfInstance.nodes.forEach((node, index) => {
@@ -262,7 +262,7 @@ describe('Project Store - Custom Block References', () => {
       });
 
       let savedContent: string = '';
-      (window.api.saveFile as any).mockImplementation((path: string, content: string) => {
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
         savedContent = content;
         return Promise.resolve();
       });
@@ -272,11 +272,11 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject = JSON.parse(savedContent) as any;
+      const savedProject = JSON.parse(savedContent) as Project;
       expect(savedProject.name).toBe(projectName);
 
       // Check structure
-      expect((savedProject as any).version).toBeDefined();
+      expect(savedProject.version).toBeDefined();
       expect(savedProject).toHaveProperty('rfInstance');
       expect(savedProject.rfInstance).toHaveProperty('nodes');
       expect(savedProject.rfInstance).toHaveProperty('edges');
@@ -313,7 +313,7 @@ describe('Project Store - Custom Block References', () => {
       });
 
       let savedContent: string = '';
-      (window.api.saveFile as any).mockImplementation((path: string, content: string) => {
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
         savedContent = content;
         return Promise.resolve();
       });
@@ -323,7 +323,7 @@ describe('Project Store - Custom Block References', () => {
       await result.current.saveProject();
 
       // Assert
-      const savedProject = JSON.parse(savedContent) as any;
+      const savedProject = JSON.parse(savedContent) as Project;
 
       // No custom blocks should have path or isCustom
       savedProject.rfInstance.nodes.forEach(node => {
