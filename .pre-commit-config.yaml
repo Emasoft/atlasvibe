@@ -9,6 +9,7 @@ repos:
     entry: /Users/emanuelesabetta/go/bin/yamlfmt
     language: system
     types: [yaml]
+    files: '^\.github/.*\.(yml|yaml)$'  # Only format GitHub workflow files
   - id: yamllint
     name: Lint YAML files with yamllint
     entry: uv run yamllint

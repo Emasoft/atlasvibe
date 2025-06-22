@@ -1,4 +1,6 @@
 # .yamlfmt
+# Configuration for GitHub Actions workflow files ONLY
+# Do not use this configuration for other YAML files in the project
 formatter:
   indent: 2 # Use 2-space indentation (standard in GitHub workflows)
   retain_line_breaks: true # Preserve existing blank lines between blocks
