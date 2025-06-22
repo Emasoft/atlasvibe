@@ -106,7 +106,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
+          script: |-
             const title = '🚨 Security: Potential secrets detected in commit ${{ github.sha }}';
             const body = `
             ## Security Alert

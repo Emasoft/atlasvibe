@@ -1,0 +1,11 @@
+# .yamlfmt
+formatter:
+  type: basic
+  indent: 2 # GitHub Actions convention: 2 spaces
+  line_ending: lf
+  include_document_start: false # Don't add `---` at the top
+  retain_line_breaks: true # Preserve user-intentional line breaks
+  disallow_anchors: false # Allow YAML anchors
+  max_line_length: 120 # Avoid wrapping unless lines are really long
+  scan_folded_as_literal: false
+  trim_trailing_whitespace: true # Clean up messy trailing whitespace

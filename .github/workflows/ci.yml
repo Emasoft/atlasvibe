@@ -138,5 +138,5 @@ jobs:
           uv lock --check
 
       - name: Verify dependencies
-        run: |
+        run: |-
           uv pip check || true

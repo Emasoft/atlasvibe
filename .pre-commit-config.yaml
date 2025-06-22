@@ -1,9 +1,14 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-  # YAML and GitHub Actions linting
+  # YAML formatting and linting
   - repo: local
     hooks:
+      - id: yamlfmt
+        name: Format YAML files with yamlfmt
+        entry: /Users/emanuelesabetta/go/bin/yamlfmt
+        language: system
+        types: [yaml]
       - id: yamllint
         name: Lint YAML files with yamllint
         entry: uv run yamllint
