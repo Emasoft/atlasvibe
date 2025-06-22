@@ -14,12 +14,7 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
-  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  AZURE_CERT_NAME: ${{ secrets.AZURE_CERT_NAME }}
+# Environment variables removed - no Azure credentials needed
 
 jobs:
   # Run pre-commit checks before building
@@ -127,10 +122,7 @@ jobs:
       - name: Install Node Dependencies
         run: pnpm install
 
-      - name: Install Azure Signing Tool (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          dotnet tool install --global AzureSignTool
+      # Azure SignTool not needed - no code signing
 
       - name: Build/release Electron app
         uses: atlasvibe-ai/action-electron-builder@main
@@ -141,11 +133,4 @@ jobs:
           release: true
           skip_install: true
           skip_build: true
-          mac_certs: ${{ secrets.mac_certs }}
-          mac_certs_password: ${{ secrets.mac_certs_password }}
-        env:
-          # macOS notarization envs
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # No code signing certificates or notarization credentials needed
