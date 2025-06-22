@@ -1,9 +1,17 @@
 import numpy as np
-import cv2
+import pytest
+
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+
 from PIL import ImageFilter, Image as PILImage
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 
+@pytest.mark.skipif(not CV2_AVAILABLE, reason="OpenCV not installed")
 def test_EDGE_DETECTION(mock_atlasvibe_decorator):
     import EDGE_DETECTION
 

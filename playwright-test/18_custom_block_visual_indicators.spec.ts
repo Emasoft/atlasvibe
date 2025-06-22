@@ -98,7 +98,7 @@ test.describe("Custom block visual indicators", () => {
       .first();
 
     // Check for different styling
-    const blueprintClasses = await blueprintBlock.getAttribute("class");
+    await blueprintBlock.getAttribute("class");
     const customClasses = await customBlock.getAttribute("class");
 
     // Custom blocks should have additional classes
@@ -230,8 +230,8 @@ test.describe("Custom block visual indicators", () => {
     expect(customMenuItems).toContain("Edit Python Code");
 
     // Custom blocks might have additional options
-    const hasRename = customMenuItems.some((item) => item.includes("Rename"));
-    const hasExport = customMenuItems.some((item) => item.includes("Export"));
+    customMenuItems.some((item) => item.includes("Rename"));
+    customMenuItems.some((item) => item.includes("Export"));
 
     console.log("Blueprint menu:", blueprintMenuItems);
     console.log("Custom menu:", customMenuItems);

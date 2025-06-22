@@ -37,6 +37,32 @@ import { join } from "path";
 import * as fs from "fs";
 import * as path from "path";
 
+interface ProjectNode {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: {
+    id: string;
+    label: string;
+    func: string;
+    type: string;
+    path?: string;
+    isCustom?: boolean;
+    ctrls: Record<string, unknown>;
+    inputs: unknown[];
+    outputs: unknown[];
+  };
+}
+
+interface ProjectData {
+  version?: string;
+  name: string;
+  rfInstance: {
+    nodes: ProjectNode[];
+    edges: unknown[];
+  };
+}
+
 test.describe("Custom block references", () => {
   let window: Page;
   let app: ElectronApplication;
@@ -126,7 +152,7 @@ test.describe("Custom block references", () => {
     expect(projectData.version).toBe("2.0.0");
 
     const customNode = projectData.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR",
+      (n: ProjectNode) => n.data.func === "MY_PROCESSOR",
     );
     expect(customNode).toBeTruthy();
     expect(customNode.data.path).toContain("atlasvibe_blocks/MY_PROCESSOR");
@@ -201,10 +227,10 @@ test.describe("Custom block references", () => {
     const project2Data = JSON.parse(fs.readFileSync(project2Path, "utf-8"));
 
     const customNode1 = project1Data.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR",
+      (n: ProjectNode) => n.data.func === "MY_PROCESSOR",
     );
     const customNode2 = project2Data.rfInstance.nodes.find(
-      (n: any) => n.data.func === "MY_PROCESSOR",
+      (n: ProjectNode) => n.data.func === "MY_PROCESSOR",
     );
 
     // Both should exist and have custom block references
@@ -318,7 +344,7 @@ test.describe("Custom block references", () => {
 
       const updatedData = JSON.parse(fs.readFileSync(project1Path, "utf-8"));
       const renamedNode = updatedData.rfInstance.nodes.find(
-        (n: any) => n.data.func === "RENAMED_PROCESSOR",
+        (n: ProjectNode) => n.data.func === "RENAMED_PROCESSOR",
       );
       expect(renamedNode).toBeTruthy();
       expect(renamedNode.data.path).toContain("RENAMED_PROCESSOR");
@@ -409,7 +435,7 @@ test.describe("Custom block references", () => {
       // Verify they're marked as custom/project blocks
       for (let i = 0; i < blockCount; i++) {
         const block = projectBlocks.nth(i);
-        const blockText = await block.textContent();
+        await block.textContent();
 
         // Custom blocks might have special styling or badges
         await expect(block).toHaveClass(/custom|project/);

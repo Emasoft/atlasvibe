@@ -10,7 +10,7 @@
 
 import { test, expect, Page } from "@playwright/test";
 import { join } from "path";
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
+import { writeFileSync, mkdirSync, rmSync } from "fs";
 import { tmpdir } from "os";
 
 // Test project setup
@@ -534,7 +534,7 @@ test.describe("Virtual Environment Management", () => {
     }
   });
 
-  test("should handle venv regeneration", async ({ page }) => {
+  test("should handle venv regeneration", async () => {
     // This test would require mocking the backend response
     // or having a real backend running with test data
   });
@@ -567,7 +567,7 @@ test.describe("Edge Cases and Error Recovery", () => {
     await expect(page.locator(".cm-editor")).toBeVisible();
   });
 
-  test("should handle permission errors", async ({ page }) => {
+  test("should handle permission errors", async () => {
     // This would test handling of read-only files
     // Would require setting up a read-only test file
   });

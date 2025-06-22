@@ -81,7 +81,15 @@ jobs:
 
       - name: Run Gitleaks on latest commit
         run: |
-          gitleaks detect --config .gitleaks.toml --log-opts="${{ github.event.before }}..${{ github.sha }}" --verbose
+          # Check if the before commit exists
+          if git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
+            echo "Running Gitleaks on commit range: ${{ github.event.before }}..${{ github.sha }}"
+            gitleaks detect --config .gitleaks.toml --log-opts="${{ github.event.before }}..${{ github.sha }}" --verbose
+          else
+            echo "Previous commit not found, running on single commit: ${{ github.sha }}"
+            gitleaks detect --config .gitleaks.toml --log-opts="${{ github.sha }}^..${{ github.sha }}" --verbose || \
+            gitleaks detect --config .gitleaks.toml --source . --verbose
+          fi
 
       - name: Create Issue on Failure
         if: failure()

@@ -35,7 +35,6 @@ import {
 import { Selectors } from "./selectors";
 import { join } from "path";
 import * as fs from "fs";
-import * as path from "path";
 
 test.describe("Edit custom block code", () => {
   let window: Page;

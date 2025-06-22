@@ -18,6 +18,7 @@ import {
   writeLogFile,
 } from "./utils";
 import { Selectors } from "./selectors";
+// @ts-expect-error - Importing from src for test purposes
 import { data as appsGallery } from "../src/renderer/utils/gallery";
 import { join } from "path";
 import { readFileSync } from "fs";

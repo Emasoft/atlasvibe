@@ -30,7 +30,7 @@ jobs:
         run: uv sync --locked --all-extras --dev
 
       - name: Check if there is any missing Block component
-        run: uv run python3 fjblock.py sync
+        run: uv run python -m cli.cmd.sync
 
       - name: Check if everything is in sync
         run: |
