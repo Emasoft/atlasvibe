@@ -24,6 +24,10 @@ paths = [
     '''\.pyc$''',
     # Exclude test files and documentation from some checks
     '''PYTHON/WATCH/''',  # External dependencies
+    # GitHub Actions workflow files contain references to secrets, not actual secrets
+    '''\.github/workflows/.*\.(yml|yaml)$''',
+    # Test files may contain example secrets
+    '''captain/tests/test_blocks_error_handling\.py$''',
 ]
 
 # Allow specific patterns

@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - main
+    - main
   pull_request:
     branches:
-      - main
+    - main
 
 env:
   DISPLAY: :0
@@ -16,127 +16,127 @@ jobs:
   python-code-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: ${{ env.UV_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Install Python from uv
-        run: uv python install
+    - name: Install Python from uv
+      run: uv python install
 
-      - name: Check format with Ruff
-        run: uvx ruff format --check .
+    - name: Check format with Ruff
+      run: uvx ruff format --check .
 
   python-code-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: ${{ env.UV_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Install Python from uv
-        run: uv python install
+    - name: Install Python from uv
+      run: uv python install
 
-      - name: Lint with Ruff
-        run: uvx ruff check .
+    - name: Lint with Ruff
+      run: uvx ruff check .
 
   ts-code-style:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+    - uses: pnpm/action-setup@v4
+      name: Install pnpm
+      with:
+        run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
 
-      - uses: actions/cache@v4
-        name: Cache pnpm
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+    - uses: actions/cache@v4
+      name: Cache pnpm
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
-      - name: Install Node Dependencies
-        run: pnpm install
+    - name: Install Node Dependencies
+      run: pnpm install
 
-      - name: Eslint check
-        run: pnpm lint
+    - name: Eslint check
+      run: pnpm lint
 
-      - name: Typescript check
-        run: pnpm exec tsc --noEmit
+    - name: Typescript check
+      run: pnpm exec tsc --noEmit
 
-      - name: Black Prettier check
-        run: pnpm run check
+    - name: Black Prettier check
+      run: pnpm run check
 
   python-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: ${{ env.UV_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Install Python from uv
-        run: uv python install
+    - name: Install Python from uv
+      run: uv python install
 
-      - name: Install Python Dependencies
-        run: uv sync --locked --all-extras --dev
+    - name: Install Python Dependencies
+      run: uv sync --locked --all-extras --dev
 
-      - name: pytest
-        run: |
-          uv run python -m pytest --cov --cov-report=xml tests/ PYTHON/tests/ cli/
+    - name: pytest
+      run: |
+        uv run python -m pytest --cov --cov-report=xml tests/ PYTHON/tests/ cli/
 
-      - name: Codecov report
-        uses: codecov/codecov-action@v4
-        with:
-          flags: python
+    - name: Codecov report
+      uses: codecov/codecov-action@v4
+      with:
+        flags: python
 
   check-lockfile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: ${{ env.UV_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Check if lockfile is up to date
-        run: |
-          uv lock --check
+    - name: Check if lockfile is up to date
+      run: |
+        uv lock --check
 
-      - name: Verify dependencies
-        run: |-
-          uv pip check || true
+    - name: Verify dependencies
+      run: |-
+        uv pip check || true

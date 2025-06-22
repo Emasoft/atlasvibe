@@ -1,139 +1,139 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-  # YAML formatting and linting
-  - repo: local
-    hooks:
-      - id: yamlfmt
-        name: Format YAML files with yamlfmt
-        entry: /Users/emanuelesabetta/go/bin/yamlfmt
-        language: system
-        types: [yaml]
-      - id: yamllint
-        name: Lint YAML files with yamllint
-        entry: uv run yamllint
-        language: system
-        types: [yaml]
-        args: [--strict]
-  # GitHub Actions linting
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
-    hooks:
-      - id: actionlint
-        name: Lint GitHub Actions workflow files
-        entry: actionlint
-        language: system
-        types: [yaml]
-        files: '^\.github/workflows/.*\.(yml|yaml)$'
+# YAML formatting and linting
+- repo: local
+  hooks:
+  - id: yamlfmt
+    name: Format YAML files with yamlfmt
+    entry: /Users/emanuelesabetta/go/bin/yamlfmt
+    language: system
+    types: [yaml]
+  - id: yamllint
+    name: Lint YAML files with yamllint
+    entry: uv run yamllint
+    language: system
+    types: [yaml]
+    args: [--strict]
+# GitHub Actions linting
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
+  hooks:
+  - id: actionlint
+    name: Lint GitHub Actions workflow files
+    entry: actionlint
+    language: system
+    types: [yaml]
+    files: '^\.github/workflows/.*\.(yml|yaml)$'
 
-  # uv for dependency management
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.13
-    hooks:
-      # Ensure uv.lock is up-to-date
-      - id: uv-lock
-        name: Check uv.lock is up-to-date
-        args: [--locked]
+# uv for dependency management
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.7.13
+  hooks:
+  # Ensure uv.lock is up-to-date
+  - id: uv-lock
+    name: Check uv.lock is up-to-date
+    args: [--locked]
 
-      # Export requirements.txt from uv.lock for compatibility
-      - id: uv-export
-        name: Export requirements.txt from uv.lock
-        args: [--frozen, --no-hashes, -o, requirements.txt]
-        files: ^(uv\.lock|pyproject\.toml)$
+  # Export requirements.txt from uv.lock for compatibility
+  - id: uv-export
+    name: Export requirements.txt from uv.lock
+    args: [--frozen, --no-hashes, -o, requirements.txt]
+    files: ^(uv\.lock|pyproject\.toml)$
 
-      # Export dev requirements
-      - id: uv-export
-        name: Export dev requirements from uv.lock
-        args: [--frozen, --no-hashes, --all-extras, -o, requirements-dev.txt]
-        files: ^(uv\.lock|pyproject\.toml)$
+  # Export dev requirements
+  - id: uv-export
+    name: Export dev requirements from uv.lock
+    args: [--frozen, --no-hashes, --all-extras, -o, requirements-dev.txt]
+    files: ^(uv\.lock|pyproject\.toml)$
 
-  # Python code quality checks
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.0
-    hooks:
-      # Run ruff linter
-      - id: ruff
-        name: Run ruff linter
-        args: [--fix, --exit-non-zero-on-fix]
-      # Run ruff formatter
-      - id: ruff-format
-        name: Run ruff formatter
+# Python code quality checks
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.12.0
+  hooks:
+  # Run ruff linter
+  - id: ruff
+    name: Run ruff linter
+    args: [--fix, --exit-non-zero-on-fix]
+  # Run ruff formatter
+  - id: ruff-format
+    name: Run ruff formatter
 
-  # Gitleaks for secret detection
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.2
-    hooks:
-      - id: gitleaks
-        name: Detect secrets with gitleaks
+# Gitleaks for secret detection
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.27.2
+  hooks:
+  - id: gitleaks
+    name: Detect secrets with gitleaks
 
-  # deptry for dependency analysis
-  - repo: local
-    hooks:
-      - id: deptry
-        name: Check Python dependencies with deptry
-        entry: uv run deptry
-        language: system
-        always_run: true
-        pass_filenames: false
-        args:
-          - .
-          - --extend-exclude
-          - "tests"
-          - --extend-exclude
-          - ".*_test.*\\.py"
-          - --extend-exclude
-          - "node_modules"
-          - --extend-exclude
-          - "playwright-test"
-          - --extend-exclude
-          - "examples"
-          - --extend-exclude
-          - "public"
-          - --extend-exclude
-          - "out"
-          - --extend-exclude
-          - "dist"
-          - --extend-exclude
-          - "PYTHON/tests"
-          - --known-first-party
-          - atlasvibe
-          - --known-first-party
-          - atlasvibe_sdk
-          - --known-first-party
-          - atlasvibe_engine
-          - --known-first-party
-          - atlasvibe_cli
-          - --known-first-party
-          - captain
-          - --known-first-party
-          - cli
-          - --ignore
-          - DEP003
-          - --per-rule-ignores
-          - "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry|ninja|av|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
+# deptry for dependency analysis
+- repo: local
+  hooks:
+  - id: deptry
+    name: Check Python dependencies with deptry
+    entry: uv run deptry
+    language: system
+    always_run: true
+    pass_filenames: false
+    args:
+    - .
+    - --extend-exclude
+    - "tests"
+    - --extend-exclude
+    - ".*_test.*\\.py"
+    - --extend-exclude
+    - "node_modules"
+    - --extend-exclude
+    - "playwright-test"
+    - --extend-exclude
+    - "examples"
+    - --extend-exclude
+    - "public"
+    - --extend-exclude
+    - "out"
+    - --extend-exclude
+    - "dist"
+    - --extend-exclude
+    - "PYTHON/tests"
+    - --known-first-party
+    - atlasvibe
+    - --known-first-party
+    - atlasvibe_sdk
+    - --known-first-party
+    - atlasvibe_engine
+    - --known-first-party
+    - atlasvibe_cli
+    - --known-first-party
+    - captain
+    - --known-first-party
+    - cli
+    - --ignore
+    - DEP003
+    - --per-rule-ignores
+    - "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry|ninja|av|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
 
-  # General file checks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: trailing-whitespace
-        name: Trim trailing whitespace
-      - id: end-of-file-fixer
-        name: Fix end of files
-      - id: check-yaml
-        name: Check YAML syntax
-        exclude: '^\.github/workflows/.*\.(yml|yaml)$' # Actionlint handles these
-      - id: check-added-large-files
-        name: Check for large files
-        args: ["--maxkb=5000"]
-      - id: check-merge-conflict
-        name: Check for merge conflicts
-      - id: check-json
-        name: Check JSON syntax
-      - id: check-toml
-        name: Check TOML syntax
-      - id: detect-private-key
-        name: Detect private keys
+# General file checks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: trailing-whitespace
+    name: Trim trailing whitespace
+  - id: end-of-file-fixer
+    name: Fix end of files
+  - id: check-yaml
+    name: Check YAML syntax
+    exclude: '^\.github/workflows/.*\.(yml|yaml)$' # Actionlint handles these
+  - id: check-added-large-files
+    name: Check for large files
+    args: ["--maxkb=5000"]
+  - id: check-merge-conflict
+    name: Check for merge conflicts
+  - id: check-json
+    name: Check JSON syntax
+  - id: check-toml
+    name: Check TOML syntax
+  - id: detect-private-key
+    name: Detect private keys
 
 # Configuration for specific hooks
 exclude: |
