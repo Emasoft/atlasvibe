@@ -1,438 +1,501 @@
+<div align="center">
+
 # AtlasVibe
 
-**🚧 Work in Progress: This project is currently under active development and is not yet ready for general use. 🚧**
+### Visual Programming IDE for Python
 
-![CI](https://github.com/Emasoft/atlasvibe/workflows/CI/badge.svg)
-![Gitleaks](https://github.com/Emasoft/atlasvibe/workflows/Gitleaks%20Security%20Scan/badge.svg)
-![Pre-commit](https://github.com/Emasoft/atlasvibe/workflows/Pre-commit%20Checks/badge.svg)
-![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+[![CI Status](https://github.com/Emasoft/atlasvibe/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/ci.yml)
+[![CD Status](https://github.com/Emasoft/atlasvibe/actions/workflows/cd.yaml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/cd.yaml)
+[![Security Scan](https://github.com/Emasoft/atlasvibe/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/gitleaks.yml)
+[![Pre-commit](https://github.com/Emasoft/atlasvibe/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/pre-commit.yml)
+[![Dependency Check](https://github.com/Emasoft/atlasvibe/actions/workflows/dependency-check.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/dependency-check.yml)
 
-AtlasVibe is an upcoming open-source, general-purpose visual programming IDE for Python. It provides a flexible environment for creating Python-based workflows through a node-based interface, with a future-forward approach towards AI-assisted node/agent development.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Node 20+](https://img.shields.io/badge/node-20+-green.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Managed with uv](https://img.shields.io/badge/managed%20with-uv-blue)](https://github.com/astral-sh/uv)
 
-## Table of Contents
+[**Documentation**](#documentation) • [**Installation**](#installation) • [**Quick Start**](#quick-start) • [**Contributing**](#contributing)
 
-- [Vision](#vision)
-- [Current Status](#current-status)
+</div>
+
+---
+
+<div align="center">
+
+## ⚠️ EARLY ALPHA WARNING ⚠️
+
+**This project is in early alpha stage and is NOT ready for production use.**
+
+**USE AT YOUR OWN RISK**
+
+- 🚧 APIs and features are subject to breaking changes
+- 🐛 Expect bugs and incomplete features
+- 📚 Documentation may be incomplete or outdated
+- 💾 Data formats may change without migration paths
+
+**We strongly recommend waiting for a stable release before using in any production environment.**
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Project Status](#project-status)
 - [System Requirements](#system-requirements)
 - [Installation](#installation)
-  - [Installing from Source](#installing-from-source)
-  - [Installing from PyPI](#installing-from-pypi)
-  - [Developer Installation](#developer-installation)
-- [Usage](#usage)
+  - [Quick Install](#quick-install)
+  - [Manual Installation](#manual-installation)
+  - [Developer Setup](#developer-setup)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
   - [CLI Reference](#cli-reference)
-  - [Quick Start](#quick-start)
-  - [Running Tests](#running-tests)
+  - [API Documentation](#api-documentation)
 - [Development](#development)
-  - [Setting Up Development Environment](#setting-up-development-environment)
+  - [Architecture](#architecture)
+  - [Building from Source](#building-from-source)
+  - [Testing](#testing)
   - [CI/CD Pipeline](#cicd-pipeline)
-  - [Pre-commit Hooks](#pre-commit-hooks)
-  - [Contributing](#contributing)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 - [Acknowledgments](#acknowledgments)
+- [Support](#support)
 
-## Vision
+## 🎯 Overview
 
-The goal is to create an intuitive visual IDE where users can construct complex Python applications by connecting nodes (or "agents"). Each node represents a Python script, and a core design principle is to eventually empower these nodes with AI capabilities to self-generate or modify their underlying code based on user intent.
+AtlasVibe is an open-source visual programming IDE for Python that enables users to create complex applications through an intuitive node-based interface. Built with modern web technologies and designed for extensibility, AtlasVibe aims to make Python programming more accessible while maintaining the full power of the language.
 
-## Current Status
+### 🌟 Vision
 
-AtlasVibe is in the early stages of development. The immediate focus is on:
-1. Refactoring the codebase from its origins (see Acknowledgments)
-2. Implementing a new project and block management system where users create project-specific, customizable blocks from a set of blueprints
-3. Establishing robust CI/CD pipelines and development workflows
+Our goal is to create a visual development environment where:
+- 🔗 Complex Python workflows can be built by connecting visual nodes
+- 🤖 AI capabilities enhance node creation and modification
+- 🎨 The interface is intuitive for beginners yet powerful for experts
+- 🔧 Every aspect is extensible and customizable
 
-## System Requirements
+## ✨ Features
 
+### Current Features (Alpha)
+- ✅ **Visual Node Editor** - Drag-and-drop interface with ReactFlow
+- ✅ **Python Block System** - Modular Python execution units
+- ✅ **Real-time Execution** - See results as you build
+- ✅ **Project Management** - Organize workflows and custom blocks
+- ✅ **Cross-platform** - Works on Windows, macOS, and Linux
+
+### Planned Features
+- 🔄 **AI-Powered Nodes** - Self-modifying blocks based on intent
+- 📦 **Block Marketplace** - Share and discover community blocks
+- 🔌 **Plugin System** - Extend functionality with plugins
+- 📊 **Advanced Visualizations** - Built-in data visualization tools
+- 🌐 **Cloud Collaboration** - Real-time collaborative editing
+
+## 📊 Project Status
+
+<div align="center">
+
+| Component | Status | Progress |
+|-----------|--------|----------|
+| Core Engine | 🟡 Alpha | ![70%](https://progress-bar.dev/70) |
+| Block System | 🟡 Alpha | ![65%](https://progress-bar.dev/65) |
+| UI/UX | 🟡 Alpha | ![60%](https://progress-bar.dev/60) |
+| Documentation | 🟠 In Progress | ![40%](https://progress-bar.dev/40) |
+| Testing | 🟠 In Progress | ![50%](https://progress-bar.dev/50) |
+| CI/CD | 🟢 Operational | ![90%](https://progress-bar.dev/90) |
+
+</div>
+
+### Current Focus
+1. 🔨 Refactoring core architecture from Flojoy Studio base
+2. 🎯 Implementing project-centric block management
+3. 🧪 Expanding test coverage
+4. 📝 Improving documentation
+
+## 💻 System Requirements
+
+### Minimum Requirements
+- **OS**: Windows 10+, macOS 10.15+, Ubuntu 20.04+
 - **Python**: 3.11 or higher
 - **Node.js**: 20.x or higher
-- **Operating Systems**: macOS, Linux, Windows
-- **Memory**: 4GB RAM minimum (8GB recommended)
+- **RAM**: 4GB
 - **Storage**: 2GB free space
 
-### Additional Requirements for Development
+### Recommended Requirements
+- **RAM**: 8GB or more
+- **Storage**: 5GB free space
+- **Display**: 1920x1080 or higher
 
-- **Git**: For version control
-- **GitHub CLI (`gh`)**: For CI/CD setup
-- **uv**: Modern Python package manager (will be installed automatically)
+### Development Requirements
+- **Git**: 2.x or higher
+- **GitHub CLI**: For automated setup (optional)
+- **Docker**: For containerized development (optional)
 
-## Installation
+## 📦 Installation
 
-### Installing from Source
+### Quick Install
 
-This is the recommended method during the development phase:
+#### Using the Installation Script (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/Emasoft/atlasvibe.git
 cd atlasvibe
 
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Run the installation script
+# Run the automated installer
 ./install.sh
 
-# The installation script will:
-# 1. Check system requirements
-# 2. Install uv package manager
-# 3. Create Python virtual environment
-# 4. Install Python dependencies
-# 5. Install Node.js dependencies
-# 6. Build the Electron application
-# 7. Install AtlasVibe as a Python package
-
-# After installation, AtlasVibe will be available as a command
-atlasvibe --help
+# After installation, run AtlasVibe
+atlasvibe run
 ```
 
-#### Manual Installation from Source
+The installation script will:
+- ✅ Check system requirements
+- ✅ Install uv package manager
+- ✅ Set up Python environment
+- ✅ Install all dependencies
+- ✅ Build the application
+- ✅ Create command-line shortcuts
 
-If you prefer to install manually or the installation script fails:
+### Manual Installation
+
+<details>
+<summary>Click to expand manual installation steps</summary>
+
+#### 1. Install Prerequisites
 
 ```bash
-# 1. Install uv
+# Install uv (Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Create and activate virtual environment
+# Install pnpm (Node package manager)
+npm install -g pnpm
+```
+
+#### 2. Clone and Setup
+
+```bash
+# Clone repository
+git clone https://github.com/Emasoft/atlasvibe.git
+cd atlasvibe
+
+# Create Python environment
 uv venv
-source .venv/bin/activate  # On Linux/macOS
-# .venv\Scripts\activate    # On Windows
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# 3. Install Python dependencies
-uv sync --all-extras --dev
+# Install Python dependencies
+uv sync --all-extras
+```
 
-# 4. Install Node.js dependencies
-pnpm install  # or: npm install
+#### 3. Build Application
 
-# 5. Build the Electron app
+```bash
+# Install Node dependencies
+pnpm install
+
+# Build frontend
 pnpm run build
-pnpm run electron-package:mac   # On macOS
-# pnpm run electron-package:win   # On Windows
-# pnpm run electron-package:linux # On Linux
 
-# 6. Install AtlasVibe package
+# Build Electron app
+pnpm run electron-package:mac   # macOS
+pnpm run electron-package:win   # Windows
+pnpm run electron-package:linux # Linux
+
+# Install AtlasVibe package
 uv pip install -e .
 ```
 
-### Installing from PyPI
+</details>
 
-**Note: Not yet available on PyPI. This will be enabled once the project reaches a stable release.**
+### Developer Setup
 
-```bash
-# Future installation method (not yet available)
-uv pip install atlasvibe
-```
-
-### Developer Installation
-
-For development, you'll need additional setup:
+<details>
+<summary>Click to expand developer setup</summary>
 
 ```bash
-# Clone with submodules
+# Clone with full history
 git clone --recursive https://github.com/Emasoft/atlasvibe.git
 cd atlasvibe
 
-# Set up git configuration
-./setup-git-env.sh
+# Set up development environment
+./setup-git-env.sh          # Configure git
+./setup-github-cicd.sh      # Set up CI/CD (requires gh CLI)
 
-# Install with development dependencies
+# Install with dev dependencies
 uv sync --all-extras --dev
 
 # Install pre-commit hooks
 uv pip install pre-commit
-pre-commit install
+pre-commit install --install-hooks
 
-# Set up CI/CD pipeline (requires GitHub CLI)
-./setup-cicd.sh
+# Verify setup
+pre-commit run --all-files  # Should pass all checks
+uv run pytest              # Should pass all tests
 ```
 
-## Usage
+</details>
+
+## 🚀 Quick Start
+
+### 1. Create Your First Project
+
+```bash
+# Create a new project
+atlasvibe init my-first-project
+cd my-first-project
+
+# Start AtlasVibe
+atlasvibe run
+```
+
+### 2. Build Your First Workflow
+
+1. **Add Blocks**: Drag blocks from the palette to the canvas
+2. **Connect Nodes**: Draw connections between block ports
+3. **Configure**: Click blocks to set parameters
+4. **Execute**: Press the Run button to execute your workflow
+
+### 3. Example: Simple Data Processing
+
+```python
+# Example workflow:
+# [CSV Reader] → [Data Filter] → [Plot Generator] → [File Writer]
+```
+
+<details>
+<summary>See example code</summary>
+
+```python
+# Each block is a Python function with the @atlasvibe decorator
+@atlasvibe(
+    display_name="CSV Reader",
+    category="DATA/IO",
+    inputs={"file_path": str},
+    outputs={"data": pd.DataFrame}
+)
+def read_csv(file_path: str) -> pd.DataFrame:
+    """Read CSV file and return DataFrame."""
+    return pd.read_csv(file_path)
+```
+
+</details>
+
+## 📚 Documentation
 
 ### CLI Reference
 
-AtlasVibe provides a command-line interface for managing the application:
-
-```
-atlasvibe --help
-
-Usage: atlasvibe [OPTIONS] COMMAND [ARGS]...
-
-  AtlasVibe - Visual Programming IDE for Python.
-
-Options:
-  --version  Show the version and exit.
-  --help     Show this message and exit.
-
-Commands:
-  init    Initialize a new AtlasVibe project.
-  run     Run both server and UI (default command).
-  server  Run the AtlasVibe backend server.
-  ui      Run the AtlasVibe Electron UI.
-```
-
-#### Command Details
-
-##### `atlasvibe run`
-Runs both the backend server and Electron UI (recommended for most users).
+AtlasVibe provides a comprehensive command-line interface:
 
 ```bash
+atlasvibe --help  # Show all available commands
+```
+
+#### Core Commands
+
+| Command | Description | Options |
+|---------|-------------|---------|
+| `run` | Start full application (default) | - |
+| `server` | Run backend server only | `--port`, `--log-level` |
+| `ui` | Run frontend UI only | `--dev` |
+| `init` | Create new project | `PATH` (required) |
+
+#### Examples
+
+```bash
+# Start AtlasVibe (full application)
 atlasvibe run
-# Starts the backend server on port 5392
-# Launches the Electron UI application
+
+# Run server on custom port with debug logging
+atlasvibe server --port 8080 --log-level DEBUG
+
+# Run UI in development mode (hot reload)
+atlasvibe ui --dev
+
+# Initialize project with custom name
+atlasvibe init ~/projects/my-workflow
 ```
 
-##### `atlasvibe server`
-Runs only the backend FastAPI server.
+### API Documentation
 
-```bash
-atlasvibe server [OPTIONS]
+When running the server, API documentation is available at:
+- **Swagger UI**: http://localhost:5392/docs
+- **ReDoc**: http://localhost:5392/redoc
 
-Options:
-  --port INTEGER    Port to run the server on [default: 5392]
-  --log-level TEXT  Logging level [default: INFO]
+## 🛠️ Development
 
-Examples:
-  atlasvibe server                    # Run on default port 5392
-  atlasvibe server --port 8080       # Run on custom port
-  atlasvibe server --log-level DEBUG # Enable debug logging
+### Architecture
+
+```
+atlasvibe/
+├── src/                    # Frontend source (React/TypeScript)
+│   ├── main/              # Electron main process
+│   └── renderer/          # React application
+├── captain/               # Backend source (Python/FastAPI)
+│   ├── routes/           # API endpoints
+│   ├── services/         # Business logic
+│   └── models/           # Data models
+├── blocks/               # Block library
+│   └── [CATEGORY]/       # Categorized blocks
+├── pkgs/                 # Internal packages
+│   ├── atlasvibe/       # Core SDK
+│   └── atlasvibe_sdk/   # Block SDK
+└── tests/               # Test suites
 ```
 
-##### `atlasvibe ui`
-Runs only the Electron UI application.
+### Building from Source
 
 ```bash
-atlasvibe ui [OPTIONS]
+# Full build
+pnpm run build
 
-Options:
-  --dev  Run in development mode
+# Watch mode (development)
+pnpm run dev
 
-Examples:
-  atlasvibe ui       # Run production build
-  atlasvibe ui --dev # Run with hot reload (requires source installation)
+# Build specific platforms
+pnpm run electron-package:mac
+pnpm run electron-package:win
+pnpm run electron-package:linux
 ```
 
-##### `atlasvibe init`
-Creates a new AtlasVibe project directory structure.
+### Testing
+
+#### Running Tests
 
 ```bash
-atlasvibe init PATH
-
-Arguments:
-  PATH  Path where the new project should be created
-
-Example:
-  atlasvibe init my-workflow
-  # Creates:
-  # my-workflow/
-  # ├── atlasvibe_blocks/    # Custom blocks directory
-  # ├── flows/               # Workflow files directory
-  # └── project.atlasvibe    # Project configuration
-```
-
-### Quick Start
-
-1. **Create a new project:**
-   ```bash
-   atlasvibe init my-first-project
-   cd my-first-project
-   ```
-
-2. **Start AtlasVibe:**
-   ```bash
-   atlasvibe run
-   ```
-
-3. **Access the application:**
-   - The UI will open automatically
-   - Backend API available at: http://localhost:5392
-   - API documentation at: http://localhost:5392/docs
-
-4. **Create your first workflow:**
-   - Drag blocks from the palette
-   - Connect blocks to create data flow
-   - Click "Run" to execute the workflow
-
-### Running Tests
-
-AtlasVibe includes comprehensive test suites for both backend and frontend:
-
-```bash
-# Run all tests using the test script
+# Run all tests
 ./runtests.sh
 
-# Run Python tests only
+# Python tests only
 uv run pytest
+uv run pytest --cov  # With coverage
 
-# Run specific test file
-uv run pytest tests/test_file.py
-
-# Run with coverage
-uv run pytest --cov --cov-report=html
-
-# Run frontend tests
+# Frontend tests
 pnpm test
 
-# Run E2E tests
+# E2E tests
 pnpm run e2e
 
-# Run ALL tests including slow tests
-./install_all_test_deps.sh  # First time only
+# Run ALL tests (including slow tests)
 ./run_all_tests.sh
 ```
 
-## Development
+#### Test Coverage
 
-### Setting Up Development Environment
-
-1. **Install development dependencies:**
-   ```bash
-   uv sync --all-extras --dev
-   pnpm install
-   ```
-
-2. **Set up pre-commit hooks:**
-   ```bash
-   uv pip install pre-commit
-   pre-commit install
-   ```
-
-3. **Configure git:**
-   ```bash
-   ./setup-git-env.sh
-   ```
-
-4. **Run in development mode:**
-   ```bash
-   # Terminal 1: Backend with auto-reload
-   uv run python main.py --reload
-
-   # Terminal 2: Frontend with hot reload
-   pnpm run dev
-   ```
+We aim for high test coverage:
+- Python backend: >80%
+- Frontend components: >70%
+- E2E scenarios: Critical paths
 
 ### CI/CD Pipeline
 
-AtlasVibe uses GitHub Actions for continuous integration and deployment:
+Our CI/CD pipeline ensures code quality and reliability:
 
-#### GitHub Actions Workflows
+#### Workflows
 
-1. **CI Pipeline** (`.github/workflows/ci.yml`)
-   - Python code formatting and linting (Ruff)
-   - TypeScript/JavaScript checks (ESLint, TSC, Prettier)
-   - Unit tests with coverage reporting
-   - Runs on every push and pull request
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **CI** | Push/PR | Code quality, tests |
+| **CD** | Tags `v*` | Build releases |
+| **Security** | Push/PR/Schedule | Secret scanning |
+| **Dependencies** | Weekly | Dependency analysis |
+| **Pre-commit** | PR | Code formatting |
 
-2. **Security Scanning** (`.github/workflows/gitleaks.yml`)
-   - Scans for secrets in code
-   - Runs on every push, PR, and daily schedule
-   - Creates security alerts for any findings
-
-3. **Dependency Analysis** (`.github/workflows/dependency-check.yml`)
-   - Weekly scans with deptry
-   - Identifies unused or missing dependencies
-   - Creates issues for problems
-
-4. **Pre-commit Checks** (`.github/workflows/pre-commit.yml`)
-   - Runs all pre-commit hooks in CI
-   - Validates code quality
-   - Comments on PRs with results
-
-5. **Blocks Quality** (`.github/workflows/blocks-quality-check.yml`)
-   - Ensures all blocks have required metadata
-   - Runs block-specific tests
-   - Validates block structure
-
-#### Setting Up CI/CD
-
-Run the setup script to configure GitHub repository settings:
+#### Local CI Simulation
 
 ```bash
-# Requires GitHub CLI (gh) to be installed and authenticated
-gh auth login
-
-# Run the CI/CD setup
-./setup-cicd.sh
-
-# This will:
-# - Configure repository settings
-# - Set up branch protection
-# - Create issue labels
-# - Configure security scanning
-# - Set up workflow permissions
-```
-
-### Pre-commit Hooks
-
-The project uses pre-commit hooks to ensure code quality:
-
-```yaml
-# .pre-commit-config.yaml includes:
-- uv-lock: Keeps lockfile updated
-- ruff: Python linting and formatting
-- gitleaks: Secret detection
-- deptry: Dependency analysis
-- yamllint: YAML validation
-- Various file checks
-```
-
-To run hooks manually:
-```bash
-# Run on all files
+# Run all CI checks locally
 pre-commit run --all-files
 
-# Run specific hook
-pre-commit run ruff --all-files
-
-# Update hooks to latest versions
-pre-commit autoupdate
+# Run specific checks
+uv run ruff check .
+uv run mypy .
+pnpm run lint
 ```
 
-### Contributing
+## 🤝 Contributing
 
-We welcome contributions! Please follow these guidelines:
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-1. **Code Style:**
-   - Python: Follow Ruff formatting (automatically applied)
-   - TypeScript: Follow ESLint and Prettier rules
-   - Commit messages: Use conventional commits format
+### Quick Contribution Guide
 
-2. **Testing:**
-   - Write tests for new features
-   - Ensure all tests pass before submitting PR
-   - Maintain or improve code coverage
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+4. **Push** to your fork (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-3. **Documentation:**
-   - Update documentation for API changes
-   - Add docstrings to new functions
-   - Update README for new features
+### Commit Convention
 
-4. **Security:**
-   - Never commit secrets or credentials
-   - Use environment variables for sensitive data
-   - Follow security best practices
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat:` New features
+- `fix:` Bug fixes
+- `docs:` Documentation changes
+- `test:` Test additions/modifications
+- `refactor:` Code refactoring
+- `chore:` Maintenance tasks
 
-5. **Pull Requests:**
-   - Create feature branches from `main`
-   - Keep PRs focused and atomic
-   - Include tests and documentation
-   - Ensure CI passes before review
+## 🔒 Security
 
-## Acknowledgments
+### Reporting Security Issues
 
-AtlasVibe is forked from **Flojoy Studio**, an open-source test sequencer for hardware validation. We are immensely grateful to the original developers of Flojoy Studio for their foundational work and for making it available under the MIT license.
+**⚠️ Do not report security vulnerabilities through public issues.**
 
-AtlasVibe is being developed by **Emasoft** (repository: [Emasoft/atlasvibe](https://github.com/Emasoft/atlasvibe)) and aims to build upon this foundation for a different set of goals, while respecting all original licensing obligations.
+Please report security vulnerabilities to our security team by following the instructions in [SECURITY.md](SECURITY.md).
 
-## License
+### Security Measures
+
+- 🔍 Automated secret scanning with Gitleaks
+- 📦 Regular dependency updates via Dependabot
+- 🛡️ Security-focused code reviews
+- 🔐 Signed releases (coming soon)
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+```
+MIT License
 
-- **Issues**: [GitHub Issues](https://github.com/Emasoft/atlasvibe/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Emasoft/atlasvibe/discussions)
-- **Security**: For security issues, please see [SECURITY.md](SECURITY.md)
+Copyright (c) 2024 Emasoft
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction...
+```
+
+## 🙏 Acknowledgments
+
+AtlasVibe is built upon the foundation of [**Flojoy Studio**](https://github.com/flojoy-ai/studio), an open-source test sequencer for hardware validation. We are deeply grateful to the Flojoy team for their excellent work and for making it available under the MIT license.
+
+Special thanks to:
+- The Flojoy Studio team for the original codebase
+- All contributors who have helped shape this project
+- The open-source community for invaluable tools and libraries
+
+## 💬 Support
+
+### Community
+
+- **GitHub Issues**: [Bug reports and feature requests](https://github.com/Emasoft/atlasvibe/issues)
+- **GitHub Discussions**: [Community discussions](https://github.com/Emasoft/atlasvibe/discussions)
+- **Wiki**: [Documentation and guides](https://github.com/Emasoft/atlasvibe/wiki) (coming soon)
+
+### Getting Help
+
+1. 📖 Check the [documentation](#documentation)
+2. 🔍 Search [existing issues](https://github.com/Emasoft/atlasvibe/issues)
+3. 💬 Ask in [discussions](https://github.com/Emasoft/atlasvibe/discussions)
+4. 🐛 Report bugs via [issues](https://github.com/Emasoft/atlasvibe/issues/new)
 
 ---
 
-**Note**: AtlasVibe is under active development. APIs and features may change. We recommend waiting for a stable release before using in production environments.
+<div align="center">
+
+**Built with ❤️ by [Emasoft](https://github.com/Emasoft) and contributors**
+
+[⬆ Back to top](#atlasvibe)
+
+</div>
