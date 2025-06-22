@@ -8,9 +8,6 @@
  * See the LICENSE file for details.
  */
 
-#!/usr/bin/env node
-// -*- coding: utf-8 -*-
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New hook for Save As functionality with custom dialog
 // - Integrates SaveProjectDialog component

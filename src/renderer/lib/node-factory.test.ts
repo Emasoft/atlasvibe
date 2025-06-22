@@ -8,9 +8,6 @@
  * See the LICENSE file for details.
  */
 
-#!/usr/bin/env node
-// -*- coding: utf-8 -*-
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New test file for node factory functions
 // - Tests for creating nodes from block definitions

@@ -8,9 +8,6 @@
  * See the LICENSE file for details.
  */
 
-#!/usr/bin/env tsx
-// -*- coding: utf-8 -*-
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New component for showing execution status
 // - Shows "Paused - Block Regenerating" when blocks are regenerating

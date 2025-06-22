@@ -8,9 +8,6 @@
  * See the LICENSE file for details.
  */
 
-#!/usr/bin/env node
-// -*- coding: utf-8 -*-
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New file for project file format migration
 // - Handles backward compatibility with old project formats
