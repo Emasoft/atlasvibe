@@ -23,36 +23,34 @@ from captain.utils.project_structure import (
 )
 
 
-class TestProjectStructureJSONRefactoring:
-    """Test refactoring of JSON operations in project_structure module."""
+@pytest.fixture
+def temp_project():
+    """Create a temporary project structure."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir) / "test_project"
+        project_dir.mkdir()
 
-    @pytest.fixture
-    def temp_project(self):
-        """Create a temporary project structure."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            project_dir = Path(tmpdir) / "test_project"
-            project_dir.mkdir()
+        # Create project file
+        project_file = project_dir / "test.atlasvibe"
+        project_file.write_text("{}")
 
-            # Create project file
-            project_file = project_dir / "test.atlasvibe"
-            project_file.write_text("{}")
+        # Create blocks directory
+        blocks_dir = project_dir / "atlasvibe_blocks"
+        blocks_dir.mkdir()
 
-            # Create blocks directory
-            blocks_dir = project_dir / "atlasvibe_blocks"
-            blocks_dir.mkdir()
+        yield str(project_file), project_dir
 
-            yield str(project_file), project_dir
 
-    @pytest.fixture
-    def temp_blueprint(self):
-        """Create a temporary blueprint block."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            blueprint_dir = Path(tmpdir) / "BLUEPRINT_BLOCK"
-            blueprint_dir.mkdir()
+@pytest.fixture
+def temp_blueprint():
+    """Create a temporary blueprint block."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        blueprint_dir = Path(tmpdir) / "BLUEPRINT_BLOCK"
+        blueprint_dir.mkdir()
 
-            # Create Python file
-            py_file = blueprint_dir / "BLUEPRINT_BLOCK.py"
-            py_file.write_text('''
+        # Create Python file
+        py_file = blueprint_dir / "BLUEPRINT_BLOCK.py"
+        py_file.write_text('''
 from atlasvibe import atlasvibe
 
 @atlasvibe
@@ -72,35 +70,39 @@ def BLUEPRINT_BLOCK(x: int = 10):
     return x * 2
 ''')
 
-            # Create app.json
-            app_json = blueprint_dir / "app.json"
-            app_json.write_text(
-                json.dumps(
-                    {
-                        "rfInstance": {
-                            "nodes": [
-                                {
-                                    "id": "1",
-                                    "data": {
-                                        "func": "BLUEPRINT_BLOCK",
-                                        "label": "BLUEPRINT_BLOCK",
-                                    },
-                                }
-                            ]
-                        }
+        # Create app.json
+        app_json = blueprint_dir / "app.json"
+        app_json.write_text(
+            json.dumps(
+                {
+                    "rfInstance": {
+                        "nodes": [
+                            {
+                                "id": "1",
+                                "data": {
+                                    "func": "BLUEPRINT_BLOCK",
+                                    "label": "BLUEPRINT_BLOCK",
+                                },
+                            }
+                        ]
                     }
-                )
+                }
             )
+        )
 
-            # Create block_data.json
-            block_data = blueprint_dir / "block_data.json"
-            block_data.write_text(
-                json.dumps({"docstring": {"short_description": "Blueprint block"}})
-            )
+        # Create block_data.json
+        block_data = blueprint_dir / "block_data.json"
+        block_data.write_text(
+            json.dumps({"docstring": {"short_description": "Blueprint block"}})
+        )
 
-            yield str(blueprint_dir)
+        yield str(blueprint_dir)
 
-    @patch("captain.utils.project_structure.json.dumps")
+
+class TestProjectStructureJSONRefactoring:
+    """Test refactoring of JSON operations in project_structure module."""
+
+    @patch("json.dumps")
     @patch("pathlib.Path.write_text")
     @patch("pathlib.Path.read_text")
     def test_update_block_metadata_uses_json_dumps(

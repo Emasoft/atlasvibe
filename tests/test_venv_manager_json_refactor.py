@@ -26,19 +26,16 @@ from captain.utils.venv_manager import (
 )
 
 
-class TestVenvManagerJSONRefactoring:
-    """Test refactoring of JSON operations in venv_manager module."""
+@pytest.fixture
+def temp_block_dir():
+    """Create a temporary block directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        block_dir = Path(tmpdir) / "TEST_BLOCK"
+        block_dir.mkdir()
 
-    @pytest.fixture
-    def temp_block_dir(self):
-        """Create a temporary block directory."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            block_dir = Path(tmpdir) / "TEST_BLOCK"
-            block_dir.mkdir()
-
-            # Create Python file
-            py_file = block_dir / "TEST_BLOCK.py"
-            py_file.write_text('''
+        # Create Python file
+        py_file = block_dir / "TEST_BLOCK.py"
+        py_file.write_text('''
 from atlasvibe import atlasvibe
 
 @atlasvibe(deps=["numpy>=1.20.0", "pandas>=1.0.0"])
@@ -47,9 +44,13 @@ def TEST_BLOCK():
     return "test"
 ''')
 
-            yield block_dir
+        yield block_dir
 
-    @patch("captain.utils.venv_manager.json.dump")
+
+class TestVenvManagerJSONRefactoring:
+    """Test refactoring of JSON operations in venv_manager module."""
+
+    @patch("json.dump")
     @patch("builtins.open", new_callable=mock_open)
     def test_save_log_uses_json_dump(self, mock_file, mock_dump, temp_block_dir):
         """Test that _save_log currently uses json.dump (to be refactored)."""
