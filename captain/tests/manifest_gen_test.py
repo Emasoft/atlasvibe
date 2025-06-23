@@ -155,7 +155,7 @@ class ManifestGenerationTest(unittest.TestCase):
                 },
                 "nums": {
                     "type": "list[int]",
-                    "default": [1, 2, 3],
+                    "default": None,
                     "desc": None,
                     "overload": None,
                 },

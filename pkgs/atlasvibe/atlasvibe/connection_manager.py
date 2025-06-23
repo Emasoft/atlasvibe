@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
 
+from datetime import datetime
 from threading import Lock
 from typing import Any, Callable
 
@@ -35,8 +36,16 @@ _connection_lock = Lock()
 
 class DeviceConnectionManager:
     handles: dict[str | int, HardwareConnection] = {}
-    tm = DeviceManager(verbose=False)
-    tm.visa_library = PYVISA_PY_BACKEND
+    _tm = None
+
+    @classmethod
+    def get_tm(cls):
+        """Lazy initialization of DeviceManager to avoid hanging at import time."""
+        if cls._tm is None:
+            print(f"{datetime.now()} - Opening DeviceManager")
+            cls._tm = DeviceManager(verbose=False)
+            cls._tm.visa_library = PYVISA_PY_BACKEND
+        return cls._tm
 
     @classmethod
     def register_connection(
@@ -73,7 +82,7 @@ class DeviceConnectionManager:
 
     @classmethod
     def clear(cls):
-        cls.tm.remove_all_devices()
+        cls.get_tm().remove_all_devices()
         logger.info("Cleaned up tm_devices DeviceManager")
 
         with _connection_lock:

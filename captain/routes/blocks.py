@@ -211,7 +211,9 @@ def find_blueprint_path(blueprint_key: str) -> Optional[Path]:
     error_code_prefix="CREATE_BLOCK",
     log_request=True,
     log_duration=True,
-    retry=False,  # TODO: Fix async retry decorator
+    retry=True,
+    max_attempts=3,
+    retry_exceptions=(OSError, ConnectionError),
 )
 async def create_custom_block(request: CreateCustomBlockRequest):
     """Create a custom block from a blueprint for a specific project.
@@ -281,7 +283,9 @@ async def create_custom_block(request: CreateCustomBlockRequest):
     error_code_prefix="UPDATE_BLOCK",
     log_request=True,
     log_duration=True,
-    retry=False,  # TODO: Fix async retry decorator
+    retry=True,
+    max_attempts=2,
+    retry_exceptions=(OSError,),
 )
 async def update_block_code(request: UpdateBlockCodeRequest):
     """Update the code of a custom block and regenerate its metadata.
@@ -510,7 +514,9 @@ async def format_code(request: FormatCodeRequest):
     error_code_prefix="VENV",
     log_request=True,
     log_duration=True,
-    retry=False,  # TODO: Fix async retry decorator
+    retry=True,
+    max_attempts=2,
+    retry_exceptions=(OSError, ConnectionError),
 )
 async def regenerate_block_venv(request: RegenerateVenvRequest):
     """Regenerate virtual environment for a block.

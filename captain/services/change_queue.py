@@ -130,10 +130,12 @@ class ChangeQueueManager:
 
         # Get WebSocket manager
         try:
+            logger.debug("Getting WebSocket manager instance...")
             self.ws_manager = ConnectionManager.get_instance()
-        except Exception:
+            logger.debug("Got WebSocket manager instance")
+        except Exception as e:
             self.ws_manager = None
-            logger.warning("WebSocket manager not available")
+            logger.warning(f"WebSocket manager not available: {e}")
 
     @classmethod
     def get_instance(cls) -> "ChangeQueueManager":

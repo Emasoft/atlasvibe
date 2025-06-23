@@ -60,6 +60,11 @@ class ConnectionManager:
     async def broadcast(
         self, message: Union[dict[str, Any], WorkerJobResponse, TestSequenceMessage]
     ):
+        # Early return if no connections
+        if not self.active_connections_map:
+            logger.debug("No active WebSocket connections, skipping broadcast")
+            return
+
         dead_connections: set[str] = set()
 
         with socket_connection_lock:

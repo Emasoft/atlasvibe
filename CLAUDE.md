@@ -27,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - never remove unused code or variables unless they are wrong, since the program is a WIP and those unused parts are likely going to be developed and used in the future. The only exception is if the user explicitly tells you to do it.
 - don't worry about functions imported from external modules, since those dependencies cannot be always included in the chat for your context limit. Do not remove them or implement them just because you can''t find the module or source file they are imported from. You just assume that the imported modules and imported functions work as expected. If you need to change them, ask the user to include them in the chat.
 - Always update the project version after changes. Use semantic version format for updating the project version: `{major - breaking changes or features}.{minor - non breaking changes or features}.{patch - small changes/fixes}`.
+- Always use uv-pre-commit. Read how here: `https://github.com/astral-sh/uv-pre-commit` and `https://docs.astral.sh/uv/guides/integration/pre-commit/`.
 - spend a long time thinking deeply to understand completely the code flow and inner working of the program before writing any code or making any change.
 - if the user asks you to implement a feature or to make a change, always check the source code to ensure that the feature was not already implemented before or it is implemented in another form. Never start a task without checking if that task was already implemented or done somewhere in the codebase.
 - if you must write a function, always check if there are already similar functions that can be extended or parametrized to do what new function need to do. Avoid writing duplicated or similar code by reusing the same flexible helper functions where is possible.
@@ -48,7 +49,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - always write the docstrings of all functions and improve the existing ones. Use Google-style docstrings with Args/Returns sections, but do not use markdown.
 - never use markdown in comments.
 - when using the Bash tool, always set the timeout parameter to 1800000 (30 minutes).
-  - always tabulate the tests result in a nice table.
+- always tabulate the tests result in a nice table.
 - do not use mockup tests or mocked behaviours unless it is absolutely impossible to do otherwise. If you need to use a service, local or remote, do not mock it, just ask the user to activate it for the duration of the tests. Results of mocked tests are completely useless. Only real tests can discover issues with the codebase.
 - always use a **Test-Driven Development (TDD)** methodology (write tests first, the implementation later) when implementing new features or change the existing ones. But first check that the existing tests are written correctly.
 - always plan in advance your actions, and break down your plan into very small tasks. Save a file named `DEVELOPMENT_PLAN.md` and write all tasks inside it. Update it with the status of each tasks after any changes.
@@ -56,16 +57,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - When making changes, identify all files that would need import updates first
 - After each change, check all type annotations for consistency
 - Make all changes in a single, well-planned operation with surgical edits
+- Always use uv-pre-commit. Read how here: `https://github.com/astral-sh/uv-pre-commit` and `https://docs.astral.sh/uv/guides/integration/pre-commit/`.
 - Always lint the file after making all the changes to it, but not before
 - Always run the tests relevant to the changed files after making all the changes planned, but not before
 - Do one comprehensive commit at the end of each operation if the code passes the tests
 - If you make errors while implementing the changes, examine you errors, ultrathink about them and write the lessons learned from them into CLAUDE.md for future references, so you won't repeat the same errors in the future.
 - Install `https://github.com/fpgmaas/deptry/` and run it at every commit.
-- Add deptry to the project pre-commit configuration following these instructions: `https://github.com/astral-sh/uv-pre-commit`.
+- Add deptry to the project uv-pre-commit configuration following these instructions: `https://github.com/astral-sh/uv-pre-commit`.
 - Add deptry to both the local and the remote github workflows actions, so it can be used in the CI/CD pipeline automatically at every push/release as instructed here: `https://docs.astral.sh/uv/guides/integration/github/`.
 - Install and run yamllint and actionlint at each commit (add them to pre-commit both local and remote, run them with `uv run`).
 - You can run the github yaml files locally with `act`. Install act and read the docs to configure it to work with uv: `https://github.com/nektos/act`.
-- Since `act` requires Docker, follow these instructions to setup docker containers with uv: https://docs.astral.sh/uv/guides/integration/docker/
+- Since `act` requires Docker, follow these instructions to setup docker containers with uv: `https://docs.astral.sh/uv/guides/integration/docker/`
 - do not create prototypes or sketched/abridged versions of the features you need to develop. That is only a waste of time. Instead break down the new features in its elemental components and functions, subdivide it in small autonomous modules with a specific function, and develop one module at time. When each module will be completed (passing the test for the module), then you will be able to implement the original feature easily just combining the modules. The modules can be helper functions, data structures, external librries, anything that is focused and reusable. Prefer functions at classes, but you can create small classes as specialized handlers for certain data and tasks, then also classes can be used as pieces for building the final feature.
 - When commit, never mention Claude as the author of the commits or as a Co-author.
 - when refactoring, enter thinking mode first, examine the program flow, be attentive to what you're changing, and how it subsequently affects the rest of the codebase as a matter of its blast radius, the codebase landscape, and possible regressions. Also bear in mind the existing type structures and interfaces that compose the makeup of the specific code you're changing.
@@ -100,6 +102,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use autofix to format pull-requests automatically. Read how here: https://autofix.ci/setup
 - Use Prettier to format all other code files (except python and yaml).
 - Use `pnpm run format` to run Prettier on node.js source files.
+- Always use uv-pre-commit to automate the formatting. Read how here: `https://github.com/astral-sh/uv-pre-commit` and `https://docs.astral.sh/uv/guides/integration/pre-commit/`.
 - Configure Prettier for github formatting actions following the instructions here: `https://prettier.io/docs/ci` and `https://autofix.ci/setup`.
 - To format yaml files only use yamlfmt. Install yamlfmt with:
 ```
@@ -140,6 +143,7 @@ yamlfmt -path .github/workflows
 - Use autofix to lint pull-requests automatically. Read how here: https://autofix.ci/setup
 - Do not use pyproject.toml or ruff.toml to configure `ruff check`, since there are too many variations of the command used in the workflows. Aleays run it in isolated mode with `--isolated` and set all options via cli.
 - Use eslint for javascript
+- Always use uv-pre-commit to automate linting. Read how here: `https://github.com/astral-sh/uv-pre-commit` and `https://docs.astral.sh/uv/guides/integration/pre-commit/`.
 - Use shellcheck for bash
 - Use actionlint snd yamllint for yaml
 - Use jsonlint for json
@@ -268,6 +272,73 @@ def is_running_in_test() -> bool:
 ### Pre-commit Hooks Configuration (NEW December 2024)
 
 The project uses pre-commit hooks to ensure code quality before every commit. All hooks are configured in `.pre-commit-config.yaml`.
+
+
+## pre-commit: install it with uv
+
+It is recommended to install pre-commit using uv’s tool mechanism, using this command:
+
+```
+$ uv tool install pre-commit --with pre-commit-uv
+```
+
+Running it, you’ll see output describing the installation process:
+
+```
+$ uv tool install pre-commit --with pre-commit-uv
+Resolved 11 packages in 1ms
+Installed 11 packages in 8ms
+...
+Installed 1 executable: pre-commit
+```
+
+This will put the `pre-commit` executable in `~/.local/bin` or similar (per the documentation). You should then be able to run it from anywhere:
+
+```
+$ pre-commit --version
+pre-commit 4.2.0 (pre-commit-uv=4.1.4, uv=0.7.2)
+```
+
+The install command also adds [pre-commit-uv](https://pypi.org/project/pre-commit-uv/), a plugin that patches pre-commit to use uv to install Python-based tools. This drastically speeds up using Python-based hooks, a common use case. (Unfortunately, it seems pre-commit itself won’t be adding uv support.)
+
+With pre-commit installed globally, you can now install its Git hook in relevant repositories per usual:
+
+```
+$ cd myrepo
+
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+
+$ pre-commit run --all-files
+[INFO] Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Using pre-commit with uv 0.7.2 via pre-commit-uv 4.1.4
+check for added large files..............................................Passed
+check for merge conflicts................................................Passed
+trim trailing whitespace.................................................Passed
+```
+
+## Upgrade pre-commit
+
+To upgrade pre-commit installed this way, run:
+
+```
+$ uv tool upgrade pre-commit
+```
+
+For example:
+
+```
+$ uv tool upgrade pre-commit
+Updated pre-commit v4.1.0 -> v4.2.0
+ - pre-commit==4.1.0
+ + pre-commit==4.2.0
+Installed 1 executable: pre-commit
+```
+
+This command upgrades pre-commit and all of its dependencies, in its managed environment.
+For more information, read the uv tool upgrade documentation: `https://docs.astral.sh/uv/concepts/tools/`
 
 
 

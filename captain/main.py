@@ -30,6 +30,7 @@ from captain.utils.logger import logger
 from captain.internal.manager import WatchManager
 from captain.internal.wsmanager import ConnectionManager
 from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator
+from captain.services.change_queue import ChangeQueueManager
 
 
 def cleanup_mecademic_handles():
@@ -65,9 +66,15 @@ async def lifespan(app: FastAPI):
     coordinator_task = asyncio.create_task(workflow_coordinator.run())
     logger.info("Workflow Queue Coordinator started (managing WCQ and WEQ)")
 
+    # Start ChangeQueueManager for real-time code updates
+    change_queue_manager = ChangeQueueManager.get_instance()
+    change_queue_manager.start()
+    logger.info("ChangeQueueManager started")
+
     # Store references for shutdown
     app.state.workflow_coordinator = workflow_coordinator
     app.state.coordinator_task = coordinator_task
+    app.state.change_queue_manager = change_queue_manager
 
     # Register cleanup handlers
     atexit.register(cleanup_mecademic_handles)
@@ -97,6 +104,11 @@ async def lifespan(app: FastAPI):
                 await asyncio.wait_for(app.state.coordinator_task, timeout=5.0)
             except asyncio.TimeoutError:
                 logger.warning("Coordinator task did not complete within timeout")
+
+    # Stop ChangeQueueManager
+    if hasattr(app.state, "change_queue_manager"):
+        app.state.change_queue_manager.stop()
+        logger.info("ChangeQueueManager stopped")
 
     cleanup_mecademic_handles()
 

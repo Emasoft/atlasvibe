@@ -187,9 +187,6 @@ class TestBlocksAPIErrorHandling:
                 "captain.routes.blocks.copy_blueprint_to_project"
             ) as mock_copy_blueprint,
             patch("captain.routes.blocks.create_manifest") as mock_create_manifest,
-            patch(
-                "captain.routes.blocks.regenerate_block_data_json"
-            ) as mock_regenerate,
             patch("captain.routes.blocks.validate_python_code") as mock_validate,
             patch("captain.routes.blocks.get_completions") as mock_completions,
             patch("captain.routes.blocks.get_hover_info") as mock_hover,
@@ -208,7 +205,6 @@ class TestBlocksAPIErrorHandling:
                 "find_blueprint": mock_find_blueprint,
                 "copy_blueprint": mock_copy_blueprint,
                 "create_manifest": mock_create_manifest,
-                "regenerate": mock_regenerate,
                 "validate": mock_validate,
                 "completions": mock_completions,
                 "hover": mock_hover,
@@ -232,8 +228,9 @@ class TestBlocksAPIErrorHandling:
         response = client.get("/blocks/manifest/")
         assert response.status_code == 500
         data = response.json()
-        assert "error" in data
-        assert "DB error" not in data["error"]  # Should be sanitized
+        assert "detail" in data
+        assert "error" in data["detail"]
+        assert "DB error" not in str(data["detail"]["error"])  # Should be sanitized
 
     def test_create_custom_block_validation_error(self, client):
         """Test validation error for invalid block name."""
@@ -245,7 +242,7 @@ class TestBlocksAPIErrorHandling:
 
         response = client.post("/blocks/create-custom/", json=request_data)
         assert response.status_code == 422
-        assert "Invalid block name" in response.json()["detail"]
+        assert "Block name must start with a letter" in response.json()["detail"]
 
     def test_create_custom_block_blueprint_not_found(self, client, mock_dependencies):
         """Test error when blueprint is not found."""
@@ -356,7 +353,12 @@ class TestBlocksAPIErrorHandling:
         """Test code formatting when black fails."""
         request_data = {"code": "def broken syntax(", "line_length": 88}
 
-        with patch("black.format_str", side_effect=Exception("Cannot parse")):
+        # Create a mock black module with InvalidInput exception
+        mock_black = Mock()
+        mock_black.InvalidInput = type("InvalidInput", (Exception,), {})
+        mock_black.format_str.side_effect = mock_black.InvalidInput("Cannot parse")
+
+        with patch.dict("sys.modules", {"black": mock_black}):
             response = client.post("/blocks/format-code/", json=request_data)
             assert response.status_code == 200
             # Should return original code

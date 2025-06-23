@@ -19,7 +19,12 @@ import os
 # Add captain to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from captain.routes import (
+# Mock tm_devices before any imports that might use it
+from .mock_tm_devices import install_mock
+
+install_mock()
+
+from captain.routes import (  # noqa: E402
     blocks,
     devices,
     flowchart,
@@ -31,11 +36,12 @@ from captain.routes import (
     project,
     workflow_queues,
 )
-from captain.utils.config import origins
-from captain.utils.logger import logger
-from captain.internal.manager import WatchManager
-from captain.internal.wsmanager import ConnectionManager
-from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator
+from captain.utils.config import origins  # noqa: E402
+from captain.utils.logger import logger  # noqa: E402
+from captain.internal.manager import WatchManager  # noqa: E402
+from captain.internal.wsmanager import ConnectionManager  # noqa: E402
+from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator  # noqa: E402
+from captain.services.change_queue import ChangeQueueManager  # noqa: E402
 
 
 @asynccontextmanager
@@ -55,9 +61,17 @@ async def test_lifespan(app: FastAPI):
     coordinator_task = asyncio.create_task(workflow_coordinator.run())
     logger.info("Workflow Queue Coordinator started (managing WCQ and WEQ)")
 
+    # Start ChangeQueueManager for real-time code updates
+    logger.info("Starting ChangeQueueManager...")
+    change_queue_manager = ChangeQueueManager.get_instance()
+    logger.info("Got ChangeQueueManager instance")
+    change_queue_manager.start()
+    logger.info("ChangeQueueManager started")
+
     # Store references for shutdown
     app.state.workflow_coordinator = workflow_coordinator
     app.state.coordinator_task = coordinator_task
+    app.state.change_queue_manager = change_queue_manager
 
     yield
 
@@ -75,6 +89,11 @@ async def test_lifespan(app: FastAPI):
                 await asyncio.wait_for(app.state.coordinator_task, timeout=5.0)
             except asyncio.TimeoutError:
                 logger.warning("Coordinator task did not complete within timeout")
+
+    # Stop ChangeQueueManager
+    if hasattr(app.state, "change_queue_manager"):
+        app.state.change_queue_manager.stop()
+        logger.info("ChangeQueueManager stopped")
 
 
 @pytest.fixture

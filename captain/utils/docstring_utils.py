@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (c) 2024 Emasoft
 #
 # This file is part of AtlasVibe, which is based on Flojoy Studio
@@ -6,8 +7,6 @@
 #
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
-
-# -*- coding: utf-8 -*-
 
 # HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 # - Created shared utility module for docstring parsing

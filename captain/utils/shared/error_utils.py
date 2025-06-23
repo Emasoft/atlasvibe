@@ -17,6 +17,8 @@ import functools
 import logging
 import traceback
 import time
+import asyncio
+import inspect
 from typing import TypeVar, Callable, Any, Optional, Type, cast
 from contextlib import contextmanager
 
@@ -120,33 +122,65 @@ def with_retry(
     """
 
     def decorator(func: F) -> F:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            current_delay = delay
-            last_exception = None
+        # Check if the function is async
+        if inspect.iscoroutinefunction(func):
 
-            for attempt in range(max_attempts):
-                try:
-                    return func(*args, **kwargs)
-                except exceptions as e:
-                    last_exception = e
-                    if attempt < max_attempts - 1:
-                        if logger:
-                            logger.warning(
-                                f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
-                            )
-                        time.sleep(current_delay)
-                        current_delay *= backoff
-                    else:
-                        if logger:
-                            logger.error(
-                                f"All {max_attempts} attempts failed for {func.__name__}: {e}"
-                            )
+            @functools.wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                current_delay = delay
+                last_exception = None
 
-            if last_exception:
-                raise last_exception
+                for attempt in range(max_attempts):
+                    try:
+                        return await func(*args, **kwargs)
+                    except exceptions as e:
+                        last_exception = e
+                        if attempt < max_attempts - 1:
+                            if logger:
+                                logger.warning(
+                                    f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
+                                )
+                            await asyncio.sleep(current_delay)
+                            current_delay *= backoff
+                        else:
+                            if logger:
+                                logger.error(
+                                    f"All {max_attempts} attempts failed for {func.__name__}: {e}"
+                                )
 
-        return cast(F, wrapper)
+                if last_exception:
+                    raise last_exception
+
+            return cast(F, async_wrapper)
+        else:
+
+            @functools.wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                current_delay = delay
+                last_exception = None
+
+                for attempt in range(max_attempts):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_exception = e
+                        if attempt < max_attempts - 1:
+                            if logger:
+                                logger.warning(
+                                    f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
+                                )
+                            time.sleep(current_delay)
+                            current_delay *= backoff
+                        else:
+                            if logger:
+                                logger.error(
+                                    f"All {max_attempts} attempts failed for {func.__name__}: {e}"
+                                )
+
+                if last_exception:
+                    raise last_exception
+
+            return cast(F, sync_wrapper)
 
     return decorator
 
