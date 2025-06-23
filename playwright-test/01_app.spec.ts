@@ -33,8 +33,10 @@ test.describe(`${productName} startup test`, () => {
   });
 
   test.afterAll(async () => {
-    await writeLogFile(app, `atlasvibe-startup-test`);
-    await app.close();
+    if (app) {
+      await writeLogFile(app, `atlasvibe-startup-test`);
+      await app.close();
+    }
   });
 
   test("Check if app is packaged", async () => {

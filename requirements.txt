@@ -305,10 +305,12 @@ pytest==7.4.4
     #   atlasvibe
     #   pytest-json-report
     #   pytest-metadata
+    #   pytest-timeout
 pytest-json-report==1.5.0
     # via atlasvibe
 pytest-metadata==3.1.1
     # via pytest-json-report
+pytest-timeout==2.4.0
 python-box==7.3.2
     # via atlasvibe
 python-dateutil==2.9.0.post0

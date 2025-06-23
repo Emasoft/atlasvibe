@@ -89,11 +89,11 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: pnpm run electron-package:linux
 
-      - name: Set up Xvfb (Linux only)
+      - name: Set up Xvfb and Linux dependencies
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0 libxss1 libasound2
           Xvfb -screen 0 1024x768x24 :0 &
           sleep 5
 

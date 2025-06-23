@@ -129,6 +129,7 @@ pythonpath = ["."]
 [dependency-groups]
 dev = [
     "pre-commit>=4.2.0",
+    "pytest-timeout>=2.4.0",
     "yamllint>=1.37.1",
 ]
 # For now, keep configuration minimal until we understand the correct format
