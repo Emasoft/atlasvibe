@@ -127,9 +127,7 @@ def spawn_workers(
     if manager.running_topology is None:
         logger.error("Could not spawn workers, no topology detected")
         return
-    worker_number = manager.running_topology.get_maximum_workers(
-        maximum_capacity=max_workers
-    )
+    worker_number = manager.running_topology.get_maximum_workers(maximum_capacity=max_workers)
     logger.debug(f"NEED {worker_number} WORKERS")
     logger.info(f"Spawning {worker_number} workers")
     manager.thread_count = worker_number
@@ -194,8 +192,7 @@ def flowchart_to_nx_graph(flowchart: dict[str, Any]):
             dict[str, str],
             next(
                 filter(
-                    lambda input, target_label_id=target_label_id: input.get("id", "")
-                    == target_label_id,
+                    lambda input, target_label_id=target_label_id: input.get("id", "") == target_label_id,
                     v_inputs,
                 ),
                 None,
@@ -208,14 +205,8 @@ def flowchart_to_nx_graph(flowchart: dict[str, Any]):
             target_label = target_input.get("name", "default")
             multiple = target_input.get("multiple", False)
 
-        logger.debug(
-            f"Adding edge from {u} to {v}\n,"
-            f"inputs: {v_inputs}, chosen label: {target_label},\n"
-            f"target_label_id: {target_label_id}"
-        )
-        nx_graph.add_edge(
-            u, v, label=label, target_label=target_label, id=_id, multiple=multiple
-        )
+        logger.debug(f"Adding edge from {u} to {v}\n," f"inputs: {v_inputs}, chosen label: {target_label},\n" f"target_label_id: {target_label_id}")
+        nx_graph.add_edge(u, v, label=label, target_label=target_label, id=_id, multiple=multiple)
 
     return nx_graph
 
@@ -238,11 +229,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
     # clean up before next run
     clean_up_function()
 
-    await manager.ws.broadcast(
-        WorkerJobResponse(
-            jobset_id=request.jobsetId, sys_status=STATUS_CODES["BUILDING_TOPOLOGY"]
-        )
-    )
+    await manager.ws.broadcast(WorkerJobResponse(jobset_id=request.jobsetId, sys_status=STATUS_CODES["BUILDING_TOPOLOGY"]))
 
     # Create new task queue and finish queue
     manager.task_queue = Queue()
@@ -264,9 +251,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
     await asyncio.create_task(Signaler(manager.ws).signal_prejob_op(request.jobsetId))
 
     nodes = fc["nodes"]
-    packages_dict = {
-        package.name: package.version for package in importlib.metadata.distributions()
-    }
+    packages_dict = {package.name: package.version for package in importlib.metadata.distributions()}
     missing_packages: list[str] = []
 
     socket_msg["SYSTEM_STATUS"] = STATUS_CODES["COLLECTING_PIP_DEPENDENCIES"]
@@ -278,11 +263,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
         for package in node["data"]["pip_dependencies"]:
             pckg = packages_dict.get(package["name"])
             if not pckg:
-                pckg_str = (
-                    f"{package['name']}=={package['v']}"
-                    if "v" in package
-                    else f"{package['name']}"
-                )
+                pckg_str = f"{package['name']}=={package['v']}" if "v" in package else f"{package['name']}"
                 logger.debug(f"Package: {package['name']} is missing!")
                 missing_packages.append(pckg_str)
             else:
@@ -292,9 +273,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
         socket_msg["SYSTEM_STATUS"] = STATUS_CODES["INSTALLING_PACKAGES"]
         await manager.ws.broadcast(socket_msg)
         logger.info("Installing required dependencies before running the flow chart...")
-        logger.info(
-            f"{', '.join(missing_packages)} packages will be installed with pip!"
-        )
+        logger.info(f"{', '.join(missing_packages)} packages will be installed with pip!")
         installation_succeed = await install_packages(missing_packages)
         logger.debug(f"installing packages was successful? {installation_succeed}")
 
@@ -309,9 +288,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
     await manager.ws.broadcast(socket_msg)
 
     # get the amount of workers needed
-    funcs, errs = pre_import_functions(
-        topology=manager.running_topology, project_path=request.projectPath
-    )
+    funcs, errs = pre_import_functions(topology=manager.running_topology, project_path=request.projectPath)
 
     if errs:
         socket_msg["SYSTEM_STATUS"] = STATUS_CODES["IMPORTING_BLOCK_FUNCTIONS_FAILED"]
@@ -320,9 +297,7 @@ async def prepare_jobs_and_run_fc(request: PostWFC, manager: Manager):
         await manager.ws.broadcast(socket_msg)
         return
 
-    logger.debug(
-        f"PRE JOB OPERATION TOOK {time.time() - pre_job_op_start} SECONDS TO COMPLETE"
-    )
+    logger.debug(f"PRE JOB OPERATION TOOK {time.time() - pre_job_op_start} SECONDS TO COMPLETE")
     """
     END PRE JOB OPERATION
     ____________________________________________________________________________

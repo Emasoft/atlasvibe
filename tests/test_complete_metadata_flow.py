@@ -73,9 +73,7 @@ class TestCompleteMetadataFlow:
         # Step 1: Create a blueprint block to copy from
         with tempfile.TemporaryDirectory() as blueprint_base:
             # Create mock blueprint structure
-            blueprint_dir = (
-                Path(blueprint_base) / "blocks" / "MATH" / "ARITHMETIC" / "CONSTANT"
-            )
+            blueprint_dir = Path(blueprint_base) / "blocks" / "MATH" / "ARITHMETIC" / "CONSTANT"
             blueprint_dir.mkdir(parents=True)
 
             # Create blueprint files
@@ -99,15 +97,9 @@ def CONSTANT(x: int = 42) -> int:
 """)
 
             # Create metadata files
-            (blueprint_dir / "app.json").write_text(
-                json.dumps({"name": "CONSTANT", "type": "default", "category": "MATH"})
-            )
+            (blueprint_dir / "app.json").write_text(json.dumps({"name": "CONSTANT", "type": "default", "category": "MATH"}))
 
-            (blueprint_dir / "block_data.json").write_text(
-                json.dumps(
-                    {"inputs": [], "outputs": [{"name": "output", "type": "int"}]}
-                )
-            )
+            (blueprint_dir / "block_data.json").write_text(json.dumps({"inputs": [], "outputs": [{"name": "output", "type": "int"}]}))
 
             # Mock the blocks path and blueprint finding
             with (
@@ -193,10 +185,7 @@ def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Cus
                 assert "multiplier" in updated_manifest["parameters"]
                 assert "description" in updated_manifest["parameters"]
                 assert updated_manifest["parameters"]["multiplier"]["default"] == 2
-                assert (
-                    updated_manifest["parameters"]["description"]["default"]
-                    == "Custom constant"
-                )
+                assert updated_manifest["parameters"]["description"]["default"] == "Custom constant"
 
     @pytest.mark.asyncio
     async def test_file_watcher_websocket_flow(self, test_project):

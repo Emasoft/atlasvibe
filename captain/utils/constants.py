@@ -51,9 +51,7 @@ INPUTS_SECTION = "Inputs"
 # Default values
 DEFAULT_BLOCK_TYPE = "default"
 BLUEPRINT_BLOCKS_DIR = "blocks"  # Global blueprint blocks directory at AtlasVibe root
-CUSTOM_BLOCKS_DIR = (
-    "atlasvibe_blocks"  # Project-specific custom blocks directory inside each project
-)
+CUSTOM_BLOCKS_DIR = "atlasvibe_blocks"  # Project-specific custom blocks directory inside each project
 
 # File extensions
 PYTHON_EXT = ".py"

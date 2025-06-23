@@ -83,15 +83,7 @@ class AtlasvibeWrapper:
                 if dtype == "" or dtype == "NoneType":
                     for idl, line in enumerate(self.doc.split("\n")):
                         if f"{arg} :" in line:
-                            dtype = (
-                                line.split(":")[1]
-                                .split(",")[0]
-                                .strip()
-                                .replace("}", "")
-                                .replace("{", "")
-                                .replace("(", "")
-                                .replace(")", "")
-                            )
+                            dtype = line.split(":")[1].split(",")[0].strip().replace("}", "").replace("{", "").replace("(", "").replace(")", "")
                             break
                 # now check for not allowed types after identifying them all:
                 if dtype in self.FORBIDDEN_TYPES:
@@ -151,15 +143,7 @@ class AtlasvibeWrapper:
         for idl, line in enumerate(self.doc.split("\n")):
             if "Returns" in line:
                 break
-        self.doc = "\n" + (
-            "\n".join(
-                [
-                    ("\t" if (":" in line or "----------" in line) else "\t\t")
-                    + line.lstrip(" ")
-                    for line in self.doc.split("\n")[:idl]
-                ]
-            ).replace("\tParameters", "Parameters")
-        )
+        self.doc = "\n" + ("\n".join([("\t" if (":" in line or "----------" in line) else "\t\t") + line.lstrip(" ") for line in self.doc.split("\n")[:idl]]).replace("\tParameters", "Parameters"))
 
         if self.decomp_return:
             replace = "Parameters\n\t----------"
@@ -186,15 +170,7 @@ class AtlasvibeWrapper:
                 if dtype == "" or dtype == "NoneType":
                     for idl, line in enumerate(self.doc.split("\n")):
                         if f"{arg} :" in line:
-                            dtype = (
-                                line.split(":")[1]
-                                .split(",")[0]
-                                .strip()
-                                .replace("}", "")
-                                .replace("{", "")
-                                .replace("(", "")
-                                .replace(")", "")
-                            )
+                            dtype = line.split(":")[1].split(",")[0].strip().replace("}", "").replace("{", "").replace("(", "").replace(")", "")
                             break
                 # now check for not allowed types after identifying them all correctly:
                 if dtype in self.FORBIDDEN_TYPES:
@@ -246,19 +222,11 @@ class AtlasvibeWrapper:
         self.data += "\n\t" + """'''""" + "\n\n"
 
         if self.module.__name__ == "numpy.linalg":
-            self.data = self.data.replace(
-                "OrderedPair | Matrix | Scalar", "Matrix | Scalar"
-            )
+            self.data = self.data.replace("OrderedPair | Matrix | Scalar", "Matrix | Scalar")
             self.data = self.data.replace("OrderedPair | Matrix", "Matrix")
-            self.data = self.data.replace(
-                "import OrderedPair, atlasvibe,", "import atlasvibe,"
-            )
+            self.data = self.data.replace("import OrderedPair, atlasvibe,", "import atlasvibe,")
 
-            self.data += f"\tresult = {self.module.__name__}.{self.name}(\n\t\t\t" + (
-                f"{self.first_argument}=default.m,\n\t\t\t"
-                if self.first_argument is not None
-                else ""
-            )
+            self.data += f"\tresult = {self.module.__name__}.{self.name}(\n\t\t\t" + (f"{self.first_argument}=default.m,\n\t\t\t" if self.first_argument is not None else "")
             self.write_func_args()
             self.data += ")\n"
 
@@ -288,11 +256,7 @@ class AtlasvibeWrapper:
         # elif self.module.__name__ == "numpy.matlib":  # TODO add matlib
 
         else:
-            self.data += f"\tresult = {self.module.__name__}.{self.name}(\n\t\t\t" + (
-                f"{self.first_argument}=default.y,\n\t\t\t"
-                if self.first_argument is not None
-                else ""
-            )
+            self.data += f"\tresult = {self.module.__name__}.{self.name}(\n\t\t\t" + (f"{self.first_argument}=default.y,\n\t\t\t" if self.first_argument is not None else "")
             self.write_func_args()
             self.data += ")\n"
 
@@ -360,12 +324,8 @@ class AtlasvibeWrapper:
             self.test_script += "np.ones(50), y=np.arange(1, 51))\n\t"
             self.test_script += f"res = {nodename}.{nodename}(default=element_a)\n\t"
 
-        self.test_script += (
-            "\n\n\t# check that the outputs are one of the correct types."
-        )
-        self.test_script += (
-            "\n\tassert isinstance(res, Scalar | OrderedPair | Matrix)\n"
-        )
+        self.test_script += "\n\n\t# check that the outputs are one of the correct types."
+        self.test_script += "\n\tassert isinstance(res, Scalar | OrderedPair | Matrix)\n"
 
         # Some nodes tests require custom inputs for testing.
         filename = f"{os.path.dirname(__file__)}/scraper/test_replace.txt"
@@ -380,11 +340,7 @@ class AtlasvibeWrapper:
 def scrape_function(func):
     signature = inspect.signature(func)
     param_names = [p.name for p in signature.parameters.values()]
-    default_optional_params = {
-        k: val.default
-        for k, val in signature.parameters.items()
-        if val.default != inspect.Parameter.empty
-    }
+    default_optional_params = {k: val.default for k, val in signature.parameters.items() if val.default != inspect.Parameter.empty}
     return func, param_names, default_optional_params
 
 
@@ -422,18 +378,12 @@ if __name__ == "__main__":
                 if not all_arg_names:
                     func_is_valid = True
                 else:
-                    if (all_arg_names[0] in ["x", "data", "A", "a"]) and (
-                        "y" not in all_arg_names
-                        and "plot" not in all_arg_names
-                        and "b" not in all_arg_names
-                    ):
+                    if (all_arg_names[0] in ["x", "data", "A", "a"]) and ("y" not in all_arg_names and "plot" not in all_arg_names and "b" not in all_arg_names):
                         func_is_valid = True
 
                 # Create object (above) for each function
                 if func_is_valid:
-                    fw = AtlasvibeWrapper(
-                        func, default_optional_params, submodule, all_arg_names
-                    )
+                    fw = AtlasvibeWrapper(func, default_optional_params, submodule, all_arg_names)
                     fw.write_wrapper(f"{module.upper()}_{submodule_name.upper()}")
                     if fw.data != "" and "NoneType" not in fw.data:
                         try:
@@ -467,9 +417,7 @@ if __name__ == "__main__":
 
             print("invalids: ", invalids)
             print("valids: ", valids)
-            print(
-                f"Created nodes for {len(valids)} out of {len(valids) + len(invalids)} functions."
-            )
+            print(f"Created nodes for {len(valids)} out of {len(valids) + len(invalids)} functions.")
             with open(NODE_DIR / "__init__.py", "w") as fh:
                 functions = "__all__ = ["
                 for name in valids:

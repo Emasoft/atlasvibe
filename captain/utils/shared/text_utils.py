@@ -78,9 +78,7 @@ def save_text_file(
 
         if atomic:
             # Write to temporary file first, then rename (atomic operation)
-            with tempfile.NamedTemporaryFile(
-                mode="w", encoding=encoding, dir=file_path.parent, delete=False
-            ) as tmp_file:
+            with tempfile.NamedTemporaryFile(mode="w", encoding=encoding, dir=file_path.parent, delete=False) as tmp_file:
                 tmp_file.write(content)
                 tmp_path = tmp_file.name
 
@@ -126,9 +124,7 @@ def append_text_file(
 
     try:
         if not file_path.exists() and not create_if_missing:
-            logger.error(
-                f"Text file not found and create_if_missing=False: {file_path}"
-            )
+            logger.error(f"Text file not found and create_if_missing=False: {file_path}")
             return False
 
         # Create parent directories if needed

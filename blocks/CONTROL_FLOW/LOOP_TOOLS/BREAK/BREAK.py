@@ -41,9 +41,7 @@ def BREAK(
     """
 
     # this is the loop ID we want to break
-    original_data: dict[str, Any] = SmallMemory().read_memory(
-        referred_node.ref, memory_key
-    )
+    original_data: dict[str, Any] = SmallMemory().read_memory(referred_node.ref, memory_key)
     data = original_data.copy()
     data["num_loop"] = 1
     data["current_iteration"] = 1

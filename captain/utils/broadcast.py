@@ -31,9 +31,7 @@ class Signaler:
         msg = WorkerJobResponse(jobset_id=jobset_id, **kwargs)
         await self.ws.broadcast(msg)
 
-    async def signal_node_results(
-        self, jobset_id: str, node_id: str, func_name: str, result: dict[str, Any]
-    ):
+    async def signal_node_results(self, jobset_id: str, node_id: str, func_name: str, result: dict[str, Any]):
         await self._broadcast_message(
             jobset_id=jobset_id,
             result=result,
@@ -41,18 +39,14 @@ class Signaler:
             node_id=node_id,
         )
 
-    async def signal_current_running_node(
-        self, jobset_id: str, node_id: str, func_name: str
-    ):
+    async def signal_current_running_node(self, jobset_id: str, node_id: str, func_name: str):
         await self._broadcast_message(
             jobset_id=jobset_id,
             sys_status=STATUS_CODES["RUNNING_PYTHON_JOB"] + func_name,
             running_node=node_id,
         )
 
-    async def signal_failed_nodes(
-        self, jobset_id: str, node_id: str, func_name: str, error: str
-    ):
+    async def signal_failed_nodes(self, jobset_id: str, node_id: str, func_name: str, error: str):
         await self._broadcast_message(
             jobset_id=jobset_id,
             sys_status=STATUS_CODES["FAILED_BLOCK"] + func_name,
@@ -60,9 +54,7 @@ class Signaler:
         )
 
     async def signal_prejob_op(self, jobset_id: str):
-        await self._broadcast_message(
-            jobset_id=jobset_id, sys_status=STATUS_CODES["RUN_PRE_JOB_OP"]
-        )
+        await self._broadcast_message(jobset_id=jobset_id, sys_status=STATUS_CODES["RUN_PRE_JOB_OP"])
 
     async def signal_standby(self, jobset_id: str):
         await self._broadcast_message(

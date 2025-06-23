@@ -172,10 +172,7 @@ def validate_block_name(name: str) -> None:
 
     # Check for valid Python identifier
     if not re.match(r"^[A-Za-z][A-Za-z0-9_]*$", name):
-        raise ProjectStructureError(
-            "Block name must start with a letter and contain only letters, "
-            "numbers, and underscores"
-        )
+        raise ProjectStructureError("Block name must start with a letter and contain only letters, " "numbers, and underscores")
 
     # Check for Python reserved words
     import keyword
@@ -189,9 +186,7 @@ def validate_block_name(name: str) -> None:
         raise ProjectStructureError(f"'{name}' is a reserved name")
 
 
-def copy_blueprint_to_project(
-    blueprint_path: str, project_path: str, new_block_name: str
-) -> str:
+def copy_blueprint_to_project(blueprint_path: str, project_path: str, new_block_name: str) -> str:
     """Copy a blueprint block to a project as a custom block.
 
     Args:
@@ -215,9 +210,7 @@ def copy_blueprint_to_project(
     new_block_dir = blocks_dir / new_block_name
 
     if new_block_dir.exists():
-        raise ProjectStructureError(
-            f"Block '{new_block_name}' already exists in project"
-        )
+        raise ProjectStructureError(f"Block '{new_block_name}' already exists in project")
 
     # Track if we need to rollback
     created_dir = False
@@ -243,9 +236,7 @@ def copy_blueprint_to_project(
             # Update function name in the Python file
             update_block_function_name(new_py_file, blueprint_name, new_block_name)
         else:
-            raise ProjectStructureError(
-                f"Blueprint Python file '{blueprint_name}.py' not found"
-            )
+            raise ProjectStructureError(f"Blueprint Python file '{blueprint_name}.py' not found")
 
         # Update metadata files
         update_block_metadata(new_block_dir, blueprint_name, new_block_name)
@@ -254,13 +245,9 @@ def copy_blueprint_to_project(
         if regenerate_block_data_json(str(new_block_dir)):
             logger.info(f"Regenerated block_data.json for '{new_block_name}'")
         else:
-            logger.warning(
-                f"Failed to regenerate block_data.json for '{new_block_name}'"
-            )
+            logger.warning(f"Failed to regenerate block_data.json for '{new_block_name}'")
 
-        logger.info(
-            f"Created custom block '{new_block_name}' from blueprint '{blueprint_name}'"
-        )
+        logger.info(f"Created custom block '{new_block_name}' from blueprint '{blueprint_name}'")
         return str(new_block_dir)
 
     except Exception as e:
@@ -368,9 +355,7 @@ def update_block_code(block_id: str, code: str, project_path: str) -> bool:
         if regenerate_block_data_json(str(block_dir)):
             logger.info(f"Updated code and regenerated metadata for block '{block_id}'")
         else:
-            logger.warning(
-                f"Updated code but failed to regenerate metadata for block '{block_id}'"
-            )
+            logger.warning(f"Updated code but failed to regenerate metadata for block '{block_id}'")
 
         return True
 

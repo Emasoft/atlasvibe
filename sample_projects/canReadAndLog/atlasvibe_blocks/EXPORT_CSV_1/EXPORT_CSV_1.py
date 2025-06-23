@@ -59,8 +59,6 @@ def EXPORT_CSV_1(
             df = pd.DataFrame(dc.m)
             df.to_csv(path, index=False, header=False)
         case _:
-            raise ValueError(
-                f"Invalid DataContainer type: {dc.type} cannot be exported as CSV."
-            )
+            raise ValueError(f"Invalid DataContainer type: {dc.type} cannot be exported as CSV.")
 
     return None

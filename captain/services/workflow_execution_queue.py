@@ -108,9 +108,7 @@ class WorkflowExecutionQueue:
             )
 
             # Import block functions
-            imported_functions, import_errors = pre_import_functions(
-                self._current_topology, topology.project_path
-            )
+            imported_functions, import_errors = pre_import_functions(self._current_topology, topology.project_path)
 
             if import_errors:
                 error_msg = f"Failed to import blocks: {import_errors}"
@@ -133,9 +131,7 @@ class WorkflowExecutionQueue:
             )
 
             if self._cancel_requested or outputs is None:
-                await self._broadcast_status(
-                    "weq_cancelled", {"execution_id": self._execution_id}
-                )
+                await self._broadcast_status("weq_cancelled", {"execution_id": self._execution_id})
                 return None
 
             # Store outputs for comparison
@@ -156,9 +152,7 @@ class WorkflowExecutionQueue:
             logger.error(f"Error executing workflow: {e}")
             logger.error(traceback.format_exc())
 
-            await self._broadcast_status(
-                "weq_error", {"execution_id": self._execution_id, "error": str(e)}
-            )
+            await self._broadcast_status("weq_error", {"execution_id": self._execution_id, "error": str(e)})
 
             return None
 
@@ -177,9 +171,7 @@ class WorkflowExecutionQueue:
         if self._current_execution and not self._current_execution.done():
             self._current_execution.cancel()
 
-    def compare_outputs(
-        self, outputs1: Dict[str, Any], outputs2: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def compare_outputs(self, outputs1: Dict[str, Any], outputs2: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Compare outputs from two executions.
 

@@ -41,9 +41,7 @@ def DEEPLAB_V3(default: Image) -> Image:
     # Parse input image
     input_image = default
     r, g, b, a = input_image.r, input_image.g, input_image.b, input_image.a
-    nparray = (
-        np.stack((r, g, b, a), axis=2) if a is not None else np.stack((r, g, b), axis=2)
-    )
+    nparray = np.stack((r, g, b, a), axis=2) if a is not None else np.stack((r, g, b), axis=2)
     # Convert input image
     input_image = TF.to_pil_image(nparray).convert("RGB")
     # Set torch hub cache directory
@@ -73,9 +71,7 @@ def DEEPLAB_V3(default: Image) -> Image:
     colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
     colors = (colors % 255).numpy().astype("uint8")
     # plot the semantic segmentation predictions of 21 classes in each color
-    r = PIL.Image.fromarray(output_predictions.byte().cpu().numpy()).resize(
-        input_image.size
-    )
+    r = PIL.Image.fromarray(output_predictions.byte().cpu().numpy()).resize(input_image.size)
     r.putpalette(colors)
     out_img = np.array(r.convert("RGB"))
     # Build the output image

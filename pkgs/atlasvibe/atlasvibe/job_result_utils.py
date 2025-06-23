@@ -16,10 +16,7 @@ __all__ = ["get_job_result", "get_next_directions", "get_next_nodes", "get_job_r
 
 
 def is_flow_controled(result: dict[str, Any] | DataContainer):
-    if (
-        ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS in result
-        or ATLASVIBE_INSTRUCTION.FLOW_TO_NODES in result
-    ):
+    if ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS in result or ATLASVIBE_INSTRUCTION.FLOW_TO_NODES in result:
         return True
     return False
 
@@ -30,12 +27,8 @@ def get_next_directions(result: dict[str, Any] | None) -> list[str] | None:
         return direction
     if not result.get(ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS):
         for value in result.values():
-            if isinstance(value, dict) and value.get(
-                ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS
-            ):
-                direction = cast(
-                    list[str], value[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS]
-                )
+            if isinstance(value, dict) and value.get(ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS):
+                direction = cast(list[str], value[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS])
                 break
     else:
         direction = result[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS]

@@ -14,9 +14,7 @@ def test_ORDERED_TRIPLE_2_SURFACE_general(mock_atlasvibe_decorator):
 
     np.testing.assert_array_equal(([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]), out.x)
     np.testing.assert_array_equal(([[0, 0, 0, 0], [1, 1, 1, 1], [2, 2, 2, 2]]), out.y)
-    np.testing.assert_array_equal(
-        ([[0.0, 3.9, 2.4, 5.0], [1.2, 3.3, 3.4, 3.5], [0.9, 8.7, 5.6, 7.1]]), out.z
-    )
+    np.testing.assert_array_equal(([[0.0, 3.9, 2.4, 5.0], [1.2, 3.3, 3.4, 3.5], [0.9, 8.7, 5.6, 7.1]]), out.z)
 
 
 def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_atlasvibe_decorator):
@@ -31,9 +29,7 @@ def test_ORDERED_TRIPLE_2_SURFACE_with_padding(mock_atlasvibe_decorator):
     out1 = ORDERED_TRIPLE_2_SURFACE.ORDERED_TRIPLE_2_SURFACE(ordTriple1)
 
     assert len(out1.z) == len(np.unique(ordTriple1.y))
-    np.testing.assert_array_equal(
-        [[0.0, 3.9, 2.4, 5.0], [1.2, 3.3, 3.4, 3.5], [0.9, 0.0, 0.0, 0.0]], out1.z
-    )
+    np.testing.assert_array_equal([[0.0, 3.9, 2.4, 5.0], [1.2, 3.3, 3.4, 3.5], [0.9, 0.0, 0.0, 0.0]], out1.z)
 
     # Test with x,y unique and len(z) smaller then len(x)*len(y)
     ordTriple2 = OrderedTriple(
@@ -75,6 +71,4 @@ def test_ORDERED_TRIPLE_2_SURFACE_no_padding(mock_atlasvibe_decorator):
     )
     out2 = ORDERED_TRIPLE_2_SURFACE.ORDERED_TRIPLE_2_SURFACE(ordTriple2)
 
-    np.testing.assert_array_equal(
-        [[8.0, 5.5, 2.4], [6.7, 1.3, 0.9], [5.6, 4.3, 7.7]], out2.z
-    )
+    np.testing.assert_array_equal([[8.0, 5.5, 2.4], [6.7, 1.3, 0.9], [5.6, 4.3, 7.7]], out2.z)

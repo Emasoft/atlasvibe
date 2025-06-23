@@ -13,9 +13,7 @@ from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_ope
 
 
 @atlasvibe
-def SUBTRACT(
-    a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
-) -> OrderedPair | Scalar | Vector:
+def SUBTRACT(a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]) -> OrderedPair | Scalar | Vector:
     """Subtract two numeric arrays, vectors, matrices, or constants element-wise.
 
     Parameters

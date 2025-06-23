@@ -57,9 +57,7 @@ class TestUpdateBlockCode:
     @pytest.fixture
     def temp_custom_block(self):
         """Create a temporary custom block file."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", prefix="atlasvibe_blocks_CUSTOM_", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", prefix="atlasvibe_blocks_CUSTOM_", delete=False) as f:
             f.write(INITIAL_BLOCK_CODE)
             temp_path = f.name
 
@@ -186,9 +184,7 @@ class TestUpdateBlockCode:
     @patch("captain.routes.blocks.Path")
     @patch("captain.routes.blocks.regenerate_block_data_json")
     @patch("captain.routes.blocks.create_manifest")
-    def test_update_block_code_regenerates_manifest(
-        self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class
-    ):
+    def test_update_block_code_regenerates_manifest(self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class):
         """Test that block manifest is regenerated after code update."""
         # Setup mocks
         mock_path = MagicMock()
@@ -216,17 +212,13 @@ class TestUpdateBlockCode:
 
         # Test expects regenerate_block_data_json and create_manifest to be called
         # This will fail until implementation exists
-        assert (
-            mock_regenerate_block_data_json.call_count == 0
-        )  # Will be 1 after implementation
+        assert mock_regenerate_block_data_json.call_count == 0  # Will be 1 after implementation
         assert mock_create_manifest.call_count == 0  # Will be 1 after implementation
 
     @patch("captain.routes.blocks.Path")
     @patch("captain.routes.blocks.regenerate_block_data_json")
     @patch("captain.routes.blocks.create_manifest")
-    def test_update_block_code_rollback_on_manifest_failure(
-        self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class
-    ):
+    def test_update_block_code_rollback_on_manifest_failure(self, mock_create_manifest, mock_regenerate_block_data_json, mock_path_class):
         """Test that changes are rolled back if manifest generation fails."""
         # Setup mocks
         mock_path = MagicMock()

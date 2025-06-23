@@ -116,9 +116,7 @@ class TestWorkflowQueuesIntegration:
             {
                 "type": ChangeType.CODE_UPDATE.value,
                 "block_id": "node2",
-                "data": {
-                    "code": "# Updated code\ndef process(inputs):\n    return inputs['primary_dp'] + 5"
-                },
+                "data": {"code": "# Updated code\ndef process(inputs):\n    return inputs['primary_dp'] + 5"},
             }
         )
 
@@ -151,18 +149,12 @@ class TestWorkflowQueuesIntegration:
                 pass
 
     @pytest.mark.asyncio
-    async def test_change_triggers_execution(
-        self, coordinator, simple_topology, ws_manager
-    ):
+    async def test_change_triggers_execution(self, coordinator, simple_topology, ws_manager):
         """Test that completing a change triggers workflow execution."""
         # Mock the actual code update and execution to avoid file system operations
         with (
-            patch.object(
-                coordinator.wcq, "_process_code_update", new_callable=AsyncMock
-            ),
-            patch.object(
-                coordinator.weq, "execute", new_callable=AsyncMock
-            ) as mock_execute,
+            patch.object(coordinator.wcq, "_process_code_update", new_callable=AsyncMock),
+            patch.object(coordinator.weq, "execute", new_callable=AsyncMock) as mock_execute,
         ):
             mock_execute.return_value = {"node3": {"output": 15}}
 
@@ -210,9 +202,7 @@ class TestWorkflowQueuesIntegration:
                         pass
 
     @pytest.mark.asyncio
-    async def test_multiple_changes_queued(
-        self, coordinator, simple_topology, ws_manager
-    ):
+    async def test_multiple_changes_queued(self, coordinator, simple_topology, ws_manager):
         """Test that multiple changes can be queued."""
         # Simple test to verify multiple changes can be enqueued
         coordinator.set_topology(simple_topology)
@@ -290,9 +280,7 @@ class TestWorkflowQueuesIntegration:
         assert change_id is not None
 
         # Test metadata update
-        change_id = await coordinator.update_metadata(
-            "node1", {"description": "Updated"}
-        )
+        change_id = await coordinator.update_metadata("node1", {"description": "Updated"})
         assert change_id is not None
 
         # Test block rename
@@ -307,9 +295,7 @@ class TestWorkflowQueuesIntegration:
     async def test_error_handling(self, coordinator, simple_topology, ws_manager):
         """Test error handling in execution."""
         # Mock execution to raise an error
-        with patch.object(
-            coordinator.weq, "execute", side_effect=Exception("Test error")
-        ):
+        with patch.object(coordinator.weq, "execute", side_effect=Exception("Test error")):
             coordinator.set_topology(simple_topology)
 
             # Manually trigger execution

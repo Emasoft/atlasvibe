@@ -160,11 +160,7 @@ class DataContainer(Box):
         copied_instance = DataContainer(**self)
         return copied_instance
 
-    def _ndarrayify(
-        self, value: DCKwargsValue
-    ) -> Union[
-        DCNpArrayType, PandasDataFrame, dict[str, DCNpArrayType], go.Figure, None
-    ]:
+    def _ndarrayify(self, value: DCKwargsValue) -> Union[DCNpArrayType, PandasDataFrame, dict[str, DCNpArrayType], go.Figure, None]:
         if isinstance(value, int) or isinstance(value, float):
             return np.array([value])
         elif isinstance(value, dict):
@@ -182,10 +178,7 @@ class DataContainer(Box):
         elif value is None:
             return value
         else:
-            raise ValueError(
-                f"DataContainer keys must be any of "
-                f"following types: {get_args(DCKwargsValue)}"
-            )
+            raise ValueError(f"DataContainer keys must be any of " f"following types: {get_args(DCKwargsValue)}")
 
     def __init__(  # type:ignore
         self, type: DCType = "OrderedPair", **kwargs: DCKwargsValue
@@ -201,10 +194,7 @@ class DataContainer(Box):
         return super().__getitem__(key, _ignore_default)  # type:ignore
 
     def __setitem__(self, key: str, value: DCKwargsValue) -> None:
-        if (
-            key not in ["type", "extra", "c", "obj"]
-            and type(value) not in self.SKIP_ARRAYIEFY_TYPES
-        ):
+        if key not in ["type", "extra", "c", "obj"] and type(value) not in self.SKIP_ARRAYIEFY_TYPES:
             formatted_value = self._ndarrayify(value)
             super().__setitem__(key, formatted_value)  # type:ignore
         else:
@@ -213,24 +203,15 @@ class DataContainer(Box):
     def __check_combination(self, key: str, keys: list[str], allowed_keys: list[str]):
         for i in keys:
             if i not in allowed_keys:
-                raise ValueError(
-                    f"You can't have '{key}' and '{i}' keys together for '{self.type}' type!"
-                )
+                raise ValueError(f"You can't have '{key}' and '{i}' keys together for '{self.type}' type!")
 
     def __validate_key_for_type(self, data_type: DCType, key: str):
         if data_type.startswith("parametric_") and key != "t":
             splitted_type = cast(DCType, data_type.split("parametric_")[1])
             self.__validate_key_for_type(splitted_type, key)
         else:
-            if (
-                key not in self.type_keys_map[data_type] + ["extra"]
-                and data_type != "plotly"
-            ):
-                raise KeyError(
-                    self.__build_error_text(
-                        key, data_type, self.type_keys_map[data_type]
-                    )
-                )
+            if key not in self.type_keys_map[data_type] + ["extra"] and data_type != "plotly":
+                raise KeyError(self.__build_error_text(key, data_type, self.type_keys_map[data_type]))
 
     def __check_for_missing_keys(self, dc_type: DCType, keys: list[str]):
         if dc_type.startswith("parametric_"):
@@ -248,25 +229,15 @@ class DataContainer(Box):
                     raise KeyError(f'"{k}" key must be provided for type "{dc_type}"')
 
     def __build_error_text(self, key: str, data_type: str, available_keys: list[str]):
-        return (
-            f'Invalid key "{key}" provided for data type "{data_type}", '
-            f"supported keys: {', '.join(available_keys)}"
-        )
+        return f'Invalid key "{key}" provided for data type "{data_type}", ' f"supported keys: {', '.join(available_keys)}"
 
     def validate(self):
         dc_type = self.type
 
         if dc_type not in self.allowed_types:
             closest_type = find_closest_match(dc_type, self.allowed_types)
-            helper_text = (
-                f'Did you mean: "{closest_type}" ?'
-                if closest_type
-                else f'allowed types: "{", ".join(self.allowed_types)}"'
-            )
-            raise ValueError(
-                f'unsupported type "{dc_type}" passed to '
-                f"DataContainer class, {helper_text}"
-            )
+            helper_text = f'Did you mean: "{closest_type}" ?' if closest_type else f'allowed types: "{", ".join(self.allowed_types)}"'
+            raise ValueError(f'unsupported type "{dc_type}" passed to ' f"DataContainer class, {helper_text}")
         dc_keys = list(cast(list[str], self.keys()))
         for k in dc_keys:
             if k != "type":
@@ -333,9 +304,7 @@ class ParametricOrderedTriple(DataContainer):
         t: DCNpArrayType,
         extra: ExtraType = None,
     ):
-        super().__init__(
-            type="ParametricOrderedTriple", x=x, y=y, z=z, t=t, extra=extra
-        )
+        super().__init__(type="ParametricOrderedTriple", x=x, y=y, z=z, t=t, extra=extra)
 
 
 class Surface(DataContainer):

@@ -66,14 +66,8 @@ def CONDITIONAL_1(
     next_direction = str(bool_).lower()
 
     return ConditionalOutput(
-        true=JobResultBuilder()
-        .from_data(data)
-        .flow_to_directions([next_direction])
-        .build(),
-        false=JobResultBuilder()
-        .from_data(data)
-        .flow_to_directions([next_direction])
-        .build(),
+        true=JobResultBuilder().from_data(data).flow_to_directions([next_direction]).build(),
+        false=JobResultBuilder().from_data(data).flow_to_directions([next_direction]).build(),
     )
 
 

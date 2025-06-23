@@ -27,10 +27,7 @@ def get_file_paths(blocks_dir: str):
     for root, _, files in os.walk(blocks_dir):
         for file in files:
             # Check if the file matches the pattern
-            if any(
-                folder_name in os.path.join(root, file)
-                for folder_name in ignore_folders
-            ):
+            if any(folder_name in os.path.join(root, file) for folder_name in ignore_folders):
                 continue
             if fnmatch.fnmatch(file, pattern):
                 # If it matches, add the full path to the list

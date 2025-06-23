@@ -22,10 +22,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
 
     f_path = file_path if file_path != "" else default_path
     if not f_path:
-        raise ValueError(
-            "The file path of the input file is missing. "
-            "Please provide a input String or a provide `file_path` with a value!"
-        )
+        raise ValueError("The file path of the input file is missing. " "Please provide a input String or a provide `file_path` with a value!")
     if not os.path.isabs(f_path):
         path_to_nodes = __file__[: __file__.rfind("blocks") + 6]
         return os.path.abspath(os.path.join(path_to_nodes, f_path))
