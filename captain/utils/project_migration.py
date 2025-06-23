@@ -97,7 +97,9 @@ def find_blueprint_block(blueprint_key: str) -> Optional[Path]:
     return None
 
 
-def migrate_project_to_new_format(project_path: str, project_data: dict, dry_run: bool = False) -> Tuple[dict, List[str]]:
+def migrate_project_to_new_format(
+    project_path: str, project_data: dict, dry_run: bool = False
+) -> Tuple[dict, List[str]]:
     """Migrate a project from old blueprint format to new custom block format.
 
     Args:
@@ -153,7 +155,9 @@ def migrate_project_to_new_format(project_path: str, project_data: dict, dry_run
             # Find the blueprint block
             blueprint_path = find_blueprint_block(func_name)
             if not blueprint_path:
-                logger.warning(f"Could not find blueprint for block '{func_name}', will mark as hardware block")
+                logger.warning(
+                    f"Could not find blueprint for block '{func_name}', will mark as hardware block"
+                )
                 # For hardware blocks that don't have blueprints, just mark them
                 # They will need to be manually configured when the hardware is connected
                 node_data["isHardwareBlock"] = True
@@ -174,10 +178,16 @@ def migrate_project_to_new_format(project_path: str, project_data: dict, dry_run
             # Create the custom block if not in dry run
             if not dry_run:
                 try:
-                    copy_blueprint_to_project(str(blueprint_path), project_path, custom_name)
-                    logger.info(f"Created custom block '{custom_name}' from blueprint '{func_name}'")
+                    copy_blueprint_to_project(
+                        str(blueprint_path), project_path, custom_name
+                    )
+                    logger.info(
+                        f"Created custom block '{custom_name}' from blueprint '{func_name}'"
+                    )
                 except ProjectStructureError as e:
-                    raise ProjectMigrationError(f"Failed to create custom block '{custom_name}': {e}")
+                    raise ProjectMigrationError(
+                        f"Failed to create custom block '{custom_name}': {e}"
+                    )
             else:
                 # Custom block already exists at blocks_dir / custom_name
                 pass
@@ -188,7 +198,9 @@ def migrate_project_to_new_format(project_path: str, project_data: dict, dry_run
         # Update the node to reference the custom block
         node_data["func"] = custom_name
         node_data["isCustom"] = True
-        node_data["path"] = str(Path("atlasvibe_blocks") / custom_name / f"{custom_name}.py")
+        node_data["path"] = str(
+            Path("atlasvibe_blocks") / custom_name / f"{custom_name}.py"
+        )
 
         # Update the node label if it matches the old function name
         if node_data.get("label") == func_name:

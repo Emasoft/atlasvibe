@@ -11,7 +11,9 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 
 @atlasvibe(deps={"prophet": "1.1.5"})
-def PROPHET_PREDICT(default: DataFrame, run_forecast: bool = True, periods: int = 365) -> DataFrame:
+def PROPHET_PREDICT(
+    default: DataFrame, run_forecast: bool = True, periods: int = 365
+) -> DataFrame:
     """Run a Prophet time series prediction model on an incoming dataframe.
 
     The DataContainer input type must be a dataframe, and the first column (or index) of the dataframe must be of a datetime type.
@@ -68,7 +70,9 @@ def PROPHET_PREDICT(default: DataFrame, run_forecast: bool = True, periods: int 
         timestamps = pd.date_range(start=start_date, end=end_date, freq="D")
         data = np.random.randn(num_days)  # Random data points
         df = pd.DataFrame({"ds": timestamps, "ys": data})
-        df.rename(columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True)  # PROPHET model expects first column to be `ds` and second to be `y`
+        df.rename(
+            columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True
+        )  # PROPHET model expects first column to be `ds` and second to be `y`
         return df
 
     def _apply_macos_prophet_hotfix():
@@ -107,8 +111,12 @@ def PROPHET_PREDICT(default: DataFrame, run_forecast: bool = True, periods: int 
     df = default.m
     first_col = df.iloc[:, 0]
     if not pd.api.types.is_datetime64_any_dtype(first_col):
-        raise ValueError("First column must be of datetime type data for PROPHET_PREDICT!")
-    df.rename(columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True)  # PROPHET model expects first column to be `ds` and second to be `y`
+        raise ValueError(
+            "First column must be of datetime type data for PROPHET_PREDICT!"
+        )
+    df.rename(
+        columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True
+    )  # PROPHET model expects first column to be `ds` and second to be `y`
     model = prophet.Prophet()
     model.fit(df)
     extra = {"prophet": model_to_json(model), "run_forecast": run_forecast}

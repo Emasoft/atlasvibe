@@ -64,7 +64,10 @@ def _tokenize(s: str, symbol_table: SymbolTableType) -> list[Token]:
 
     def _match_op_symbol(ptr: int) -> tuple[Operator, int]:
         extend = 0
-        while ptr + extend + 1 <= len(s) and s[ptr : ptr + extend + 1] in TOKEN_TO_CLASS.keys():
+        while (
+            ptr + extend + 1 <= len(s)
+            and s[ptr : ptr + extend + 1] in TOKEN_TO_CLASS.keys()
+        ):
             extend += 1
         c = s[ptr : ptr + extend]
         return Operator(c), extend
@@ -165,11 +168,15 @@ def _build_ast(tokens: list[Token], symbol_table: SymbolTableType) -> Expression
                     try:
                         start_idx = stack.pop()
                     except IndexError:
-                        raise MissingLeftParenthesis("empty stack during parsing of subexpression")
+                        raise MissingLeftParenthesis(
+                            "empty stack during parsing of subexpression"
+                        )
                     if len(stack) == 0:
                         sub_exps.append((start_idx, i))
         if len(stack) != 0:
-            raise MissingRightParenthesis("found unclosed paranthesis at the end of parsing subexpression")
+            raise MissingRightParenthesis(
+                "found unclosed paranthesis at the end of parsing subexpression"
+            )
         return sub_exps
 
     def _match(
@@ -188,14 +195,20 @@ def _build_ast(tokens: list[Token], symbol_table: SymbolTableType) -> Expression
                 cur_node.is_end = True
             return root
 
-        def _is_a_match(cur_idx: int, trie: TrieNode) -> tuple[bool, list[Expression], Type[Expression]]:
+        def _is_a_match(
+            cur_idx: int, trie: TrieNode
+        ) -> tuple[bool, list[Expression], Type[Expression]]:
             cur_node = trie
             targets = []
             expr_type: Type[Expression] = None  # type: ignore
             try:
                 while not cur_node.is_end:
                     cur_item = to_parse[cur_idx]
-                    item_matcher = cur_item.returns if isinstance(cur_item, Expression) else cur_item
+                    item_matcher = (
+                        cur_item.returns
+                        if isinstance(cur_item, Expression)
+                        else cur_item
+                    )
 
                     if item_matcher not in cur_node.children:
                         return False, None, None  # type: ignore
@@ -207,7 +220,9 @@ def _build_ast(tokens: list[Token], symbol_table: SymbolTableType) -> Expression
                         targets.append(cur_item)
 
                 if not expr_type:
-                    raise MatchError("could not find the expression type (was an operator provided?)")
+                    raise MatchError(
+                        "could not find the expression type (was an operator provided?)"
+                    )
                 return True, targets, expr_type
             except IndexError:
                 return False, None, None  # type: ignore
@@ -227,7 +242,9 @@ def _build_ast(tokens: list[Token], symbol_table: SymbolTableType) -> Expression
     to_parse: List[ParseItem] = []
 
     # step 1: parse all subexpressions first
-    sub_exps = [(-2, -1)] + _get_subexpressions(tokens) + [(len(tokens), len(tokens) + 1)]
+    sub_exps = (
+        [(-2, -1)] + _get_subexpressions(tokens) + [(len(tokens), len(tokens) + 1)]
+    )
     i = -2
     for sub_exp in sub_exps:
         to_parse += tokens[i : sub_exp[0]]
@@ -240,7 +257,11 @@ def _build_ast(tokens: list[Token], symbol_table: SymbolTableType) -> Expression
     for expressions in rules.order_of_operations:
         match_obj = _match(to_parse, expressions)
         while match_obj.matched:
-            to_parse = to_parse[: match_obj.start_idx] + [match_obj.expression] + to_parse[match_obj.end_idx :]
+            to_parse = (
+                to_parse[: match_obj.start_idx]
+                + [match_obj.expression]
+                + to_parse[match_obj.end_idx :]
+            )
             match_obj = _match(to_parse, expressions)
 
     # step 3: verify that expression was successfully parsed
@@ -254,12 +275,16 @@ def _evaluate_ast(_ast: Expression) -> bool:
     return _ast.operation()
 
 
-def eval_expression(input: str, symbol_table: SymbolTableType, identifiers: set[str]) -> bool:
+def eval_expression(
+    input: str, symbol_table: SymbolTableType, identifiers: set[str]
+) -> bool:
     """
     Evaluates the input expression with the given symbol_table.
     Necessarily returns a boolean value.
     """
     tokens = _tokenize(input, symbol_table)
-    _verify(VerificationContainer(tokens, symbol_table, identifiers), [_verify_identifiers])
+    _verify(
+        VerificationContainer(tokens, symbol_table, identifiers), [_verify_identifiers]
+    )
     ast = _build_ast(tokens, symbol_table)
     return _evaluate_ast(ast)

@@ -13,7 +13,9 @@ from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Matrix
 
 
 @atlasvibe
-def LEAST_SQUARES(a: OrderedPair | Matrix, b: Optional[OrderedPair | Matrix] = None) -> Matrix | OrderedPair:
+def LEAST_SQUARES(
+    a: OrderedPair | Matrix, b: Optional[OrderedPair | Matrix] = None
+) -> Matrix | OrderedPair:
     """Perform a least squares regression on the input DataContainer (input can be a Matrix or OrderedPair).
 
     Parameters

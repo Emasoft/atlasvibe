@@ -104,7 +104,9 @@ class PythonValidator:
             "Surface",
         }
 
-    def validate_code(self, code: str, filename: str = "<unknown>") -> List[ValidationError]:
+    def validate_code(
+        self, code: str, filename: str = "<unknown>"
+    ) -> List[ValidationError]:
         """Validate Python code and return list of errors.
 
         Args:
@@ -169,14 +171,20 @@ class PythonValidator:
 
         return errors
 
-    def _validate_atlasvibe_decorator(self, tree: ast.AST, code: str) -> List[ValidationError]:
+    def _validate_atlasvibe_decorator(
+        self, tree: ast.AST, code: str
+    ) -> List[ValidationError]:
         """Validate AtlasVibe decorator usage."""
         errors = []
         visitor = DecoratorVisitor()
         visitor.visit(tree)
 
         # Check if there's an @atlasvibe decorated function
-        atlasvibe_funcs = [f for f in visitor.decorated_functions if any(d in ["atlasvibe", "atlasvibe_node"] for d in f["decorators"])]
+        atlasvibe_funcs = [
+            f
+            for f in visitor.decorated_functions
+            if any(d in ["atlasvibe", "atlasvibe_node"] for d in f["decorators"])
+        ]
 
         if not atlasvibe_funcs:
             errors.append(
@@ -247,7 +255,9 @@ class PythonValidator:
                     )
 
                 # Get function parameters
-                func_params = {arg.arg for arg in func.args.args if arg.arg not in ["self", "cls"]}
+                func_params = {
+                    arg.arg for arg in func.args.args if arg.arg not in ["self", "cls"]
+                }
 
                 # Check documented parameters
                 doc_params = {p.arg_name for p in parsed.params}
@@ -327,7 +337,12 @@ class PythonValidator:
         visitor.visit(tree)
 
         # Find undefined variables
-        undefined = visitor.used_names - visitor.defined_names - self.builtin_names - self.atlasvibe_imports
+        undefined = (
+            visitor.used_names
+            - visitor.defined_names
+            - self.builtin_names
+            - self.atlasvibe_imports
+        )
 
         for var_info in visitor.variable_uses:
             if var_info["name"] in undefined:
@@ -370,7 +385,9 @@ class PythonValidator:
     def _can_import(self, module_name: str) -> bool:
         """Check if a module can be imported."""
         # Special handling for atlasvibe modules
-        if module_name.startswith("atlasvibe") or module_name.startswith("pkgs.atlasvibe"):
+        if module_name.startswith("atlasvibe") or module_name.startswith(
+            "pkgs.atlasvibe"
+        ):
             return True
 
         # Try to find the module
@@ -444,7 +461,10 @@ class PythonValidator:
                 continue
 
             # Check if function has return statement but no return type
-            has_return = any(isinstance(node, ast.Return) and node.value is not None for node in ast.walk(func))
+            has_return = any(
+                isinstance(node, ast.Return) and node.value is not None
+                for node in ast.walk(func)
+            )
 
             if has_return and not func.returns:
                 errors.append(
@@ -532,12 +552,16 @@ class ImportVisitor(ast.NodeVisitor):
 
     def visit_Import(self, node):
         for alias in node.names:
-            self.imports.append({"module": alias.name, "line": node.lineno, "col": node.col_offset})
+            self.imports.append(
+                {"module": alias.name, "line": node.lineno, "col": node.col_offset}
+            )
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node):
         if node.module:
-            self.imports.append({"module": node.module, "line": node.lineno, "col": node.col_offset})
+            self.imports.append(
+                {"module": node.module, "line": node.lineno, "col": node.col_offset}
+            )
         self.generic_visit(node)
 
 
@@ -592,7 +616,9 @@ class VariableVisitor(ast.NodeVisitor):
             self.defined_names.add(node.id)
         elif isinstance(node.ctx, ast.Load):
             self.used_names.add(node.id)
-            self.variable_uses.append({"name": node.id, "line": node.lineno, "col": node.col_offset})
+            self.variable_uses.append(
+                {"name": node.id, "line": node.lineno, "col": node.col_offset}
+            )
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
@@ -648,7 +674,9 @@ class TypeAnnotationVisitor(ast.NodeVisitor):
 # Utility functions for the API
 
 
-def validate_python_code(code: str, filename: str = "<unknown>", project_path: Optional[str] = None) -> Dict[str, Any]:
+def validate_python_code(
+    code: str, filename: str = "<unknown>", project_path: Optional[str] = None
+) -> Dict[str, Any]:
     """Validate Python code and return results in API format.
 
     Args:

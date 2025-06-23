@@ -172,7 +172,9 @@ class FileDescriptorReadWritePipe(ReadWritePipe):
 
     def get_writer(self) -> PipeWriter:
         if self.write_is_closed():
-            raise ValueError("Attempted to get writer while the write end of the pipe is closed.")
+            raise ValueError(
+                "Attempted to get writer while the write end of the pipe is closed."
+            )
         return self.writer
 
     def read(self) -> bytes:
@@ -225,7 +227,9 @@ class MPSpawnReadWritePipe:
 
     def __init__(self) -> None:
         super().__init__()
-        self.read_conn, self.write_conn = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        self.read_conn, self.write_conn = multiprocessing.get_context("spawn").Pipe(
+            duplex=True
+        )
         self._writer = MPSpawnReadWritePipe._MPWriter(write_conn=self.write_conn)
         self._writer_is_closed = False
 
@@ -253,7 +257,9 @@ class MPSpawnReadWritePipe:
 
     def get_writer(self) -> PipeWriter:
         if self.write_is_closed():
-            raise ValueError("Attempted to get writer while the write end of the pipe is closed.")
+            raise ValueError(
+                "Attempted to get writer while the write end of the pipe is closed."
+            )
         return self._writer
 
 
@@ -350,7 +356,9 @@ class LogPipe:
         elif mode == LogPipeMode.SUBPROCESS:
             self.pipe = FileDescriptorReadWritePipe()
         else:
-            raise ValueError(f"Invalid mode {mode}, expected one of {LogPipeMode.__members__}")
+            raise ValueError(
+                f"Invalid mode {mode}, expected one of {LogPipeMode.__members__}"
+            )
         self.mode = mode
         self.thread = threading.Thread(target=self.run, daemon=False)
         self.logger = logger
@@ -400,7 +408,9 @@ class LogPipe:
         return self.pipe.get_writer()
 
     @staticmethod
-    def wrap_and_redirect_stream(func: Callable, stream: StreamEnum, pipe_writer: PipeWriter) -> Callable:
+    def wrap_and_redirect_stream(
+        func: Callable, stream: StreamEnum, pipe_writer: PipeWriter
+    ) -> Callable:
         """
         Wraps a function to redirect its output to a pipe writer.
 
@@ -414,9 +424,15 @@ class LogPipe:
         """
 
         if stream not in StreamEnum.__members__.values():
-            raise ValueError(f"Invalid stream {stream}, expected one of {StreamEnum.__members__}")
+            raise ValueError(
+                f"Invalid stream {stream}, expected one of {StreamEnum.__members__}"
+            )
 
         if not isinstance(pipe_writer, MPSpawnReadWritePipe._MPWriter):
-            raise ValueError("Invalid pipe_writer, please provide a writer for a LogPipe started in MP_SPAWN mode")
+            raise ValueError(
+                "Invalid pipe_writer, please provide a writer for a LogPipe started in MP_SPAWN mode"
+            )
 
-        return partial(_wrap_to_redirect_stream, func=func, stream=stream, pipe_writer=pipe_writer)
+        return partial(
+            _wrap_to_redirect_stream, func=func, stream=stream, pipe_writer=pipe_writer
+        )

@@ -54,10 +54,14 @@ def SCATTER_1(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
             if is_timeseries:
                 for col in df.columns:
                     if col != df.columns[0]:
-                        fig.add_trace(go.Scatter(x=first_col, y=df[col], mode="markers", name=col))
+                        fig.add_trace(
+                            go.Scatter(x=first_col, y=df[col], mode="markers", name=col)
+                        )
             else:
                 for col in df.columns:
-                    fig.add_trace(go.Scatter(x=df.index, y=df[col], mode="markers", name=col))
+                    fig.add_trace(
+                        go.Scatter(x=df.index, y=df[col], mode="markers", name=col)
+                    )
 
         case Matrix():
             m: np.ndarray = default.m
@@ -66,7 +70,11 @@ def SCATTER_1(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
             x_ticks = np.arange(num_cols)
 
             for i in range(num_rows):
-                fig.add_trace(go.Scatter(x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="markers"))
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_ticks, y=m[i, :], name=f"Row {i + 1}", mode="markers"
+                    )
+                )
 
             fig.update_layout(xaxis_title="Column", yaxis_title="Value")
         case Vector():

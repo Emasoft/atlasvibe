@@ -45,11 +45,21 @@ class JobResultBuilder:
 
     def flow_to_directions(self, directions: list[str]):
         if directions.__len__() > 0:
-            self._add_instructions({ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: directions})
+            self._add_instructions(
+                {ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: directions}
+            )
         return self
 
-    def flow_by_flag(self, flag: bool, true_direction: list[str], false_direction: list[str]):
-        self._add_instructions({ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: true_direction if flag else false_direction})
+    def flow_by_flag(
+        self, flag: bool, true_direction: list[str], false_direction: list[str]
+    ):
+        self._add_instructions(
+            {
+                ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS: true_direction
+                if flag
+                else false_direction
+            }
+        )
         return self
 
     def build(self):

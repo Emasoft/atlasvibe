@@ -79,7 +79,9 @@ class PrefectChangeExecutor:
 
     def __init__(self, change_queue_manager: Optional[ChangeQueueManager] = None):
         """Initialize the Prefect change executor."""
-        self.change_queue_manager = change_queue_manager or ChangeQueueManager.get_instance()
+        self.change_queue_manager = (
+            change_queue_manager or ChangeQueueManager.get_instance()
+        )
 
         # Prefect client for API operations
         self.prefect_client = None
@@ -153,7 +155,9 @@ class PrefectChangeExecutor:
                 except Empty:
                     continue
                 except Exception as e:
-                    logger.error(f"Error in executor loop: {e}\n{traceback.format_exc()}")
+                    logger.error(
+                        f"Error in executor loop: {e}\n{traceback.format_exc()}"
+                    )
         finally:
             loop.close()
 
@@ -167,7 +171,9 @@ class PrefectChangeExecutor:
         Returns:
             Flow run ID
         """
-        logger.info(f"Submitting transaction {transaction.id} with {len(transaction.changes)} changes")
+        logger.info(
+            f"Submitting transaction {transaction.id} with {len(transaction.changes)} changes"
+        )
 
         # Queue for execution
         self._execution_queue.put(transaction)
@@ -206,7 +212,9 @@ class PrefectChangeExecutor:
             await self._on_flow_completed(transaction.id, success=True)
 
         except Exception as e:
-            logger.error(f"Failed to execute transaction {transaction.id}: {e}\n{traceback.format_exc()}")
+            logger.error(
+                f"Failed to execute transaction {transaction.id}: {e}\n{traceback.format_exc()}"
+            )
             await self._on_flow_completed(transaction.id, success=False, error=str(e))
 
     async def _create_change_flow(self, transaction: ChangeTransaction):
@@ -246,7 +254,9 @@ class PrefectChangeExecutor:
         try:
             # Check if block is executing
             if self.change_queue_manager.is_block_executing(change.block_id):
-                logger.warning(f"Block {change.block_id} is executing, deferring change")
+                logger.warning(
+                    f"Block {change.block_id} is executing, deferring change"
+                )
                 return ChangeExecutionResult(
                     change_id=change.id,
                     success=False,
@@ -275,7 +285,9 @@ class PrefectChangeExecutor:
             return result
 
         except Exception as e:
-            logger.error(f"Failed to apply change {change.id}: {e}\n{traceback.format_exc()}")
+            logger.error(
+                f"Failed to apply change {change.id}: {e}\n{traceback.format_exc()}"
+            )
             return ChangeExecutionResult(
                 change_id=change.id,
                 success=False,
@@ -287,7 +299,9 @@ class PrefectChangeExecutor:
 
     async def _apply_change_task(self, change: BlockChange) -> ChangeExecutionResult:
         """Async version of apply_change_task for direct calling."""
-        return await asyncio.get_event_loop().run_in_executor(None, self.apply_change_task, change)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self.apply_change_task, change
+        )
 
     async def _apply_code_change(self, change: BlockChange) -> ChangeExecutionResult:
         """Apply a code change to a block."""
@@ -360,7 +374,9 @@ class PrefectChangeExecutor:
                 rolled_back=bool(change.old_value),
             )
 
-    async def _apply_change_with_reload(self, change: BlockChange) -> ChangeExecutionResult:
+    async def _apply_change_with_reload(
+        self, change: BlockChange
+    ) -> ChangeExecutionResult:
         """Apply a change with module reloading support."""
         result = await self._apply_code_change(change)
 
@@ -393,7 +409,9 @@ class PrefectChangeExecutor:
         except Exception as e:
             logger.warning(f"Failed to reload module for {block_file}: {e}")
 
-    async def _capture_block_output(self, block_path: str, block_id: str, parameters: Dict[str, Any]) -> OutputCapture:
+    async def _capture_block_output(
+        self, block_path: str, block_id: str, parameters: Dict[str, Any]
+    ) -> OutputCapture:
         """Capture the output of a block execution."""
         capture = OutputCapture(block_id=block_id, timestamp=time.time())
 
@@ -417,7 +435,9 @@ class PrefectChangeExecutor:
 
         return capture
 
-    def _compare_outputs(self, before: OutputCapture, after: OutputCapture) -> Dict[str, Any]:
+    def _compare_outputs(
+        self, before: OutputCapture, after: OutputCapture
+    ) -> Dict[str, Any]:
         """Compare outputs before and after a change."""
         diff = {
             "before": before.outputs,
@@ -435,11 +455,15 @@ class PrefectChangeExecutor:
             after_val = after.outputs.get(key)
 
             if before_val != after_val:
-                diff["changes"].append({"field": key, "before": before_val, "after": after_val})
+                diff["changes"].append(
+                    {"field": key, "before": before_val, "after": after_val}
+                )
 
         return diff
 
-    async def _apply_parameter_change(self, change: BlockChange) -> ChangeExecutionResult:
+    async def _apply_parameter_change(
+        self, change: BlockChange
+    ) -> ChangeExecutionResult:
         """Apply a parameter change to a block."""
         # Parameter changes are typically handled by the frontend
         # Here we just track and broadcast the change
@@ -455,7 +479,9 @@ class PrefectChangeExecutor:
             },
         )
 
-    async def _apply_dependency_change(self, change: BlockChange) -> ChangeExecutionResult:
+    async def _apply_dependency_change(
+        self, change: BlockChange
+    ) -> ChangeExecutionResult:
         """Apply a dependency change to a block."""
         # This would trigger virtual environment regeneration
         # For now, just track the change
@@ -469,11 +495,17 @@ class PrefectChangeExecutor:
 
     async def _apply_generic_change(self, change: BlockChange) -> ChangeExecutionResult:
         """Apply a generic change to a block."""
-        return ChangeExecutionResult(change_id=change.id, success=True, execution_time=0)
+        return ChangeExecutionResult(
+            change_id=change.id, success=True, execution_time=0
+        )
 
-    async def _on_flow_completed(self, transaction_id: str, success: bool, error: Optional[str] = None):
+    async def _on_flow_completed(
+        self, transaction_id: str, success: bool, error: Optional[str] = None
+    ):
         """Handle flow completion."""
-        logger.info(f"Flow completed for transaction {transaction_id}: success={success}")
+        logger.info(
+            f"Flow completed for transaction {transaction_id}: success={success}"
+        )
 
         # Update transaction state
         if transaction_id in self.flow_runs:
@@ -504,7 +536,9 @@ class PrefectChangeExecutor:
             except Exception as e:
                 logger.error(f"Failed to broadcast message: {e}")
 
-    async def _broadcast_execution_result(self, result: ChangeExecutionResult, block_id: str):
+    async def _broadcast_execution_result(
+        self, result: ChangeExecutionResult, block_id: str
+    ):
         """Broadcast execution result with output differences."""
         message = {
             "type": "change_execution_result",
@@ -564,6 +598,8 @@ class PrefectChangeExecutor:
 
 # Standalone task function for Prefect
 @task(name="apply_block_change")
-def apply_change_task(change: BlockChange, executor: PrefectChangeExecutor) -> ChangeExecutionResult:
+def apply_change_task(
+    change: BlockChange, executor: PrefectChangeExecutor
+) -> ChangeExecutionResult:
     """Apply a single change as a Prefect task."""
     return executor.apply_change_task(change)

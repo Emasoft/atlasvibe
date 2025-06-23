@@ -9,7 +9,9 @@ except ImportError:
     sklearn_installed = False
 
 
-@pytest.mark.skipif(not sklearn_installed, reason="sklearn is not installed | Skipping test in CI")
+@pytest.mark.skipif(
+    not sklearn_installed, reason="sklearn is not installed | Skipping test in CI"
+)
 def test_COUNT_VECTORIZER(mock_atlasvibe_decorator):
     # create the CountVectorizerOutput container
 

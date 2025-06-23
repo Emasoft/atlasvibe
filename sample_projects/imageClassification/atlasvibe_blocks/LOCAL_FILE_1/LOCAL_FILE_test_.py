@@ -39,7 +39,9 @@ def insurance_excel():
     return f"{path.dirname(path.realpath(__file__))}/assets/sampledatainsurance.xlsx"
 
 
-def test_LOCAL_FILE_img(mock_atlasvibe_decorator, astronaut_img_array_rgb, camera_img_array_rgb):
+def test_LOCAL_FILE_img(
+    mock_atlasvibe_decorator, astronaut_img_array_rgb, camera_img_array_rgb
+):
     image_path = f"{path.dirname(path.realpath(__file__))}/assets/camera.png"
 
     expected_image = Image(
@@ -58,7 +60,9 @@ def test_LOCAL_FILE_img(mock_atlasvibe_decorator, astronaut_img_array_rgb, camer
     np.testing.assert_array_equal(output.b, expected_image.b)
     np.testing.assert_array_equal(None, expected_image.a)
 
-    output_from_textblob = LOCAL_FILE.LOCAL_FILE(default=String(s=image_path), file_type="Image")
+    output_from_textblob = LOCAL_FILE.LOCAL_FILE(
+        default=String(s=image_path), file_type="Image"
+    )
     np.testing.assert_array_equal(output_from_textblob.r, expected_image.r)
     np.testing.assert_array_equal(output_from_textblob.g, expected_image.g)
     np.testing.assert_array_equal(output_from_textblob.b, expected_image.b)
@@ -125,7 +129,9 @@ def test_LOCAL_FILE_csv(mock_atlasvibe_decorator, iris_csv):
         "Virginica",
     ]
 
-    output_from_textblob = LOCAL_FILE.LOCAL_FILE(default=String(s=iris_csv), file_type="CSV")
+    output_from_textblob = LOCAL_FILE.LOCAL_FILE(
+        default=String(s=iris_csv), file_type="CSV"
+    )
     assert output.m.equals(output_from_textblob.m)
 
 
@@ -164,7 +170,9 @@ def test_LOCAL_FILE_json(mock_atlasvibe_decorator, employees_json):
         3.7,
     ]
 
-    output_from_textblob = LOCAL_FILE.LOCAL_FILE(default=String(s=employees_json), file_type="JSON")
+    output_from_textblob = LOCAL_FILE.LOCAL_FILE(
+        default=String(s=employees_json), file_type="JSON"
+    )
     assert output.m.equals(output_from_textblob.m)
 
 

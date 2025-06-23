@@ -51,13 +51,22 @@ def fetch_inputs(previous_jobs: list[dict[str, str]]):
             multiple = prev_job.get("multiple", False)
             edge = prev_job.get("edge", "")
 
-            logger.debug(f"fetching input from prev job id: {prev_job_id}" + f"for input: {input_name} edge: {edge}")
+            logger.debug(
+                f"fetching input from prev job id: {prev_job_id}"
+                + f"for input: {input_name} edge: {edge}"
+            )
 
             job_result = JobService().get_job_result(prev_job_id)
             if not job_result:
-                raise ValueError(f"Tried to get job result from {prev_job_id} but it was None")
+                raise ValueError(
+                    f"Tried to get job result from {prev_job_id} but it was None"
+                )
 
-            result = get_dc_from_result(job_result[edge]) if edge != "default" else get_dc_from_result(job_result)
+            result = (
+                get_dc_from_result(job_result[edge])
+                if edge != "default"
+                else get_dc_from_result(job_result)
+            )
             if result is not None:
                 logger.debug(f"got job result from {prev_job_id}")
                 if multiple:
@@ -75,7 +84,9 @@ def fetch_inputs(previous_jobs: list[dict[str, str]]):
 
 
 class DefaultParams:
-    def __init__(self, node_id: str, job_id: str, jobset_id: str, node_type: str) -> None:
+    def __init__(
+        self, node_id: str, job_id: str, jobset_id: str, node_type: str
+    ) -> None:
         self.node_id = node_id
         self.job_id = job_id
         self.jobset_id = jobset_id
@@ -105,7 +116,8 @@ def display(
 
 
 def atlasvibe_node(
-    original_function: Callable[..., Optional[DataContainer | dict[str, Any]]] | None = None,
+    original_function: Callable[..., Optional[DataContainer | dict[str, Any]]]
+    | None = None,
     *,
     node_type: Optional[str] = None,
     deps: Optional[list[str]] = None,
@@ -181,7 +193,9 @@ def atlasvibe_node(
                         func_params[param] = format_param_value(value, input["type"])
                 func_params["type"] = "default"
 
-                logger.debug(f"executing node_id: {node_id} previous_jobs: {previous_jobs}")
+                logger.debug(
+                    f"executing node_id: {node_id} previous_jobs: {previous_jobs}"
+                )
                 dict_inputs = fetch_inputs(previous_jobs)
 
                 # constructing the inputs
@@ -214,14 +228,19 @@ def atlasvibe_node(
                     device = args["connection"]
                     logger.debug(f"device handle: {device}")
                     if device is None:
-                        raise ValueError("No device selected, please select one using the edit menu.")
+                        raise ValueError(
+                            "No device selected, please select one using the edit menu."
+                        )
                     _id = device.get_id()
                     connection = DeviceConnectionManager.get_connection(_id)
                     args["connection"] = connection
 
                 # This fixes when people forget to add `= None` in
                 # default: Optional[DataContainer] = None
-                if "default" not in args and "default" in inspect.signature(func).parameters.keys():
+                if (
+                    "default" not in args
+                    and "default" in inspect.signature(func).parameters.keys()
+                ):
                     args["default"] = None
 
                 ##########################
@@ -233,7 +252,9 @@ def atlasvibe_node(
                 ##########################
 
                 # some special nodes like LOOP return dict instead of `DataContainer`
-                if isinstance(dc_obj, DataContainer) and not isinstance(dc_obj, Stateful):
+                if isinstance(dc_obj, DataContainer) and not isinstance(
+                    dc_obj, Stateful
+                ):
                     dc_obj.validate()  # Validate returned DataContainer object
                 elif dc_obj is not None:
                     for value in dc_obj.values():
@@ -245,7 +266,9 @@ def atlasvibe_node(
 
                 # Package the result and return it
                 FN = func.__name__
-                result = get_frontend_res_obj_from_result(node_id, observe_blocks, dc_obj)
+                result = get_frontend_res_obj_from_result(
+                    node_id, observe_blocks, dc_obj
+                )
                 return JobSuccess(
                     result=result,
                     fn=FN,

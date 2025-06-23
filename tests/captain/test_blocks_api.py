@@ -74,7 +74,9 @@ def TEST_BLOCK(x: int = 1) -> int:
     @patch("captain.routes.blocks.regenerate_block_data_json")
     @patch("captain.routes.blocks.create_manifest")
     @patch("captain.routes.blocks.logger")
-    def test_update_block_code_success(self, mock_logger, mock_create_manifest, mock_regenerate, temp_block_file):
+    def test_update_block_code_success(
+        self, mock_logger, mock_create_manifest, mock_regenerate, temp_block_file
+    ):
         """Test successful block code update."""
         # Setup mocks
         mock_regenerate.return_value = True
@@ -157,7 +159,9 @@ def TEST_BLOCK(x: int = 1) -> int:
 
     @patch("captain.routes.blocks.regenerate_block_data_json")
     @patch("captain.routes.blocks.create_manifest")
-    def test_update_block_code_manifest_failure(self, mock_create_manifest, mock_regenerate, temp_block_file):
+    def test_update_block_code_manifest_failure(
+        self, mock_create_manifest, mock_regenerate, temp_block_file
+    ):
         """Test rollback when manifest generation fails."""
         # Read original content
         with open(temp_block_file, "r") as f:
@@ -187,7 +191,9 @@ def TEST_BLOCK(x: int = 1) -> int:
 
     @patch("captain.routes.blocks.regenerate_block_data_json")
     @patch("captain.routes.blocks.create_manifest")
-    def test_update_block_code_exception_rollback(self, mock_create_manifest, mock_regenerate, temp_block_file):
+    def test_update_block_code_exception_rollback(
+        self, mock_create_manifest, mock_regenerate, temp_block_file
+    ):
         """Test rollback on unexpected exceptions."""
         # Read original content
         with open(temp_block_file, "r") as f:

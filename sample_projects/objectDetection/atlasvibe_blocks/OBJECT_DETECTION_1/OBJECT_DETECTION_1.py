@@ -34,7 +34,9 @@ def OBJECT_DETECTION_1(default: Image) -> Image:
     b = default.b
     a = default.a
 
-    path = os.path.join(os.path.abspath(os.getcwd()), "PYTHON/utils/object_detection/yolov3.weights")
+    path = os.path.join(
+        os.path.abspath(os.getcwd()), "PYTHON/utils/object_detection/yolov3.weights"
+    )
     exists = os.path.exists(path)
 
     if not exists:
@@ -138,7 +140,9 @@ def detect_object(img_np_array):
 
     # Load the pre-trained YOLO model
     net = cv2.dnn.readNet(
-        os.path.join(os.path.abspath(os.getcwd()), "PYTHON/utils/object_detection/yolov3.weights"),
+        os.path.join(
+            os.path.abspath(os.getcwd()), "PYTHON/utils/object_detection/yolov3.weights"
+        ),
         os.path.join(absolute_path, "assets/yolov3.cfg"),
     )
 

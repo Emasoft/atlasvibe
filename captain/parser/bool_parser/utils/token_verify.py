@@ -19,7 +19,9 @@ from captain.parser.bool_parser.types.token_verifier import (
 )
 
 
-def _verify_identifiers(tokens: List[Token], symbol_table: SymbolTableType, all_identifiers: set[str]):
+def _verify_identifiers(
+    tokens: List[Token], symbol_table: SymbolTableType, all_identifiers: set[str]
+):
     for token in tokens:
         if not isinstance(token, Identifier):
             continue
@@ -30,6 +32,8 @@ def _verify_identifiers(tokens: List[Token], symbol_table: SymbolTableType, all_
             raise EarlyIdentifier(id_token)
 
 
-def _verify(verification_container: VerificationContainer, verifiers: List[TokenVerifier]):
+def _verify(
+    verification_container: VerificationContainer, verifiers: List[TokenVerifier]
+):
     for verifier in verifiers:
         verifier(**verification_container.__dict__)

@@ -83,7 +83,9 @@ class TestJSONRefactoringIntegration:
 
             assert updated_data["rfInstance"]["nodes"][0]["data"]["func"] == "NEW_NAME"
             assert updated_data["rfInstance"]["nodes"][0]["data"]["label"] == "NEW_NAME"
-            assert updated_data["rfInstance"]["nodes"][0]["data"]["custom"] == "preserved"
+            assert (
+                updated_data["rfInstance"]["nodes"][0]["data"]["custom"] == "preserved"
+            )
             assert updated_data["extra"] == "data"
 
     def test_venv_manager_log_persistence(self):
@@ -224,7 +226,9 @@ def TEST_BLOCK(x: int = 10):
 
             # Check docstring was added
             assert "docstring" in data
-            assert data["docstring"]["short_description"] == "Test block for integration."
+            assert (
+                data["docstring"]["short_description"] == "Test block for integration."
+            )
             assert len(data["docstring"]["parameters"]) == 1
             assert data["docstring"]["parameters"][0]["name"] == "x"
 

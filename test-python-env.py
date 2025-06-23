@@ -25,7 +25,9 @@ def test_python_version():
     """Verify Python version is 3.11."""
     version = sys.version_info
     print(f"Python version: {version.major}.{version.minor}.{version.micro}")
-    assert version.major == 3 and version.minor == 11, f"Expected Python 3.11, got {version.major}.{version.minor}"
+    assert version.major == 3 and version.minor == 11, (
+        f"Expected Python 3.11, got {version.major}.{version.minor}"
+    )
     print("✓ Python version is correct (3.11)")
 
 
@@ -77,12 +79,18 @@ def test_atlasvibe_config():
 
 def test_python_cache():
     """Verify Python interpreter cache is set correctly."""
-    cache_path = Path.home() / "Library" / "Application Support" / "atlasvibe_py_interpreter"
+    cache_path = (
+        Path.home() / "Library" / "Application Support" / "atlasvibe_py_interpreter"
+    )
     if cache_path.exists():
         interpreter = cache_path.read_text().strip()
         print(f"Cached interpreter: {interpreter}")
-        assert Path(interpreter).exists(), f"Cached interpreter not found: {interpreter}"
-        assert "3.11" in subprocess.check_output([interpreter, "--version"]).decode(), "Cached interpreter is not Python 3.11"
+        assert Path(interpreter).exists(), (
+            f"Cached interpreter not found: {interpreter}"
+        )
+        assert "3.11" in subprocess.check_output([interpreter, "--version"]).decode(), (
+            "Cached interpreter is not Python 3.11"
+        )
         print("✓ Python interpreter cache is correct")
     else:
         print("⚠ Python interpreter cache not found (will be created on first run)")

@@ -49,7 +49,9 @@ from captain.utils.constants import (
 logger = logging.getLogger(__name__)
 
 
-def find_function_node(tree: ast.Module, function_name: str) -> Optional[ast.FunctionDef]:
+def find_function_node(
+    tree: ast.Module, function_name: str
+) -> Optional[ast.FunctionDef]:
     """
     Find a function definition node with the given name in an AST tree.
 
@@ -86,14 +88,18 @@ def extract_docstring_from_node(node: ast.FunctionDef) -> Optional[str]:
     if isinstance(first_stmt.value, ast.Str):
         # Python < 3.8 compatibility
         return first_stmt.value.s
-    elif isinstance(first_stmt.value, ast.Constant) and isinstance(first_stmt.value.value, str):
+    elif isinstance(first_stmt.value, ast.Constant) and isinstance(
+        first_stmt.value.value, str
+    ):
         # Python >= 3.8
         return first_stmt.value.value
 
     return None
 
 
-def parse_python_file(file_path: str, function_name: str) -> Tuple[Optional[ast.FunctionDef], Optional[str]]:
+def parse_python_file(
+    file_path: str, function_name: str
+) -> Tuple[Optional[ast.FunctionDef], Optional[str]]:
     """
     Parse a Python file and extract a specific function's AST node and docstring.
 
@@ -131,7 +137,9 @@ def parse_python_file(file_path: str, function_name: str) -> Tuple[Optional[ast.
         return None, None
 
 
-def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: bool = True) -> Dict[str, Any]:
+def create_docstring_json(
+    parsed_docstring: Docstring, include_empty_fields: bool = True
+) -> Dict[str, Any]:
     """
     Convert a parsed docstring object to a JSON-compatible dictionary.
 
@@ -175,8 +183,12 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
         data[RETURNS_KEY] = [
             {
                 "name": "",
-                "type": parsed_docstring.returns.type_name if parsed_docstring.returns.type_name is not None else "",
-                "description": parsed_docstring.returns.description if parsed_docstring.returns.description is not None else "",
+                "type": parsed_docstring.returns.type_name
+                if parsed_docstring.returns.type_name is not None
+                else "",
+                "description": parsed_docstring.returns.description
+                if parsed_docstring.returns.description is not None
+                else "",
             }
         ]
 
@@ -200,7 +212,9 @@ def create_docstring_json(parsed_docstring: Docstring, include_empty_fields: boo
     return data
 
 
-def parse_numpy_style_docstring(docstring: str, extra_sections: Optional[List[Tuple[str, str]]] = None) -> Docstring:
+def parse_numpy_style_docstring(
+    docstring: str, extra_sections: Optional[List[Tuple[str, str]]] = None
+) -> Docstring:
     """
     Parse a NumPy-style docstring with optional extra sections.
 
@@ -235,7 +249,9 @@ def parse_google_style_docstring(docstring: str) -> Docstring:
     return parser.parse(docstring)
 
 
-def extract_docstring_data(file_path: str, function_name: Optional[str] = None, style: str = "auto") -> Optional[Dict[str, Any]]:
+def extract_docstring_data(
+    file_path: str, function_name: Optional[str] = None, style: str = "auto"
+) -> Optional[Dict[str, Any]]:
     """
     Extract and parse docstring data from a Python file.
 
@@ -298,7 +314,9 @@ def extract_docstring_data(file_path: str, function_name: Optional[str] = None, 
             return None
 
 
-def get_param_descriptions(docstring: Optional[str], style: str = "numpy") -> Dict[str, str]:
+def get_param_descriptions(
+    docstring: Optional[str], style: str = "numpy"
+) -> Dict[str, str]:
     """
     Extract parameter descriptions from a docstring.
 
@@ -327,7 +345,9 @@ def get_param_descriptions(docstring: Optional[str], style: str = "numpy") -> Di
     return {}
 
 
-def get_return_descriptions(docstring: Optional[str], style: str = "numpy") -> Dict[str, str]:
+def get_return_descriptions(
+    docstring: Optional[str], style: str = "numpy"
+) -> Dict[str, str]:
     """
     Extract return value descriptions from a docstring.
 

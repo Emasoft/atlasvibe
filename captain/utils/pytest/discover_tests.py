@@ -34,10 +34,14 @@ def extract_error(report: RootModel):
     return missing_lib, error_msg
 
 
-def discover_pytest_file(path: str, one_file: bool, return_val: list, missing_lib: list, errors: list):
+def discover_pytest_file(
+    path: str, one_file: bool, return_val: list, missing_lib: list, errors: list
+):
     unload_module(path)
     plugin = JSONReport()
-    pytest.main(["-s", "--json-report-file=none", "--collect-only", path], plugins=[plugin])
+    pytest.main(
+        ["-s", "--json-report-file=none", "--collect-only", path], plugins=[plugin]
+    )
     logger.info(plugin.report)
     json_data: RootModel = RootModel.model_validate(plugin.report)
     missing_libs, error_msg = extract_error(json_data)
@@ -63,7 +67,9 @@ def discover_pytest_file(path: str, one_file: bool, return_val: list, missing_li
                 test_list.append(
                     TestDiscoveryResponse(
                         test_name=node.nodeid.replace(" ", "_"),
-                        path=pathlib.Path(os.path.join(json_data.root, node.nodeid)).as_posix(),
+                        path=pathlib.Path(
+                            os.path.join(json_data.root, node.nodeid)
+                        ).as_posix(),
                     )
                 )
 
@@ -73,7 +79,11 @@ def discover_pytest_file(path: str, one_file: bool, return_val: list, missing_li
         # No test, just the file itself in the list
         return
     if one_file:
-        return_val.append(TestDiscoveryResponse(test_name=os.path.basename(path), path=pathlib.Path(path).as_posix()))
+        return_val.append(
+            TestDiscoveryResponse(
+                test_name=os.path.basename(path), path=pathlib.Path(path).as_posix()
+            )
+        )
     else:
         return_val.extend(test_list)
 
@@ -82,12 +92,22 @@ def discover_robot_file(path: str, one_file: bool, return_val: list, errors: lis
     try:
         builder = TestSuiteBuilder()
         suite = builder.build(path)
-        logging.info(f"Suite: {suite} - suites in it: {suite.suites} - tests in it: {suite.tests}")
+        logging.info(
+            f"Suite: {suite} - suites in it: {suite.suites} - tests in it: {suite.tests}"
+        )
         if one_file:
-            return_val.append(TestDiscoveryResponse(test_name=suite.full_name, path=pathlib.Path(path).as_posix()))
+            return_val.append(
+                TestDiscoveryResponse(
+                    test_name=suite.full_name, path=pathlib.Path(path).as_posix()
+                )
+            )
         else:
             for test in suite.tests:
-                return_val.append(TestDiscoveryResponse(test_name=test.full_name, path=pathlib.Path(path).as_posix()))
+                return_val.append(
+                    TestDiscoveryResponse(
+                        test_name=test.full_name, path=pathlib.Path(path).as_posix()
+                    )
+                )
 
     except Exception as e:
         errors.append(str(e))

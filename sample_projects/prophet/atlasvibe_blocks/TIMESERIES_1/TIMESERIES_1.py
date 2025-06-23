@@ -14,7 +14,9 @@ import traceback
 
 
 @atlasvibe
-def TIMESERIES_1(start_date: str = "2023-01-01", end_date: str = "2023-07-20") -> DataFrame:
+def TIMESERIES_1(
+    start_date: str = "2023-01-01", end_date: str = "2023-07-20"
+) -> DataFrame:
     """Generate a timeseries with random y values between two dates.
 
     Parameters

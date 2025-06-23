@@ -67,7 +67,11 @@ def TEXT_DATASET(
     DataFrame
     """
 
-    to_remove = tuple(["headers" for remove_headers in [remove_headers] if remove_headers] + ["footers" for remove_footers in [remove_footers] if remove_footers] + ["quotes" for remove_quotes in [remove_quotes] if remove_quotes])
+    to_remove = tuple(
+        ["headers" for remove_headers in [remove_headers] if remove_headers]
+        + ["footers" for remove_footers in [remove_footers] if remove_footers]
+        + ["quotes" for remove_quotes in [remove_quotes] if remove_quotes]
+    )
 
     newsgroups = fetch_20newsgroups(
         subset=subset,

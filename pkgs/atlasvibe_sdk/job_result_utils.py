@@ -16,7 +16,10 @@ __all__ = ["get_job_result", "get_next_directions", "get_next_nodes", "get_job_r
 
 
 def is_flow_controled(result: dict[str, Any] | DataContainer):
-    if ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS in result or ATLASVIBE_INSTRUCTION.FLOW_TO_NODES in result:
+    if (
+        ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS in result
+        or ATLASVIBE_INSTRUCTION.FLOW_TO_NODES in result
+    ):
         return True
     return False
 
@@ -27,8 +30,12 @@ def get_next_directions(result: dict[str, Any] | None) -> list[str] | None:
         return direction
     if not result.get(ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS):
         for value in result.values():
-            if isinstance(value, dict) and value.get(ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS):
-                direction = cast(list[str], value[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS])
+            if isinstance(value, dict) and value.get(
+                ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS
+            ):
+                direction = cast(
+                    list[str], value[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS]
+                )
                 break
     else:
         direction = result[ATLASVIBE_INSTRUCTION.FLOW_TO_DIRECTIONS]
@@ -107,9 +114,13 @@ def get_frontend_res_obj_from_result(
 
         plotly_fig = None
         text_blob = None
-        data = None  # data variable was previously not consistently assigned a value here
+        data = (
+            None  # data variable was previously not consistently assigned a value here
+        )
         match result:  # This match should be on 'data' not 'result' if data is the DC
-            case Plotly() | String() | Bytes():  # This will likely not match if result is a dict
+            case (
+                Plotly() | String() | Bytes()
+            ):  # This will likely not match if result is a dict
                 # This logic needs to be based on the actual DataContainer instance
                 # Assuming 'data' is the DataContainer instance after extraction
                 if isinstance(data, (Plotly, String, Bytes)):
@@ -130,5 +141,7 @@ def get_frontend_res_obj_from_result(
     # This recursive call might lead to issues if the structure isn't as expected.
     # Assuming it's intended to dive into nested dictionaries.
     if keys:  # Ensure there are keys before trying to access
-        return get_frontend_res_obj_from_result(node_id, observe_blocks, result[keys[0]])
+        return get_frontend_res_obj_from_result(
+            node_id, observe_blocks, result[keys[0]]
+        )
     return None  # Return None if result is an empty dictionary

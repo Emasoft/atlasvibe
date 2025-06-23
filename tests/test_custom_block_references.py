@@ -136,7 +136,9 @@ def test_custom_block_reference_in_saved_project(client, test_project_dir):
                         "type": "CustomBlock",
                         "ctrls": {"input_value": {"type": "float", "value": 5.0}},
                         "inputs": [],
-                        "outputs": [{"name": "output", "id": "output", "type": "float"}],
+                        "outputs": [
+                            {"name": "output", "id": "output", "type": "float"}
+                        ],
                         "path": f"atlasvibe_blocks/{custom_block_name}",
                         "isCustom": True,
                     },
@@ -152,7 +154,9 @@ def test_custom_block_reference_in_saved_project(client, test_project_dir):
                         "type": "CONSTANT",
                         "ctrls": {"constant": {"type": "float", "value": 10.0}},
                         "inputs": [],
-                        "outputs": [{"name": "output", "id": "output", "type": "float"}],
+                        "outputs": [
+                            {"name": "output", "id": "output", "type": "float"}
+                        ],
                         "isCustom": False,
                     },
                 },
@@ -173,12 +177,16 @@ def test_custom_block_reference_in_saved_project(client, test_project_dir):
     loaded_data = json.loads(project_file.read_text())
 
     # Check custom block has path reference
-    custom_node = next(n for n in loaded_data["rfInstance"]["nodes"] if n["id"] == "custom-1")
+    custom_node = next(
+        n for n in loaded_data["rfInstance"]["nodes"] if n["id"] == "custom-1"
+    )
     assert custom_node["data"]["isCustom"] is True
     assert custom_node["data"]["path"] == f"atlasvibe_blocks/{custom_block_name}"
 
     # Check standard block doesn't have path
-    standard_node = next(n for n in loaded_data["rfInstance"]["nodes"] if n["id"] == "standard-1")
+    standard_node = next(
+        n for n in loaded_data["rfInstance"]["nodes"] if n["id"] == "standard-1"
+    )
     assert standard_node["data"].get("isCustom", False) is False
     assert "path" not in standard_node["data"]
 
@@ -262,7 +270,9 @@ def test_custom_block_execution_after_load(client, test_project_dir):
                         "type": "CONSTANT",
                         "ctrls": {"constant": {"type": "float", "value": 5.0}},
                         "inputs": [],
-                        "outputs": [{"name": "output", "id": "output", "type": "float"}],
+                        "outputs": [
+                            {"name": "output", "id": "output", "type": "float"}
+                        ],
                     },
                 },
                 {
@@ -282,7 +292,9 @@ def test_custom_block_execution_after_load(client, test_project_dir):
                                 "type": "float",
                             }
                         ],
-                        "outputs": [{"name": "output", "id": "output", "type": "float"}],
+                        "outputs": [
+                            {"name": "output", "id": "output", "type": "float"}
+                        ],
                         "path": f"atlasvibe_blocks/{custom_block_name}",
                         "isCustom": True,
                     },
@@ -426,9 +438,13 @@ def test_custom_block_path_validation(test_project_dir):
     for i, node in enumerate(project_data["rfInstance"]["nodes"]):
         if node["data"].get("isCustom"):
             if "path" not in node["data"]:
-                errors.append(f"Custom block at index {i} ({node['data']['func']}) is missing path reference")
+                errors.append(
+                    f"Custom block at index {i} ({node['data']['func']}) is missing path reference"
+                )
             elif not node["data"]["path"].startswith("atlasvibe_blocks/"):
-                errors.append(f"Custom block at index {i} ({node['data']['func']}) has invalid path: {node['data']['path']}")
+                errors.append(
+                    f"Custom block at index {i} ({node['data']['func']}) has invalid path: {node['data']['path']}"
+                )
 
     # Should find both errors
     assert len(errors) == 2

@@ -124,7 +124,9 @@ def find_project_root(start_path: Optional[Path | str] = None) -> Optional[Path]
     return None
 
 
-def ensure_directory_exists(path: Path | str, parents: bool = True, exist_ok: bool = True) -> Path:
+def ensure_directory_exists(
+    path: Path | str, parents: bool = True, exist_ok: bool = True
+) -> Path:
     """
     Ensure a directory exists, creating it if necessary.
 
@@ -187,7 +189,9 @@ def get_relative_path(path: Path | str, base: Optional[Path | str] = None) -> Pa
         return path
 
 
-def find_files_by_pattern(directory: Path | str, pattern: str, recursive: bool = True) -> List[Path]:
+def find_files_by_pattern(
+    directory: Path | str, pattern: str, recursive: bool = True
+) -> List[Path]:
     """
     Find all files matching a pattern in a directory.
 

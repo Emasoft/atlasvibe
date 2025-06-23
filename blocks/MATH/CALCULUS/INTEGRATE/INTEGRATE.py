@@ -52,7 +52,9 @@ def INTEGRATE(default: OrderedPair | Vector) -> OrderedPair:
     elif not isinstance(input_y, np.ndarray):
         raise ValueError(f"Invalid type for y:{type(input_y)}")
     elif len(input_x) != len(input_y):
-        raise ValueError(f"X and Y keys must have the same length got, x:{len(input_x)} y:{len(input_y)}")
+        raise ValueError(
+            f"X and Y keys must have the same length got, x:{len(input_x)} y:{len(input_y)}"
+        )
 
     integrate = trapz(input_x, input_y)
 

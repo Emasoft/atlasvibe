@@ -38,7 +38,9 @@ class EnqueueChangeRequest(BaseModel):
 
     type: ChangeType = Field(..., description="Type of change to enqueue")
     block_id: str = Field(..., description="ID of the block being changed")
-    data: Dict[str, Any] = Field(default_factory=dict, description="Change-specific data")
+    data: Dict[str, Any] = Field(
+        default_factory=dict, description="Change-specific data"
+    )
 
     @validator("type", pre=True)
     def validate_type(cls, v):
@@ -65,7 +67,9 @@ class EnqueueChangeResponse(BaseModel):
     """Response model for enqueue operations."""
 
     change_id: str = Field(..., description="Unique ID of the enqueued change")
-    queue_status: Dict[str, Any] = Field(..., description="Current status of both queues")
+    queue_status: Dict[str, Any] = Field(
+        ..., description="Current status of both queues"
+    )
 
 
 class SetTopologyRequest(BaseModel):
@@ -73,8 +77,12 @@ class SetTopologyRequest(BaseModel):
 
     job_id: str = Field(..., description="Unique job identifier")
     name: str = Field(..., description="Name of the workflow")
-    graph: Dict[str, List[Dict[str, Any]]] = Field(..., description="Workflow graph with nodes and edges")
-    run_config: Dict[str, Any] = Field(default_factory=dict, description="Execution configuration")
+    graph: Dict[str, List[Dict[str, Any]]] = Field(
+        ..., description="Workflow graph with nodes and edges"
+    )
+    run_config: Dict[str, Any] = Field(
+        default_factory=dict, description="Execution configuration"
+    )
     project_path: Optional[str] = Field(None, description="Path to project directory")
 
     class Config:
@@ -116,8 +124,12 @@ class ExecutionOutputsResponse(BaseModel):
     """Response model for execution outputs."""
 
     execution_id: Optional[str] = Field(None, description="ID of the last execution")
-    outputs: Optional[Dict[str, Any]] = Field(None, description="Node outputs from last execution")
-    differences: Optional[Dict[str, Any]] = Field(None, description="Differences from previous execution")
+    outputs: Optional[Dict[str, Any]] = Field(
+        None, description="Node outputs from last execution"
+    )
+    differences: Optional[Dict[str, Any]] = Field(
+        None, description="Differences from previous execution"
+    )
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -200,7 +212,9 @@ async def enqueue_change(request: EnqueueChangeRequest, req: Request):
         # Get current status
         status = coordinator.get_status()
 
-        logger.info(f"Enqueued change {change_id}: {request.type.value} for {request.block_id}")
+        logger.info(
+            f"Enqueued change {change_id}: {request.type.value} for {request.block_id}"
+        )
 
         return EnqueueChangeResponse(change_id=change_id, queue_status=status)
 
@@ -225,7 +239,9 @@ async def get_queue_status(req: Request):
         coordinator = req.app.state.workflow_coordinator
         status = coordinator.get_status()
 
-        return QueueStatusResponse(coordinator=status["coordinator"], wcq=status["wcq"], weq=status["weq"])
+        return QueueStatusResponse(
+            coordinator=status["coordinator"], wcq=status["wcq"], weq=status["weq"]
+        )
 
     except Exception as e:
         logger.error(f"Error getting queue status: {e}")
@@ -382,7 +398,9 @@ async def update_block_metadata(request: UpdateMetadataRequest, req: Request):
     """Update metadata for a specific block."""
     try:
         coordinator = req.app.state.workflow_coordinator
-        change_id = await coordinator.update_metadata(request.block_id, request.metadata)
+        change_id = await coordinator.update_metadata(
+            request.block_id, request.metadata
+        )
 
         return {
             "change_id": change_id,
@@ -399,7 +417,9 @@ async def rename_block(request: RenameBlockRequest, req: Request):
     """Rename a block."""
     try:
         coordinator = req.app.state.workflow_coordinator
-        change_id = await coordinator.rename_block(request.old_block_id, request.new_block_id)
+        change_id = await coordinator.rename_block(
+            request.old_block_id, request.new_block_id
+        )
 
         return {
             "change_id": change_id,
@@ -416,7 +436,9 @@ async def update_connections(request: UpdateConnectionsRequest, req: Request):
     """Update connections for a specific block."""
     try:
         coordinator = req.app.state.workflow_coordinator
-        change_id = await coordinator.update_connections(request.block_id, request.connections)
+        change_id = await coordinator.update_connections(
+            request.block_id, request.connections
+        )
 
         return {
             "change_id": change_id,
@@ -433,7 +455,9 @@ async def update_parameters(request: UpdateParametersRequest, req: Request):
     """Update parameters for a specific block."""
     try:
         coordinator = req.app.state.workflow_coordinator
-        change_id = await coordinator.update_parameters(request.block_id, request.parameters)
+        change_id = await coordinator.update_parameters(
+            request.block_id, request.parameters
+        )
 
         return {
             "change_id": change_id,

@@ -7,7 +7,9 @@ from plotly.graph_objs import Figure
 
 @pytest.fixture
 def mock_prophet_model_json():
-    with open(os.path.join(os.path.dirname(__file__), "mock_prophet_model.json"), "r") as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "mock_prophet_model.json"), "r"
+    ) as f:
         return f.read()
 
 
@@ -17,7 +19,9 @@ def mock_prophet_output_dataframe():
         "fastparquet",
         reason="A suitable version of pyarrow or fastparquet is required for parquet support used by PROPHET_COMPONENTS.",
     )
-    return pd.read_parquet(os.path.join(os.path.dirname(__file__), "mock_prophet_output_dataframe.parquet"))
+    return pd.read_parquet(
+        os.path.join(os.path.dirname(__file__), "mock_prophet_output_dataframe.parquet")
+    )
 
 
 def test_PROPHET_COMPONENTS(

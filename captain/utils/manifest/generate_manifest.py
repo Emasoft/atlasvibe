@@ -99,11 +99,23 @@ def browse_directories(dir_path: str, cur_type: Optional[str] = None, depth: int
         result["key"] = basename
 
     result["children"] = []
-    entries = sorted(os.scandir(dir_path), key=lambda e: e.name)  # Sort entries alphabetically
+    entries = sorted(
+        os.scandir(dir_path), key=lambda e: e.name
+    )  # Sort entries alphabetically
 
     for entry in entries:
         if entry.is_dir():
-            if entry.name.startswith(".") or entry.name.startswith("_") or entry.name == "assets" or entry.name == "utils" or entry.name == "MANIFEST" or "examples" in entry.path or "a1-[autogen]" in entry.path or "appendix" in entry.path or not os.listdir(entry):
+            if (
+                entry.name.startswith(".")
+                or entry.name.startswith("_")
+                or entry.name == "assets"
+                or entry.name == "utils"
+                or entry.name == "MANIFEST"
+                or "examples" in entry.path
+                or "a1-[autogen]" in entry.path
+                or "appendix" in entry.path
+                or not os.listdir(entry)
+            ):
                 continue
 
             cur_type = (
@@ -126,7 +138,9 @@ def browse_directories(dir_path: str, cur_type: Optional[str] = None, depth: int
             n_path = os.path.join(dir_path, n_file_name)
             result = create_manifest(n_path)
         except Exception as e:
-            raise ValueError(f"Failed to generate manifest from {os.path.basename(dir_path)}.py, reason: {str(e)}")
+            raise ValueError(
+                f"Failed to generate manifest from {os.path.basename(dir_path)}.py, reason: {str(e)}"
+            )
 
         if not result.get("type"):
             result["type"] = cur_type
@@ -173,7 +187,9 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
         for block_dir in sorted(project_blocks_dir.iterdir()):
             if block_dir.is_dir() and not block_dir.name.startswith("_"):
                 py_file = block_dir / f"{block_dir.name}.py"
-                logger.debug(f"Checking block: {block_dir.name}, py_file exists: {py_file.exists()}")
+                logger.debug(
+                    f"Checking block: {block_dir.name}, py_file exists: {py_file.exists()}"
+                )
                 if py_file.exists():
                     try:
                         block_manifest = create_manifest(str(py_file))
@@ -181,9 +197,13 @@ def generate_manifest(blocks_path: str | None, project_path: str | None = None):
                             block_manifest["type"] = "PROJECT"
                             block_manifest["isCustom"] = True
                             project_blocks["children"].append(block_manifest)
-                            logger.debug(f"Added project block: {block_manifest['name']}")
+                            logger.debug(
+                                f"Added project block: {block_manifest['name']}"
+                            )
                     except Exception as e:
-                        logger.error(f"Failed to create manifest for project block {block_dir.name}: {e}")
+                        logger.error(
+                            f"Failed to create manifest for project block {block_dir.name}: {e}"
+                        )
 
         # Add project blocks at the beginning if there are any
         if project_blocks["children"]:

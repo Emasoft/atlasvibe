@@ -207,7 +207,9 @@ class RightParenthesis:
         pass
 
 
-PARANTHESES_TO_CLASS: dict[str, Union[Type[LeftParenthesis], Type[RightParenthesis]]] = {
+PARANTHESES_TO_CLASS: dict[
+    str, Union[Type[LeftParenthesis], Type[RightParenthesis]]
+] = {
     "(": LeftParenthesis,
     ")": RightParenthesis,
 }

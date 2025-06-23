@@ -5,7 +5,9 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 def test_WAVEPACKET(mock_atlasvibe_decorator):
     import WAVEPACKET
 
-    default = DefaultParams(node_id="WAVEPACKET", job_id="0", jobset_id="0", node_type="default")
+    default = DefaultParams(
+        node_id="WAVEPACKET", job_id="0", jobset_id="0", node_type="default"
+    )
 
     # node under test
     res = WAVEPACKET.WAVEPACKET(default_params=default)

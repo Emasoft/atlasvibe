@@ -44,7 +44,9 @@ class ConnectionManager:
         with socket_connection_lock:
             self.active_connections_map[socket_id] = websocket
 
-        logger.debug(f"Connected! Amt of active connections: {len(self.active_connections_map.keys())}")
+        logger.debug(
+            f"Connected! Amt of active connections: {len(self.active_connections_map.keys())}"
+        )
 
     async def disconnect(self, socket_id: str):
         with socket_connection_lock:
@@ -55,7 +57,9 @@ class ConnectionManager:
             del self.active_connections_map[socket_id]
 
     # this method sends a message to all connected websockets
-    async def broadcast(self, message: Union[dict[str, Any], WorkerJobResponse, TestSequenceMessage]):
+    async def broadcast(
+        self, message: Union[dict[str, Any], WorkerJobResponse, TestSequenceMessage]
+    ):
         # Early return if no connections
         if not self.active_connections_map:
             logger.debug("No active WebSocket connections, skipping broadcast")
@@ -69,11 +73,17 @@ class ConnectionManager:
                     continue
 
                 try:
-                    await connection.send_text(json.dumps(message, cls=PlotlyJSONEncoder))
+                    await connection.send_text(
+                        json.dumps(message, cls=PlotlyJSONEncoder)
+                    )
                 except Exception as e:
-                    logger.error(f"Error in broadcast to {id}: {e}\n{traceback.format_exc()}")
+                    logger.error(
+                        f"Error in broadcast to {id}: {e}\n{traceback.format_exc()}"
+                    )
                     if connection.client_state == WebSocketState.DISCONNECTED:
-                        logger.debug(f"Connection state for {id} is Disconnected, adding to dead_connection...")
+                        logger.debug(
+                            f"Connection state for {id} is Disconnected, adding to dead_connection..."
+                        )
                         dead_connections.add(id)
 
         for connection in dead_connections:

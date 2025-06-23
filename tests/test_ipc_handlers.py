@@ -47,16 +47,22 @@ class TestIPCHandlerConstants:
         for constant in expected_constants:
             # Check that constant is defined in API object
             pattern = rf'{constant}:\s*["\']\w+["\']'
-            assert re.search(pattern, content), f"API constant '{constant}' not found in api/index.ts"
+            assert re.search(pattern, content), (
+                f"API constant '{constant}' not found in api/index.ts"
+            )
 
     def test_ipc_main_handlers_use_constants(self):
         """Test that ipc-main-handlers.ts uses API constants."""
         # Read the IPC handlers file
-        handlers_file = Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        handlers_file = (
+            Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        )
         content = handlers_file.read_text()
 
         # Should import API constants
-        assert "import { API }" in content or "import API" in content, "IPC handlers should import API constants"
+        assert "import { API }" in content or "import API" in content, (
+            "IPC handlers should import API constants"
+        )
 
         # Should not have string literals for handlers
         # Look for patterns like ipcMain.handle("string", ...)
@@ -77,7 +83,9 @@ class TestIPCHandlerConstants:
                 ]:
                     literal_handlers.append(handler_name)
 
-        assert len(literal_handlers) == 0, f"Found string literals in IPC handlers: {literal_handlers}. Should use API constants instead."
+        assert len(literal_handlers) == 0, (
+            f"Found string literals in IPC handlers: {literal_handlers}. Should use API constants instead."
+        )
 
         # Should use API.constant pattern
         assert "API." in content, "IPC handlers should use API.constant pattern"
@@ -89,7 +97,9 @@ class TestIPCHandlerConstants:
         content = preload_file.read_text()
 
         # Should import API constants
-        assert "import { API }" in content or "import API" in content, "Preload should import API constants"
+        assert "import { API }" in content or "import API" in content, (
+            "Preload should import API constants"
+        )
 
         # Check for ipcRenderer.invoke with string literals
         string_literal_pattern = r'ipcRenderer\.invoke\s*\(\s*["\'][^"\']+["\']\s*[,)]'
@@ -107,13 +117,17 @@ class TestIPCHandlerConstants:
                 ]:
                     literal_calls.append(call_name)
 
-        assert len(literal_calls) == 0, f"Found string literals in preload IPC calls: {literal_calls}. Should use API constants instead."
+        assert len(literal_calls) == 0, (
+            f"Found string literals in preload IPC calls: {literal_calls}. Should use API constants instead."
+        )
 
     def test_consistency_between_files(self):
         """Test that API constants are used consistently across files."""
         # Read all relevant files
         api_file = Path(__file__).parent.parent / "src" / "api" / "index.ts"
-        handlers_file = Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        handlers_file = (
+            Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        )
         preload_file = Path(__file__).parent.parent / "src" / "preload" / "index.ts"
 
         api_content = api_file.read_text()
@@ -147,11 +161,15 @@ class TestIPCHandlerConstants:
                 # Should be used in either handlers or preload
                 in_handlers = f"API.{constant}" in handlers_content
                 in_preload = f"API.{constant}" in preload_content
-                assert in_handlers or in_preload, f"API constant '{constant}' defined but not used in handlers or preload"
+                assert in_handlers or in_preload, (
+                    f"API constant '{constant}' defined but not used in handlers or preload"
+                )
 
     def test_no_duplicate_handlers(self):
         """Test that there are no duplicate handler registrations."""
-        handlers_file = Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        handlers_file = (
+            Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        )
         content = handlers_file.read_text()
 
         # Find all ipcMain.handle calls
@@ -166,11 +184,15 @@ class TestIPCHandlerConstants:
                 duplicates.append(handler)
             seen.add(handler)
 
-        assert len(duplicates) == 0, f"Found duplicate handler registrations: {duplicates}"
+        assert len(duplicates) == 0, (
+            f"Found duplicate handler registrations: {duplicates}"
+        )
 
     def test_handler_implementations_exist(self):
         """Test that all registered handlers have implementations."""
-        handlers_file = Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        handlers_file = (
+            Path(__file__).parent.parent / "src" / "main" / "ipc-main-handlers.ts"
+        )
         content = handlers_file.read_text()
 
         # Find all ipcMain.handle registrations
@@ -182,11 +204,17 @@ class TestIPCHandlerConstants:
 
             # Check that implementation is not empty or just a comment
             # Remove comments and whitespace
-            impl_without_comments = re.sub(r"//.*$", "", implementation, flags=re.MULTILINE)
-            impl_without_comments = re.sub(r"/\*.*?\*/", "", impl_without_comments, flags=re.DOTALL)
+            impl_without_comments = re.sub(
+                r"//.*$", "", implementation, flags=re.MULTILINE
+            )
+            impl_without_comments = re.sub(
+                r"/\*.*?\*/", "", impl_without_comments, flags=re.DOTALL
+            )
             impl_without_comments = impl_without_comments.strip()
 
-            assert len(impl_without_comments) > 0, f"Handler '{handler_name}' has no implementation"
+            assert len(impl_without_comments) > 0, (
+                f"Handler '{handler_name}' has no implementation"
+            )
 
     def test_window_api_matches_handlers(self):
         """Test that window.api exposed methods match registered handlers."""
@@ -210,7 +238,9 @@ class TestIPCHandlerConstants:
                 brace_count -= 1
             i += 1
 
-        exposed_content = content[api_start + len("const extendedApi: ExtendedWindowApi = {") : i]
+        exposed_content = content[
+            api_start + len("const extendedApi: ExtendedWindowApi = {") : i
+        ]
 
         # Extract exposed method names
         exposed_methods = []
@@ -228,7 +258,9 @@ class TestIPCHandlerConstants:
         ]
 
         for method in expected_methods:
-            assert method in exposed_methods, f"Expected method '{method}' not exposed in window.api"
+            assert method in exposed_methods, (
+                f"Expected method '{method}' not exposed in window.api"
+            )
 
 
 if __name__ == "__main__":

@@ -84,7 +84,11 @@ def TWO_DIMENSIONAL_FFT(
                 grayscale = np.array(image)
                 fourier = fft.rfft2(grayscale) if real_signal else fft.fft2(grayscale)
             else:
-                fourier = fft.rfft2(locals()[color], axes=[0, 1]) if real_signal else fft.fft2(locals()[color], axes=[0, 1])
+                fourier = (
+                    fft.rfft2(locals()[color], axes=[0, 1])
+                    if real_signal
+                    else fft.fft2(locals()[color], axes=[0, 1])
+                )
 
     fourier = np.log10(np.abs(fourier))
     fourier = extrapolate(fourier)

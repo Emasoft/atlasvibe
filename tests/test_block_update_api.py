@@ -35,7 +35,9 @@ class TestBlockUpdateAPI:
             project_dir.mkdir()
 
             project_file = project_dir / "test_project.atlasvibe"
-            project_file.write_text(json.dumps({"version": "0.1.0", "nodes": [], "edges": []}))
+            project_file.write_text(
+                json.dumps({"version": "0.1.0", "nodes": [], "edges": []})
+            )
 
             # Create custom blocks directory
             blocks_dir = project_dir / "atlasvibe_blocks"
@@ -64,7 +66,9 @@ def TEST_BLOCK(x: int = 1) -> int:
     return x * 2
 """)
 
-            (block_dir / "app.json").write_text(json.dumps({"name": "TEST_BLOCK", "type": "default"}))
+            (block_dir / "app.json").write_text(
+                json.dumps({"name": "TEST_BLOCK", "type": "default"})
+            )
 
             (block_dir / "block_data.json").write_text(
                 json.dumps(

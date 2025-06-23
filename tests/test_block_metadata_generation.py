@@ -44,7 +44,13 @@ class TestBlockMetadataGeneration:
         """Create a test block directory structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create block directory structure like blueprint blocks
-            block_base = Path(tmpdir) / "blocks" / "TEST_CATEGORY" / "TEST_SUBCATEGORY" / "TEST_BLOCK"
+            block_base = (
+                Path(tmpdir)
+                / "blocks"
+                / "TEST_CATEGORY"
+                / "TEST_SUBCATEGORY"
+                / "TEST_BLOCK"
+            )
             block_base.mkdir(parents=True)
 
             yield block_base
@@ -191,7 +197,11 @@ def TEST_BLOCK(
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name == block_name:
                 # Extract docstring
-                if node.body and isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Str):
+                if (
+                    node.body
+                    and isinstance(node.body[0], ast.Expr)
+                    and isinstance(node.body[0].value, ast.Str)
+                ):
                     docstring = node.body[0].value.s
 
                     # Parse docstring
@@ -222,8 +232,12 @@ def TEST_BLOCK(
                             else [
                                 {
                                     "name": None,
-                                    "type": parsed.returns.type_name if parsed.returns else None,
-                                    "description": parsed.returns.description if parsed.returns else None,
+                                    "type": parsed.returns.type_name
+                                    if parsed.returns
+                                    else None,
+                                    "description": parsed.returns.description
+                                    if parsed.returns
+                                    else None,
                                 }
                             ],
                         }
@@ -510,7 +524,9 @@ def TEST_BLOCK():
             yield block_dir, "TEST_BLOCK"
 
     @patch("captain.utils.block_metadata_generator.save_json_file")
-    def test_generate_app_json_uses_save_json_file(self, mock_save_json, temp_block_dir):
+    def test_generate_app_json_uses_save_json_file(
+        self, mock_save_json, temp_block_dir
+    ):
         """Test that generate_app_json uses save_json_file from shared utilities."""
         block_dir, block_name = temp_block_dir
         mock_save_json.return_value = True
@@ -531,7 +547,9 @@ def TEST_BLOCK():
         assert data["rfInstance"]["nodes"][0]["data"]["func"] == block_name
 
     @patch("captain.utils.block_metadata_generator.save_json_file")
-    def test_generate_app_json_handles_save_failure(self, mock_save_json, temp_block_dir):
+    def test_generate_app_json_handles_save_failure(
+        self, mock_save_json, temp_block_dir
+    ):
         """Test error handling when save_json_file fails."""
         block_dir, block_name = temp_block_dir
         mock_save_json.return_value = False
@@ -542,7 +560,9 @@ def TEST_BLOCK():
     @patch("captain.utils.block_metadata_generator.save_json_file")
     @patch("captain.utils.block_metadata_generator.load_json_file")
     @patch("captain.utils.block_metadata_generator.extract_docstring_data")
-    def test_generate_block_data_uses_shared_utilities(self, mock_extract, mock_load, mock_save, temp_block_dir):
+    def test_generate_block_data_uses_shared_utilities(
+        self, mock_extract, mock_load, mock_save, temp_block_dir
+    ):
         """Test that generate_block_data_json uses shared JSON utilities."""
         block_dir, block_name = temp_block_dir
 

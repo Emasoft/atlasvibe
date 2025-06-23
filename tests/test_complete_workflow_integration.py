@@ -117,7 +117,9 @@ def SAMPLE_BLUEPRINT(
 
             yield str(project_file)
 
-    def test_complete_workflow_blueprint_to_instance_to_edit(self, blueprint_setup, project_setup, test_client):
+    def test_complete_workflow_blueprint_to_instance_to_edit(
+        self, blueprint_setup, project_setup, test_client
+    ):
         """Test the complete workflow from blueprint to instance to edited instance."""
         blueprint_path, blocks_base = blueprint_setup
         project_path = project_setup
@@ -132,7 +134,9 @@ def SAMPLE_BLUEPRINT(
 
         # Step 2: Create instance from blueprint (simulating drag & drop)
         instance_name = "SAMPLE_BLUEPRINT_1"
-        instance_path = copy_blueprint_to_project(blueprint_path, project_path, instance_name)
+        instance_path = copy_blueprint_to_project(
+            blueprint_path, project_path, instance_name
+        )
 
         # Verify instance was created
         instance_dir = Path(instance_path)
@@ -150,7 +154,10 @@ def SAMPLE_BLUEPRINT(
 
         # Verify docstring was properly extracted
         assert "docstring" in block_data
-        assert block_data["docstring"]["short_description"] == "Sample blueprint for integration testing."
+        assert (
+            block_data["docstring"]["short_description"]
+            == "Sample blueprint for integration testing."
+        )
         assert len(block_data["docstring"]["parameters"]) == 2
         assert block_data["docstring"]["parameters"][0]["name"] == "text_input"
         assert block_data["docstring"]["parameters"][1]["name"] == "multiplier"
@@ -227,7 +234,10 @@ def SAMPLE_BLUEPRINT_1(
         with open(block_data_path) as f:
             updated_data = json.load(f)
 
-        assert updated_data["docstring"]["short_description"] == "Modified instance demonstrating independence from blueprint."
+        assert (
+            updated_data["docstring"]["short_description"]
+            == "Modified instance demonstrating independence from blueprint."
+        )
         assert len(updated_data["docstring"]["parameters"]) == 3
         param_names = [p["name"] for p in updated_data["docstring"]["parameters"]]
         assert "modified_text" in param_names
@@ -261,7 +271,9 @@ def SAMPLE_BLUEPRINT_1(
 
         # Step 9: Create another instance to verify independence
         instance3_name = "SAMPLE_BLUEPRINT_3"
-        instance3_path = copy_blueprint_to_project(blueprint_path, project_path, instance3_name)
+        instance3_path = copy_blueprint_to_project(
+            blueprint_path, project_path, instance3_name
+        )
 
         instance3_dir = Path(instance3_path)
         instance3_py = instance3_dir / f"{instance3_name}.py"

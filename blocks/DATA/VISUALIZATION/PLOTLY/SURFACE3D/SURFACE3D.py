@@ -46,7 +46,9 @@ def SURFACE3D(default: OrderedTriple | DataFrame | Surface | Matrix) -> Plotly:
 
             # Truncate or pad the z array to match the desired size
             if z_size > len(default.z):
-                z = np.pad(default.z, (0, z_size - len(default.z)), mode="constant").reshape(len(y), len(x))
+                z = np.pad(
+                    default.z, (0, z_size - len(default.z)), mode="constant"
+                ).reshape(len(y), len(x))
             else:
                 z = default.z[:z_size].reshape(len(y), len(x))
 

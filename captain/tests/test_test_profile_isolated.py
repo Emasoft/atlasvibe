@@ -132,7 +132,9 @@ class TestHelperFunctions:
     def test_update_to_origin_main_dirty_repo(self, mock_run):
         """Test updating dirty repo raises ProfileError."""
         # Mock dirty repo status
-        mock_run.return_value = Mock(returncode=0, stdout=b"M modified_file.py\n", stderr=b"")
+        mock_run.return_value = Mock(
+            returncode=0, stdout=b"M modified_file.py\n", stderr=b""
+        )
 
         with pytest.raises(ProfileError) as exc_info:
             update_to_origin_main("/path/to/repo")

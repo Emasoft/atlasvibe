@@ -287,7 +287,9 @@ class TestManagedOperation:
         ws_manager = AsyncMock()
 
         with pytest.raises(ValueError):
-            async with managed_operation("test_operation", broadcast_start=True, ws_manager=ws_manager):
+            async with managed_operation(
+                "test_operation", broadcast_start=True, ws_manager=ws_manager
+            ):
                 raise ValueError("Test error")
 
         # Check error broadcast

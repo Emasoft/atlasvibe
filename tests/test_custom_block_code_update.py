@@ -50,8 +50,12 @@ def test_project():
                             "func": "CUSTOM_PROCESSOR",
                             "type": "CustomBlock",
                             "ctrls": {},
-                            "inputs": [{"name": "input", "id": "input", "type": "number"}],
-                            "outputs": [{"name": "output", "id": "output", "type": "number"}],
+                            "inputs": [
+                                {"name": "input", "id": "input", "type": "number"}
+                            ],
+                            "outputs": [
+                                {"name": "output", "id": "output", "type": "number"}
+                            ],
                             "path": "atlasvibe_blocks/CUSTOM_PROCESSOR",
                             "isCustom": True,
                         },
@@ -271,7 +275,10 @@ def CUSTOM_PROCESSOR(input: float, multiplier: float = 2.0, power: int = 1) -> f
     }
 
     # Custom block path should remain unchanged
-    assert project_data["rfInstance"]["nodes"][0]["data"]["path"] == "atlasvibe_blocks/CUSTOM_PROCESSOR"
+    assert (
+        project_data["rfInstance"]["nodes"][0]["data"]["path"]
+        == "atlasvibe_blocks/CUSTOM_PROCESSOR"
+    )
     assert project_data["rfInstance"]["nodes"][0]["data"]["isCustom"] is True
 
 
@@ -331,7 +338,9 @@ def PROCESSOR(input: float) -> float:
             }
             project_file.write_text(json.dumps(project_data, indent=2))
 
-            projects.append({"dir": project_dir, "file": project_file, "multiplier": i + 2})
+            projects.append(
+                {"dir": project_dir, "file": project_file, "multiplier": i + 2}
+            )
 
         # Verify each project maintains its own custom block
         for i, proj in enumerate(projects):
@@ -344,7 +353,9 @@ def PROCESSOR(input: float) -> float:
             assert node["data"]["isCustom"] is True
 
             # Code is different in each project
-            code = (proj["dir"] / "atlasvibe_blocks" / "PROCESSOR" / "PROCESSOR.py").read_text()
+            code = (
+                proj["dir"] / "atlasvibe_blocks" / "PROCESSOR" / "PROCESSOR.py"
+            ).read_text()
             assert f"input * {proj['multiplier']}" in code
 
 

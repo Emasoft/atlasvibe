@@ -27,8 +27,12 @@ async def set_env_var_route(env_var: EnvVar):
         set_env_var(env_var.key, env_var.value)
 
     except Exception as e:
-        logger.error(f"error occurred in set_env_var function: {e}, traceback:{e.with_traceback(e.__traceback__)}")
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=e.__str__())
+        logger.error(
+            f"error occurred in set_env_var function: {e}, traceback:{e.with_traceback(e.__traceback__)}"
+        )
+        return Response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=e.__str__()
+        )
 
     return Response(status_code=200)
 
@@ -38,7 +42,9 @@ async def delete_env_var_route(key_name: str):
     try:
         delete_env_var(key_name)
     except Exception as e:
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=e.__str__())
+        return Response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=e.__str__()
+        )
     return Response(status_code=200)
 
 
@@ -46,7 +52,9 @@ async def delete_env_var_route(key_name: str):
 async def get_env_var_by_name_route(key_name: str):
     value: Optional[str] = get_env_var(key_name)
     if value is None:
-        return Response(status_code=status.HTTP_400_BAD_REQUEST, content="No key found!")
+        return Response(
+            status_code=status.HTTP_400_BAD_REQUEST, content="No key found!"
+        )
 
     return EnvVar(key=key_name, value=value)
 

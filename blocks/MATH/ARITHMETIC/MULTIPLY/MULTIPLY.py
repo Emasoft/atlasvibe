@@ -13,7 +13,9 @@ from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_ope
 
 
 @atlasvibe
-def MULTIPLY(a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]) -> OrderedPair | Scalar | Vector:
+def MULTIPLY(
+    a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
+) -> OrderedPair | Scalar | Vector:
     """Multiply two numeric arrays, vectors, matrices, or constants element-wise.
 
     Parameters
