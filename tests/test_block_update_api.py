@@ -128,10 +128,12 @@ def TEST_BLOCK(x: int = 1) -> int:
         assert actual_content == new_code
         assert "x * 3" in actual_content
 
-        # Response should contain manifest data
+        # Response should contain block data
         data = response.json()
-        assert data.get("name") == "TEST_BLOCK"
+        assert data.get("block_name") == "TEST_BLOCK"
         assert "path" in data
+        assert "transaction_id" in data
+        assert "status" in data
 
     def test_update_non_custom_block_rejected(self):
         """Test that blueprint blocks cannot be updated."""
