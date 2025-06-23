@@ -19,9 +19,9 @@
 
 import { Command } from "@/main/command";
 import { execCommand } from "@/main/executor";
-import pyproject from "../../pyproject.toml?raw";
 import * as TOML from "@iarna/toml";
 import * as fs from "fs";
+import * as path from "path";
 import log from "electron-log/main";
 import { DependencyGroupInfo, PythonDependency } from "@/types/dependencies";
 
@@ -109,7 +109,9 @@ export async function uvShowTopLevel(): Promise<PythonDependency[]> {
 export async function uvShowUserGroup(): Promise<PythonDependency[]> {
   // For user group, we'll read from pyproject.toml and check what's installed
   const installed = await uvShowTopLevel();
-  const parsed = TOML.parse(pyproject) as PyProjectToml;
+  const pyprojectPath = path.join(process.cwd(), "pyproject.toml");
+  const pyprojectContent = fs.readFileSync(pyprojectPath, "utf8");
+  const parsed = TOML.parse(pyprojectContent) as PyProjectToml;
 
   if (parsed?.project?.["optional-dependencies"]?.user) {
     const userDeps = parsed.project["optional-dependencies"].user;
@@ -131,7 +133,9 @@ export async function uvShowUserGroup(): Promise<PythonDependency[]> {
 
 export async function uvGetGroupInfo(): Promise<DependencyGroupInfo[]> {
   const installed = await uvShowTopLevel();
-  const parsed = TOML.parse(pyproject) as PyProjectToml;
+  const pyprojectPath = path.join(process.cwd(), "pyproject.toml");
+  const pyprojectContent = fs.readFileSync(pyprojectPath, "utf8");
+  const parsed = TOML.parse(pyprojectContent) as PyProjectToml;
 
   const result: DependencyGroupInfo[] = [];
 
