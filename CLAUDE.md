@@ -49,7 +49,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - always write the docstrings of all functions and improve the existing ones. Use Google-style docstrings with Args/Returns sections, but do not use markdown.
 - never use markdown in comments.
 - when using the Bash tool, always set the timeout parameter to 1800000 (30 minutes).
-- always tabulate the tests result in a nice table.
+  - always tabulate the tests result in a nice table.
 - do not use mockup tests or mocked behaviours unless it is absolutely impossible to do otherwise. If you need to use a service, local or remote, do not mock it, just ask the user to activate it for the duration of the tests. Results of mocked tests are completely useless. Only real tests can discover issues with the codebase.
 - always use a **Test-Driven Development (TDD)** methodology (write tests first, the implementation later) when implementing new features or change the existing ones. But first check that the existing tests are written correctly.
 - always plan in advance your actions, and break down your plan into very small tasks. Save a file named `DEVELOPMENT_PLAN.md` and write all tasks inside it. Update it with the status of each tasks after any changes.
@@ -96,6 +96,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 
 ### Formatting Rules
+
 - Use only ruff format for formatting python files. Read how here: https://docs.astral.sh/ruff/formatter/
 - Set ruff format to allows line lenght up to 400 chars, using the `--line-length=400`
 - Do not use pyproject.toml or ruff.toml to configure ruff, since there are too many variations of the command used in the workflows. Aleays run it in isolated mode with `--isolated` and set all options via cli.
@@ -105,22 +106,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always use uv-pre-commit to automate the formatting. Read how here: `https://github.com/astral-sh/uv-pre-commit` and `https://docs.astral.sh/uv/guides/integration/pre-commit/`.
 - Configure Prettier for github formatting actions following the instructions here: `https://prettier.io/docs/ci` and `https://autofix.ci/setup`.
 - To format yaml files only use yamlfmt. Install yamlfmt with:
+
 ```
 go install github.com/google/yamlfmt/cmd/yamlfmt@latest
 ```
 
 Then create this configuration file (`.yamlfmt`):
+
 ```yaml
 # .yamlfmt
 formatter:
-  indent: 2                      # Use 2-space indentation (standard in GitHub workflows)
-  retain_line_breaks: true       # Preserve existing blank lines between blocks
-  indentless_arrays: true        # Don’t add extra indent before each “-” list item
-  scan_folded_as_literal: true   # Keep multi-line “>”-style blocks as-is, avoid collapsing
+  indent: 2 # Use 2-space indentation (standard in GitHub workflows)
+  retain_line_breaks: true # Preserve existing blank lines between blocks
+  indentless_arrays: true # Don’t add extra indent before each “-” list item
+  scan_folded_as_literal: true # Keep multi-line “>”-style blocks as-is, avoid collapsing
   trim_trailing_whitespace: true # Remove trailing spaces at end of lines
-  eof_newline: true              # Ensure the file ends with exactly one newline
+  eof_newline: true # Ensure the file ends with exactly one newline
 gitignore_excludes: true
-
 ```
 
 To use yamlfmt:
@@ -132,13 +134,14 @@ yamlfmt -path .github/workflows/ci.yml
 # Or format all workflow files
 yamlfmt -path .github/workflows
 ```
+
 - You should place the .yamlfmt file in the root directory of the project.
 - You must check the .yamlfmt configuration file to see if you are using different settings (i.e. indent 2 or 4 spaces, etc.)
 - Add yamlfmt to the git hooks/uv-pre-commit, so it is automatically executed at each commit.
 - IMPORTANT: yamlfmt must not format all yaml files, but only those inside the .github subfolder, since it is configured for the github workflows formatting style. Other yaml files may exist outside the .github folder using different formatting styles. Do not format those files.
 
-
 ### Linting Rules
+
 - Use `ruff check` and mypy for python
 - Use autofix to lint pull-requests automatically. Read how here: https://autofix.ci/setup
 - Do not use pyproject.toml or ruff.toml to configure `ruff check`, since there are too many variations of the command used in the workflows. Aleays run it in isolated mode with `--isolated` and set all options via cli.
@@ -153,9 +156,8 @@ yamlfmt -path .github/workflows
 - Use `pnpm run lint` to run eslint on node.js source files.
 - Add git hooks that uses uv-pre-commit to run the linting at each commit, read the guide here: `https://docs.astral.sh/uv/guides/integration/pre-commit/`
 
-
-
 ### Testing Rules
+
 - Always use pytest and pytest-cov for testing
 - Run tests with uv (`uv run pytest`) or `pnpm run tests`
 - For coverage reports: `uv run pytest --cov=. --cov-report=html`
@@ -170,22 +172,23 @@ yamlfmt -path .github/workflows
 - Mark the slow tests (those usually skipped when running tests on GitHub, or that need some extra big dependencies installed) with the emoji of a snail 🐌. Be sure to account for the extra character in the table formatting.
 
 ## GITHUB WORKFLOWS AFTER PUSHING
+
 - Use GH cli tool to interact with github
 - Keep synching, linting, formatting, testing and building, releasing and publishing separated in different workflows.
-    - synch.yml = update the dependency libraries and the dev tools to the version indicated in the configuration files (i.e. `pyproject.toml`, `package.json`, `requirements-dev.txt`, etc.). Use uv synch for python.
-    - lint.yml = lint the code files (ruff, eslint, shellcheck, actionlint, yamllint, jsonlint, pnpm, etc.)
-    - format.yml = format the code files (ruff, prettier, yamlfmt, pnpm, etc.)
-    - test.yml = run the tests for all code files (pytest, pytest-cov, playwright, etc.)
-    - build.yml = build the project packages with uv build
-    - release.yml = add a new release to github from the latest build, bump the semantic version and update the changelog
-    - publish.yml = publish the ladt release to PyPi and other online indexes
-    - metrics.yml = compute varous code metrics and statistics to be used to define the health of the project, the coverage, the issues/bugs open, the repo tars, repo size, etc. to be used in the docs and in the README.md
-    - docs.yml = update the README.md file and all the docs with the latest changes. Also update the PyPi package info page if available and up to date.
-    - ci.yml = orchestrator for the whole CI pipeline (it calls: synch, lint, format, test, build, release, publish, docs)
-    - prfix.yml = review and autofix fix pull requests
-    - check.yml = only check the project (it calls: synch, lint, format, test, security).
-    - generate.yml = only build the package (it calls: synch, lint, format, test, build)
-    - security.yml = some custom security checks, but this is optional since github already checks security. Use it only for project specific checks not included in github controls.
+  - synch.yml = update the dependency libraries and the dev tools to the version indicated in the configuration files (i.e. `pyproject.toml`, `package.json`, `requirements-dev.txt`, etc.). Use uv synch for python.
+  - lint.yml = lint the code files (ruff, eslint, shellcheck, actionlint, yamllint, jsonlint, pnpm, etc.)
+  - format.yml = format the code files (ruff, prettier, yamlfmt, pnpm, etc.)
+  - test.yml = run the tests for all code files (pytest, pytest-cov, playwright, etc.)
+  - build.yml = build the project packages with uv build
+  - release.yml = add a new release to github from the latest build, bump the semantic version and update the changelog
+  - publish.yml = publish the ladt release to PyPi and other online indexes
+  - metrics.yml = compute varous code metrics and statistics to be used to define the health of the project, the coverage, the issues/bugs open, the repo tars, repo size, etc. to be used in the docs and in the README.md
+  - docs.yml = update the README.md file and all the docs with the latest changes. Also update the PyPi package info page if available and up to date.
+  - ci.yml = orchestrator for the whole CI pipeline (it calls: synch, lint, format, test, build, release, publish, docs)
+  - prfix.yml = review and autofix fix pull requests
+  - check.yml = only check the project (it calls: synch, lint, format, test, security).
+  - generate.yml = only build the package (it calls: synch, lint, format, test, build)
+  - security.yml = some custom security checks, but this is optional since github already checks security. Use it only for project specific checks not included in github controls.
 - Do not setup cron jobs. Setup the workflows to be triggered when the code change or there are PR
 - Setup the CI/CD pipeline and all workflows to use an uv environment. Read how here: `https://docs.astral.sh/uv/guides/integration/github/`
 - Always use uv-pre-commit ( `https://github.com/astral-sh/uv-pre-commit` ). Read how here: `https://docs.astral.sh/uv/guides/integration/pre-commit/`
@@ -196,47 +199,56 @@ yamlfmt -path .github/workflows
 - Make sure the tests have a configuration for remote run on github that is different from the local one. Make API tests flexible so they can use different parameters when run locally and remotely.
 - Let the test retry counts and all retry logic in the code be configurable with different max values for local and remote for faster CI execution
 - After committing and pushing the project to github, always check if the push passed the github actions and checks. Wait few seconds, according to the average time needed for the lint and tests to run, then use the following commands to retrieve the last logs of the last actions:
+
 ```
 gh run list --limit <..max number of recent actions logs to list...>
 gh run view <... run number ...> --log-failed
 ```
+
 Example:
+
 ```
 > gh run list --limit 10
 > mkdir -p ./logs && gh run view 15801201757 --log-failed > ./logs/15801201757.log
 etc..
 
 ```
+
 Then examine the log files saved in the ./logs/ subdir. Think ultrahard to find the causes of the failures. Use actionlint, yamllint and act to test and verify the workflows issues. Then report the issues causing the failings.
 
 ## API Configuration
+
 - The system uses OpenRouter API for both renaming and translation phases
 - Set `OPENROUTER_API_KEY` environment variable with your OpenRouter API key
 - OpenRouter provides unified cost tracking across all models
 - Model names are automatically mapped (e.g., "gpt-4o-mini" → "openai/gpt-4o-mini")
 
-
 ### Key Principles for CI/CD Success:
 
 1. **Avoid Super-Linter** - Use a simpler lint workflow that runs tools directly
+
    - Super-Linter has configuration path issues and is overly complex. Do not use it.
    - Direct tool execution is more transparent and easier to debug
 
 2. **Ensure Local/CI Formatting Consistency** - Use pre-commit hooks in CI workflows
+
    - Run `uv run pre-commit run <hook> --all-files` in CI instead of direct tool commands
    - This ensures identical behavior between local development and CI
 
 3. **Separate Concerns in Workflows**
+
    - Keep linting, testing, and building in different workflows
    - This makes failures easier to diagnose and workflows faster to run
 
 4. **Environment-Aware Test Configuration**
+
    - Tests should detect if running locally vs on GitHub Actions
    - Use environment detection: `is_running_in_test()` function
    - Different retry counts: local (10 retries) vs CI (2 retries)
    - Different timeouts: local (60s max) vs CI (5s max)
 
 5. **Flexible API Tests**
+
    - Make API tests accept various valid responses, parsing the right tags or the right code blocks and ignoring the remaining text as it is variable
    - If the AI model and the API service support structured json responses, make use of them to get deterministic responses. If you use Openrouter, read the following: `https://openrouter.ai/docs/features/structured-outputs`. You can find the list of models supporting structured output here: `https://openrouter.ai/models?fmt=table&order=context-high-to-low&supported_parameters=structured_outputs`.
    - Put in place boundaries and measures to prevent the risks of consuming too many tokens (and spending too much money) when running API requests during the tests.
@@ -250,6 +262,7 @@ Then examine the log files saved in the ./logs/ subdir. Think ultrahard to find 
    - Reduces CI execution time from 10+ minutes to ~2 minutes
 
 ### Implementation Example:
+
 ```python
 def is_running_in_test() -> bool:
     """Detect if code is running in a test environment."""
@@ -272,7 +285,6 @@ def is_running_in_test() -> bool:
 ### Pre-commit Hooks Configuration (NEW December 2024)
 
 The project uses pre-commit hooks to ensure code quality before every commit. All hooks are configured in `.pre-commit-config.yaml`.
-
 
 ## pre-commit: install it with uv
 
@@ -339,9 +351,6 @@ Installed 1 executable: pre-commit
 
 This command upgrades pre-commit and all of its dependencies, in its managed environment.
 For more information, read the uv tool upgrade documentation: `https://docs.astral.sh/uv/concepts/tools/`
-
-
-
 
 #### Initial Setup
 
@@ -2387,7 +2396,7 @@ await watcher.run(stop_flag)  # Monitors for changes
 1. **Decorator Compatibility**: Both `@atlasvibe` and `@atlasvibe_node` are recognized
 2. **Docstring Format**: Must use NumPy-style docstrings (not Google style for blocks)
 3. **File Naming**: Python file must match the folder name exactly
-4. ****init**.py**: Required in each block directory
+4. \***\*init**.py\*\*: Required in each block directory
 5. **Manifest vs Metadata**: Manifest is generated on-the-fly, block_data.json is persisted
 
 ## GitHub Actions Workflows

@@ -14,7 +14,7 @@
 // - Provides type safety for custom block operations
 //
 
-import { BlockDefinition } from '@/renderer/types/manifest';
+import { BlockDefinition } from "@/renderer/types/manifest";
 
 /**
  * Extended block definition for custom blocks
@@ -46,5 +46,5 @@ export interface UpdateBlockCodeResponse {
   has_pending_changes: boolean;
   is_executing: boolean;
   version: number;
-  status: 'queued' | 'applied';
+  status: "queued" | "applied";
 }

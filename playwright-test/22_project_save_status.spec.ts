@@ -8,7 +8,6 @@
  * See the LICENSE file for details.
  */
 
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New test file for project save functionality and status indicators
 // - Tests improved save option to any folder
@@ -17,7 +16,13 @@
 // - Tests autosave functionality
 //
 
-import { test, expect, ElectronApplication, Page, _electron as electron } from "@playwright/test";
+import {
+  test,
+  expect,
+  ElectronApplication,
+  Page,
+  _electron as electron,
+} from "@playwright/test";
 import {
   mockDialogMessage,
   writeLogFile,
@@ -42,10 +47,15 @@ test.describe("Project Save and Status Indicators", () => {
     window = await app.firstWindow();
 
     // Create test projects directory
-    testProjectsDir = path.join(os.tmpdir(), `atlasvibe-projects-${Date.now()}`);
+    testProjectsDir = path.join(
+      os.tmpdir(),
+      `atlasvibe-projects-${Date.now()}`,
+    );
     await fs.mkdir(testProjectsDir, { recursive: true });
 
-    await window.waitForSelector(Selectors.closeWelcomeModalBtn, { timeout: 30000 });
+    await window.waitForSelector(Selectors.closeWelcomeModalBtn, {
+      timeout: 30000,
+    });
     await window.getByTestId(Selectors.closeWelcomeModalBtn).click();
   });
 
@@ -62,8 +72,8 @@ test.describe("Project Save and Status Indicators", () => {
     await expect(statusIndicator).toHaveText("Saved");
 
     // Verify color on black background
-    const savedColor = await statusIndicator.evaluate(el =>
-      window.getComputedStyle(el).color
+    const savedColor = await statusIndicator.evaluate(
+      (el) => window.getComputedStyle(el).color,
     );
     // Should be a readable green on black
     expect(savedColor).toMatch(/rgb\(\d{100,200}, \d{200,255}, \d{100,200}\)/);
@@ -75,8 +85,8 @@ test.describe("Project Save and Status Indicators", () => {
 
     // Status should change to "Unsaved changes"
     await expect(statusIndicator).toHaveText("Unsaved changes");
-    const unsavedColor = await statusIndicator.evaluate(el =>
-      window.getComputedStyle(el).color
+    const unsavedColor = await statusIndicator.evaluate(
+      (el) => window.getComputedStyle(el).color,
     );
     // Should be yellow/amber
     expect(unsavedColor).toMatch(/rgb\(2\d{2}, \d{150,220}, \d{0,100}\)/);
@@ -93,8 +103,8 @@ test.describe("Project Save and Status Indicators", () => {
 
     // Status should show "Saving"
     await expect(statusIndicator).toHaveText("Saving");
-    const savingColor = await statusIndicator.evaluate(el =>
-      window.getComputedStyle(el).color
+    const savingColor = await statusIndicator.evaluate(
+      (el) => window.getComputedStyle(el).color,
     );
     // Should be a different shade of yellow
     expect(savingColor).toMatch(/rgb\(2\d{2}, \d{180,240}, \d{50,150}\)/);
@@ -110,8 +120,8 @@ test.describe("Project Save and Status Indicators", () => {
     // Should show "Autosaving" after a delay
     await window.waitForTimeout(2000); // Wait for autosave to trigger
     await expect(statusIndicator).toHaveText("Autosaving");
-    const autosavingColor = await statusIndicator.evaluate(el =>
-      window.getComputedStyle(el).color
+    const autosavingColor = await statusIndicator.evaluate(
+      (el) => window.getComputedStyle(el).color,
     );
     // Should be yet another shade of yellow
     expect(autosavingColor).toMatch(/rgb\(2\d{2}, \d{200,255}, \d{100,200}\)/);
@@ -133,13 +143,19 @@ test.describe("Project Save and Status Indicators", () => {
     await window.keyboard.press("Control+Shift+S");
 
     // Should open custom save dialog
-    const saveDialog = await window.getByRole("dialog", { name: "Save Project" });
+    const saveDialog = await window.getByRole("dialog", {
+      name: "Save Project",
+    });
     await expect(saveDialog).toBeVisible();
 
     // Project name input
-    const projectNameInput = await saveDialog.locator('input[placeholder="Project name"]');
+    const projectNameInput = await saveDialog.locator(
+      'input[placeholder="Project name"]',
+    );
     // Move folderPathInput declaration to where it's actually used
-    const browseButton = await saveDialog.getByRole("button", { name: "Browse" });
+    const browseButton = await saveDialog.getByRole("button", {
+      name: "Browse",
+    });
 
     // Click browse to select folder
     await browseButton.click();
@@ -169,7 +185,10 @@ test.describe("Project Save and Status Indicators", () => {
 
     await window.waitForTimeout(1000); // Wait for save
 
-    const exists = await fs.access(projectFile).then(() => true).catch(() => false);
+    const exists = await fs
+      .access(projectFile)
+      .then(() => true)
+      .catch(() => false);
     expect(exists).toBe(true);
 
     // Status should show saved with project name
@@ -181,17 +200,30 @@ test.describe("Project Save and Status Indicators", () => {
     // Open save as dialog
     await window.keyboard.press("Control+Shift+S");
 
-    const saveDialog = await window.getByRole("dialog", { name: "Save Project" });
-    const projectNameInput = await saveDialog.locator('input[placeholder="Project name"]');
+    const saveDialog = await window.getByRole("dialog", {
+      name: "Save Project",
+    });
+    const projectNameInput = await saveDialog.locator(
+      'input[placeholder="Project name"]',
+    );
     const errorMessage = await saveDialog.locator(".error-message");
     const saveButton = await saveDialog.getByRole("button", { name: "Save" });
 
     // Test invalid characters
     const invalidNames = [
-      { input: "my-project", error: "Name can only contain letters (A-Z, a-z) and underscores (_)" },
+      {
+        input: "my-project",
+        error: "Name can only contain letters (A-Z, a-z) and underscores (_)",
+      },
       { input: "123project", error: "Name must start with a letter" },
-      { input: "my.project", error: "Name can only contain letters (A-Z, a-z) and underscores (_)" },
-      { input: "my project!", error: "Name can only contain letters (A-Z, a-z) and underscores (_)" },
+      {
+        input: "my.project",
+        error: "Name can only contain letters (A-Z, a-z) and underscores (_)",
+      },
+      {
+        input: "my project!",
+        error: "Name can only contain letters (A-Z, a-z) and underscores (_)",
+      },
       { input: "", error: "Name cannot be empty" },
     ];
 
@@ -219,7 +251,9 @@ test.describe("Project Save and Status Indicators", () => {
 
     const previewMessage = await saveDialog.locator(".preview-message");
     await expect(previewMessage).toBeVisible();
-    await expect(previewMessage).toHaveText("Project will be saved as: My_Test_Project");
+    await expect(previewMessage).toHaveText(
+      "Project will be saved as: My_Test_Project",
+    );
 
     // Cancel for now
     await saveDialog.getByRole("button", { name: "Cancel" }).click();
@@ -232,14 +266,18 @@ test.describe("Project Save and Status Indicators", () => {
     await fs.mkdir(existingProjectDir, { recursive: true });
     await fs.writeFile(
       path.join(existingProjectDir, `${existingProjectName}.atlasvibe`),
-      JSON.stringify({ name: existingProjectName })
+      JSON.stringify({ name: existingProjectName }),
     );
 
     // Try to save with same name
     await window.keyboard.press("Control+Shift+S");
 
-    const saveDialog = await window.getByRole("dialog", { name: "Save Project" });
-    const projectNameInput = await saveDialog.locator('input[placeholder="Project name"]');
+    const saveDialog = await window.getByRole("dialog", {
+      name: "Save Project",
+    });
+    const projectNameInput = await saveDialog.locator(
+      'input[placeholder="Project name"]',
+    );
 
     // Set folder
     await app.evaluate(async ({ dialog }, folderPath) => {
@@ -256,12 +294,16 @@ test.describe("Project Save and Status Indicators", () => {
     const warningMessage = await saveDialog.locator(".warning-message");
     await expect(warningMessage).toBeVisible();
     await expect(warningMessage).toHaveText(
-      "A project with this name already exists in the selected folder. Do you want to overwrite it?"
+      "A project with this name already exists in the selected folder. Do you want to overwrite it?",
     );
 
     // Should show overwrite options
-    const overwriteButton = await saveDialog.getByRole("button", { name: "Overwrite" });
-    const cancelButton = await saveDialog.getByRole("button", { name: "Cancel" });
+    const overwriteButton = await saveDialog.getByRole("button", {
+      name: "Overwrite",
+    });
+    const cancelButton = await saveDialog.getByRole("button", {
+      name: "Cancel",
+    });
     await expect(overwriteButton).toBeVisible();
     await expect(cancelButton).toBeVisible();
 
@@ -291,9 +333,11 @@ test.describe("Project Save and Status Indicators", () => {
       },
       async () => {
         // Move block
-        const block = await window.locator("h2", { hasText: "MULTIPLY" }).first();
+        const block = await window
+          .locator("h2", { hasText: "MULTIPLY" })
+          .first();
         await block.dragTo(await window.locator(".react-flow__pane"), {
-          targetPosition: { x: 400, y: 300 }
+          targetPosition: { x: 400, y: 300 },
         });
       },
       async () => {
@@ -304,10 +348,14 @@ test.describe("Project Save and Status Indicators", () => {
       },
       async () => {
         // Connect blocks
-        const multiplyOutput = await window.locator('[data-handleid="multiply-output"]');
-        const divideInput = await window.locator('[data-handleid="divide-input"]');
+        const multiplyOutput = await window.locator(
+          '[data-handleid="multiply-output"]',
+        );
+        const divideInput = await window.locator(
+          '[data-handleid="divide-input"]',
+        );
         await multiplyOutput.dragTo(divideInput);
-      }
+      },
     ];
 
     // Execute changes rapidly
@@ -337,19 +385,29 @@ test.describe("Project Save and Status Indicators", () => {
 
     // Should have both blocks
     expect(savedData.rfInstance.nodes).toHaveLength(2);
-    expect(savedData.rfInstance.nodes.map(n => n.data.func)).toContain("MULTIPLY");
-    expect(savedData.rfInstance.nodes.map(n => n.data.func)).toContain("DIVIDE");
+    expect(savedData.rfInstance.nodes.map((n) => n.data.func)).toContain(
+      "MULTIPLY",
+    );
+    expect(savedData.rfInstance.nodes.map((n) => n.data.func)).toContain(
+      "DIVIDE",
+    );
 
     // Should have connection
     expect(savedData.rfInstance.edges).toHaveLength(1);
 
     // Test crash recovery - simulate by checking transaction log
-    const transactionLog = path.join(projectPath, ".atlasvibe_transactions.log");
-    const logExists = await fs.access(transactionLog).then(() => true).catch(() => false);
+    const transactionLog = path.join(
+      projectPath,
+      ".atlasvibe_transactions.log",
+    );
+    const logExists = await fs
+      .access(transactionLog)
+      .then(() => true)
+      .catch(() => false);
 
     if (logExists) {
       const transactions = await fs.readFile(transactionLog, "utf-8");
-      const lines = transactions.split("\n").filter(line => line.trim());
+      const lines = transactions.split("\n").filter((line) => line.trim());
 
       // Should have recorded all changes
       expect(lines.length).toBeGreaterThanOrEqual(changes.length);
@@ -366,34 +424,48 @@ test.describe("Project Save and Status Indicators", () => {
     const backgroundElement = await window.locator(".status-bar, .app-header");
 
     // Get background color
-    const bgColor = await backgroundElement.evaluate(el =>
-      window.getComputedStyle(el).backgroundColor
+    const bgColor = await backgroundElement.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor,
     );
 
     // Should be dark/black
-    expect(bgColor).toMatch(/rgb\(0, 0, 0\)|rgba\(0, 0, 0|rgb\(\d{0,30}, \d{0,30}, \d{0,30}\)/);
+    expect(bgColor).toMatch(
+      /rgb\(0, 0, 0\)|rgba\(0, 0, 0|rgb\(\d{0,30}, \d{0,30}, \d{0,30}\)/,
+    );
 
     // Test each status color
     const statusStates = [
-      { text: "Saved", expectedColor: /rgb\(\d{100,200}, \d{200,255}, \d{100,200}\)/ }, // Green
-      { text: "Unsaved changes", expectedColor: /rgb\(2\d{2}, \d{150,220}, \d{0,100}\)/ }, // Yellow
-      { text: "Saving", expectedColor: /rgb\(2\d{2}, \d{180,240}, \d{50,150}\)/ }, // Light yellow
-      { text: "Autosaving", expectedColor: /rgb\(2\d{2}, \d{200,255}, \d{100,200}\)/ }, // Pale yellow
+      {
+        text: "Saved",
+        expectedColor: /rgb\(\d{100,200}, \d{200,255}, \d{100,200}\)/,
+      }, // Green
+      {
+        text: "Unsaved changes",
+        expectedColor: /rgb\(2\d{2}, \d{150,220}, \d{0,100}\)/,
+      }, // Yellow
+      {
+        text: "Saving",
+        expectedColor: /rgb\(2\d{2}, \d{180,240}, \d{50,150}\)/,
+      }, // Light yellow
+      {
+        text: "Autosaving",
+        expectedColor: /rgb\(2\d{2}, \d{200,255}, \d{100,200}\)/,
+      }, // Pale yellow
     ];
 
     // Make changes to trigger different states
     for (const { text, expectedColor } of statusStates) {
       // Wait for the specific state (would be triggered by actual operations)
-      if (await statusIndicator.textContent() === text) {
-        const color = await statusIndicator.evaluate(el =>
-          window.getComputedStyle(el).color
+      if ((await statusIndicator.textContent()) === text) {
+        const color = await statusIndicator.evaluate(
+          (el) => window.getComputedStyle(el).color,
         );
 
         // Verify color matches expected range
         expect(color).toMatch(expectedColor);
 
         // Check contrast ratio (simplified check)
-        const luminance = await statusIndicator.evaluate(el => {
+        const luminance = await statusIndicator.evaluate((el) => {
           const style = window.getComputedStyle(el);
           const color = style.color;
           const rgb = color.match(/\d+/g);

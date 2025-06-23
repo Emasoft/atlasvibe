@@ -8,7 +8,6 @@
  * See the LICENSE file for details.
  */
 
-
 // HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
 // - New test file for block regeneration visual indicators
 // - Tests blinking indicator during regeneration
@@ -17,7 +16,13 @@
 // - Tests actual regeneration completion
 //
 
-import { test, expect, ElectronApplication, Page, _electron as electron } from "@playwright/test";
+import {
+  test,
+  expect,
+  ElectronApplication,
+  Page,
+  _electron as electron,
+} from "@playwright/test";
 import {
   mockDialogMessage,
   writeLogFile,
@@ -46,7 +51,9 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await fs.mkdir(projectDir, { recursive: true });
 
     // Wait for app to load
-    await window.waitForSelector(Selectors.closeWelcomeModalBtn, { timeout: 30000 });
+    await window.waitForSelector(Selectors.closeWelcomeModalBtn, {
+      timeout: 30000,
+    });
     await window.getByTestId(Selectors.closeWelcomeModalBtn).click();
   });
 
@@ -63,12 +70,16 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await window.keyboard.press("Enter");
 
     // Wait for block to appear
-    const blockElement = await window.locator("h2", { hasText: "CONSTANT" }).first();
+    const blockElement = await window
+      .locator("h2", { hasText: "CONSTANT" })
+      .first();
     await expect(blockElement).toBeVisible();
 
     // Right-click to open context menu
     await blockElement.click({ button: "right" });
-    await expect(window.getByTestId(Selectors.blockContextMenuDiv)).toBeVisible();
+    await expect(
+      window.getByTestId(Selectors.blockContextMenuDiv),
+    ).toBeVisible();
 
     // Click "Edit Python Code"
     await window.getByTestId(Selectors.contextEditBlockBtn).click();
@@ -81,12 +92,14 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await window.keyboard.press("Control+S");
 
     // Check for blinking indicator
-    const blinkingIndicator = await window.locator(".block-regenerating-indicator");
+    const blinkingIndicator = await window.locator(
+      ".block-regenerating-indicator",
+    );
 
     // Expected: Indicator should be visible and have blinking animation
     await expect(blinkingIndicator).toBeVisible();
-    const animationName = await blinkingIndicator.evaluate(el =>
-      window.getComputedStyle(el).animationName
+    const animationName = await blinkingIndicator.evaluate(
+      (el) => window.getComputedStyle(el).animationName,
     );
     expect(animationName).toContain("blink");
 
@@ -136,12 +149,14 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await window.keyboard.type("MULTIPLY");
     await window.keyboard.press("Enter");
 
-    const blockElement = await window.locator("h2", { hasText: "MULTIPLY" }).first();
+    const blockElement = await window
+      .locator("h2", { hasText: "MULTIPLY" })
+      .first();
     const blockHeader = await blockElement.locator("..").first(); // Parent element
 
     // Get original border color
-    const originalBorderColor = await blockHeader.evaluate(el =>
-      window.getComputedStyle(el).borderColor
+    const originalBorderColor = await blockHeader.evaluate(
+      (el) => window.getComputedStyle(el).borderColor,
     );
 
     // Trigger regeneration
@@ -151,8 +166,8 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await window.keyboard.press("Control+S");
 
     // Check border color change
-    const regeneratingBorderColor = await blockHeader.evaluate(el =>
-      window.getComputedStyle(el).borderColor
+    const regeneratingBorderColor = await blockHeader.evaluate(
+      (el) => window.getComputedStyle(el).borderColor,
     );
 
     // Expected: Orange/amber color during regeneration
@@ -160,8 +175,8 @@ test.describe("Block Regeneration Visual Indicators", () => {
     expect(regeneratingBorderColor).not.toBe(originalBorderColor);
 
     // Check for pulsing animation
-    const animationName = await blockHeader.evaluate(el =>
-      window.getComputedStyle(el).animationName
+    const animationName = await blockHeader.evaluate(
+      (el) => window.getComputedStyle(el).animationName,
     );
     expect(animationName).toContain("pulse");
 
@@ -169,8 +184,8 @@ test.describe("Block Regeneration Visual Indicators", () => {
     await window.waitForTimeout(3000);
 
     // Border should return to original
-    const finalBorderColor = await blockHeader.evaluate(el =>
-      window.getComputedStyle(el).borderColor
+    const finalBorderColor = await blockHeader.evaluate(
+      (el) => window.getComputedStyle(el).borderColor,
     );
     expect(finalBorderColor).toBe(originalBorderColor);
   });
@@ -224,7 +239,9 @@ def ${blockName}(input: float) -> float:
     await window.keyboard.press("Enter");
 
     // Edit the code
-    const blockElement = await window.locator("h2", { hasText: blockName }).first();
+    const blockElement = await window
+      .locator("h2", { hasText: blockName })
+      .first();
     await blockElement.click({ button: "right" });
     await window.getByTestId(Selectors.contextEditBlockBtn).click();
 
@@ -263,19 +280,27 @@ def ${blockName}(input: float, multiplier: float = 3.0) -> float:
 
     // Verify block_data.json was generated/updated
     const blockDataPath = path.join(blockDir, "block_data.json");
-    const blockDataExists = await fs.access(blockDataPath).then(() => true).catch(() => false);
+    const blockDataExists = await fs
+      .access(blockDataPath)
+      .then(() => true)
+      .catch(() => false);
     expect(blockDataExists).toBe(true);
 
     if (blockDataExists) {
       const blockData = JSON.parse(await fs.readFile(blockDataPath, "utf-8"));
-      expect(blockData.docstring.short_description).toContain("Advanced processor");
+      expect(blockData.docstring.short_description).toContain(
+        "Advanced processor",
+      );
       expect(blockData.docstring.parameters).toHaveLength(2);
       expect(blockData.docstring.parameters[1].name).toBe("multiplier");
     }
 
     // Verify manifest was regenerated
     const manifestPath = path.join(blockDir, "manifest.json");
-    const manifestExists = await fs.access(manifestPath).then(() => true).catch(() => false);
+    const manifestExists = await fs
+      .access(manifestPath)
+      .then(() => true)
+      .catch(() => false);
 
     if (manifestExists) {
       const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8"));

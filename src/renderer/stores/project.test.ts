@@ -14,12 +14,12 @@
 // - Tests for referencing custom blocks by path
 //
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
-import { useProjectStore } from './project';
-import { Project } from '@/renderer/types/project';
-import { Node } from 'reactflow';
-import { BlockData } from '@/renderer/types/block';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { useProjectStore } from "./project";
+import { Project } from "@/renderer/types/project";
+import { Node } from "reactflow";
+import { BlockData } from "@/renderer/types/block";
 
 // Mock window.api
 global.window = {
@@ -32,7 +32,7 @@ global.window = {
   prompt: vi.fn(),
 } as unknown as Window & typeof globalThis;
 
-describe('Project Store - Custom Block References', () => {
+describe("Project Store - Custom Block References", () => {
   beforeEach(() => {
     // Reset store to initial state
     useProjectStore.setState({
@@ -49,120 +49,142 @@ describe('Project Store - Custom Block References', () => {
     vi.clearAllMocks();
   });
 
-  describe('Custom Block Handling', () => {
-    it('should save project with custom block references', async () => {
+  describe("Custom Block Handling", () => {
+    it("should save project with custom block references", async () => {
       // Arrange
       const customBlock: Node<BlockData> = {
-        id: 'custom-1',
-        type: 'CustomBlock',
+        id: "custom-1",
+        type: "CustomBlock",
         position: { x: 100, y: 100 },
         data: {
-          id: 'custom-1',
-          label: 'MyCustomBlock',
-          func: 'MY_CUSTOM_BLOCK',
-          type: 'CustomBlock',
+          id: "custom-1",
+          label: "MyCustomBlock",
+          func: "MY_CUSTOM_BLOCK",
+          type: "CustomBlock",
           ctrls: {},
-          inputs: [{ name: 'in', id: 'in', type: 'number', desc: null, multiple: false }],
-          outputs: [{ name: 'out', id: 'out', type: 'number', desc: null }],
-          path: 'atlasvibe_blocks/MY_CUSTOM_BLOCK',
+          inputs: [
+            {
+              name: "in",
+              id: "in",
+              type: "number",
+              desc: null,
+              multiple: false,
+            },
+          ],
+          outputs: [{ name: "out", id: "out", type: "number", desc: null }],
+          path: "atlasvibe_blocks/MY_CUSTOM_BLOCK",
           isCustom: true,
         },
       };
 
       const standardBlock: Node<BlockData> = {
-        id: 'standard-1',
-        type: 'StandardBlock',
+        id: "standard-1",
+        type: "StandardBlock",
         position: { x: 300, y: 100 },
         data: {
-          id: 'standard-1',
-          label: 'Add',
-          func: 'ADD',
-          type: 'StandardBlock',
+          id: "standard-1",
+          label: "Add",
+          func: "ADD",
+          type: "StandardBlock",
           ctrls: {},
           inputs: [
-            { name: 'a', id: 'a', type: 'number', desc: null, multiple: false },
-            { name: 'b', id: 'b', type: 'number', desc: null, multiple: false },
+            { name: "a", id: "a", type: "number", desc: null, multiple: false },
+            { name: "b", id: "b", type: "number", desc: null, multiple: false },
           ],
-          outputs: [{ name: 'sum', id: 'sum', type: 'number', desc: null }],
-          path: '',
+          outputs: [{ name: "sum", id: "sum", type: "number", desc: null }],
+          path: "",
           isCustom: false,
         },
       };
 
       // Act
       useProjectStore.setState({
-        name: 'TestProject',
-        path: '/path/to/project.atlasvibe',
+        name: "TestProject",
+        path: "/path/to/project.atlasvibe",
         nodes: [customBlock, standardBlock],
-        edges: [{
-          id: 'e1',
-          source: 'custom-1',
-          target: 'standard-1',
-          sourceHandle: 'out',
-          targetHandle: 'a',
-        }],
+        edges: [
+          {
+            id: "e1",
+            source: "custom-1",
+            target: "standard-1",
+            sourceHandle: "out",
+            targetHandle: "a",
+          },
+        ],
       });
 
-      let savedContent: string = '';
-      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
-        savedContent = content;
-        return Promise.resolve();
-      });
+      let savedContent: string = "";
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation(
+        (path: string, content: string) => {
+          savedContent = content;
+          return Promise.resolve();
+        },
+      );
 
       const { result } = renderHook(() => useProjectStore());
       await result.current.saveProject();
 
       // Assert
       expect(window.api.saveFile).toHaveBeenCalledWith(
-        '/path/to/project.atlasvibe',
-        expect.any(String)
+        "/path/to/project.atlasvibe",
+        expect.any(String),
       );
 
       const savedProject = JSON.parse(savedContent) as Project;
 
       // Check that custom block has path reference
-      const savedCustomBlock = savedProject.rfInstance.nodes.find(n => n.id === 'custom-1');
+      const savedCustomBlock = savedProject.rfInstance.nodes.find(
+        (n) => n.id === "custom-1",
+      );
       expect(savedCustomBlock?.data.isCustom).toBe(true);
-      expect(savedCustomBlock?.data.path).toBe('atlasvibe_blocks/MY_CUSTOM_BLOCK');
+      expect(savedCustomBlock?.data.path).toBe(
+        "atlasvibe_blocks/MY_CUSTOM_BLOCK",
+      );
 
       // Check that standard block doesn't have path
-      const savedStandardBlock = savedProject.rfInstance.nodes.find(n => n.id === 'standard-1');
+      const savedStandardBlock = savedProject.rfInstance.nodes.find(
+        (n) => n.id === "standard-1",
+      );
       expect(savedStandardBlock?.data.isCustom).toBe(false);
-      expect(savedStandardBlock?.data.path).toBe('');
+      expect(savedStandardBlock?.data.path).toBe("");
     });
 
-    it('should handle multiple custom blocks with unique paths', async () => {
+    it("should handle multiple custom blocks with unique paths", async () => {
       // Arrange
       const customBlocks: Node<BlockData>[] = [
         {
-          id: 'custom-1',
-          type: 'CustomBlock',
+          id: "custom-1",
+          type: "CustomBlock",
           position: { x: 100, y: 100 },
           data: {
-            id: 'custom-1',
-            label: 'CustomMatrix1',
-            func: 'CUSTOM_MATRIX_1',
-            type: 'CustomBlock',
+            id: "custom-1",
+            label: "CustomMatrix1",
+            func: "CUSTOM_MATRIX_1",
+            type: "CustomBlock",
             ctrls: {},
             inputs: [],
-            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix', desc: null }],
-            path: 'atlasvibe_blocks/CUSTOM_MATRIX_1',
+            outputs: [
+              { name: "matrix", id: "matrix", type: "matrix", desc: null },
+            ],
+            path: "atlasvibe_blocks/CUSTOM_MATRIX_1",
             isCustom: true,
           },
         },
         {
-          id: 'custom-2',
-          type: 'CustomBlock',
+          id: "custom-2",
+          type: "CustomBlock",
           position: { x: 300, y: 100 },
           data: {
-            id: 'custom-2',
-            label: 'CustomMatrix2',
-            func: 'CUSTOM_MATRIX_2',
-            type: 'CustomBlock',
+            id: "custom-2",
+            label: "CustomMatrix2",
+            func: "CUSTOM_MATRIX_2",
+            type: "CustomBlock",
             ctrls: {},
             inputs: [],
-            outputs: [{ name: 'matrix', id: 'matrix', type: 'matrix', desc: null }],
-            path: 'atlasvibe_blocks/CUSTOM_MATRIX_2',
+            outputs: [
+              { name: "matrix", id: "matrix", type: "matrix", desc: null },
+            ],
+            path: "atlasvibe_blocks/CUSTOM_MATRIX_2",
             isCustom: true,
           },
         },
@@ -170,19 +192,21 @@ describe('Project Store - Custom Block References', () => {
 
       // Act
       useProjectStore.setState({
-        name: 'MultiCustomProject',
+        name: "MultiCustomProject",
         nodes: customBlocks,
       });
 
-      let savedContent: string = '';
+      let savedContent: string = "";
       (window.api.saveFileAs as ReturnType<typeof vi.fn>).mockResolvedValue({
-        filePath: '/path/to/multi-custom.atlasvibe',
+        filePath: "/path/to/multi-custom.atlasvibe",
         canceled: false,
       });
-      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
-        savedContent = content;
-        return Promise.resolve();
-      });
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation(
+        (path: string, content: string) => {
+          savedContent = content;
+          return Promise.resolve();
+        },
+      );
 
       const { result } = renderHook(() => useProjectStore());
       await result.current.saveProject();
@@ -193,30 +217,32 @@ describe('Project Store - Custom Block References', () => {
       // Each custom block should have its unique path
       savedProject.rfInstance.nodes.forEach((node, index) => {
         expect(node.data.isCustom).toBe(true);
-        expect(node.data.path).toBe(`atlasvibe_blocks/CUSTOM_MATRIX_${index + 1}`);
+        expect(node.data.path).toBe(
+          `atlasvibe_blocks/CUSTOM_MATRIX_${index + 1}`,
+        );
       });
     });
 
-    it('should preserve custom block paths when loading project', () => {
+    it("should preserve custom block paths when loading project", () => {
       // Arrange
       const projectToLoad: Project = {
-        version: '2.0.0',
-        name: 'LoadedProject',
+        version: "2.0.0",
+        name: "LoadedProject",
         rfInstance: {
           nodes: [
             {
-              id: 'custom-loaded',
-              type: 'CustomBlock',
+              id: "custom-loaded",
+              type: "CustomBlock",
               position: { x: 200, y: 200 },
               data: {
-                id: 'custom-loaded',
-                label: 'LoadedCustomBlock',
-                func: 'LOADED_CUSTOM',
-                type: 'CustomBlock',
+                id: "custom-loaded",
+                label: "LoadedCustomBlock",
+                func: "LOADED_CUSTOM",
+                type: "CustomBlock",
                 ctrls: {},
                 inputs: [],
                 outputs: [],
-                path: 'atlasvibe_blocks/LOADED_CUSTOM',
+                path: "atlasvibe_blocks/LOADED_CUSTOM",
                 isCustom: true,
               },
             },
@@ -227,7 +253,7 @@ describe('Project Store - Custom Block References', () => {
       };
 
       // Mock manifest and metadata
-      vi.mock('./manifest', () => ({
+      vi.mock("./manifest", () => ({
         useManifest: () => ({}),
         useMetadata: () => ({}),
       }));
@@ -238,21 +264,21 @@ describe('Project Store - Custom Block References', () => {
       // Directly set state since useLoadProject requires manifest/metadata
       result.current.handleNodeChanges(
         () => projectToLoad.rfInstance.nodes,
-        () => []
+        () => [],
       );
 
       // Assert
       const loadedNode = result.current.nodes[0];
       expect(loadedNode.data.isCustom).toBe(true);
-      expect(loadedNode.data.path).toBe('atlasvibe_blocks/LOADED_CUSTOM');
+      expect(loadedNode.data.path).toBe("atlasvibe_blocks/LOADED_CUSTOM");
     });
   });
 
-  describe('Project File Format', () => {
-    it('should include project metadata in saved file', async () => {
+  describe("Project File Format", () => {
+    it("should include project metadata in saved file", async () => {
       // Arrange
-      const projectName = 'MyTestProject';
-      const projectPath = '/path/to/my-test-project.atlasvibe';
+      const projectName = "MyTestProject";
+      const projectPath = "/path/to/my-test-project.atlasvibe";
 
       useProjectStore.setState({
         name: projectName,
@@ -261,11 +287,13 @@ describe('Project Store - Custom Block References', () => {
         edges: [],
       });
 
-      let savedContent: string = '';
-      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
-        savedContent = content;
-        return Promise.resolve();
-      });
+      let savedContent: string = "";
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation(
+        (path: string, content: string) => {
+          savedContent = content;
+          return Promise.resolve();
+        },
+      );
 
       // Act
       const { result } = renderHook(() => useProjectStore());
@@ -277,46 +305,48 @@ describe('Project Store - Custom Block References', () => {
 
       // Check structure
       expect(savedProject.version).toBeDefined();
-      expect(savedProject).toHaveProperty('rfInstance');
-      expect(savedProject.rfInstance).toHaveProperty('nodes');
-      expect(savedProject.rfInstance).toHaveProperty('edges');
-      expect(savedProject).toHaveProperty('textNodes');
-      expect(savedProject).toHaveProperty('controlNodes');
-      expect(savedProject).toHaveProperty('controlVisualizationNodes');
-      expect(savedProject).toHaveProperty('controlTextNodes');
+      expect(savedProject).toHaveProperty("rfInstance");
+      expect(savedProject.rfInstance).toHaveProperty("nodes");
+      expect(savedProject.rfInstance).toHaveProperty("edges");
+      expect(savedProject).toHaveProperty("textNodes");
+      expect(savedProject).toHaveProperty("controlNodes");
+      expect(savedProject).toHaveProperty("controlVisualizationNodes");
+      expect(savedProject).toHaveProperty("controlTextNodes");
     });
 
-    it('should handle project without custom blocks', async () => {
+    it("should handle project without custom blocks", async () => {
       // Arrange
       const standardOnlyProject: Node<BlockData>[] = [
         {
-          id: 'std-1',
-          type: 'ADD',
+          id: "std-1",
+          type: "ADD",
           position: { x: 100, y: 100 },
           data: {
-            id: 'std-1',
-            label: 'Add',
-            func: 'ADD',
-            type: 'ADD',
+            id: "std-1",
+            label: "Add",
+            func: "ADD",
+            type: "ADD",
             ctrls: {},
             inputs: [],
             outputs: [],
-            path: '',
+            path: "",
           },
         },
       ];
 
       useProjectStore.setState({
-        name: 'StandardOnlyProject',
-        path: '/path/to/standard.atlasvibe',
+        name: "StandardOnlyProject",
+        path: "/path/to/standard.atlasvibe",
         nodes: standardOnlyProject,
       });
 
-      let savedContent: string = '';
-      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation((path: string, content: string) => {
-        savedContent = content;
-        return Promise.resolve();
-      });
+      let savedContent: string = "";
+      (window.api.saveFile as ReturnType<typeof vi.fn>).mockImplementation(
+        (path: string, content: string) => {
+          savedContent = content;
+          return Promise.resolve();
+        },
+      );
 
       // Act
       const { result } = renderHook(() => useProjectStore());
@@ -326,9 +356,9 @@ describe('Project Store - Custom Block References', () => {
       const savedProject = JSON.parse(savedContent) as Project;
 
       // No custom blocks should have path or isCustom
-      savedProject.rfInstance.nodes.forEach(node => {
+      savedProject.rfInstance.nodes.forEach((node) => {
         expect(node.data.isCustom).toBeFalsy();
-        expect(node.data.path).toBe('');
+        expect(node.data.path).toBe("");
       });
     });
   });

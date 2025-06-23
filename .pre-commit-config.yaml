@@ -1,7 +1,7 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-# YAML formatting and linting
+  # YAML formatting and linting
 - repo: local
   hooks:
   - id: yamlfmt
@@ -9,7 +9,7 @@ repos:
     entry: /Users/emanuelesabetta/go/bin/yamlfmt
     language: system
     types: [yaml]
-    files: '^\.github/.*\.(yml|yaml)$'  # Only format GitHub workflow files
+    files: '^\.github/.*\.(yml|yaml)$' # Only format GitHub workflow files
   - id: yamllint
     name: Lint YAML files with yamllint
     entry: uv run yamllint
@@ -31,7 +31,7 @@ repos:
 - repo: https://github.com/astral-sh/uv-pre-commit
   rev: 0.7.13
   hooks:
-  # Ensure uv.lock is up-to-date
+    # Ensure uv.lock is up-to-date
   - id: uv-lock
     name: Check uv.lock is up-to-date
     args: [--locked]
@@ -52,7 +52,7 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.12.0
   hooks:
-  # Run ruff linter
+    # Run ruff linter
   - id: ruff
     name: Run ruff linter
     args: [--fix, --exit-non-zero-on-fix]

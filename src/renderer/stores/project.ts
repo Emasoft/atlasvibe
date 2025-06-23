@@ -44,9 +44,7 @@ import {
   useManifest,
   useMetadata,
 } from "@/renderer/stores/manifest";
-import {
-  addRandomPositionOffset,
-} from "@/renderer/lib/block";
+import { addRandomPositionOffset } from "@/renderer/lib/block";
 import { filterMap } from "@/renderer/utils/array";
 import { getEdgeTypes, isCompatibleType } from "@/renderer/lib/type-check";
 import { toast } from "sonner";

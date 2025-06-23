@@ -29,7 +29,7 @@ export const useSaveAs = () => {
     useShallow((state) => ({
       name: state.name,
       setProjectName: state.setProjectName,
-    }))
+    })),
   );
 
   const handleSaveAs = () => {
@@ -43,17 +43,19 @@ export const useSaveAs = () => {
     // Create project directory
     const createResult = await fromPromise(
       window.api.createDirectory(projectPath),
-      (e) => e as Error
+      (e) => e as Error,
     );
 
     if (createResult.isErr()) {
-      throw new Error(`Failed to create project directory: ${createResult.error.message}`);
+      throw new Error(
+        `Failed to create project directory: ${createResult.error.message}`,
+      );
     }
 
     // Save project file
     const project = useProjectStore.getState();
     const projectData = {
-      version: '2.0.0',
+      version: "2.0.0",
       name: projectName,
       rfInstance: {
         nodes: project.nodes,
@@ -70,11 +72,13 @@ export const useSaveAs = () => {
 
     const saveResult = await fromPromise(
       window.api.saveFile(filePath, fileContent),
-      (e) => e as Error
+      (e) => e as Error,
     );
 
     if (saveResult.isErr()) {
-      throw new Error(`Failed to save project file: ${saveResult.error.message}`);
+      throw new Error(
+        `Failed to save project file: ${saveResult.error.message}`,
+      );
     }
 
     // Update project path in store
