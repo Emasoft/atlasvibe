@@ -20,9 +20,7 @@ import os
 # Add captain to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from captain.main import app
-
-client = TestClient(app)
+# Import test_app fixture from conftest
 
 
 class TestBlockUpdateAPI:
@@ -89,7 +87,7 @@ def TEST_BLOCK(x: int = 1) -> int:
                 "block_dir": block_dir,
             }
 
-    def test_update_block_code_endpoint(self, project_setup):
+    def test_update_block_code_endpoint(self, project_setup, test_app):
         """Test the /blocks/update-code/ endpoint."""
         new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -109,70 +107,75 @@ def TEST_BLOCK(x: int = 1) -> int:
     return x * 3  # Changed from x * 2
 """
 
-        response = client.post(
-            "/blocks/update-code/",
-            json={
-                "block_path": project_setup["block_file"],
-                "content": new_code,
-                "project_path": project_setup["project_file"],
-            },
-        )
+        # Create client with test app
+        with TestClient(test_app) as client:
+            response = client.post(
+                "/blocks/update-code/",
+                json={
+                    "block_path": project_setup["block_file"],
+                    "content": new_code,
+                    "project_path": project_setup["project_file"],
+                },
+            )
 
-        # Should succeed
-        assert response.status_code == 200
+            # Should succeed
+            assert response.status_code == 200
 
-        # Check file was updated
-        with open(project_setup["block_file"], "r") as f:
-            actual_content = f.read()
+            # Check file was updated
+            with open(project_setup["block_file"], "r") as f:
+                actual_content = f.read()
 
-        assert actual_content == new_code
-        assert "x * 3" in actual_content
+            assert actual_content == new_code
+            assert "x * 3" in actual_content
 
-        # Response should contain block data
-        data = response.json()
-        assert data.get("block_name") == "TEST_BLOCK"
-        assert "path" in data
-        assert "transaction_id" in data
-        assert "status" in data
+            # Response should contain block data
+            data = response.json()
+            assert data.get("block_name") == "TEST_BLOCK"
+            assert "path" in data
+            assert "transaction_id" in data
+            assert "status" in data
 
-    def test_update_non_custom_block_rejected(self):
+    def test_update_non_custom_block_rejected(self, test_app):
         """Test that blueprint blocks cannot be updated."""
-        response = client.post(
-            "/blocks/update-code/",
-            json={
-                "block_path": "/blocks/MATH/ADD/ADD.py",
-                "content": "# new content",
-                "project_path": "/project/test.atlasvibe",
-            },
-        )
+        with TestClient(test_app) as client:
+            response = client.post(
+                "/blocks/update-code/",
+                json={
+                    "block_path": "/blocks/MATH/ADD/ADD.py",
+                    "content": "# new content",
+                    "project_path": "/project/test.atlasvibe",
+                },
+            )
 
-        assert response.status_code == 403
-        assert "custom project blocks" in response.json()["detail"]
+            assert response.status_code == 403
+            assert "custom project blocks" in response.json()["detail"]
 
-    def test_update_invalid_project_path(self, project_setup):
+    def test_update_invalid_project_path(self, project_setup, test_app):
         """Test that invalid project paths are rejected."""
-        response = client.post(
-            "/blocks/update-code/",
-            json={
-                "block_path": project_setup["block_file"],
-                "content": "# new content",
-                "project_path": "/invalid/path.txt",
-            },
-        )
+        with TestClient(test_app) as client:
+            response = client.post(
+                "/blocks/update-code/",
+                json={
+                    "block_path": project_setup["block_file"],
+                    "content": "# new content",
+                    "project_path": "/invalid/path.txt",
+                },
+            )
 
-        assert response.status_code == 422
-        assert "Invalid project path" in response.json()["detail"]
+            assert response.status_code == 422
+            assert "Invalid project path" in response.json()["detail"]
 
-    def test_update_nonexistent_block(self):
+    def test_update_nonexistent_block(self, test_app):
         """Test handling of non-existent block files."""
-        response = client.post(
-            "/blocks/update-code/",
-            json={
-                "block_path": "/nonexistent/atlasvibe_blocks/BLOCK/BLOCK.py",
-                "content": "# content",
-                "project_path": "/project/test.atlasvibe",
-            },
-        )
+        with TestClient(test_app) as client:
+            response = client.post(
+                "/blocks/update-code/",
+                json={
+                    "block_path": "/nonexistent/atlasvibe_blocks/BLOCK/BLOCK.py",
+                    "content": "# content",
+                    "project_path": "/project/test.atlasvibe",
+                },
+            )
 
-        assert response.status_code == 404
-        assert "Block file not found" in response.json()["detail"]
+            assert response.status_code == 404
+            assert "Block file not found" in response.json()["detail"]
