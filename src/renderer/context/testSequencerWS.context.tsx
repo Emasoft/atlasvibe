@@ -19,7 +19,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import { BackendMsg, Test } from "@/renderer/types/test-sequencer";
 import { toast } from "sonner";
 import { env } from "@/env";
-import { useSequencerStore } from "../stores/sequencer";
+import { useSequencerStore } from "@/renderer/stores/sequencer";
 
 type ContextType = {
   tSSendJsonMessage: SendJsonMessage;

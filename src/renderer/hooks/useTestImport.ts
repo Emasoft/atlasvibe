@@ -21,8 +21,8 @@ import {
 import { toast } from "sonner";
 import { useCallback } from "react";
 import { discoverPytest, discoverRobot } from "@/renderer/lib/api";
-import { useSequencerModalStore } from "../stores/modal";
-import { toastResultPromise } from "../utils/report-error";
+import { useSequencerModalStore } from "@/renderer/stores/modal";
+import { toastResultPromise } from "@/renderer/utils/report-error";
 import { Result, err, ok } from "neverthrow";
 import { match } from "ts-pattern";
 

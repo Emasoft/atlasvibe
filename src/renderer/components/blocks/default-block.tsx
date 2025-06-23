@@ -22,7 +22,7 @@ import { useProjectStore } from "@/renderer/stores/project";
 import { useShallow } from "zustand/react/shallow";
 import { RegeneratingIndicator } from "@/renderer/components/common/RegeneratingIndicator";
 import { useManifestStore } from "@/renderer/stores/manifest";
-import "../BlockRegenerationStyles.css";
+import "@/renderer/components/BlockRegenerationStyles.css";
 
 type DefaultBlockProps = BlockProps & {
   width?: CSSProperties["width"];

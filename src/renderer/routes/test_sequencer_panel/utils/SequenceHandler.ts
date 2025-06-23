@@ -25,6 +25,7 @@ import {
   TestSequenceElement,
   TestSequencerProject,
 } from "@/renderer/types/test-sequencer";
+import { PythonDependency } from "@/types/dependencies";
 import { createNewTest } from "@/renderer/hooks/useTestSequencerState";
 import { err, ok, Result } from "neverthrow";
 import { toast } from "sonner";
@@ -217,7 +218,7 @@ async function saveToDisk(
 ): Promise<Result<void, Error>> {
   // Deps
   if (sequence.interpreter.requirementsPath) {
-    const deps = await window.api.uvShowUserGroup();
+    const deps: PythonDependency[] = await window.api.uvShowUserGroup();
     const content = deps
       .map((dep) => dep.name + "==" + dep.version)
       .join("\n");

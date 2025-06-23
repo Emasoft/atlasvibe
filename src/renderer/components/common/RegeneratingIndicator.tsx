@@ -16,7 +16,7 @@
 
 import React from "react";
 import clsx from "clsx";
-import "../BlockRegenerationStyles.css";
+import "@/renderer/components/BlockRegenerationStyles.css";
 
 interface RegeneratingIndicatorProps {
   visible: boolean;
