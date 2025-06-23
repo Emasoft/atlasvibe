@@ -12,6 +12,8 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   workers: 1,
+  testDir: "./playwright-test",
+  testMatch: "**/*.spec.ts",
   use: {
     trace: {
       mode: "retain-on-failure",
