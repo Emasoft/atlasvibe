@@ -34,6 +34,4 @@ def install_mock():
     sys.modules["tm_devices.helpers"] = mock_tm_devices.helpers
     sys.modules["tm_devices.drivers"] = mock_tm_devices.drivers
     sys.modules["tm_devices.drivers.pi"] = mock_tm_devices.drivers.pi
-    sys.modules["tm_devices.drivers.pi.pi_device"] = (
-        mock_tm_devices.drivers.pi.pi_device
-    )
+    sys.modules["tm_devices.drivers.pi.pi_device"] = mock_tm_devices.drivers.pi.pi_device

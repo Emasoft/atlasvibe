@@ -5,9 +5,7 @@ import numpy as np
 def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
-    a_triple = OrderedTriple(
-        x=[0, 0, 0, 0, 0, 0], y=[0, 0, 0, 0, 0, 0], z=[0, 0, 0, 0, 0, 0]
-    )
+    a_triple = OrderedTriple(x=[0, 0, 0, 0, 0, 0], y=[0, 0, 0, 0, 0, 0], z=[0, 0, 0, 0, 0, 0])
     c = np.array([[0, 0, 0], [0, 0, 0]])
 
     output = DOUBLE_INDEFINITE_INTEGRAL.DOUBLE_INDEFINITE_INTEGRAL(a_triple, 3, 2)
@@ -17,9 +15,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_good_output(mock_atlasvibe_decorator):
 def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
-    a_triple = OrderedTriple(
-        x=[0, 0, 0, 0, 0, 0], y=[0, 0, 0, 0, 0, 0], z=[0, 0, 0, 0, 0, 0]
-    )
+    a_triple = OrderedTriple(x=[0, 0, 0, 0, 0, 0], y=[0, 0, 0, 0, 0, 0], z=[0, 0, 0, 0, 0, 0])
 
     np.testing.assert_raises_regex(
         ArithmeticError,
@@ -34,9 +30,7 @@ def test_DOUBLE_INDEFINITE_INTEGRAL_reshape_errorMessage(mock_atlasvibe_decorato
 def test_DOUBLE_INDEFINITE_INTEGRAL_str_errorMessage(mock_atlasvibe_decorator):
     import DOUBLE_INDEFINITE_INTEGRAL
 
-    b_triple = OrderedTriple(
-        x=[1, 2, 3, 4], y=[0, 1, 2, 3], z=["hello", "world", "hi", "welcome"]
-    )
+    b_triple = OrderedTriple(x=[1, 2, 3, 4], y=[0, 1, 2, 3], z=["hello", "world", "hi", "welcome"])
 
     np.testing.assert_raises_regex(
         ValueError,

@@ -25,13 +25,7 @@ from blocks.DATA.VISUALIZATION.template import plot_layout
 
 @atlasvibe
 def HEATMAP(
-    default: OrderedPair
-    | Matrix
-    | Grayscale
-    | DataFrame
-    | Vector
-    | OrderedTriple
-    | Surface,
+    default: OrderedPair | Matrix | Grayscale | DataFrame | Vector | OrderedTriple | Surface,
     x_label: str = "x",
     y_label: str = "y",
     z_label: str = "z",
@@ -120,9 +114,7 @@ def HEATMAP(
 
     colorbar = dict(title=z_label, titleside="right") if show_scale else None
 
-    heatmap = go.Heatmap(
-        x=x, y=y, z=z, colorscale=color_scale, colorbar=colorbar, showscale=show_scale
-    )
+    heatmap = go.Heatmap(x=x, y=y, z=z, colorscale=color_scale, colorbar=colorbar, showscale=show_scale)
 
     fig = go.Figure(data=[heatmap], layout=layout)
 

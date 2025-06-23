@@ -37,7 +37,4 @@ def test_NLP_CONNECT_VIT_GPT2(
         a=None,
     )
     output_df = NLP_CONNECT_VIT_GPT2.NLP_CONNECT_VIT_GPT2(input_img)  # type: ignore
-    assert (
-        output_df.m.iloc[0].caption
-        == "a man in a suit and tie standing in front of a flag"
-    )
+    assert output_df.m.iloc[0].caption == "a man in a suit and tie standing in front of a flag"

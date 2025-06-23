@@ -183,9 +183,7 @@ class TestBlocksAPIErrorHandling:
             patch("captain.routes.blocks.WatchManager") as mock_watch_manager,
             patch("captain.routes.blocks.ConnectionManager") as mock_connection_manager,
             patch("captain.routes.blocks.find_blueprint_path") as mock_find_blueprint,
-            patch(
-                "captain.routes.blocks.copy_blueprint_to_project"
-            ) as mock_copy_blueprint,
+            patch("captain.routes.blocks.copy_blueprint_to_project") as mock_copy_blueprint,
             patch("captain.routes.blocks.create_manifest") as mock_create_manifest,
             patch("captain.routes.blocks.validate_python_code") as mock_validate,
             patch("captain.routes.blocks.get_completions") as mock_completions,
@@ -256,13 +254,9 @@ class TestBlocksAPIErrorHandling:
 
         response = client.post("/blocks/create-custom/", json=request_data)
         assert response.status_code == 404
-        assert (
-            "Blueprint block 'NONEXISTENT_BLOCK' not found" in response.json()["detail"]
-        )
+        assert "Blueprint block 'NONEXISTENT_BLOCK' not found" in response.json()["detail"]
 
-    def test_create_custom_block_copy_failure_with_retry(
-        self, client, mock_dependencies
-    ):
+    def test_create_custom_block_copy_failure_with_retry(self, client, mock_dependencies):
         """Test that file copy operations are retried on failure."""
         # Simulate transient failure then success
         mock_dependencies["find_blueprint"].return_value = Path("/blocks/TEST")
@@ -309,20 +303,13 @@ class TestBlocksAPIErrorHandling:
             assert response.status_code == 404
             error_response = response.json()
             # Check both possible formats
-            if "detail" in error_response and isinstance(
-                error_response["detail"], dict
-            ):
+            if "detail" in error_response and isinstance(error_response["detail"], dict):
                 assert "error" in error_response["detail"]
-                assert (
-                    "Block file not found"
-                    in error_response["detail"]["error"]["message"]
-                )
+                assert "Block file not found" in error_response["detail"]["error"]["message"]
             else:
                 assert "Block file not found" in str(error_response)
 
-    def test_update_block_code_rollback_on_manifest_failure(
-        self, client, mock_dependencies
-    ):
+    def test_update_block_code_rollback_on_manifest_failure(self, client, mock_dependencies):
         """Test that code changes are rolled back if manifest generation fails."""
         mock_dependencies["create_manifest"].return_value = None
 
@@ -437,9 +424,7 @@ class TestErrorRecovery:
 
         for block_name, result in updates:
             if result == "permission_error":
-                accumulator.add(
-                    f"Updating {block_name}", PermissionError("Access denied")
-                )
+                accumulator.add(f"Updating {block_name}", PermissionError("Access denied"))
             elif result == "syntax_error":
                 accumulator.add(f"Updating {block_name}", SyntaxError("Invalid code"))
 
@@ -472,9 +457,7 @@ class TestLoggingIntegration:
         async def test_endpoint(request: CreateCustomBlockRequest):
             raise ValueError("Test error")
 
-        request = CreateCustomBlockRequest(
-            blueprint_key="TEST", new_block_name="NEW", project_path="/test.atlasvibe"
-        )
+        request = CreateCustomBlockRequest(blueprint_key="TEST", new_block_name="NEW", project_path="/test.atlasvibe")
 
         with pytest.raises(HTTPException):
             await test_endpoint(request)

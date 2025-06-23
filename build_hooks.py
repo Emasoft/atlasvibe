@@ -38,9 +38,7 @@ class CustomBuildHook(BuildHookInterface):
             if dir_path.exists():
                 shutil.rmtree(dir_path)
 
-    def finalize(
-        self, version: str, build_data: Dict[str, Any], artifact_path: str
-    ) -> None:
+    def finalize(self, version: str, build_data: Dict[str, Any], artifact_path: str) -> None:
         """Finalize the build by adding Electron app."""
         if not self.electron_built:
             self._build_electron_app()

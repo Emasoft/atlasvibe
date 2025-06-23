@@ -68,8 +68,8 @@ import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { useSequencerModalStore } from "@/renderer/stores/modal";
 import { WriteMinMaxModal } from "@/renderer/routes/test_sequencer_panel/components/modals/WriteMinMaxModal";
 import { toast } from "sonner";
-import { ChangeLinkedTestModal } from "../modals/ChangeLinkedTest";
-import { ImportType } from "../modals/ImportTestModal";
+import { ChangeLinkedTestModal } from "@/renderer/routes/test_sequencer_panel/components/modals/ChangeLinkedTest";
+import { ImportType } from "@/renderer/routes/test_sequencer_panel/components/modals/ImportTestModal";
 import { useSequencerStore } from "@/renderer/stores/sequencer";
 import { useShallow } from "zustand/react/shallow";
 

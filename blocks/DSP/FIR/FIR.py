@@ -82,9 +82,7 @@ def FIR(
 
     if input_signal.size < n_taps * 3:
         raise ValueError("length of the data should be three times longer than taps")
-    elif (
-        n_taps % 2 == 0
-    ):  # in the case where the passband contains the Nyquist frequency
+    elif n_taps % 2 == 0:  # in the case where the passband contains the Nyquist frequency
         n_taps = n_taps + 1
 
     # create the filter with the parameter inputs

@@ -59,9 +59,7 @@ class TektronixMDO30xx(VisaInstrument):
     number_of_measurements = 5  # The number of available
     # measurements does not change.
 
-    def __init__(
-        self, name: str, address: str, number_of_channels: int = 4, **kwargs: Any
-    ) -> None:
+    def __init__(self, name: str, address: str, number_of_channels: int = 4, **kwargs: Any) -> None:
         super().__init__(name, address, terminator="\n", **kwargs)
 
         self.add_submodule("horizontal", TektronixMSOHorizontal(self, "horizontal"))
@@ -73,17 +71,13 @@ class TektronixMDO30xx(VisaInstrument):
         measurement_list = ChannelList(self, "measurement", TektronixMSOMeasurement)
         for measurement_number in range(1, self.number_of_measurements):
             measurement_name = f"measurement{measurement_number}"
-            measurement_module = TektronixMSOMeasurement(
-                self, measurement_name, measurement_number
-            )
+            measurement_module = TektronixMSOMeasurement(self, measurement_name, measurement_number)
 
             self.add_submodule(measurement_name, measurement_module)
             measurement_list.append(measurement_module)
 
         self.add_submodule("measurement", measurement_list)
-        self.add_submodule(
-            "statistics", TektronixMSOMeasurementStatistics(self, "statistics")
-        )
+        self.add_submodule("statistics", TektronixMSOMeasurementStatistics(self, "statistics"))
 
         channel_list = ChannelList(self, "channel", TektronixMSOChannel)
         for channel_number in range(1, number_of_channels + 1):
@@ -138,9 +132,7 @@ class TektronixMSOData(InstrumentChannel):
             get_parser=int,
         )
 
-        self.add_parameter(
-            "stop_index", get_cmd="DATa:STOP?", set_cmd="DATa:STOP {}", get_parser=int
-        )
+        self.add_parameter("stop_index", get_cmd="DATa:STOP?", set_cmd="DATa:STOP {}", get_parser=int)
 
         self.add_parameter(
             "source",
@@ -182,11 +174,7 @@ class TekronixMSOWaveform(InstrumentChannel):
     channels.
     """
 
-    valid_identifiers = [
-        f"{source_type}{i}"
-        for source_type in ["CH", "MATH", "REF"]
-        for i in range(1, TektronixMDO30xx.number_of_channels + 1)
-    ]
+    valid_identifiers = [f"{source_type}{i}" for source_type in ["CH", "MATH", "REF"] for i in range(1, TektronixMDO30xx.number_of_channels + 1)]
 
     def __init__(
         self,
@@ -197,9 +185,7 @@ class TekronixMSOWaveform(InstrumentChannel):
         super().__init__(parent, name)
 
         if identifier not in self.valid_identifiers:
-            raise ValueError(
-                f"Identifier {identifier} must be one of {self.valid_identifiers}"
-            )
+            raise ValueError(f"Identifier {identifier} must be one of {self.valid_identifiers}")
 
         self._identifier = identifier
 
@@ -217,9 +203,7 @@ class TekronixMSOWaveform(InstrumentChannel):
             ),
         )
 
-        self.add_parameter(
-            "x_unit", get_cmd=self._get_cmd("WFMOutpre:XUNit?"), get_parser=strip_quotes
-        )
+        self.add_parameter("x_unit", get_cmd=self._get_cmd("WFMOutpre:XUNit?"), get_parser=strip_quotes)
 
         self.add_parameter(
             "x_increment",
@@ -228,9 +212,7 @@ class TekronixMSOWaveform(InstrumentChannel):
             get_parser=float,
         )
 
-        self.add_parameter(
-            "y_unit", get_cmd=self._get_cmd("WFMOutpre:YUNit?"), get_parser=strip_quotes
-        )
+        self.add_parameter("y_unit", get_cmd=self._get_cmd("WFMOutpre:YUNit?"), get_parser=strip_quotes)
 
         self.add_parameter(
             "offset",
@@ -246,9 +228,7 @@ class TekronixMSOWaveform(InstrumentChannel):
             unit=self.y_unit(),
         )
 
-        self.add_parameter(
-            "length", get_cmd=self._get_cmd("WFMOutpre:NR_Pt?"), get_parser=int
-        )
+        self.add_parameter("length", get_cmd=self._get_cmd("WFMOutpre:NR_Pt?"), get_parser=int)
 
         hor_unit = self.x_unit()
         hor_label = "Time" if hor_unit == "s" else "Frequency"
@@ -291,9 +271,7 @@ class TekronixMSOWaveform(InstrumentChannel):
         waveform = self.root_instrument.waveform
 
         if not waveform.is_binary():
-            raw_data = self.root_instrument.visa_handle.query_ascii_values(
-                "CURVE?", container=np.array
-            )
+            raw_data = self.root_instrument.visa_handle.query_ascii_values("CURVE?", container=np.array)
         else:
             bytes_per_sample = waveform.bytes_per_sample()
             data_type = {1: "b", 2: "h", 4: "f", 8: "d"}[bytes_per_sample]
@@ -384,9 +362,7 @@ class TektronixMSOChannel(InstrumentChannel):
         super().__init__(parent, name)
         self._identifier = f"CH{channel_number}"
 
-        self.add_submodule(
-            "waveform", TekronixMSOWaveform(self, "waveform", self._identifier)
-        )
+        self.add_submodule("waveform", TekronixMSOWaveform(self, "waveform", self._identifier))
 
         self.add_parameter(
             "scale",
@@ -430,9 +406,7 @@ class TektronixMSOChannel(InstrumentChannel):
             value: The requested number of samples in the trace
         """
         if self.root_instrument.horizontal.record_length() < value:
-            raise ValueError(
-                "Cannot set a trace length which is larger than the record length. Please switch to manual mode and adjust the record length first"
-            )
+            raise ValueError("Cannot set a trace length which is larger than the record length. Please switch to manual mode and adjust the record length first")
 
         self.root_instrument.data.start_index(1)
         self.root_instrument.data.stop_index(value)
@@ -476,9 +450,7 @@ class TektronixMSOHorizontal(InstrumentChannel):
             """,
         )
 
-        self.add_parameter(
-            "unit", get_cmd="HORizontal:MAIn:UNIts?", get_parser=strip_quotes
-        )
+        self.add_parameter("unit", get_cmd="HORizontal:MAIn:UNIts?", get_parser=strip_quotes)
 
         self.add_parameter(
             "record_length",
@@ -535,9 +507,7 @@ class TektronixMSOHorizontal(InstrumentChannel):
 
     def _set_record_length(self, value: int) -> None:
         if self.mode() != "manual":
-            raise TektronixMSOModeError(
-                "The record length can only be changed in manual mode"
-            )
+            raise TektronixMSOModeError("The record length can only be changed in manual mode")
 
         self.write(f"HORizontal:MODE:RECOrdlength {value}")
 
@@ -574,9 +544,7 @@ class TekronixMSOTrigger(InstrumentChannel):
 
         trigger_types = ["edge", "logic", "pulse"]
         if self._identifier == "A":
-            trigger_types.extend(
-                ["video", "i2c", "can", "spi", "communication", "serial", "rs232"]
-            )
+            trigger_types.extend(["video", "i2c", "can", "spi", "communication", "serial", "rs232"])
 
         self.add_parameter(
             "type",
@@ -613,9 +581,7 @@ class TekronixMSOTrigger(InstrumentChannel):
             get_parser=str.lower,
         )
 
-        trigger_sources = [
-            f"CH{i}" for i in range(1, TektronixMDO30xx.number_of_channels)
-        ]
+        trigger_sources = [f"CH{i}" for i in range(1, TektronixMDO30xx.number_of_channels)]
 
         trigger_sources.extend([f"D{i}" for i in range(0, 16)])
 
@@ -631,9 +597,7 @@ class TekronixMSOTrigger(InstrumentChannel):
 
     def _trigger_type(self, value: str) -> None:
         if value != "edge":
-            raise NotImplementedError(
-                "We currently only support the 'edge' trigger type"
-            )
+            raise NotImplementedError("We currently only support the 'edge' trigger type")
         self.write(f"TRIGger:{self._identifier}:TYPE {value}")
 
     def _trigger_channel(self) -> str:
@@ -660,9 +624,7 @@ class TektronixMSOMeasurementParameter(Parameter):
         measurement_channel.wait_adjustment_time()
         measurement_number = measurement_channel.measurement_number
 
-        str_value = measurement_channel.ask(
-            f"MEASUrement:MEAS{measurement_number}:{metric}?"
-        )
+        str_value = measurement_channel.ask(f"MEASUrement:MEAS{measurement_number}:{metric}?")
 
         return float(str_value)
 
@@ -771,9 +733,7 @@ class TektronixMSOMeasurement(InstrumentChannel):
             set_cmd=self._set_measurement_type,
             get_parser=str.lower,
             vals=Enum(*(m[0] for m in self.measurements)),
-            docstring=textwrap.dedent(
-                "Please see page 566-569 of the programmers manual for a detailed description of these arguments. http://download.tek.com/manual/077001022.pdf"
-            ),
+            docstring=textwrap.dedent("Please see page 566-569 of the programmers manual for a detailed description of these arguments. http://download.tek.com/manual/077001022.pdf"),
         )
 
         for measurement, unit in self.measurements:
@@ -801,9 +761,7 @@ class TektronixMSOMeasurement(InstrumentChannel):
 
     def _set_source(self, source_number: int, value: str) -> None:
         self._adjustment_time = time.perf_counter()
-        self.write(
-            f"MEASUrement:MEAS{self._measurement_number}:SOUrce{source_number} {value}"
-        )
+        self.write(f"MEASUrement:MEAS{self._measurement_number}:SOUrce{source_number} {value}")
 
     def wait_adjustment_time(self) -> None:
         """
@@ -845,9 +803,7 @@ class TektronixMSOMeasurementStatistics(InstrumentChannel):
             get_cmd="MEASUrement:STATIstics:WEIghting?",
             set_cmd="MEASUrement:STATIstics:WEIghting {}",
             get_parser=int,
-            docstring=textwrap.dedent(
-                "This command sets or queries the time constant for mean and standard deviation statistical accumulations, which is equivalent to selecting Measurement Setup from the Measure menu, clicking the Statistics button and entering the desired Weight n= value."
-            ),
+            docstring=textwrap.dedent("This command sets or queries the time constant for mean and standard deviation statistical accumulations, which is equivalent to selecting Measurement Setup from the Measure menu, clicking the Statistics button and entering the desired Weight n= value."),
         )
 
     def reset(self) -> None:

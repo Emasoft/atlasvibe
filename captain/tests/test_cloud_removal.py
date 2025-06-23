@@ -60,9 +60,7 @@ def test_no_cloud_imports():
         module_dict = vars(module)
         for name, obj in module_dict.items():
             if hasattr(obj, "__module__") and obj.__module__:
-                assert "atlasvibe_cloud" not in obj.__module__, (
-                    f"Found cloud import in {module.__name__}.{name}"
-                )
+                assert "atlasvibe_cloud" not in obj.__module__, f"Found cloud import in {module.__name__}.{name}"
 
 
 def test_api_module_has_no_post_session():

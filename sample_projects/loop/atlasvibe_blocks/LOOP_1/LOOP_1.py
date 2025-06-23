@@ -126,9 +126,7 @@ def LOOP_1(
 
 def load_loop_data(node_id: str, default_num_loops: int) -> LoopData:
     data: dict[str, Any] = SmallMemory().read_memory(node_id, memory_key) or {}
-    loop_data = LoopData.from_data(
-        node_id=node_id, data={"num_loops": default_num_loops, **data}
-    )
+    loop_data = LoopData.from_data(node_id=node_id, data={"num_loops": default_num_loops, **data})
     return loop_data
 
 
@@ -142,16 +140,6 @@ def delete_loop_data(node_id: str):
 
 def build_result(inputs: list[DataContainer], is_loop_finished: bool):
     return LoopOutput(
-        body=JobResultBuilder()
-        .from_inputs(inputs)
-        .flow_by_flag(
-            flag=is_loop_finished, false_direction=["body"], true_direction=["end"]
-        )
-        .build(),
-        end=JobResultBuilder()
-        .from_inputs(inputs)
-        .flow_by_flag(
-            flag=is_loop_finished, false_direction=["body"], true_direction=["end"]
-        )
-        .build(),
+        body=JobResultBuilder().from_inputs(inputs).flow_by_flag(flag=is_loop_finished, false_direction=["body"], true_direction=["end"]).build(),
+        end=JobResultBuilder().from_inputs(inputs).flow_by_flag(flag=is_loop_finished, false_direction=["body"], true_direction=["end"]).build(),
     )

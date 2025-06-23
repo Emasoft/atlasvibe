@@ -248,11 +248,7 @@ def BLUEPRINT_BLOCK(x: int = 5) -> int:
 """)
 
             # Create metadata files
-            (blueprint_path / "app.json").write_text(
-                json.dumps(
-                    {"name": "BLUEPRINT_BLOCK", "type": "default", "category": "MATH"}
-                )
-            )
+            (blueprint_path / "app.json").write_text(json.dumps({"name": "BLUEPRINT_BLOCK", "type": "default", "category": "MATH"}))
 
             (blueprint_path / "block_data.json").write_text(
                 json.dumps(
@@ -265,9 +261,7 @@ def BLUEPRINT_BLOCK(x: int = 5) -> int:
 
             # Copy blueprint to project
             new_block_name = "MY_CUSTOM_BLOCK"
-            custom_block_path = copy_blueprint_to_project(
-                str(blueprint_path), test_project["project_file"], new_block_name
-            )
+            custom_block_path = copy_blueprint_to_project(str(blueprint_path), test_project["project_file"], new_block_name)
 
             # Verify the custom block was created
             custom_block_dir = Path(custom_block_path)

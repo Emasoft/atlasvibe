@@ -34,9 +34,7 @@ def test_test_sequencer_no_cloud_dependencies():
     mock_ws_manager = Mock()
 
     # Run test sequence should work without any cloud parameters
-    with patch(
-        "captain.utils.test_sequencer.run_test_sequence.ts_manager", mock_ws_manager
-    ):
+    with patch("captain.utils.test_sequencer.run_test_sequence.ts_manager", mock_ws_manager):
         # This should not raise any errors related to cloud services
         try:
             # The function signature should not require cloud parameters
@@ -63,12 +61,8 @@ def test_no_cloud_imports_in_test_sequencer():
         module_dict = vars(module)
         for name, obj in module_dict.items():
             if hasattr(obj, "__module__") and obj.__module__:
-                assert "cloud" not in obj.__module__.lower(), (
-                    f"Found cloud import in {module.__name__}.{name}"
-                )
-                assert "upload" not in obj.__module__.lower(), (
-                    f"Found upload import in {module.__name__}.{name}"
-                )
+                assert "cloud" not in obj.__module__.lower(), f"Found cloud import in {module.__name__}.{name}"
+                assert "upload" not in obj.__module__.lower(), f"Found upload import in {module.__name__}.{name}"
 
 
 def test_test_sequence_model_no_cloud_fields():
@@ -103,9 +97,7 @@ def test_test_sequence_model_no_cloud_fields():
 
     # Verify the instance doesn't have cloud attributes
     for field in cloud_fields:
-        assert not hasattr(test_instance, field), (
-            f"Test instance has cloud field '{field}'"
-        )
+        assert not hasattr(test_instance, field), f"Test instance has cloud field '{field}'"
 
 
 def test_websocket_messages_no_cloud():

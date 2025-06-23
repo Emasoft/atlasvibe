@@ -185,9 +185,7 @@ def EXTREMA_DETERMINATION(
         else:
             image = np.stack((r, g, b, a), axis=2)
         image = PILImage.fromarray(image)
-        image = np.array(
-            image.convert("L"), dtype=np.uint8
-        )  # a greyscale image that can be processed
+        image = np.array(image.convert("L"), dtype=np.uint8)  # a greyscale image that can be processed
     elif isinstance(default, Grayscale) or isinstance(default, Matrix):
         image = np.array(default.m)  # explicit typing just to be extra safe
 
@@ -215,9 +213,7 @@ def EXTREMA_DETERMINATION(
                 im /= gaussian_filter(input=im, sigma=min(image.shape) / 20, truncate=2)
             im = np.nan_to_num(im, copy=False)
 
-            autocorr = np.abs(
-                cross_correlate_masked(arr1=im, arr2=im, m1=mask, m2=mask, mode="same")
-            )
+            autocorr = np.abs(cross_correlate_masked(arr1=im, arr2=im, m1=mask, m2=mask, mode="same"))
             autocorr = shift(
                 autocorr,
                 shift=np.asarray(center) - np.array(im.shape) / 2,
@@ -234,9 +230,7 @@ def EXTREMA_DETERMINATION(
 
             labels = label(regions, return_num=False)
             props = regionprops(label_image=labels, intensity_image=im)
-            candidates = [
-                prop for prop in props if not np.any(np.isnan(prop.weighted_centroid))
-            ]
+            candidates = [prop for prop in props if not np.any(np.isnan(prop.weighted_centroid))]
             peaks = list()
             for prop in candidates:
                 pos = np.asarray(prop.weighted_centroid)
@@ -247,9 +241,7 @@ def EXTREMA_DETERMINATION(
                         for coord in prop.coords:
                             blob_mask[coord[0], coord[1]] = 1
                     peaks.append(pos[::-1])
-            peaks = np.array([peaks]).reshape(
-                -1, 2
-            )  # now gives us the final array of peaks
+            peaks = np.array([peaks]).reshape(-1, 2)  # now gives us the final array of peaks
         case "persistence":  # we use the persistence algorithm
             g0 = Persistence(image).persistence
             birth_death = list()
@@ -273,20 +265,12 @@ def EXTREMA_DETERMINATION(
                 candidates.append([x, y])
             if min_dist > 0.0:
                 combos = combinations(candidates, 2)
-                points_to_remove = [
-                    point2
-                    for point1, point2 in combos
-                    if np.linalg.norm(np.array(point1) - np.array(point2)) < min_dist
-                ]
-                candidates = [
-                    point for point in candidates if point not in points_to_remove
-                ]
+                points_to_remove = [point2 for point1, point2 in combos if np.linalg.norm(np.array(point1) - np.array(point2)) < min_dist]
+                candidates = [point for point in candidates if point not in points_to_remove]
             peaks = np.array(candidates).reshape(-1, 2)
             # remove peaks that are within the masked area
             if mask.sum() != mask.shape[0] * mask.shape[1]:
-                peaks = np.array([p for p in candidates if mask[p[1], p[0]]]).reshape(
-                    -1, 2
-                )
+                peaks = np.array([p for p in candidates if mask[p[1], p[0]]]).reshape(-1, 2)
 
         case "log":
             # This is the most expensive algorithm!!
@@ -301,11 +285,7 @@ def EXTREMA_DETERMINATION(
                 y, x = np.ogrid[-n // 2 : n // 2 + 1, -n // 2 : n // 2 + 1]
                 y_filter = np.exp(-(y**2 / (2.0 * sigma * sigma)))
                 x_filter = np.exp(-(x**2 / (2.0 * sigma * sigma)))
-                return (
-                    (-(2 * sigma**2) + (x * x + y * y))
-                    * (x_filter * y_filter)
-                    * (1 / (2 * np.pi * sigma**4))
-                )
+                return (-(2 * sigma**2) + (x * x + y * y)) * (x_filter * y_filter) * (1 / (2 * np.pi * sigma**4))
 
             # Step 2: perform the convolution with the LOG filters for increasing powers of sigma
             log_images = np.zeros((max_power, *image.shape))  # to store responses
@@ -357,9 +337,7 @@ def EXTREMA_DETERMINATION(
             labels = label(blob_mask)
             rprops = regionprops(label_image=labels, intensity_image=blob_mask)
             peaks = list()
-            for region in [
-                prop for prop in rprops if not np.any(np.isnan(prop.weighted_centroid))
-            ]:
+            for region in [prop for prop in rprops if not np.any(np.isnan(prop.weighted_centroid))]:
                 peaks.append(region.weighted_centroid)
             peaks = np.array(peaks).reshape(-1, 2)
     # Congratulations! We now have an (N,2) array of the peaks in the image;
@@ -368,9 +346,7 @@ def EXTREMA_DETERMINATION(
     # that's black and white so we can render it. First, scale image to
     # range 0-255.
 
-    rgb_image = np.zeros(
-        (*image.shape, 3), dtype=np.uint8
-    )  # only generated for plotting
+    rgb_image = np.zeros((*image.shape, 3), dtype=np.uint8)  # only generated for plotting
     rgb_image[..., 0] = image * 255  # Red channel
     rgb_image[..., 1] = image * 255  # Green channel
     rgb_image[..., 2] = image * 255  # Blue channel
@@ -496,10 +472,7 @@ class Persistence:
                         self._groups0[self.uf[q]] = (bl, bl - v, p)
                     self.uf.union(oldp, q)
 
-        self._groups0 = [
-            (k, self._groups0[k][0], self._groups0[k][1], self._groups0[k][2])
-            for k in self._groups0
-        ]
+        self._groups0 = [(k, self._groups0[k][0], self._groups0[k][1], self._groups0[k][2]) for k in self._groups0]
         self._groups0.sort(key=lambda g: g[2], reverse=True)
         self.persistence = self._groups0
 

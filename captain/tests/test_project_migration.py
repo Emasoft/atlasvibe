@@ -113,9 +113,7 @@ class TestProjectMigration:
             json.dump(project_data, f)
 
         # Migrate the project
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=False
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=False)
 
         # Verify migration results
         assert len(created_blocks) == 1
@@ -159,9 +157,7 @@ class TestProjectMigration:
             json.dump(project_data, f)
 
         # Migrate the project
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=False
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=False)
 
         # Verify no blocks were created for hardware blocks
         assert len(created_blocks) == 0
@@ -197,9 +193,7 @@ class TestProjectMigration:
             json.dump(project_data, f)
 
         # Attempt migration
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=False
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=False)
 
         # Verify no changes were made
         assert len(created_blocks) == 0
@@ -227,9 +221,7 @@ class TestProjectMigration:
         }
 
         # Migrate in dry run mode
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=True
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=True)
 
         # Verify migration would happen
         assert len(created_blocks) == 1
@@ -273,9 +265,7 @@ class TestProjectMigration:
             json.dump(project_data, f)
 
         # Migrate the project
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=False
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=False)
 
         # Verify both blocks get the same custom name (reused)
         assert len(created_blocks) == 1

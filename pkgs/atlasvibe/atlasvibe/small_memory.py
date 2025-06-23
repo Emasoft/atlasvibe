@@ -52,9 +52,7 @@ class SmallMemory:
                 self.dao.set_obj(value_type_key, meta_data)
                 self.dao.set_bool(memory_key, value)
             case _:
-                raise ValueError(
-                    f"SmallMemory currently does not support '{v_type}' type data!"
-                )
+                raise ValueError(f"SmallMemory currently does not support '{v_type}' type data!")
 
     def read_memory(self, job_id: str, key: str):
         """

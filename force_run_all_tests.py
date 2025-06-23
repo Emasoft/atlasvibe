@@ -79,9 +79,7 @@ def run_all_tests():
         # Set PYTHONPATH to include our plugin directory
         env = os.environ.copy()
         pythonpath = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = (
-            f"{plugin_dir}:{pythonpath}" if pythonpath else str(plugin_dir)
-        )
+        env["PYTHONPATH"] = f"{plugin_dir}:{pythonpath}" if pythonpath else str(plugin_dir)
 
         # Run pytest
         result = subprocess.run(cmd, env=env)

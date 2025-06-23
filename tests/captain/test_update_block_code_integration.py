@@ -34,9 +34,7 @@ class TestUpdateBlockCodeRealIntegration:
             project_dir.mkdir()
 
             project_file = project_dir / "test_project.atlasvibe"
-            project_file.write_text(
-                json.dumps({"version": "0.1.0", "nodes": [], "edges": []})
-            )
+            project_file.write_text(json.dumps({"version": "0.1.0", "nodes": [], "edges": []}))
 
             # Create atlasvibe_blocks directory
             blocks_dir = project_dir / "atlasvibe_blocks"
@@ -132,9 +130,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
 """
 
         # Create request
-        request = UpdateBlockCodeRequest(
-            block_path=block_file_path, content=new_code, project_path=project_path
-        )
+        request = UpdateBlockCodeRequest(block_path=block_file_path, content=new_code, project_path=project_path)
 
         # Call the actual function (no mocks)
         result = await update_block_code(request)
@@ -154,9 +150,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         assert result["path"] == str(Path(block_file_path).parent)
 
     @pytest.mark.asyncio
-    async def test_update_block_code_validates_custom_block_path(
-        self, real_project_setup
-    ):
+    async def test_update_block_code_validates_custom_block_path(self, real_project_setup):
         """Test that non-custom blocks are rejected."""
         # Try to update a blueprint block (no atlasvibe_blocks in path)
         request = UpdateBlockCodeRequest(
@@ -223,9 +217,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
     return x +   # Syntax error here
 """
 
-        request = UpdateBlockCodeRequest(
-            block_path=block_file_path, content=bad_code, project_path=project_path
-        )
+        request = UpdateBlockCodeRequest(block_path=block_file_path, content=bad_code, project_path=project_path)
 
         # The update might succeed (file is written) but manifest generation might fail
         # This depends on how process_block_directory handles syntax errors
@@ -266,9 +258,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
     return x + y + z
 """
 
-        request = UpdateBlockCodeRequest(
-            block_path=block_file_path, content=new_code, project_path=project_path
-        )
+        request = UpdateBlockCodeRequest(block_path=block_file_path, content=new_code, project_path=project_path)
 
         # Update the block
         result = await update_block_code(request)

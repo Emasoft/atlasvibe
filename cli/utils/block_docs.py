@@ -17,9 +17,7 @@ class BlockDocsBuilder:
         self.block_name = block_name
         self.block_folder_path = block_folder_path
         self.description = description
-        self.github_link = self.github_base.format(
-            block_name=block_name, block_folder_path=block_folder_path
-        )
+        self.github_link = self.github_base.format(block_name=block_name, block_folder_path=block_folder_path)
 
         self.template = """\
 ---

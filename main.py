@@ -23,9 +23,5 @@ if __name__ == "__main__":
         port=5392,
         log_level=log_level,
         reload=is_dev,
-        reload_excludes=[
-            os.path.join(os.getcwd(), p)
-            for p in __ignore_list
-            if os.path.exists(os.path.join(os.getcwd(), p))
-        ],
+        reload_excludes=[os.path.join(os.getcwd(), p) for p in __ignore_list if os.path.exists(os.path.join(os.getcwd(), p))],
     )

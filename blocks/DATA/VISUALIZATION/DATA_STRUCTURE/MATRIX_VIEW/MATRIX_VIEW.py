@@ -28,9 +28,7 @@ def numpy_2d_array_as_table(
 ):
     new_arr = arr
     if arr_row_shape > MAX_ALLOWED_SHAPE or arr_col_shape > MAX_ALLOWED_SHAPE:
-        new_arr = np.full(
-            (MAX_ALLOWED_SHAPE, MAX_ALLOWED_SHAPE), placeholder, dtype=object
-        )
+        new_arr = np.full((MAX_ALLOWED_SHAPE, MAX_ALLOWED_SHAPE), placeholder, dtype=object)
         new_arr[:-2, :-2] = arr[: MAX_ALLOWED_SHAPE - 2, : MAX_ALLOWED_SHAPE - 2]
         last_row = arr[arr_row_shape - 1, :]
         first_cols = last_row[: MAX_ALLOWED_SHAPE - 2]
@@ -38,9 +36,7 @@ def numpy_2d_array_as_table(
         last_col = arr[:, arr.shape[1] - 1]
         first_rows = last_col[: MAX_ALLOWED_SHAPE - 2]
         new_arr[: MAX_ALLOWED_SHAPE - 2, MAX_ALLOWED_SHAPE - 1] = first_rows
-        new_arr[MAX_ALLOWED_SHAPE - 1, MAX_ALLOWED_SHAPE - 1 :] = arr[
-            arr_row_shape - 1, arr.shape[1] - 1 :
-        ]
+        new_arr[MAX_ALLOWED_SHAPE - 1, MAX_ALLOWED_SHAPE - 1 :] = arr[arr_row_shape - 1, arr.shape[1] - 1 :]
         new_arr[0, MAX_ALLOWED_SHAPE - 2] = l_dot
         new_arr[MAX_ALLOWED_SHAPE - 1, MAX_ALLOWED_SHAPE - 2] = l_dot
 

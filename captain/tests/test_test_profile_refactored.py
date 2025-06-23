@@ -49,9 +49,7 @@ class TestTestProfileRefactored:
         with patch("captain.routes.test_profile.os.makedirs") as mock:
             yield mock
 
-    def test_install_success_new_repo(
-        self, client, mock_subprocess, mock_os_path, mock_makedirs
-    ):
+    def test_install_success_new_repo(self, client, mock_subprocess, mock_os_path, mock_makedirs):
         """Test successful installation of new repository."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"
@@ -77,9 +75,7 @@ class TestTestProfileRefactored:
         assert "--depth" in clone_call[0][0]
         assert test_url in clone_call[0][0]
 
-    def test_install_success_existing_repo(
-        self, client, mock_subprocess, mock_os_path, mock_makedirs
-    ):
+    def test_install_success_existing_repo(self, client, mock_subprocess, mock_os_path, mock_makedirs):
         """Test successful installation when repository already exists."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"
@@ -123,9 +119,7 @@ class TestTestProfileRefactored:
         assert data["error"]["code"] == "TEST_PROFILE_SYSTEM_ERROR"
         assert "Git is not found" not in data["error"]["message"]  # Should be sanitized
 
-    def test_install_clone_failure(
-        self, client, mock_subprocess, mock_os_path, mock_makedirs
-    ):
+    def test_install_clone_failure(self, client, mock_subprocess, mock_os_path, mock_makedirs):
         """Test error when git clone fails."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"
@@ -151,9 +145,7 @@ class TestTestProfileRefactored:
         assert data["error"]["code"] == "TEST_PROFILE_CLONE_FAILED"
         assert "repository not found" not in data["error"]["message"]  # Sanitized
 
-    def test_install_dirty_repo_update(
-        self, client, mock_subprocess, mock_os_path, mock_makedirs
-    ):
+    def test_install_dirty_repo_update(self, client, mock_subprocess, mock_os_path, mock_makedirs):
         """Test error when existing repo has uncommitted changes."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"
@@ -161,9 +153,7 @@ class TestTestProfileRefactored:
 
         def mock_run(cmd, **kwargs):
             if "status" in cmd and "--porcelain" in cmd:
-                return Mock(
-                    returncode=0, stdout=b"M modified_file.py", stderr=b""
-                )  # Dirty repo
+                return Mock(returncode=0, stdout=b"M modified_file.py", stderr=b"")  # Dirty repo
             return Mock(returncode=0, stdout=b"output", stderr=b"")
 
         mock_subprocess.side_effect = mock_run
@@ -189,9 +179,7 @@ class TestTestProfileRefactored:
             if "rev-parse" in cmd:
                 return Mock(
                     returncode=0,
-                    stdout=current_hash.encode()
-                    if current_hash == "abc123def456"
-                    else target_hash.encode(),
+                    stdout=current_hash.encode() if current_hash == "abc123def456" else target_hash.encode(),
                     stderr=b"",
                 )
             return Mock(returncode=0, stdout=b"output", stderr=b"")
@@ -199,9 +187,7 @@ class TestTestProfileRefactored:
         mock_subprocess.side_effect = mock_run
 
         # Execute
-        response = client.post(
-            f"/test_profile/checkout/{target_hash}/", headers={"url": test_url}
-        )
+        response = client.post(f"/test_profile/checkout/{target_hash}/", headers={"url": test_url})
 
         # Assert
         assert response.status_code == 200
@@ -228,9 +214,7 @@ class TestTestProfileRefactored:
         mock_subprocess.side_effect = mock_run
 
         # Execute
-        response = client.post(
-            f"/test_profile/checkout/{target_hash}/", headers={"url": test_url}
-        )
+        response = client.post(f"/test_profile/checkout/{target_hash}/", headers={"url": test_url})
 
         # Assert
         assert response.status_code == 500
@@ -257,9 +241,7 @@ class TestTestProfileRefactored:
         mock_subprocess.side_effect = mock_run
 
         # Execute
-        response = client.post(
-            f"/test_profile/checkout/{target_hash}/", headers={"url": test_url}
-        )
+        response = client.post(f"/test_profile/checkout/{target_hash}/", headers={"url": test_url})
 
         # Assert
         assert response.status_code == 500
@@ -294,9 +276,7 @@ class TestTestProfileRefactored:
         assert error["request_id"].startswith("req-")
         assert len(error["request_id"]) == 16  # req- + 12 hex chars
 
-    def test_retry_on_transient_failures(
-        self, client, mock_subprocess, mock_os_path, mock_makedirs
-    ):
+    def test_retry_on_transient_failures(self, client, mock_subprocess, mock_os_path, mock_makedirs):
         """Test that transient failures are retried."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"
@@ -337,9 +317,7 @@ class TestTestProfileRefactored:
             (ConnectionError("Network error"), "TEST_PROFILE_CONNECTION_FAILED"),
         ],
     )
-    def test_error_code_mapping(
-        self, client, mock_subprocess, exception_type, expected_code
-    ):
+    def test_error_code_mapping(self, client, mock_subprocess, exception_type, expected_code):
         """Test that different exceptions map to appropriate error codes."""
         # Setup
         test_url = "https://github.com/user/test-repo.git"

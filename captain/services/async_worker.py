@@ -85,9 +85,7 @@ class AsyncWorker:
 
         if self.signaler:
             # Signal the running node to the front-end
-            await self.signaler.signal_current_running_node(
-                job.jobset_id, job.job_id, func.__name__
-            )
+            await self.signaler.signal_current_running_node(job.jobset_id, job.job_id, func.__name__)
 
         # Mark block as executing in change queue
         self.change_queue_manager.mark_block_executing(job.job_id)
@@ -115,9 +113,7 @@ class AsyncWorker:
             logger.debug(f"Job finished: {job.job_id}, status: ok")
             if self.signaler:
                 # Send results to frontend
-                await self.signaler.signal_node_results(
-                    job.jobset_id, job.job_id, func.__name__, response.result
-                )
+                await self.signaler.signal_node_results(job.jobset_id, job.job_id, func.__name__, response.result)
 
         elif isinstance(response, JobFailure):
             logger.debug(f"Job finished: {job.job_id}, status: failed")
@@ -125,9 +121,7 @@ class AsyncWorker:
 
             if self.signaler:
                 # Signal to frontend that the node has failed
-                await self.signaler.signal_failed_nodes(
-                    job.jobset_id, job.job_id, func.__name__, response.error
-                )
+                await self.signaler.signal_failed_nodes(job.jobset_id, job.job_id, func.__name__, response.error)
 
             # Mark block as finished before raising
             self.change_queue_manager.mark_block_finished(job.job_id)

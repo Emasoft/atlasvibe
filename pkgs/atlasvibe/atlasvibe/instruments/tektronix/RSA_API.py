@@ -204,12 +204,7 @@ AcqDataStatus_ADC_OVERRANGE = 0x1
 AcqDataStatus_REF_OSC_UNLOCK = 0x2
 AcqDataStatus_LOW_SUPPLY_VOLTAGE = 0x10
 AcqDataStatus_ADC_DATA_LOST = 0x20
-AcqDataStatus_VALID_BITS_MASK = (
-    AcqDataStatus_ADC_OVERRANGE
-    or AcqDataStatus_REF_OSC_UNLOCK
-    or AcqDataStatus_LOW_SUPPLY_VOLTAGE
-    or AcqDataStatus_ADC_DATA_LOST
-)
+AcqDataStatus_VALID_BITS_MASK = AcqDataStatus_ADC_OVERRANGE or AcqDataStatus_REF_OSC_UNLOCK or AcqDataStatus_LOW_SUPPLY_VOLTAGE or AcqDataStatus_ADC_DATA_LOST
 
 
 class AcqDataStatus:

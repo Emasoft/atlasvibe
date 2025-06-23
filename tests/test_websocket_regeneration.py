@@ -145,9 +145,7 @@ def TEST_BLOCK(x: int = 1) -> int:
         # Create a mock for the WebSocket manager
         mock_ws = AsyncMock()
 
-        with patch(
-            "captain.services.consumer.blocks_watcher.ConnectionManager"
-        ) as MockWS:
+        with patch("captain.services.consumer.blocks_watcher.ConnectionManager") as MockWS:
             MockWS.get_instance.return_value = mock_ws
 
             # Create BlocksWatcher instance
@@ -157,9 +155,7 @@ def TEST_BLOCK(x: int = 1) -> int:
             block_file = temp_block_dir["file"]
 
             # Mock the regeneration process
-            with patch(
-                "captain.utils.block_metadata_generator.regenerate_block_data_json"
-            ) as mock_regen:
+            with patch("captain.utils.block_metadata_generator.regenerate_block_data_json") as mock_regen:
                 mock_regen.return_value = True
 
                 # Simulate the watcher detecting a change and triggering regeneration
@@ -228,9 +224,5 @@ def CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
                 calls = mock_ws.broadcast.call_args_list
 
                 # Should have at least regeneration start and complete
-                assert any(
-                    call[0][0].get("type") == "regeneration_start" for call in calls
-                )
-                assert any(
-                    call[0][0].get("type") == "regeneration_complete" for call in calls
-                )
+                assert any(call[0][0].get("type") == "regeneration_start" for call in calls)
+                assert any(call[0][0].get("type") == "regeneration_complete" for call in calls)

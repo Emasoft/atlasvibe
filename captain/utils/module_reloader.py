@@ -68,9 +68,7 @@ class ModuleReloader:
                 if not force:
                     last_reload = self._reload_times.get(module_name, 0)
                     if time.time() - last_reload < 1.0:
-                        logger.debug(
-                            f"Module {module_name} recently reloaded, skipping"
-                        )
+                        logger.debug(f"Module {module_name} recently reloaded, skipping")
                         return True
 
                 # Get module and its dependencies
@@ -209,9 +207,7 @@ class ModuleReloader:
             logger.warning(f"Error getting dependencies for {module_name}: {e}")
             return []
 
-    def _reload_with_dependencies(
-        self, module_name: str, dependencies: List[str]
-    ) -> bool:
+    def _reload_with_dependencies(self, module_name: str, dependencies: List[str]) -> bool:
         """Reload a module and its dependencies in correct order."""
         try:
             # Reload dependencies first

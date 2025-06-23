@@ -63,28 +63,14 @@ def PID_1(
     regulation_error_primes = zeros(3) if initialize else data[1:]
     regulation_error = single_input.c
 
-    integral: float = integral + 0.5 * Ki * (
-        regulation_error + regulation_error_primes[0]
-    )
-    output_signal = -1 * (
-        Kp * regulation_error
-        + integral
-        + 0.1667
-        * Kd
-        * (
-            regulation_error
-            - regulation_error_primes[2]
-            + 3.0 * (regulation_error_primes[0] - regulation_error_primes[1])
-        )
-    )
+    integral: float = integral + 0.5 * Ki * (regulation_error + regulation_error_primes[0])
+    output_signal = -1 * (Kp * regulation_error + integral + 0.1667 * Kd * (regulation_error - regulation_error_primes[2] + 3.0 * (regulation_error_primes[0] - regulation_error_primes[1])))
     regulation_error_primes[2] = regulation_error_primes[1]
     regulation_error_primes[1] = regulation_error_primes[0]
     regulation_error_primes[0] = regulation_error
 
     # Now write to memory ...
-    SmallMemory().write_to_memory(
-        node_id, memory_key, append(integral, regulation_error_primes)
-    )
+    SmallMemory().write_to_memory(node_id, memory_key, append(integral, regulation_error_primes))
 
     # ... and return the result
     return Scalar(c=output_signal)

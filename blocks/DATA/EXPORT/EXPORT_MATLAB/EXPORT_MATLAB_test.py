@@ -30,9 +30,7 @@ def test_EXPORT_MATLAB_dataframe(mock_atlasvibe_decorator):
 
     try:
         file_path = os.path.join(directory, "testmatfile.mat")
-        assert os.path.exists(file_path), (
-            f"File '{file_path}' does not exist. The export to .mat failed."
-        )
+        assert os.path.exists(file_path), f"File '{file_path}' does not exist. The export to .mat failed."
         mat = scipy.io.loadmat(file_path)
         assert "IntegerColumn" in mat, "Column was not saved"
         assert data["IntegerColumn"][1] in mat["IntegerColumn"][0], "Data was not saved"
@@ -64,9 +62,7 @@ def test_EXPORT_MATLAB_pair(mock_atlasvibe_decorator):
 
     try:
         file_path = os.path.join(directory, "testmatfile.mat")
-        assert os.path.exists(file_path), (
-            f"File '{file_path}' does not exist. The export to .mat failed."
-        )
+        assert os.path.exists(file_path), f"File '{file_path}' does not exist. The export to .mat failed."
         mat = scipy.io.loadmat(file_path)
         assert "x" in mat, "Column was not saved"
         assert data["x"][1] in mat["x"][0], "Data was not saved"
@@ -94,9 +90,7 @@ def test_EXPORT_MATLAB_matrix(mock_atlasvibe_decorator):
 
     try:
         file_path = os.path.join(directory, "testmatfile.mat")
-        assert os.path.exists(file_path), (
-            f"File '{file_path}' does not exist. The export to .mat failed."
-        )
+        assert os.path.exists(file_path), f"File '{file_path}' does not exist. The export to .mat failed."
         mat = scipy.io.loadmat(file_path)
         assert "matrix" in mat, "Column was not saved"
         assert data.shape == mat["matrix"].shape, "Data was not saved"

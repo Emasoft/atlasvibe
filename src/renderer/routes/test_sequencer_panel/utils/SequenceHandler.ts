@@ -25,7 +25,6 @@ import {
   TestSequenceElement,
   TestSequencerProject,
 } from "@/renderer/types/test-sequencer";
-import { PythonDependency } from "@/types/dependencies";
 import { createNewTest } from "@/renderer/hooks/useTestSequencerState";
 import { err, ok, Result } from "neverthrow";
 import { toast } from "sonner";

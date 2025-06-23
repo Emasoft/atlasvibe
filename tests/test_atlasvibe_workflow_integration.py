@@ -96,9 +96,7 @@ def TEST_BLUEPRINT(
                     "returns": [],
                 }
             }
-            (blueprint_dir / "block_data.json").write_text(
-                json.dumps(block_data, indent=2)
-            )
+            (blueprint_dir / "block_data.json").write_text(json.dumps(block_data, indent=2))
 
             yield str(blueprint_dir)
 
@@ -119,9 +117,7 @@ def TEST_BLUEPRINT(
         instance_name = "TEST_BLUEPRINT_1"
 
         # This is what happens when user drags a blueprint from palette
-        instance_path = copy_blueprint_to_project(
-            temp_blueprint, temp_project, instance_name
-        )
+        instance_path = copy_blueprint_to_project(temp_blueprint, temp_project, instance_name)
 
         print(f"✓ Created block instance at: {instance_path}")
         print("✓ Blueprint remains unchanged in global palette")
@@ -157,10 +153,7 @@ def TEST_BLUEPRINT(
         block_data = json.loads(block_data_json.read_text())
 
         # The automatic generation should have updated this from the actual docstring
-        assert (
-            block_data["docstring"]["short_description"]
-            == "Test blueprint block for workflow integration."
-        )
+        assert block_data["docstring"]["short_description"] == "Test blueprint block for workflow integration."
         assert len(block_data["docstring"]["parameters"]) == 2
         assert block_data["docstring"]["parameters"][0]["name"] == "input_text"
         assert block_data["docstring"]["parameters"][1]["name"] == "scale"
@@ -172,9 +165,7 @@ def TEST_BLUEPRINT(
 
         # First create an instance from blueprint
         instance_name = "TEST_EDITABLE_INSTANCE"
-        instance_path = copy_blueprint_to_project(
-            temp_blueprint, temp_project, instance_name
-        )
+        instance_path = copy_blueprint_to_project(temp_blueprint, temp_project, instance_name)
 
         instance_dir = Path(instance_path)
         py_file = instance_dir / f"{instance_name}.py"
@@ -232,10 +223,7 @@ def TEST_EDITABLE_INSTANCE(
         block_data = json.loads(block_data_json.read_text())
 
         # Check that docstring was updated
-        assert (
-            block_data["docstring"]["short_description"]
-            == "UPDATED: Instance that has been modified (blueprint unchanged)."
-        )
+        assert block_data["docstring"]["short_description"] == "UPDATED: Instance that has been modified (blueprint unchanged)."
 
         # Check that parameters were updated
         params = block_data["docstring"]["parameters"]
@@ -262,9 +250,7 @@ def TEST_EDITABLE_INSTANCE(
 
         # Create first custom block
         original_name = "ORIGINAL_BLOCK"
-        original_path = copy_blueprint_to_project(
-            temp_blueprint, temp_project, original_name
-        )
+        original_path = copy_blueprint_to_project(temp_blueprint, temp_project, original_name)
 
         # Simulate duplicating the block (creates another custom block)
         duplicate_name = "ORIGINAL_BLOCK_2"
