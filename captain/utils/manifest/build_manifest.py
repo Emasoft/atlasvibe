@@ -98,7 +98,9 @@ class ManifestBuilder:
 
         if docstring:
             # Parse the docstring with Inputs section support
-            self.docstring = parse_numpy_style_docstring(docstring, [("Inputs", "inputs")])
+            self.docstring = parse_numpy_style_docstring(
+                docstring, [("Inputs", "inputs")]
+            )
             self.param_descriptions = get_param_descriptions(docstring)
             self.return_descriptions = get_return_descriptions(docstring)
         else:
@@ -135,7 +137,9 @@ class ManifestBuilder:
         )
         return self
 
-    def with_param(self, name: str, param_type: Type, default: Any, overload: dict | None):
+    def with_param(
+        self, name: str, param_type: Type, default: Any, overload: dict | None
+    ):
         self.parameters[name] = {
             "type": type_str(param_type),
             "default": default,
@@ -352,7 +356,9 @@ def create_manifest(path: str) -> dict[str, Any]:
 
         # Add parameter types aliases for convenience
         if hasattr(atlasvibe_module, "Scalar"):
-            module.__dict__["Number"] = getattr(atlasvibe_module, "Scalar")  # Number alias for Scalar
+            module.__dict__["Number"] = getattr(
+                atlasvibe_module, "Scalar"
+            )  # Number alias for Scalar
 
         exec(code, module.__dict__)
     finally:
@@ -391,7 +397,9 @@ def populate_manifest(
             populate_inputs(name, param, mb)
     else:
         for name, param in sig.parameters.items():
-            populate_inputs(name, param, mb, overload[name] if name in overload else None)
+            populate_inputs(
+                name, param, mb, overload[name] if name in overload else None
+            )
 
     populate_return(sig.return_annotation, mb, is_special_node)
 
@@ -418,7 +426,9 @@ def populate_inputs(
             # Recurse with the inner type, treating it as if the optional wasn't there
             populate_inputs(
                 name,
-                Parameter(name, kind=param.kind, default=param.default, annotation=inner_type),
+                Parameter(
+                    name, kind=param.kind, default=param.default, annotation=inner_type
+                ),
                 mb,
                 overload=overload,
                 multiple=multiple,
@@ -463,14 +473,19 @@ def populate_inputs(
         if is_datacontainer(inner_type) or is_union_of_datacontainers(inner_type):
             populate_inputs(
                 name,
-                Parameter(name, kind=param.kind, default=param.default, annotation=inner_type),
+                Parameter(
+                    name, kind=param.kind, default=param.default, annotation=inner_type
+                ),
                 mb,
                 overload=overload,
                 multiple=True,
             )
             return
         if param_type not in ALLOWED_PARAM_TYPES:
-            raise TypeError(f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or special types like NodeReference," f"got {param_type}")
+            raise TypeError(
+                f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or special types like NodeReference,"
+                f"got {param_type}"
+            )
         mb.with_param(name, param_type, default_value, overload)
     # Case 6: Literal type which becomes a select param
     elif is_outer_type(param_type, Literal):
@@ -480,7 +495,10 @@ def populate_inputs(
         return
     else:
         if param_type != DefaultParams and param_type not in ALLOWED_PARAM_TYPES:
-            raise TypeError(f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or special types like NodeReference," f"got {param_type}")
+            raise TypeError(
+                f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or special types like NodeReference,"
+                f"got {param_type}"
+            )
         if param_type != DefaultParams:
             mb.with_param(name, param_type, default_value, overload)
 
@@ -520,7 +538,10 @@ def populate_init_params(init_func: Callable, mb: ManifestBuilder):
             )
         else:
             if param_type not in ALLOWED_PARAM_TYPES and param_type != Array:
-                raise TypeError(f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or Array" f"got {param_type}")
+                raise TypeError(
+                    f"Parameter types must be one of {ALLOWED_PARAM_TYPES} or Array"
+                    f"got {param_type}"
+                )
             mb.with_init_param(name, param_type, default)
 
     for name, param in sig.parameters.items():
@@ -561,7 +582,10 @@ def populate_return(return_type: Any, mb: ManifestBuilder, is_special_node: bool
                 mb.with_output(name=attr, output_type=value, named=True)
             else:
                 if not issubclass(value, DataContainer):
-                    raise TypeError("Return type must be a DataContainer or a typing.TypedDict" f"consisting of only DataContainers as fields, got {return_type}")
+                    raise TypeError(
+                        "Return type must be a DataContainer or a typing.TypedDict"
+                        f"consisting of only DataContainers as fields, got {return_type}"
+                    )
 
                 mb.with_output(attr, value, named=True)
 

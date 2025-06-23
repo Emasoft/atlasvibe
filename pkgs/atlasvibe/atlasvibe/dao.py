@@ -91,7 +91,9 @@ class Dao:
     def check_if_valid(self, result: Any | None, expected_type: Any):
         with _dict_sm_lock:
             if result is not None and not isinstance(result, expected_type):
-                raise ValueError(f"Expected {expected_type} type, but got {type(result)} instead!")
+                raise ValueError(
+                    f"Expected {expected_type} type, but got {type(result)} instead!"
+                )
 
     def set_np_array(self, memo_key: str, value: DCNpArrayType):
         with _dict_sm_lock:

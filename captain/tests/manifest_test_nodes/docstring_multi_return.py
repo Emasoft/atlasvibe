@@ -13,7 +13,9 @@ class DocstringMultiReturnOutput(TypedDict):
 
 
 @atlasvibe_node(node_type="TEST_TYPE")  # CHANGED
-def DOCSTRING_MULTI_RETURN(a: OrderedPair, b: OrderedPair) -> DocstringMultiReturnOutput:
+def DOCSTRING_MULTI_RETURN(
+    a: OrderedPair, b: OrderedPair
+) -> DocstringMultiReturnOutput:
     """A docstring test.
 
     Returns

@@ -122,7 +122,9 @@ class TestWithErrorHandling:
         """Test decorator logs errors."""
         logger = logging.getLogger("test_decorator")
 
-        @with_error_handling(default="failed", logger=logger, error_message="Error in {func_name}")
+        @with_error_handling(
+            default="failed", logger=logger, error_message="Error in {func_name}"
+        )
         def test_function():
             raise RuntimeError("Something went wrong")
 

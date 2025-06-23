@@ -232,7 +232,9 @@ async def create_custom_block(request: CreateCustomBlockRequest):
 
     # Validate project path
     if not request.project_path or not request.project_path.endswith(".atlasvibe"):
-        raise HTTPException(status_code=422, detail="Invalid project path. Must be a .atlasvibe file")
+        raise HTTPException(
+            status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
+        )
 
     # Find the blueprint block directory
     with error_context("finding blueprint path", logger):
@@ -246,11 +248,15 @@ async def create_custom_block(request: CreateCustomBlockRequest):
 
     # Copy the blueprint to the project
     with error_context("copying blueprint to project", logger):
-        new_block_path = copy_blueprint_to_project(str(blueprint_path), request.project_path, request.new_block_name)
+        new_block_path = copy_blueprint_to_project(
+            str(blueprint_path), request.project_path, request.new_block_name
+        )
 
     # Generate manifest for the new block
     with error_context("generating manifest for new block", logger):
-        block_manifest = create_manifest(str(Path(new_block_path) / f"{request.new_block_name}.py"))
+        block_manifest = create_manifest(
+            str(Path(new_block_path) / f"{request.new_block_name}.py")
+        )
 
     if not block_manifest:
         raise HTTPException(
@@ -299,7 +305,9 @@ async def update_block_code(request: UpdateBlockCodeRequest):
 
     # Validate project path
     if not request.project_path or not request.project_path.endswith(".atlasvibe"):
-        raise HTTPException(status_code=422, detail="Invalid project path. Must be a .atlasvibe file")
+        raise HTTPException(
+            status_code=422, detail="Invalid project path. Must be a .atlasvibe file"
+        )
 
     # Write the new content to the file
     block_file = Path(request.block_path)
@@ -365,7 +373,10 @@ async def update_block_code(request: UpdateBlockCodeRequest):
                 # We can't use create_manifest directly as it needs the file on disk
                 # For now, we'll skip validation and trust the editor
                 # In the future, we should add a validate_python_code function
-                logger.info(f"[{request_id}] Queued code update for block '{block_name}' - " f"transaction {transaction_id}")
+                logger.info(
+                    f"[{request_id}] Queued code update for block '{block_name}' - "
+                    f"transaction {transaction_id}"
+                )
             except Exception as e:
                 logger.warning(f"Code validation warning: {e}")
 
@@ -378,10 +389,16 @@ async def update_block_code(request: UpdateBlockCodeRequest):
             "has_pending_changes": change_queue.has_pending_changes(block_id),
             "is_executing": change_queue.is_block_executing(block_id),
             "version": change_queue.get_block_version(block_id),
-            "status": "queued" if change_queue.is_block_executing(block_id) else "applied",
+            "status": "queued"
+            if change_queue.is_block_executing(block_id)
+            else "applied",
         }
 
-        logger.info(f"Code update for block '{block_name}' (ID: {block_id}) - " f"transaction {transaction_id} - " f"status: {response['status']}")
+        logger.info(
+            f"Code update for block '{block_name}' (ID: {block_id}) - "
+            f"transaction {transaction_id} - "
+            f"status: {response['status']}"
+        )
 
         return response
 
@@ -406,7 +423,9 @@ async def validate_code(request: ValidateCodeRequest):
         Validation results with errors, warnings, and suggestions
     """
     with error_context("validating Python code", logger):
-        result = validate_python_code(request.code, request.filename, request.project_path)
+        result = validate_python_code(
+            request.code, request.filename, request.project_path
+        )
         return result
 
 
@@ -452,7 +471,9 @@ async def get_hover_information(request: GetHoverRequest):
         Hover information or null
     """
     with error_context("getting hover information", logger):
-        info = get_hover_info(request.code, request.line, request.column, request.project_path)
+        info = get_hover_info(
+            request.code, request.line, request.column, request.project_path
+        )
         return {"hover": info}
 
 
@@ -476,7 +497,9 @@ async def format_code(request: FormatCodeRequest):
 
         with error_context("formatting code with Black", logger):
             # Format the code
-            formatted = black.format_str(request.code, mode=black.Mode(line_length=request.line_length))
+            formatted = black.format_str(
+                request.code, mode=black.Mode(line_length=request.line_length)
+            )
 
         return {"formatted": formatted, "changed": formatted != request.code}
     except black.InvalidInput as e:
@@ -523,7 +546,9 @@ async def regenerate_block_venv(request: RegenerateVenvRequest):
     ) as request_id:
         # Regenerate venv
         with error_context("regenerating virtual environment", logger):
-            result = regenerate_venv(request.block_path, request.dependencies, request.python_version)
+            result = regenerate_venv(
+                request.block_path, request.dependencies, request.python_version
+            )
 
         # Broadcast completion or error based on result
         if result["success"]:

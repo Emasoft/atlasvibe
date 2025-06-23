@@ -72,13 +72,17 @@ def ONNX_MODEL(
 
     # Validate file_path is a string
     if not isinstance(file_path, str):
-        raise TypeError(f"Expected string for file_path, got {type(file_path).__name__}")
+        raise TypeError(
+            f"Expected string for file_path, got {type(file_path).__name__}"
+        )
 
     model_name = os.path.basename(file_path)
 
     if file_path.startswith("http://") or file_path.startswith("https://"):
         # Downloading the ONNX model from a URL to ATLASVIBE_CACHE_DIR.
-        onnx_model_zoo_cache = os.path.join(ATLASVIBE_CACHE_DIR, "cache", "onnx", "model_zoo")
+        onnx_model_zoo_cache = os.path.join(
+            ATLASVIBE_CACHE_DIR, "cache", "onnx", "model_zoo"
+        )
 
         os.makedirs(onnx_model_zoo_cache, exist_ok=True)
 

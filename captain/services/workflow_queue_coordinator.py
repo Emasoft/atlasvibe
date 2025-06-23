@@ -118,7 +118,9 @@ class WorkflowQueueCoordinator:
         self._current_topology = topology
         self._stats["topology_updates"] += 1
 
-        logger.info(f"Topology updated: {topology.job_id} with {len(topology.graph['nodes'])} nodes")
+        logger.info(
+            f"Topology updated: {topology.job_id} with {len(topology.graph['nodes'])} nodes"
+        )
 
         # Broadcast topology update
         asyncio.create_task(
@@ -145,7 +147,9 @@ class WorkflowQueueCoordinator:
         # Add project path if we have a topology
         if self._current_topology and "project_path" not in change.get("data", {}):
             change["data"] = change.get("data", {})
-            change["data"]["project_path"] = getattr(self._current_topology, "project_path", None)
+            change["data"]["project_path"] = getattr(
+                self._current_topology, "project_path", None
+            )
 
         # Enqueue to WCQ
         change_id = await self.wcq.enqueue(change)
@@ -190,7 +194,9 @@ class WorkflowQueueCoordinator:
 
             self._pending_execution = False
 
-            logger.info(f"Starting workflow execution for job {self._current_topology.job_id}")
+            logger.info(
+                f"Starting workflow execution for job {self._current_topology.job_id}"
+            )
 
             # Broadcast execution trigger
             await self._broadcast_status(
@@ -280,7 +286,9 @@ class WorkflowQueueCoordinator:
 
     async def regenerate_manifest(self, block_id: str) -> str:
         """Regenerate block manifest."""
-        return await self.enqueue_change({"type": ChangeType.MANIFEST_REGEN.value, "block_id": block_id, "data": {}})
+        return await self.enqueue_change(
+            {"type": ChangeType.MANIFEST_REGEN.value, "block_id": block_id, "data": {}}
+        )
 
     async def update_metadata(self, block_id: str, metadata: Dict[str, Any]) -> str:
         """Update block metadata."""
@@ -302,7 +310,9 @@ class WorkflowQueueCoordinator:
             }
         )
 
-    async def update_connections(self, block_id: str, connections: Dict[str, Any]) -> str:
+    async def update_connections(
+        self, block_id: str, connections: Dict[str, Any]
+    ) -> str:
         """Update block connections."""
         return await self.enqueue_change(
             {

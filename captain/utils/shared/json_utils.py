@@ -88,7 +88,9 @@ def save_json_file(
 
         if atomic:
             # Write to temporary file first, then rename (atomic operation)
-            with tempfile.NamedTemporaryFile(mode="w", encoding=encoding, dir=file_path.parent, delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding=encoding, dir=file_path.parent, delete=False
+            ) as tmp_file:
                 tmp_file.write(json_str)
                 tmp_file.write("\n")  # Add trailing newline
                 tmp_path = tmp_file.name
@@ -150,7 +152,9 @@ def update_json_file(
     return save_json_file(file_path, data, encoding=encoding)
 
 
-def merge_json_files(source_files: list[Path | str], target_file: Path | str, encoding: str = "utf-8") -> bool:
+def merge_json_files(
+    source_files: list[Path | str], target_file: Path | str, encoding: str = "utf-8"
+) -> bool:
     """
     Merge multiple JSON files into one.
 

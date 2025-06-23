@@ -20,7 +20,9 @@ class HardwareDevice(ABC):
 
     def __init__(self, id: int | str) -> None:
         if id == "":
-            raise ValueError("No device selected, please select one using the parameter menu.")
+            raise ValueError(
+                "No device selected, please select one using the parameter menu."
+            )
         self._id = id
 
     def get_id(self) -> str | int:
@@ -71,32 +73,48 @@ class NIDevice(HardwareDevice):
 
 
 class CameraConnection(HardwareConnection):
-    def __init__(self, handle: Any, cleanup: Callable[[Any], Any] | None = None) -> None:
-        super().__init__(handle, (lambda conn: conn.release()) if cleanup is None else cleanup)
+    def __init__(
+        self, handle: Any, cleanup: Callable[[Any], Any] | None = None
+    ) -> None:
+        super().__init__(
+            handle, (lambda conn: conn.release()) if cleanup is None else cleanup
+        )
 
     def __del__(self):
         self._cleanup(self._handle)
 
 
 class SerialConnection(HardwareConnection):
-    def __init__(self, handle: Any, cleanup: Callable[[Any], Any] | None = None) -> None:
-        super().__init__(handle, (lambda conn: conn.close()) if cleanup is None else cleanup)
+    def __init__(
+        self, handle: Any, cleanup: Callable[[Any], Any] | None = None
+    ) -> None:
+        super().__init__(
+            handle, (lambda conn: conn.close()) if cleanup is None else cleanup
+        )
 
     def __del__(self):
         self._cleanup(self._handle)
 
 
 class VisaConnection(HardwareConnection):
-    def __init__(self, handle: Any, cleanup: Callable[[Any], Any] | None = None) -> None:
-        super().__init__(handle, (lambda conn: conn.close()) if cleanup is None else cleanup)
+    def __init__(
+        self, handle: Any, cleanup: Callable[[Any], Any] | None = None
+    ) -> None:
+        super().__init__(
+            handle, (lambda conn: conn.close()) if cleanup is None else cleanup
+        )
 
     def __del__(self):
         self._cleanup(self._handle)
 
 
 class NIConnection(HardwareConnection):
-    def __init__(self, handle: Any, cleanup: Callable[[Any], Any] | None = None) -> None:
-        super().__init__(handle, (lambda conn: conn.close()) if cleanup is None else cleanup)
+    def __init__(
+        self, handle: Any, cleanup: Callable[[Any], Any] | None = None
+    ) -> None:
+        super().__init__(
+            handle, (lambda conn: conn.close()) if cleanup is None else cleanup
+        )
 
     def __del__(self):
         self._cleanup(self._handle)
@@ -184,7 +202,9 @@ def format_param_value(value: Any, value_type: str):
         case "Secret":
             return Secret(value)
         case "CameraDevice" | "CameraConnection":
-            return CameraDevice(int(value)) if value.isnumeric() else CameraDevice(value)
+            return (
+                CameraDevice(int(value)) if value.isnumeric() else CameraDevice(value)
+            )
         case "SerialDevice" | "SerialConnection":
             return SerialDevice(value)
         case "VisaDevice" | "VisaConnection":
@@ -216,7 +236,9 @@ def format_param_value(value: Any, value_type: str):
             return value
 
 
-def parse_array(str_value: str, type_list: list[Any], param_type: str) -> list[Union[int, float, str]]:
+def parse_array(
+    str_value: str, type_list: list[Any], param_type: str
+) -> list[Union[int, float, str]]:
     if not str_value:
         return []
 
@@ -228,4 +250,7 @@ def parse_array(str_value: str, type_list: list[Any], param_type: str) -> list[U
         except ValueError:
             continue
 
-    raise ValueError(f"Couldn't parse list items with type {','.join([str(t) for t in type_list])}." + f"Value should be comma (',') separated {' | '.join([t.__name__ for t in type_list])} for parameter type {param_type}.")
+    raise ValueError(
+        f"Couldn't parse list items with type {','.join([str(t) for t in type_list])}."
+        + f"Value should be comma (',') separated {' | '.join([t.__name__ for t in type_list])} for parameter type {param_type}."
+    )

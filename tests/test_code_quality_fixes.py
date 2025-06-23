@@ -41,7 +41,9 @@ class TestFileHeaders:
             if file_path.exists():
                 content = file_path.read_text()
                 first_line = content.split("\n")[0]
-                assert first_line == "#!/usr/bin/env python3", f"File {file_path} missing proper shebang line"
+                assert first_line == "#!/usr/bin/env python3", (
+                    f"File {file_path} missing proper shebang line"
+                )
 
     def test_python_files_have_encoding(self):
         """Test that Python files have UTF-8 encoding specification."""
@@ -56,8 +58,12 @@ class TestFileHeaders:
                         encoding_line = lines[i]
                         break
 
-                assert encoding_line is not None, f"File {file_path} missing UTF-8 encoding specification"
-                assert "# -*- coding: utf-8 -*-" in encoding_line, f"File {file_path} has incorrect encoding format"
+                assert encoding_line is not None, (
+                    f"File {file_path} missing UTF-8 encoding specification"
+                )
+                assert "# -*- coding: utf-8 -*-" in encoding_line, (
+                    f"File {file_path} has incorrect encoding format"
+                )
 
 
 class TestTypeAnnotations:
@@ -65,7 +71,9 @@ class TestTypeAnnotations:
 
     def test_docstring_utils_type_annotations(self):
         """Test that docstring_utils.py has proper type annotations."""
-        file_path = Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        file_path = (
+            Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        )
 
         if not file_path.exists():
             pytest.skip("docstring_utils.py not found")
@@ -77,7 +85,10 @@ class TestTypeAnnotations:
         # Find the create_docstring_json function
         create_json_func = None
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name == "create_docstring_json":
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name == "create_docstring_json"
+            ):
                 create_json_func = node
                 break
 
@@ -96,7 +107,9 @@ class TestTypeAnnotations:
 
     def test_no_bare_any_types(self):
         """Test that we don't use bare Any types where specific types are possible."""
-        file_path = Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        file_path = (
+            Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        )
 
         if not file_path.exists():
             pytest.skip("docstring_utils.py not found")
@@ -120,7 +133,10 @@ class TestConstants:
         """Test that constants are used instead of hardcoded strings."""
         files_to_check = [
             Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py",
-            Path(__file__).parent.parent / "captain" / "utils" / "block_metadata_generator.py",
+            Path(__file__).parent.parent
+            / "captain"
+            / "utils"
+            / "block_metadata_generator.py",
         ]
 
         for file_path in files_to_check:
@@ -128,18 +144,26 @@ class TestConstants:
                 content = file_path.read_text()
 
                 # Check that constants are imported instead of hardcoded strings
-                assert "from captain.utils.constants import" in content, f"File {file_path} should import constants"
+                assert "from captain.utils.constants import" in content, (
+                    f"File {file_path} should import constants"
+                )
 
                 # Verify no hardcoded metadata file names remain
                 hardcoded_block_data = len(re.findall(r'"block_data\.json"', content))
                 hardcoded_app_json = len(re.findall(r'"app\.json"', content))
 
-                assert hardcoded_block_data == 0, f"File {file_path} still contains hardcoded 'block_data.json' strings"
-                assert hardcoded_app_json == 0, f"File {file_path} still contains hardcoded 'app.json' strings"
+                assert hardcoded_block_data == 0, (
+                    f"File {file_path} still contains hardcoded 'block_data.json' strings"
+                )
+                assert hardcoded_app_json == 0, (
+                    f"File {file_path} still contains hardcoded 'app.json' strings"
+                )
 
     def test_docstring_key_consistency(self):
         """Test that constants are used instead of hardcoded strings."""
-        file_path = Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        file_path = (
+            Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        )
 
         if not file_path.exists():
             pytest.skip("docstring_utils.py not found")
@@ -147,16 +171,22 @@ class TestConstants:
         content = file_path.read_text()
 
         # Check that constants are imported and used instead of hardcoded strings
-        assert "from captain.utils.constants import" in content, "Constants should be imported"
+        assert "from captain.utils.constants import" in content, (
+            "Constants should be imported"
+        )
         assert "DOCSTRING_KEY" in content, "DOCSTRING_KEY constant should be used"
 
         # Check for potential typos or variations
         variations = re.findall(r'"doc_string"|"doc-string"|"docString"', content)
-        assert len(variations) == 0, f"Found inconsistent docstring key variations: {variations}"
+        assert len(variations) == 0, (
+            f"Found inconsistent docstring key variations: {variations}"
+        )
 
         # Check that we're not using hardcoded strings where constants should be used
         hardcoded_docstring = re.findall(r'return \{"docstring":', content)
-        assert len(hardcoded_docstring) == 0, "Should use DOCSTRING_KEY constant instead of hardcoded string"
+        assert len(hardcoded_docstring) == 0, (
+            "Should use DOCSTRING_KEY constant instead of hardcoded string"
+        )
 
 
 class TestCodeConsistency:
@@ -164,7 +194,9 @@ class TestCodeConsistency:
 
     def test_error_handling_consistency(self):
         """Test that error handling follows consistent patterns."""
-        file_path = Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        file_path = (
+            Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        )
 
         if not file_path.exists():
             pytest.skip("docstring_utils.py not found")
@@ -173,7 +205,9 @@ class TestCodeConsistency:
 
         # Check that specific exceptions are caught, not bare except
         bare_excepts = re.findall(r"except:", content)
-        assert len(bare_excepts) == 0, "Found bare except clauses - should use specific exceptions"
+        assert len(bare_excepts) == 0, (
+            "Found bare except clauses - should use specific exceptions"
+        )
 
         # Check that we have specific exception handling
         specific_excepts = re.findall(r"except \w+Error", content)
@@ -185,7 +219,9 @@ class TestCodeConsistency:
 
     def test_import_organization(self):
         """Test that imports are properly organized."""
-        file_path = Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        file_path = (
+            Path(__file__).parent.parent / "captain" / "utils" / "docstring_utils.py"
+        )
 
         if not file_path.exists():
             pytest.skip("docstring_utils.py not found")
@@ -207,7 +243,10 @@ class TestCodeConsistency:
 
         # Check that imports are grouped properly (stdlib, third-party, local)
         # This is a simplified check
-        has_stdlib = any("import ast" in line[1] or "import logging" in line[1] for line in import_lines)
+        has_stdlib = any(
+            "import ast" in line[1] or "import logging" in line[1]
+            for line in import_lines
+        )
         has_third_party = any("docstring_parser" in line[1] for line in import_lines)
 
         assert has_stdlib or has_third_party, "Should have proper import organization"

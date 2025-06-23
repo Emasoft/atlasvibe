@@ -6,7 +6,9 @@ from pkgs.atlasvibe.atlasvibe.atlasvibe_python import DefaultParams
 def test_PID(mock_atlasvibe_decorator):
     import PID
 
-    default = DefaultParams(node_id="PID", job_id="0", jobset_id="0", node_type="default")
+    default = DefaultParams(
+        node_id="PID", job_id="0", jobset_id="0", node_type="default"
+    )
 
     # x = np.linspace(0.0, 10.0, 1000)
     # y = np.linspace(2.0, 2.0, 1000)

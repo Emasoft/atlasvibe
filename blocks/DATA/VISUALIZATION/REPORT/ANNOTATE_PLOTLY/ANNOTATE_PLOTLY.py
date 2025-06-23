@@ -43,7 +43,9 @@ def ANNOTATE_PLOTLY(
                 fig["data"][i]["marker"]["color"] = ATLASVIBE_COLORS[i]
 
     fig["layout"]["title"] = {"text": title, "font": {"color": "rgba(0,0,0,0)"}}
-    fig["layout"]["annotations"] = [{"text": caption, "showarrow": False, "visible": False}]
+    fig["layout"]["annotations"] = [
+        {"text": caption, "showarrow": False, "visible": False}
+    ]
 
     # 3d only
     if "scene" in fig["layout"]:

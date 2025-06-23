@@ -26,9 +26,13 @@ def test_APPEND():
     # create the two ordered pair datacontainers
     import APPEND
 
-    element_a = DataContainer(type="OrderedPair", x=numpy.linspace(0, 10, 10), y=numpy.linspace(0, 10, 10))
+    element_a = DataContainer(
+        type="OrderedPair", x=numpy.linspace(0, 10, 10), y=numpy.linspace(0, 10, 10)
+    )
 
-    element_b = DataContainer(type="OrderedPair", x=numpy.linspace(11, 12, 1), y=numpy.linspace(11, 12, 1))
+    element_b = DataContainer(
+        type="OrderedPair", x=numpy.linspace(11, 12, 1), y=numpy.linspace(11, 12, 1)
+    )
 
     # node under test
     res = APPEND.APPEND([element_a, element_b], {})

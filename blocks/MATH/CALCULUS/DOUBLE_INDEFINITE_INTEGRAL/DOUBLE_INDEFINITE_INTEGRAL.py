@@ -14,11 +14,15 @@ import numpy as np
 def contains_only_numbers(column, colName):
     for i in range(0, len(column)):
         if not isinstance(column.item(i), (int, float)):
-            raise ValueError(f"The value {column.item(i)} in column {colName} is of type {type(column.item(i))}. The OrderedTriple need to contain only int or float values.")
+            raise ValueError(
+                f"The value {column.item(i)} in column {colName} is of type {type(column.item(i))}. The OrderedTriple need to contain only int or float values."
+            )
 
 
 @atlasvibe
-def DOUBLE_INDEFINITE_INTEGRAL(default: OrderedTriple, width: int = 3, height: int = 3) -> Matrix:
+def DOUBLE_INDEFINITE_INTEGRAL(
+    default: OrderedTriple, width: int = 3, height: int = 3
+) -> Matrix:
     """Compute the indefinite integral of an OrderedTriple (x,y,z).
 
     The width and height parameters represent the number of columns and rows, respectively, that the x, y, and z reshaped matrices will have.
@@ -53,14 +57,25 @@ def DOUBLE_INDEFINITE_INTEGRAL(default: OrderedTriple, width: int = 3, height: i
         input_y = np.reshape(default.y, (height, width))
         input_z = np.reshape(default.z, (height, width))
     else:
-        raise ArithmeticError(f"Cannot reshape size {len(default.x)} in a matrix of {width} by {height}. Please enter appropriate width and height.")
+        raise ArithmeticError(
+            f"Cannot reshape size {len(default.x)} in a matrix of {width} by {height}. Please enter appropriate width and height."
+        )
 
     integrate = np.zeros_like(input_x)
 
     for i in range(1, len(input_x)):
         for j in range(1, width):
-            cal = (input_x[i][j] - input_x[i][j - 1]) * (input_y[i][j] - input_y[i - 1][j]) / 4
-            result = cal * (input_z[i - 1][j - 1] + input_z[i][j - 1] + input_z[i - 1][j] + input_z[i][j])
+            cal = (
+                (input_x[i][j] - input_x[i][j - 1])
+                * (input_y[i][j] - input_y[i - 1][j])
+                / 4
+            )
+            result = cal * (
+                input_z[i - 1][j - 1]
+                + input_z[i][j - 1]
+                + input_z[i - 1][j]
+                + input_z[i][j]
+            )
             integrate[i][j] = result
 
     result = np.copy(integrate)
@@ -72,6 +87,11 @@ def DOUBLE_INDEFINITE_INTEGRAL(default: OrderedTriple, width: int = 3, height: i
             elif j == 1:
                 result[i][j] = result[i - 1][j] + result[i][j]
             else:
-                result[i][j] = result[i][j - 1] + result[i - 1][j] + result[i][j] - result[i - 1][j - 1]
+                result[i][j] = (
+                    result[i][j - 1]
+                    + result[i - 1][j]
+                    + result[i][j]
+                    - result[i - 1][j - 1]
+                )
 
     return Matrix(m=result)

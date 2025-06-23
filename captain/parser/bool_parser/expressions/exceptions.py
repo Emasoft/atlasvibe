@@ -57,4 +57,6 @@ class InvalidIdentifier(Exception):
 
 class EarlyIdentifier(Exception):
     def __init__(self, message=""):
-        self.message = f"Unable to access test result for {message} as it's executed afterward"
+        self.message = (
+            f"Unable to access test result for {message} as it's executed afterward"
+        )

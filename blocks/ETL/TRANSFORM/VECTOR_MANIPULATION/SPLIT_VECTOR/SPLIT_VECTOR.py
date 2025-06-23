@@ -41,4 +41,6 @@ def SPLIT_VECTOR(
     if index > len(default.v) - 1:
         raise ValueError(f"Given index is larger than the input vector, index: {index}")
 
-    return resultSplit(vector1=Vector(default.v[:index]), vector2=Vector(default.v[index:]))
+    return resultSplit(
+        vector1=Vector(default.v[:index]), vector2=Vector(default.v[index:])
+    )

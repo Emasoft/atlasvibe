@@ -41,7 +41,9 @@ def generate_docstring_json() -> bool:
             func_node, docstring = parse_python_file(file_path, block_name)
 
             if not func_node:
-                print(f"{ERR_STRING} Could not find the {block_name} function in {block_name}.py! Please make sure there is a function called {block_name}.")
+                print(
+                    f"{ERR_STRING} Could not find the {block_name} function in {block_name}.py! Please make sure there is a function called {block_name}."
+                )
                 continue
 
             if not docstring:
@@ -69,9 +71,14 @@ def generate_docstring_json() -> bool:
                 error += 1
 
             # Build the JSON data using shared utility
-            docstring_json_data = create_docstring_json(parsed_docstring, include_empty_fields=False)
+            docstring_json_data = create_docstring_json(
+                parsed_docstring, include_empty_fields=False
+            )
             # Remove the "docstring" key since we'll wrap it later
-            if isinstance(docstring_json_data, dict) and "docstring" in docstring_json_data:
+            if (
+                isinstance(docstring_json_data, dict)
+                and "docstring" in docstring_json_data
+            ):
                 docstring_json_data = docstring_json_data["docstring"]
 
             # Write the data to a JSON file in the same directory

@@ -116,7 +116,9 @@ def sanitize_error_details(error: Exception) -> str:
     error_type = type(error).__name__
 
     # Return specific message if available, otherwise generic
-    return safe_messages.get(error_type, "An internal error occurred. Please check logs for details.")
+    return safe_messages.get(
+        error_type, "An internal error occurred. Please check logs for details."
+    )
 
 
 def fastapi_error_handler(
@@ -179,9 +181,14 @@ def fastapi_error_handler(
                 if log_duration:
                     duration = time.time() - start_time
                     if duration > slow_threshold:
-                        logger.warning(f"[{request_id}] Slow operation detected: {operation} " f"took {duration:.2f}s (threshold: {slow_threshold}s)")
+                        logger.warning(
+                            f"[{request_id}] Slow operation detected: {operation} "
+                            f"took {duration:.2f}s (threshold: {slow_threshold}s)"
+                        )
                     else:
-                        logger.debug(f"[{request_id}] {operation} completed in {duration:.2f}s")
+                        logger.debug(
+                            f"[{request_id}] {operation} completed in {duration:.2f}s"
+                        )
 
                 return result
 
@@ -229,9 +236,14 @@ def fastapi_error_handler(
                 if log_duration:
                     duration = time.time() - start_time
                     if duration > slow_threshold:
-                        logger.warning(f"[{request_id}] Slow operation detected: {operation} " f"took {duration:.2f}s (threshold: {slow_threshold}s)")
+                        logger.warning(
+                            f"[{request_id}] Slow operation detected: {operation} "
+                            f"took {duration:.2f}s (threshold: {slow_threshold}s)"
+                        )
                     else:
-                        logger.debug(f"[{request_id}] {operation} completed in {duration:.2f}s")
+                        logger.debug(
+                            f"[{request_id}] {operation} completed in {duration:.2f}s"
+                        )
 
                 return result
 
@@ -331,7 +343,9 @@ class ErrorAccumulator(BaseErrorAccumulator):
 
         error_details = []
         for context, error in self.errors:
-            error_details.append({"context": context, "error": str(error), "type": type(error).__name__})
+            error_details.append(
+                {"context": context, "error": str(error), "type": type(error).__name__}
+            )
 
         return JSONResponse(
             status_code=status_code,
@@ -411,7 +425,9 @@ async def managed_operation(
                 }
             )
 
-        logger.info(f"[{request_id}] Completed {operation} in {time.time() - start_time:.2f}s")
+        logger.info(
+            f"[{request_id}] Completed {operation} in {time.time() - start_time:.2f}s"
+        )
 
     except Exception as e:
         # Broadcast error event if requested

@@ -36,7 +36,9 @@ async def websocket_endpoint(websocket: WebSocket, socket_id: str):
                 }
             )
         )
-        logger.info("AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help.")
+        logger.info(
+            "AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help."
+        )
 
         # await for messages and send messages (no need to read from frontend, this is used to keep connection alive)
         while True:

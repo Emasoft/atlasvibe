@@ -119,7 +119,9 @@ class TestUpdateBlockCodeUnit:
     @patch("captain.routes.blocks.Path")
     @patch("captain.routes.blocks.create_manifest")
     @patch("captain.routes.blocks.regenerate_block_data_json")
-    def test_update_block_code_flow(self, mock_regenerate, mock_create_manifest, mock_path_class):
+    def test_update_block_code_flow(
+        self, mock_regenerate, mock_create_manifest, mock_path_class
+    ):
         """Test the complete flow of update_block_code."""
         # Mock setup
         mock_path = MagicMock()
@@ -138,7 +140,9 @@ class TestUpdateBlockCodeUnit:
 
         # Validation checks
         if "atlasvibe_blocks" not in block_path:
-            raise HTTPException(status_code=403, detail="Can only edit custom project blocks")
+            raise HTTPException(
+                status_code=403, detail="Can only edit custom project blocks"
+            )
 
         if not project_path.endswith(".atlasvibe"):
             raise HTTPException(status_code=422, detail="Invalid project path")
@@ -163,7 +167,9 @@ class TestUpdateBlockCodeUnit:
             if not manifest:
                 # Rollback
                 mock_path.write_text(original_content)
-                raise HTTPException(status_code=500, detail="Failed to regenerate manifest")
+                raise HTTPException(
+                    status_code=500, detail="Failed to regenerate manifest"
+                )
 
             manifest["path"] = str(mock_path.parent)
 

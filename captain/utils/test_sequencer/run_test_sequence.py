@@ -55,7 +55,9 @@ def validate_test_path(path: str) -> str:
 
     # Check for suspicious patterns
     path_str = str(test_path)
-    if any(dangerous in path_str for dangerous in ["/etc/", "/root/", "/proc/", "/sys/"]):
+    if any(
+        dangerous in path_str for dangerous in ["/etc/", "/root/", "/proc/", "/sys/"]
+    ):
         raise ValueError(f"Path contains potentially dangerous location: {test_path}")
 
     # Ensure the file has a valid extension for tests
@@ -106,9 +108,13 @@ Extract = tuple[
 def _with_stream_test_result(func: Callable[[TestNode], Extract]):
     # TODO: support run in parallel feature
     async def wrapper(node: TestNode) -> Extract:
-        await _stream_result_to_frontend(MsgState.running, test_id=node.id, result=StatusTypes.pending)
+        await _stream_result_to_frontend(
+            MsgState.running, test_id=node.id, result=StatusTypes.pending
+        )
         test_sequencer._set_output_loc(node.id, rm_existing_data=True)
-        logging.info(f"Running test {node.id} - min: {node.min_value} | max: {node.max_value}")
+        logging.info(
+            f"Running test {node.id} - min: {node.min_value} | max: {node.max_value}"
+        )
         test_sequencer._set_min_max(node.min_value, node.max_value)
         children_getter, test_result = func(node)
         measured_value = test_sequencer._get_most_recent_data(node.id)
@@ -122,7 +128,9 @@ def _with_stream_test_result(func: Callable[[TestNode], Extract]):
                 time_taken=test_result.time_taken,  # TODO result, time_taken should be together
                 created_at=test_result.created_at,
                 error=test_result.error,
-                value=float(measured_value) if isinstance(measured_value, float) or isinstance(measured_value, int) else None,
+                value=float(measured_value)
+                if isinstance(measured_value, float) or isinstance(measured_value, int)
+                else None,
             )
         return children_getter, test_result
 
@@ -144,13 +152,17 @@ def _run_python(node: TestNode) -> Extract:
         # Validate the path before running
         validated_path = validate_test_path(node.path)
         logger.info(f"[Python Runner] Running {validated_path}")
-        result = subprocess.run(["python", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(
+            ["python", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         logger.info(f"[Python Runner] Running {result}")
         end_time = time.time()
         if result.returncode == 0:
             is_pass = True
         else:
-            logger.info(f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}")
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
             is_pass = False
         return (
             lambda _: None,
@@ -190,13 +202,17 @@ def _run_pytest(node: TestNode) -> Extract:
     try:
         # Validate the path before running
         validated_path = validate_test_path(node.path)
-        result = subprocess.run(["pytest", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(
+            ["pytest", validated_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         end_time = time.time()
 
         if result.returncode == 0:
             is_pass = True
         else:
-            logger.info(f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}")
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
             is_pass = False
         return (
             lambda _: None,
@@ -266,7 +282,10 @@ def _run_robotframework(node: TestNode) -> Extract:
             safe_args = []
             for arg in node.args:
                 # Skip args that could be dangerous
-                if not any(danger in str(arg) for danger in ["..", ";", "|", "&", ">", "<", "`", "$"]):
+                if not any(
+                    danger in str(arg)
+                    for danger in ["..", ";", "|", "&", ">", "<", "`", "$"]
+                ):
                     safe_args.append(arg)
                 else:
                     logger.warning(f"Skipping potentially dangerous argument: {arg}")
@@ -280,7 +299,9 @@ def _run_robotframework(node: TestNode) -> Extract:
         if result.returncode == 0:
             is_pass = True
         else:
-            logger.info(f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}")
+            logger.info(
+                f"TEST {validated_path} FAILED:\nSTDOUT: {result.stdout.decode()}\nSTDERR: {result.stderr.decode()}"
+            )
             is_pass = False
         return (
             lambda _: None,
@@ -307,7 +328,9 @@ def _run_robotframework(node: TestNode) -> Extract:
         )
 
 
-def _eval_condition(result_dict: dict[str, TestResult], condition: str, identifiers: set[str]):
+def _eval_condition(
+    result_dict: dict[str, TestResult], condition: str, identifiers: set[str]
+):
     """
     evaluates condition expression.
     returns true or false
@@ -396,7 +419,9 @@ map_to_handler_run = (
 )
 
 
-async def _extract_from_node(node: TestRootNode | TestSequenceElementNode, map_to_handler) -> Extract:
+async def _extract_from_node(
+    node: TestRootNode | TestSequenceElementNode, map_to_handler
+) -> Extract:
     if not bool(node.__dict__):
         return lambda _: None, None
     matcher, cur = map_to_handler
@@ -417,7 +442,9 @@ async def run_test_sequence(data, ts_manager: TSManager):
             if isinstance(node, TestNode):
                 await ts_manager.wait_if_paused(node.id)
 
-            children_getter, test_result = await _extract_from_node(node, map_to_handler_run)
+            children_getter, test_result = await _extract_from_node(
+                node, map_to_handler_run
+            )
 
             if test_result:
                 context.result_dict[test_result.test_node.test_name] = test_result

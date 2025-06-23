@@ -146,7 +146,9 @@ class WatchManager(object):
 
         logger.info("Starting thread for startup event")
         self.thread_event = threading.Event()
-        thread = threading.Thread(target=lambda: asyncio.run(run_services(self.thread_event)))
+        thread = threading.Thread(
+            target=lambda: asyncio.run(run_services(self.thread_event))
+        )
         thread.daemon = True
         self.watch_thread = thread
         self.is_thread_running = False

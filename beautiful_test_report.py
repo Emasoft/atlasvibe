@@ -32,7 +32,11 @@ class TestDocstringExtractor(ast.NodeVisitor):
             # Check for @pytest.mark.slow decorator
             for decorator in node.decorator_list:
                 if isinstance(decorator, ast.Attribute):
-                    if isinstance(decorator.value, ast.Attribute) and decorator.value.attr == "mark" and decorator.attr == "slow":
+                    if (
+                        isinstance(decorator.value, ast.Attribute)
+                        and decorator.value.attr == "mark"
+                        and decorator.attr == "slow"
+                    ):
                         self.slow_tests.add(node.name)
                 elif isinstance(decorator, ast.Name) and decorator.id == "slow":
                     self.slow_tests.add(node.name)
@@ -104,12 +108,18 @@ def run_tests_and_parse_output():
             report = json.load(f)
 
         for test in report.get("tests", []):
-            test_name = test["nodeid"].split("::")[-1] if "::" in test["nodeid"] else test["nodeid"]
+            test_name = (
+                test["nodeid"].split("::")[-1]
+                if "::" in test["nodeid"]
+                else test["nodeid"]
+            )
             test_results.append(
                 {
                     "name": test_name,
                     "status": test["outcome"].upper(),
-                    "file": test["nodeid"].split("::")[0] if "::" in test["nodeid"] else test["nodeid"],
+                    "file": test["nodeid"].split("::")[0]
+                    if "::" in test["nodeid"]
+                    else test["nodeid"],
                 }
             )
 
@@ -191,13 +201,29 @@ def format_beautiful_table(test_data, descriptions, slow_tests):
     lines = []
 
     # Top border
-    lines.append(TOP_LEFT + HORIZONTAL * col_widths[0] + T_DOWN + HORIZONTAL * col_widths[1] + T_DOWN + HORIZONTAL * col_widths[2] + TOP_RIGHT)
+    lines.append(
+        TOP_LEFT
+        + HORIZONTAL * col_widths[0]
+        + T_DOWN
+        + HORIZONTAL * col_widths[1]
+        + T_DOWN
+        + HORIZONTAL * col_widths[2]
+        + TOP_RIGHT
+    )
 
     # Header
     lines.append(format_row("Test Function", "Description", "Status", is_header=True))
 
     # Header separator
-    lines.append(T_RIGHT + HORIZONTAL * col_widths[0] + CROSS + HORIZONTAL * col_widths[1] + CROSS + HORIZONTAL * col_widths[2] + T_LEFT)
+    lines.append(
+        T_RIGHT
+        + HORIZONTAL * col_widths[0]
+        + CROSS
+        + HORIZONTAL * col_widths[1]
+        + CROSS
+        + HORIZONTAL * col_widths[2]
+        + T_LEFT
+    )
 
     # Group tests by status
     grouped = defaultdict(list)
@@ -213,10 +239,20 @@ def format_beautiful_table(test_data, descriptions, slow_tests):
             for test in sorted(grouped[status], key=lambda x: x["name"]):
                 desc = descriptions.get(test["name"], "No description available")
                 is_slow = test["name"] in slow_tests
-                lines.append(format_row(test["name"], desc, test["status"], is_slow=is_slow))
+                lines.append(
+                    format_row(test["name"], desc, test["status"], is_slow=is_slow)
+                )
 
     # Bottom border
-    lines.append(BOTTOM_LEFT + HORIZONTAL * col_widths[0] + T_UP + HORIZONTAL * col_widths[1] + T_UP + HORIZONTAL * col_widths[2] + BOTTOM_RIGHT)
+    lines.append(
+        BOTTOM_LEFT
+        + HORIZONTAL * col_widths[0]
+        + T_UP
+        + HORIZONTAL * col_widths[1]
+        + T_UP
+        + HORIZONTAL * col_widths[2]
+        + BOTTOM_RIGHT
+    )
 
     return "\n".join(lines)
 
@@ -237,8 +273,12 @@ def generate_summary(test_data):
     for status in ["PASSED", "FAILED", "SKIPPED", "ERROR"]:
         if counts[status] > 0:
             percentage = (counts[status] / total) * 100
-            emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️", "ERROR": "🔥"}.get(status, "❓")
-            lines.append(f"{emoji} {status:<10}: {counts[status]:>4} ({percentage:>5.1f}%)")
+            emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️", "ERROR": "🔥"}.get(
+                status, "❓"
+            )
+            lines.append(
+                f"{emoji} {status:<10}: {counts[status]:>4} ({percentage:>5.1f}%)"
+            )
 
     lines.append("-" * 140)
     lines.append(f"   {'TOTAL':<10}: {total:>4} (100.0%)")

@@ -52,7 +52,9 @@ def setup_environment() -> None:
             sys.path.insert(0, path)
 
     current_pythonpath = os.environ.get("PYTHONPATH", "")
-    new_pythonpath = ":".join(python_paths + [current_pythonpath] if current_pythonpath else python_paths)
+    new_pythonpath = ":".join(
+        python_paths + [current_pythonpath] if current_pythonpath else python_paths
+    )
     os.environ["PYTHONPATH"] = new_pythonpath
 
 
@@ -120,7 +122,9 @@ def ui(dev: bool):
         electron_path = app_dir / "electron"
 
         if platform.system() == "Darwin":
-            app_path = electron_path / "atlasvibe.app" / "Contents" / "MacOS" / "atlasvibe"
+            app_path = (
+                electron_path / "atlasvibe.app" / "Contents" / "MacOS" / "atlasvibe"
+            )
         elif platform.system() == "Windows":
             app_path = electron_path / "atlasvibe.exe"
         else:
@@ -147,7 +151,11 @@ def run():
     app_dir = get_app_dir()
 
     # Start server in a separate thread
-    server_thread = threading.Thread(target=lambda: subprocess.run([sys.executable, str(app_dir / "main.py")], cwd=str(app_dir)))
+    server_thread = threading.Thread(
+        target=lambda: subprocess.run(
+            [sys.executable, str(app_dir / "main.py")], cwd=str(app_dir)
+        )
+    )
     server_thread.daemon = True
     server_thread.start()
 

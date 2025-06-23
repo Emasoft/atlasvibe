@@ -60,7 +60,9 @@ def sync():
         # FIXME: This is a hacky way to keep the intro and overview pages
         keep_files = ["intro.mdx", "tek_overview.mdx"]
 
-        progress.add_task(f"Cleaning the blocks section except all the {keep_files} files.")
+        progress.add_task(
+            f"Cleaning the blocks section except all the {keep_files} files."
+        )
         for root, _, files in os.walk(BLOCKS_DOCS_FOLDER, topdown=False):
             for file in files:
                 if file in keep_files:
@@ -124,7 +126,9 @@ def sync():
                 has_app_json = True
                 if not os.path.exists(os.path.join(root, "app.json")):
                     if current_block_category not in auto_gen_categories:
-                        print(f"{ERR_STRING} No app.json found for {file_name}, please add an app.json to demo this block and don't forget to add some description in example.md!")
+                        print(
+                            f"{ERR_STRING} No app.json found for {file_name}, please add an app.json to demo this block and don't forget to add some description in example.md!"
+                        )
                         has_app_json = False
                         err_count += 1
                         # sys.exit(1)
@@ -136,8 +140,14 @@ def sync():
                 with open(os.path.join(root, "block_data.json"), "r") as f:
                     block_data = json.load(f)
                     description = block_data["docstring"]["short_description"]
-                    videos = [DocsVideo(**video) for video in block_data["videos"]] if "videos" in block_data else None
-                    thumbnail = block_data["thumbnail"] if "thumbnail" in block_data else None
+                    videos = (
+                        [DocsVideo(**video) for video in block_data["videos"]]
+                        if "videos" in block_data
+                        else None
+                    )
+                    thumbnail = (
+                        block_data["thumbnail"] if "thumbnail" in block_data else None
+                    )
 
                 # Keep track of the file tree structure in order to generate
                 # overview pages for all of the top level categories
@@ -153,7 +163,9 @@ def sync():
                 )
 
                 # Create the markdown template file in docs
-                target_md_file = BLOCKS_DOCS_FOLDER + os.path.join(current_block_folder_path + ".mdx")
+                target_md_file = BLOCKS_DOCS_FOLDER + os.path.join(
+                    current_block_folder_path + ".mdx"
+                )
 
                 os.makedirs(os.path.dirname(target_md_file), exist_ok=True)
 
@@ -173,7 +185,10 @@ def sync():
                     if videos:
                         result = result.add_videos(videos)
 
-                    if current_block_category not in auto_gen_categories and has_app_json:
+                    if (
+                        current_block_category not in auto_gen_categories
+                        and has_app_json
+                    ):
                         result = result.add_example_app()
 
                     f.write(result.build())
@@ -211,14 +226,18 @@ def sync():
                     summary = frontmatter.load(summary_path)
                     for fm in required_frontmatters:
                         if fm not in summary:
-                            print(f"{ERR_STRING} frontmatter '{fm}' is missing in summary.md for {top_level_category}")
+                            print(
+                                f"{ERR_STRING} frontmatter '{fm}' is missing in summary.md for {top_level_category}"
+                            )
                             sys.exit(1)
 
                     overview_title = summary["title"]
                     overview_desc = summary["description"]
                     overview_content = summary.content
 
-                task_id = progress.add_task(f"Generating overview for {top_level_category}...")
+                task_id = progress.add_task(
+                    f"Generating overview for {top_level_category}..."
+                )
 
                 overview_page_path = os.path.join(
                     BLOCKS_DOCS_FOLDER,
@@ -237,7 +256,9 @@ def sync():
                                 top_level_category,
                             )
                             .add_content(
-                                _get_nested_dict_value(category_tree, top_level_category),
+                                _get_nested_dict_value(
+                                    category_tree, top_level_category
+                                ),
                             )
                             .build()
                         )
@@ -249,7 +270,9 @@ def sync():
         print("Finished generating all the overview pages.")
 
     if err_count > 0:
-        print(f"{ERR_STRING} {err_count} error(s) found during syncing. Please fix them before syncing again.")
+        print(
+            f"{ERR_STRING} {err_count} error(s) found during syncing. Please fix them before syncing again."
+        )
         sys.exit(1)
 
     print(f"Successfully synced {total_synced_pages} pages!")

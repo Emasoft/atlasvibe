@@ -19,7 +19,9 @@ def test_NP_2_DF_dataframe(mock_atlasvibe_decorator):
     import NP_2_DF
 
     # Case DataFrame
-    df = DataFrame(pd.DataFrame({"hello": [0, 1, 2], "hi": [3, 4, 5], "world": [6, 7, 8]}))
+    df = DataFrame(
+        pd.DataFrame({"hello": [0, 1, 2], "hi": [3, 4, 5], "world": [6, 7, 8]})
+    )
     out = NP_2_DF.NP_2_DF(df)
     assert out == df
 
@@ -42,7 +44,9 @@ def test_NP_2_DF_orderedpair(mock_atlasvibe_decorator):
     assert out.m.equals(pd.DataFrame(ordPair.y))
 
     # Case ParametricOrderedPair
-    param_ordPair = ParametricOrderedPair(x=np.array([0, 1]), y=np.array([2, 3]), t=np.array([[2, 3], [0, 1]]))
+    param_ordPair = ParametricOrderedPair(
+        x=np.array([0, 1]), y=np.array([2, 3]), t=np.array([[2, 3], [0, 1]])
+    )
     param_out = NP_2_DF.NP_2_DF(param_ordPair)
     assert param_out.m.equals(pd.DataFrame(param_ordPair.y))
 
@@ -51,7 +55,9 @@ def test_NP_2_DF_orderedpair(mock_atlasvibe_decorator):
 def test_NP_2_DF_orderedtriple(mock_atlasvibe_decorator):
     import NP_2_DF
 
-    ordTriple = OrderedTriple(x=np.array([0, 1]), y=np.array([2, 3]), z=np.array([4, 5]))
+    ordTriple = OrderedTriple(
+        x=np.array([0, 1]), y=np.array([2, 3]), z=np.array([4, 5])
+    )
     out = NP_2_DF.NP_2_DF(ordTriple)
     assert out.m.equals(pd.DataFrame(ordTriple.z))
 

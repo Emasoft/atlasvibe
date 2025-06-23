@@ -13,7 +13,9 @@ from pkgs.atlasvibe.atlasvibe.parameter_types import Array
 
 
 @atlasvibe
-def REPLACE_SUBSET(default: Vector, indices: Array, values: Array, length: int = 1) -> Vector:
+def REPLACE_SUBSET(
+    default: Vector, indices: Array, values: Array, length: int = 1
+) -> Vector:
     """The REPLACE_SUBSET node returns a new Vector with subset of elements replaced.
 
     Inputs
@@ -43,17 +45,25 @@ def REPLACE_SUBSET(default: Vector, indices: Array, values: Array, length: int =
     # unwrap the values next
     values = array(values.unwrap(), dtype=int)
 
-    assert len(default.v) > len(indices), "The length of indices parameter must be less than the length of the Vector."
+    assert len(default.v) > len(indices), (
+        "The length of indices parameter must be less than the length of the Vector."
+    )
     assert any(indices >= 0), "The indices must be greater than zero."
 
     if len(indices) == 1:
-        assert (indices[0] + (length - 1)) < len(default.v), "The length of items to delete starting from index parameter must not exceed the length of the Vector."
+        assert (indices[0] + (length - 1)) < len(default.v), (
+            "The length of items to delete starting from index parameter must not exceed the length of the Vector."
+        )
 
     if len(indices) > 1:
-        assert len(indices) == len(values), "The number of indices and the number of correpsonding elements must be equal."
+        assert len(indices) == len(values), (
+            "The number of indices and the number of correpsonding elements must be equal."
+        )
         put(default.v, indices, values)
     else:
-        assert length == len(values), "The number of indices and the number of correpsonding elements must be equal."
+        assert length == len(values), (
+            "The number of indices and the number of correpsonding elements must be equal."
+        )
         indices = arange(indices[0], length)
         put(default.v, indices, values)
     return Vector(v=default.v)
