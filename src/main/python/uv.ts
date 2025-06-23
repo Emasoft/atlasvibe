@@ -17,13 +17,13 @@
 // UV package management utilities
 // This replaces the legacy Poetry functionality
 
-import { Command } from "../command";
-import { execCommand } from "../executor";
-import pyproject from "../../../pyproject.toml?raw";
+import { Command } from "@/main/command";
+import { execCommand } from "@/main/executor";
+import pyproject from "@/pyproject.toml?raw";
 import * as TOML from "@iarna/toml";
 import * as fs from "fs";
 import log from "electron-log/main";
-import { DependencyGroupInfo, PythonDependency } from "src/types/dependencies";
+import { DependencyGroupInfo, PythonDependency } from "@/types/dependencies";
 
 interface PyProjectToml {
   project?: {

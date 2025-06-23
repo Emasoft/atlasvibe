@@ -23,15 +23,17 @@ def test_no_cloud_endpoints():
     for endpoint in cloud_endpoints:
         # GET requests should return 404
         response = client.get(endpoint)
-        assert response.status_code in [404, 405], (
-            f"Endpoint {endpoint} still exists with status {response.status_code}"
-        )
+        assert response.status_code in [
+            404,
+            405,
+        ], f"Endpoint {endpoint} still exists with status {response.status_code}"
 
         # POST requests should return 404
         response = client.post(endpoint, json={})
-        assert response.status_code in [404, 405], (
-            f"Endpoint {endpoint} still exists with status {response.status_code}"
-        )
+        assert response.status_code in [
+            404,
+            405,
+        ], f"Endpoint {endpoint} still exists with status {response.status_code}"
 
 
 def test_test_sequencer_works_without_cloud():

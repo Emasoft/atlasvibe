@@ -10,7 +10,7 @@
 
 import Store from "electron-store";
 import os from "os";
-import { User } from "../types/auth";
+import { User } from "@/types/auth";
 
 type TypedStore = {
   uvOptionalGroups: string[];

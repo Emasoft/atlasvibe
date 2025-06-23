@@ -9,11 +9,11 @@
  */
 
 import log from "electron-log/main";
-import { execCommand } from "../executor";
+import { execCommand } from "@/main/executor";
 import { app } from "electron";
-import { Command } from "../command";
+import { Command } from "@/main/command";
 import { ChildProcess, execSync, spawn } from "child_process";
-import { sendToStatusBar } from "../logging";
+import { sendToStatusBar } from "@/main/logging";
 import {
   InterpretersList,
   PythonManager,
@@ -22,7 +22,7 @@ import {
 import * as os from "os";
 import { existsSync, readFileSync } from "fs";
 import { uvGroupEnsureValid } from "./uv";
-import { store } from "../store";
+import { store } from "@/main/store";
 import { join } from "path";
 
 export async function checkPythonInstallation(

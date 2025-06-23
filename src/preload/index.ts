@@ -9,8 +9,8 @@
  */
 
 import { contextBridge, ipcRenderer } from "electron";
-import { API } from "../api/index";
-import { InterpretersList } from "src/main/python/interpreter";
+import { API } from "@/api/index";
+import { InterpretersList } from "@/main/python/interpreter";
 import { BlockDefinition } from "@/renderer/types/manifest";
 
 // Define a type for the extended API
