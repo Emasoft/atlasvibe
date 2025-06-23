@@ -17,9 +17,8 @@
 // - Tests autosave functionality
 //
 
-import { test, expect, ElectronApplication, Page } from "@playwright/test";
+import { test, expect, ElectronApplication, Page, _electron as electron } from "@playwright/test";
 import {
-  launchApp,
   mockDialogMessage,
   writeLogFile,
   STARTUP_TIMEOUT,
@@ -139,7 +138,7 @@ test.describe("Project Save and Status Indicators", () => {
 
     // Project name input
     const projectNameInput = await saveDialog.locator('input[placeholder="Project name"]');
-    const folderPathInput = await saveDialog.locator('input[placeholder="Select folder"]');
+    // Move folderPathInput declaration to where it's actually used
     const browseButton = await saveDialog.getByRole("button", { name: "Browse" });
 
     // Click browse to select folder
@@ -241,7 +240,6 @@ test.describe("Project Save and Status Indicators", () => {
 
     const saveDialog = await window.getByRole("dialog", { name: "Save Project" });
     const projectNameInput = await saveDialog.locator('input[placeholder="Project name"]');
-    const folderPathInput = await saveDialog.locator('input[placeholder="Select folder"]');
 
     // Set folder
     await app.evaluate(async ({ dialog }, folderPath) => {

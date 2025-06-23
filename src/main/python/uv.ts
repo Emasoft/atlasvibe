@@ -31,9 +31,21 @@ interface PyProjectToml {
     "optional-dependencies"?: {
       [key: string]: string[];
     };
-    [key: string]: any;
+    name?: string;
+    version?: string;
+    description?: string;
+    requires?: string[];
   };
-  [key: string]: any;
+  "dependency-groups"?: {
+    [key: string]: string[];
+  };
+  tool?: {
+    [key: string]: unknown;
+  };
+  "build-system"?: {
+    requires?: string[];
+    "build-backend"?: string;
+  };
 }
 
 // UV dependency groups
@@ -97,7 +109,7 @@ export async function uvShowTopLevel(): Promise<PythonDependency[]> {
 export async function uvShowUserGroup(): Promise<PythonDependency[]> {
   // For user group, we'll read from pyproject.toml and check what's installed
   const installed = await uvShowTopLevel();
-  const parsed = TOML.parse(pyproject);
+  const parsed = TOML.parse(pyproject) as PyProjectToml;
 
   if (parsed?.project?.["optional-dependencies"]?.user) {
     const userDeps = parsed.project["optional-dependencies"].user;
@@ -119,7 +131,7 @@ export async function uvShowUserGroup(): Promise<PythonDependency[]> {
 
 export async function uvGetGroupInfo(): Promise<DependencyGroupInfo[]> {
   const installed = await uvShowTopLevel();
-  const parsed = TOML.parse(pyproject);
+  const parsed = TOML.parse(pyproject) as PyProjectToml;
 
   const result: DependencyGroupInfo[] = [];
 
@@ -164,7 +176,7 @@ export async function uvGetInstalledGroups(): Promise<string[]> {
   const pyprojectPath = "pyproject.toml";
   try {
     const content = fs.readFileSync(pyprojectPath, "utf8");
-    const parsed = TOML.parse(content) as any;
+    const parsed = TOML.parse(content) as unknown as PyProjectToml;
 
     // Get all available optional dependency groups
     if (parsed?.project?.["optional-dependencies"]) {
@@ -198,7 +210,7 @@ export async function uvInstallDepUserGroup(name: string): Promise<boolean> {
   const pyprojectPath = "pyproject.toml";
   try {
     const pyprojectContent = fs.readFileSync(pyprojectPath, "utf8");
-    const parsed = TOML.parse(pyprojectContent) as PyProjectToml;
+    const parsed = TOML.parse(pyprojectContent) as unknown as PyProjectToml;
 
     // Ensure optional-dependencies exists
     if (!parsed.project) {
@@ -217,7 +229,7 @@ export async function uvInstallDepUserGroup(name: string): Promise<boolean> {
       userDeps.push(name);
 
       // Write back to file
-      const tomlContent = TOML.stringify(parsed as TOML.JsonMap);
+      const tomlContent = TOML.stringify(parsed as unknown as TOML.JsonMap);
       fs.writeFileSync(pyprojectPath, tomlContent, "utf8");
       log.info(`Added ${name} to user dependencies in pyproject.toml`);
     }
@@ -253,7 +265,7 @@ export async function uvUninstallDepUserGroup(name: string): Promise<boolean> {
   const pyprojectPath = "pyproject.toml";
   try {
     const pyprojectContent = fs.readFileSync(pyprojectPath, "utf8");
-    const parsed = TOML.parse(pyprojectContent) as PyProjectToml;
+    const parsed = TOML.parse(pyprojectContent) as unknown as PyProjectToml;
 
     if (parsed?.project?.["optional-dependencies"]?.user) {
       const userDeps = parsed.project["optional-dependencies"].user as string[];
@@ -261,7 +273,7 @@ export async function uvUninstallDepUserGroup(name: string): Promise<boolean> {
 
       if (filtered.length !== userDeps.length) {
         parsed.project["optional-dependencies"].user = filtered;
-        const tomlContent = TOML.stringify(parsed as TOML.JsonMap);
+        const tomlContent = TOML.stringify(parsed as unknown as TOML.JsonMap);
         fs.writeFileSync(pyprojectPath, tomlContent, "utf8");
         log.info(`Removed ${name} from user dependencies in pyproject.toml`);
       }
@@ -296,7 +308,7 @@ export async function uvGroupEnsureValid(): Promise<string[]> {
     }
 
     const content = fs.readFileSync(pyprojectPath, "utf8");
-    const parsed = TOML.parse(content) as any;
+    const parsed = TOML.parse(content) as unknown as PyProjectToml;
 
     // Check for optional-dependencies (uv style)
     if (parsed?.project?.["optional-dependencies"]) {

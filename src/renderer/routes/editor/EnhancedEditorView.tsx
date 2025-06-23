@@ -55,6 +55,7 @@ import { useManifestStore } from "@/renderer/stores/manifest";
 import { ScrollArea } from "@/renderer/components/ui/scroll-area";
 import { cn } from "@/renderer/lib/utils";
 import { debounce } from "lodash";
+import { UpdateBlockCodeResponse } from "@/renderer/types/custom-block";
 
 interface ValidationError {
   line: number;
@@ -124,15 +125,15 @@ const EnhancedEditorView = () => {
           const updateRes = await updateBlockCode(fullPath, value, projectPath);
 
           if (updateRes.isOk()) {
-            const response = updateRes.value;
+            const response = updateRes.value as UpdateBlockCodeResponse;
 
-            if ((response as any).status === "queued") {
+            if (response.status === "queued") {
               toast.info("Block update queued", {
                 description: `Block is currently executing. Changes will be applied when it finishes.`,
               });
             } else {
               toast.success("Block updated successfully", {
-                description: `Version ${(response as any).version + 1}`,
+                description: `Version ${response.version + 1}`,
               });
             }
 

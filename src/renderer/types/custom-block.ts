@@ -34,3 +34,17 @@ export interface CreateCustomBlockResponse {
   blockDefinition: CustomBlockDefinition;
   blockPath: string;
 }
+
+/**
+ * Response type from updateBlockCode API
+ */
+export interface UpdateBlockCodeResponse {
+  transaction_id: string;
+  block_id: string;
+  block_name: string;
+  path: string;
+  has_pending_changes: boolean;
+  is_executing: boolean;
+  version: number;
+  status: 'queued' | 'applied';
+}

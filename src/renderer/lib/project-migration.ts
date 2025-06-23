@@ -15,7 +15,7 @@
 //
 
 import { Project } from "@/renderer/types/project";
-import { Node } from "reactflow";
+import { Node, Edge } from "reactflow";
 import { BlockData } from "@/renderer/types/block";
 
 export interface ProjectMigrationResult {
@@ -49,8 +49,8 @@ export function migrateProjectFormat(
     // Check each node to see if it might be a custom block
     const rfInstance = project.rfInstance as {
       nodes?: Node<BlockData>[];
-      [key: string]: any;
-    };
+      edges?: Edge[];
+    } | undefined;
     if (rfInstance?.nodes) {
       rfInstance.nodes = rfInstance.nodes.map((node: Node<BlockData>) => {
         // If node already has isCustom flag and path, preserve it

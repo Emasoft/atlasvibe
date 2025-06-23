@@ -17,9 +17,8 @@
 // - Tests actual regeneration completion
 //
 
-import { test, expect, ElectronApplication, Page } from "@playwright/test";
+import { test, expect, ElectronApplication, Page, _electron as electron } from "@playwright/test";
 import {
-  launchApp,
   mockDialogMessage,
   writeLogFile,
   STARTUP_TIMEOUT,
