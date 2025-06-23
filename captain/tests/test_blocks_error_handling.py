@@ -307,7 +307,18 @@ class TestBlocksAPIErrorHandling:
         with patch("pathlib.Path.exists", return_value=False):
             response = client.post("/blocks/update-code/", json=request_data)
             assert response.status_code == 404
-            assert "Block file not found" in response.json()["detail"]
+            error_response = response.json()
+            # Check both possible formats
+            if "detail" in error_response and isinstance(
+                error_response["detail"], dict
+            ):
+                assert "error" in error_response["detail"]
+                assert (
+                    "Block file not found"
+                    in error_response["detail"]["error"]["message"]
+                )
+            else:
+                assert "Block file not found" in str(error_response)
 
     def test_update_block_code_rollback_on_manifest_failure(
         self, client, mock_dependencies

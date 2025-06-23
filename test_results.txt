@@ -1,0 +1,102 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.12, pytest-7.4.4, pluggy-1.6.0 -- /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.11.12', 'Platform': 'macOS-15.4.1-arm64-arm-64bit', 'Packages': {'pytest': '7.4.4', 'pluggy': '1.6.0'}, 'Plugins': {'cov': '5.0.0', 'anyio': '4.9.0', 'json-report': '1.5.0', 'metadata': '3.1.1', 'mock': '3.14.1', 'asyncio': '0.21.2'}}
+rootdir: /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain
+configfile: pytest.ini
+plugins: cov-5.0.0, anyio-4.9.0, json-report-1.5.0, metadata-3.1.1, mock-3.14.1, asyncio-0.21.2
+asyncio: mode=Mode.STRICT
+collecting ... collected 215 items
+
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_basic_node_manifest PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_docstring PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_docstring_multi_return PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_end PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_default_param_values PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_multi_inputs PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_no_inputs PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_node_type PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_optionals PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_selects PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_manifest_with_unions PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_node_init PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_node_manifest_with_deps PASSED
+captain/tests/manifest_gen_test.py::ManifestGenerationTest::test_none_return PASSED
+captain/tests/test_blocks_error_handling.py::TestErrorSanitization::test_sanitize_project_structure_error PASSED
+captain/tests/test_blocks_error_handling.py::TestErrorSanitization::test_sanitize_file_not_found_error PASSED
+captain/tests/test_blocks_error_handling.py::TestErrorSanitization::test_sanitize_permission_error PASSED
+captain/tests/test_blocks_error_handling.py::TestErrorSanitization::test_sanitize_syntax_error PASSED
+captain/tests/test_blocks_error_handling.py::TestErrorSanitization::test_sanitize_generic_exception PASSED
+captain/tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_success SKIPPED
+captain/tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_http_exception SKIPPED
+captain/tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_generic_exception SKIPPED
+captain/tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_with_retry SKIPPED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_get_manifest_success PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_get_manifest_error_handling PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_create_custom_block_validation_error PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_create_custom_block_blueprint_not_found PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_create_custom_block_copy_failure_with_retry PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_update_block_code_forbidden_blueprint_edit PASSED
+captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_update_block_code_file_not_found FAILED
+
+=================================== FAILURES ===================================
+_______ TestBlocksAPIErrorHandling.test_update_block_code_file_not_found _______
+
+self = <captain.tests.test_blocks_error_handling.TestBlocksAPIErrorHandling object at 0x33134b810>
+client = <starlette.testclient.TestClient object at 0x334139e10>
+mock_dependencies = {'completions': <MagicMock name='get_completions' id='13758630160'>, 'copy_blueprint': <MagicMock name='copy_blueprint...<MagicMock name='create_manifest' id='13758534992'>, 'create_map': <MagicMock name='create_map' id='13758609424'>, ...}
+
+    def test_update_block_code_file_not_found(self, client, mock_dependencies):
+        """Test error when block file doesn't exist."""
+        request_data = {
+            "block_path": "/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py",
+            "content": "# new code",
+            "project_path": "/path/to/project.atlasvibe",
+        }
+
+        with patch("pathlib.Path.exists", return_value=False):
+            response = client.post("/blocks/update-code/", json=request_data)
+            assert response.status_code == 404
+>           assert "Block file not found" in response.json()["detail"]
+E           AssertionError: assert 'Block file not found' in {'error': {'code': 'UPDATE_BLOCK_FILE_NOT_FOUND', 'details': {'block_path': '/project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py'}, 'message': 'Block file not found: /project/atlasvibe_blocks/CUSTOM_BLOCK/CUSTOM_BLOCK.py', 'request_id': 'req-e2d31d895532', ...}}
+
+captain/tests/test_blocks_error_handling.py:310: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:323
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:323
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:323
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:323
+  /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373
+  /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+  * 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+    warnings.warn(message, UserWarning)
+
+captain/routes/workflow_queues.py:45
+  /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/captain/routes/workflow_queues.py:45: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator("type", pre=True)
+
+tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_success
+tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_http_exception
+tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_generic_exception
+tests/test_blocks_error_handling.py::TestFastAPIErrorHandler::test_fastapi_error_handler_with_retry
+  /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/lib/python3.11/site-packages/_pytest/python.py:183: PytestUnhandledCoroutineWarning: async def functions are not natively supported and have been skipped.
+  You need to install a suitable plugin for your async framework, for example:
+    - anyio
+    - pytest-asyncio
+    - pytest-tornasync
+    - pytest-trio
+    - pytest-twisted
+    warnings.warn(PytestUnhandledCoroutineWarning(msg.format(nodeid)))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED captain/tests/test_blocks_error_handling.py::TestBlocksAPIErrorHandling::test_update_block_code_file_not_found
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============= 1 failed, 25 passed, 4 skipped, 11 warnings in 3.33s =============
