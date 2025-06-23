@@ -76,9 +76,11 @@ jobs:
 
       - name: Install Gitleaks
         run: |
+          cd /tmp
           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz
           tar -xzf gitleaks_8.18.1_linux_x64.tar.gz
           sudo mv gitleaks /usr/local/bin/
+          cd -
 
       - name: Run Gitleaks on latest commit
         run: |

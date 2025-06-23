@@ -25,6 +25,11 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        "@": resolve(__dirname, "src"),
+      },
+    },
   },
   renderer: {
     server: {
