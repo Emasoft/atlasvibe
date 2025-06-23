@@ -3,12 +3,6 @@
 repos:
 - repo: local
   hooks:
-  - id: yamlfmt
-    name: Format YAML files with yamlfmt
-    entry: /Users/emanuelesabetta/go/bin/yamlfmt
-    language: system
-    types: [yaml]
-    files: '^\.github/.*\.(yml|yaml)$' # Only format GitHub workflow files
   - id: yamllint
     name: Lint YAML files with yamllint
     entry: uv run yamllint
@@ -147,10 +141,8 @@ exclude: |
     node_modules/|
     out/|
     \.pytest_cache/|
-    __pycache__/|
-    .*\.egg-info/
-  )
-
-# Set default language version
-default_language_version:
-  python: python3.11
+    \.mypy_cache/|
+    htmlcov/|
+    \.tox/|
+    \.coverage
+  )$
