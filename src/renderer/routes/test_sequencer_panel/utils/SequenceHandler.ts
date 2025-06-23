@@ -220,7 +220,7 @@ async function saveToDisk(
   if (sequence.interpreter.requirementsPath) {
     const deps = await window.api.uvShowUserGroup();
     const content = deps
-      .map((dep: PythonDependency) => dep.name + "==" + dep.version)
+      .map((dep) => dep.name + "==" + dep.version)
       .join("\n");
     const didSave = await window.api.saveFileToDisk(
       sequence.projectPath + sequence.interpreter.requirementsPath,
