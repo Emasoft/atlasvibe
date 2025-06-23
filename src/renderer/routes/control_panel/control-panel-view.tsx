@@ -58,7 +58,7 @@ import { toast } from "sonner";
 import { useContextMenu } from "@/renderer/hooks/useContextMenu";
 import { deepMutableClone } from "@/renderer/utils/clone";
 import { Link } from "react-router-dom";
-import FlowControlButtons from "../flow_chart/views/ControlBar/FlowControlButtons";
+import FlowControlButtons from "@/renderer/routes/flow_chart/views/ControlBar/FlowControlButtons";
 import _ from "lodash";
 import { Input } from "@/renderer/components/ui/input";
 

@@ -218,7 +218,7 @@ async function saveToDisk(
 ): Promise<Result<void, Error>> {
   // Deps
   if (sequence.interpreter.requirementsPath) {
-    const deps: PythonDependency[] = await window.api.uvShowUserGroup();
+    const deps = await window.api.uvShowUserGroup();
     const content = deps
       .map((dep) => dep.name + "==" + dep.version)
       .join("\n");

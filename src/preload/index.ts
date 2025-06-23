@@ -12,6 +12,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import { API } from "@/api/index";
 import { InterpretersList } from "@/main/python/interpreter";
 import { BlockDefinition } from "@/renderer/types/manifest";
+import { PythonDependency, DependencyGroupInfo } from "@/types/dependencies";
 
 // Define a type for the extended API
 // This should match the handlers you set up in your main process
@@ -67,9 +68,9 @@ export interface ExtendedWindowApi {
   pipxEnsurepath: () => Promise<void>;
   installUv: () => Promise<void>;
   installDependencies: () => Promise<void>;
-  uvShowTopLevel: () => Promise<unknown[]>;
-  uvShowUserGroup: () => Promise<unknown[]>;
-  uvGetGroupInfo: () => Promise<unknown[]>;
+  uvShowTopLevel: () => Promise<PythonDependency[]>;
+  uvShowUserGroup: () => Promise<PythonDependency[]>;
+  uvGetGroupInfo: () => Promise<DependencyGroupInfo[]>;
   uvInstallDepGroup: (group: string) => Promise<boolean>;
   uvUninstallDepGroup: (group: string) => Promise<boolean>;
   uvInstallDepUserGroup: (dep: string) => Promise<boolean>;

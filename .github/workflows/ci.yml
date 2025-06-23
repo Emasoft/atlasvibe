@@ -30,7 +30,7 @@ jobs:
       run: uv python install
 
     - name: Check format with Ruff
-      run: uvx ruff format --check --line-length=400 --isolated .
+      run: uvx ruff format --check --line-length=320 --isolated .
 
   python-code-lint:
     runs-on: ubuntu-latest

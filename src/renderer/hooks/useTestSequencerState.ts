@@ -36,7 +36,7 @@ import {
   testSequencePauseRequest,
   testSequenceResumeRequest,
   testSequenceStopRequest,
-} from "../routes/test_sequencer_panel/models/models";
+} from "@/renderer/routes/test_sequencer_panel/models/models";
 import { produce } from "immer";
 import { z } from "zod";
 
