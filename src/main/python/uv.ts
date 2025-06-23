@@ -19,7 +19,7 @@
 
 import { Command } from "@/main/command";
 import { execCommand } from "@/main/executor";
-import pyproject from "@/pyproject.toml?raw";
+import pyproject from "../../pyproject.toml?raw";
 import * as TOML from "@iarna/toml";
 import * as fs from "fs";
 import log from "electron-log/main";
