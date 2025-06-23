@@ -33,9 +33,7 @@ class ReconcilerTestCase(unittest.TestCase):
 
     def test_dataframe_different_sizes(self):
         # reconciler should take no action, as pandas operations are quite permissive already
-        df_a = pandas.DataFrame(
-            data={"col1": [1, 2, 3], "col2": [4, 5, 6], "col3": [7, 8, 9]}
-        )
+        df_a = pandas.DataFrame(data={"col1": [1, 2, 3], "col2": [4, 5, 6], "col3": [7, 8, 9]})
         df_b = pandas.DataFrame(data={"col2": [-1, -2], "col3": [-4, -5]})
 
         # create the two matrix datacontainers
@@ -68,9 +66,7 @@ class ReconcilerTestCase(unittest.TestCase):
     def test_complain_if_irreconcilable(self):
         dc_a = DataContainer(type="Grayscale")
 
-        dc_b = DataContainer(
-            type="OrderedPair", x=numpy.linspace(-10, 10, 100), y=[7] * 100
-        )
+        dc_b = DataContainer(type="OrderedPair", x=numpy.linspace(-10, 10, 100), y=[7] * 100)
 
         r = Reconciler()
         # function under test

@@ -222,17 +222,9 @@ class VenvManager:
             log_data["checks"].extend([c.to_dict() for c in pre_checks])
 
             # Check if any critical pre-checks failed
-            critical_failures = [
-                c
-                for c in pre_checks
-                if c.status == CheckStatus.ERROR
-                and c.name
-                in ["python_version", "disk_space", "permissions", "uv_availability"]
-            ]
+            critical_failures = [c for c in pre_checks if c.status == CheckStatus.ERROR and c.name in ["python_version", "disk_space", "permissions", "uv_availability"]]
             if critical_failures:
-                raise Exception(
-                    f"Critical pre-checks failed: {[c.name for c in critical_failures]}"
-                )
+                raise Exception(f"Critical pre-checks failed: {[c.name for c in critical_failures]}")
 
             # Parse dependencies from code if not provided
             if dependencies is None:
@@ -267,16 +259,9 @@ class VenvManager:
             log_data["checks"].extend([c.to_dict() for c in post_checks])
 
             # Verify all critical post-checks passed
-            critical_post_failures = [
-                c
-                for c in post_checks
-                if c.status == CheckStatus.ERROR
-                and c.name in ["import_test", "block_execution"]
-            ]
+            critical_post_failures = [c for c in post_checks if c.status == CheckStatus.ERROR and c.name in ["import_test", "block_execution"]]
             if critical_post_failures:
-                raise Exception(
-                    f"Critical post-checks failed: {[c.name for c in critical_post_failures]}"
-                )
+                raise Exception(f"Critical post-checks failed: {[c.name for c in critical_post_failures]}")
 
             # Success - remove backup
             if backup_path and backup_path.exists():
@@ -505,9 +490,7 @@ class VenvManager:
             # Try to reach PyPI
             import urllib.request
 
-            with urllib.request.urlopen(
-                "https://pypi.org/simple/", timeout=5
-            ) as response:
+            with urllib.request.urlopen("https://pypi.org/simple/", timeout=5) as response:
                 if response.status == 200:
                     return CheckResult(
                         name="network",
@@ -538,9 +521,7 @@ class VenvManager:
         start = time.time()
 
         try:
-            result = subprocess.run(
-                ["uv", "--version"], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["uv", "--version"], capture_output=True, text=True, timeout=5)
 
             if result.returncode == 0:
                 version = result.stdout.strip()
@@ -674,9 +655,7 @@ class VenvManager:
                     )
 
             except Exception as e:
-                failed_imports.append(
-                    {"package": package_name, "import": import_name, "error": str(e)}
-                )
+                failed_imports.append({"package": package_name, "import": import_name, "error": str(e)})
 
         if failed_imports:
             return CheckResult(
@@ -990,9 +969,7 @@ class VenvManager:
             return log_file
         else:
             # Fallback to non-atomic write if atomic fails
-            self.logger.warning(
-                f"Atomic write failed, using standard write for {log_file}"
-            )
+            self.logger.warning(f"Atomic write failed, using standard write for {log_file}")
             save_json_file(log_file, log_data, indent=2, atomic=False)
             return log_file
 

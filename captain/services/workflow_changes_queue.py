@@ -261,9 +261,7 @@ class WorkflowChangesQueue:
 
         return success
 
-    async def _process_manifest_regeneration(
-        self, block_id: str, data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _process_manifest_regeneration(self, block_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Regenerate manifest for a block."""
         project_path = data.get("project_path")
 
@@ -276,15 +274,11 @@ class WorkflowChangesQueue:
         manifest = create_manifest(str(block_path))
 
         # Broadcast manifest update
-        await self._broadcast_status(
-            "manifest_update", {"block_id": block_id, "manifest": manifest}
-        )
+        await self._broadcast_status("manifest_update", {"block_id": block_id, "manifest": manifest})
 
         return manifest
 
-    async def _process_metadata_update(
-        self, block_id: str, data: Dict[str, Any]
-    ) -> bool:
+    async def _process_metadata_update(self, block_id: str, data: Dict[str, Any]) -> bool:
         """Update block metadata (block_data.json)."""
         project_path = data.get("project_path")
         metadata = data.get("metadata", {})
@@ -309,9 +303,7 @@ class WorkflowChangesQueue:
 
         return True
 
-    async def _process_block_rename(
-        self, old_block_id: str, data: Dict[str, Any]
-    ) -> bool:
+    async def _process_block_rename(self, old_block_id: str, data: Dict[str, Any]) -> bool:
         """Process block renaming."""
         new_block_id = data.get("new_block_id")
         project_path = data.get("project_path")
@@ -342,27 +334,21 @@ class WorkflowChangesQueue:
 
         return True
 
-    async def _process_connection_change(
-        self, block_id: str, data: Dict[str, Any]
-    ) -> bool:
+    async def _process_connection_change(self, block_id: str, data: Dict[str, Any]) -> bool:
         """Process connection changes (edges in the graph)."""
         # Connection changes don't require file updates
         # They're handled by the topology when workflow executes
         logger.info(f"Connection change for {block_id}: {data}")
         return True
 
-    async def _process_parameter_update(
-        self, block_id: str, data: Dict[str, Any]
-    ) -> bool:
+    async def _process_parameter_update(self, block_id: str, data: Dict[str, Any]) -> bool:
         """Process parameter updates for a block."""
         # Parameter updates are typically runtime values
         # They don't require file changes
         logger.info(f"Parameter update for {block_id}: {data}")
         return True
 
-    async def _regenerate_block_metadata(
-        self, block_id: str, project_path: Optional[str]
-    ):
+    async def _regenerate_block_metadata(self, block_id: str, project_path: Optional[str]):
         """Regenerate block_data.json from docstring."""
         block_path = self._find_block_path(block_id, project_path)
         if block_path:
@@ -372,9 +358,7 @@ class WorkflowChangesQueue:
             except Exception as e:
                 logger.warning(f"Failed to regenerate metadata for {block_id}: {e}")
 
-    def _find_block_path(
-        self, block_id: str, project_path: Optional[str]
-    ) -> Optional[Path]:
+    def _find_block_path(self, block_id: str, project_path: Optional[str]) -> Optional[Path]:
         """Find the Python file for a block."""
         # Check project blocks first
         if project_path:
@@ -402,9 +386,7 @@ class WorkflowChangesQueue:
 
         return None
 
-    def _find_block_directory(
-        self, block_id: str, project_path: Optional[str]
-    ) -> Optional[Path]:
+    def _find_block_directory(self, block_id: str, project_path: Optional[str]) -> Optional[Path]:
         """Find the directory for a block."""
         block_path = self._find_block_path(block_id, project_path)
         return block_path.parent if block_path else None

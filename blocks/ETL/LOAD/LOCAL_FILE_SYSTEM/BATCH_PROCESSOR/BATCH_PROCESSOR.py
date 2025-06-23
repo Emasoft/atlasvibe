@@ -90,9 +90,7 @@ def BATCH_PROCESSOR(
         new_files = get_fnames(directory_path, pattern if pattern else "*")
         old_data: dict[str, Any] = SmallMemory().read_memory(node_id, memory_key) or {}
         if old_data:
-            difference = set(new_files).difference(
-                set(old_data["original_files"])
-            )  # designed to only catch the addition of files
+            difference = set(new_files).difference(set(old_data["original_files"]))  # designed to only catch the addition of files
             if not all([d not in old_data["original_files"] for d in list(difference)]):
                 # this means there are more new files added to the mix
                 SmallMemory().write_to_memory(
@@ -116,6 +114,4 @@ def BATCH_PROCESSOR(
     if curr_iter > data["n_files"]:
         SmallMemory().delete_object(node_id, memory_key)
     # And return the current fname
-    return BATCH_OUTPUT(
-        fname=String(s=fname), n_files=Scalar(c=len(data["original_files"]))
-    )
+    return BATCH_OUTPUT(fname=String(s=fname), n_files=Scalar(c=len(data["original_files"])))

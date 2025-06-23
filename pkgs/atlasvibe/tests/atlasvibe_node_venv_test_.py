@@ -35,9 +35,7 @@ def local_server():
         def do_POST(self):
             content_length = int(self.headers["Content-Length"])
             post_body = self.rfile.read(content_length)
-            post_data.append(
-                post_body.decode("utf-8")
-            )  # Add the POST content to the post_data list
+            post_data.append(post_body.decode("utf-8"))  # Add the POST content to the post_data list
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"POST received")
@@ -67,16 +65,12 @@ def configure_logging():
 # Define a fixture to patch tempfile.tempdir
 @pytest.fixture
 def mock_venv_cache_dir():
-    _test_tempdir = os.path.realpath(
-        os.path.join(tempfile.gettempdir(), "test_atlasvibe_node_venv")
-    )
+    _test_tempdir = os.path.realpath(os.path.join(tempfile.gettempdir(), "test_atlasvibe_node_venv"))
     # Wipe the directory to be patched if it exists
     shutil.rmtree(_test_tempdir, ignore_errors=True)
     os.makedirs(_test_tempdir)
     # Patch the tempfile.tempdir
-    with patch(
-        "atlasvibe.atlasvibe_node_venv._get_venv_cache_dir", return_value=_test_tempdir
-    ):
+    with patch("atlasvibe.atlasvibe_node_venv._get_venv_cache_dir", return_value=_test_tempdir):
         yield _test_tempdir
     # Clean up
     shutil.rmtree(_test_tempdir)
@@ -99,9 +93,7 @@ def run_in_venv_script_source_code():
     )
 
 
-def test_run_in_venv_streams_logs_to_http_server(
-    mock_venv_cache_dir, configure_logging, local_server
-):
+def test_run_in_venv_streams_logs_to_http_server(mock_venv_cache_dir, configure_logging, local_server):
     from atlasvibe import run_in_venv
 
     # Get the URL of the local server
@@ -121,9 +113,7 @@ def test_run_in_venv_streams_logs_to_http_server(
 
     logger = logging.getLogger("func_that_streams_logs_to_server")
     handler = HttpLogHandler(url)
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    )
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
     logger.addHandler(handler)
 
     @run_in_venv(pip_dependencies=["numpy"], verbose=True)
@@ -209,10 +199,7 @@ def test_run_in_venv_imports_jax_properly(mock_venv_cache_dir, configure_logging
         import importlib.metadata
 
         # Get the list of installed packages
-        packages_dict = {
-            package.name: package.version
-            for package in importlib.metadata.distributions()
-        }
+        packages_dict = {package.name: package.version for package in importlib.metadata.distributions()}
         return packages_dict, sys.path, sys.executable
 
     # Run the function
@@ -238,10 +225,7 @@ def test_run_in_venv_imports_flytekit_properly(mock_venv_cache_dir, configure_lo
         import importlib.metadata
 
         # Get the list of installed packages
-        packages_dict = {
-            package.name: package.version
-            for package in importlib.metadata.distributions()
-        }
+        packages_dict = {package.name: package.version for package in importlib.metadata.distributions()}
         return packages_dict, sys.path, sys.executable
 
     # Run the function
@@ -266,10 +250,7 @@ def test_run_in_venv_imports_opencv_properly(mock_venv_cache_dir, configure_logg
         import importlib.metadata
 
         # Get the list of installed packages
-        packages_dict = {
-            package.name: package.version
-            for package in importlib.metadata.distributions()
-        }
+        packages_dict = {package.name: package.version for package in importlib.metadata.distributions()}
         return packages_dict, sys.path, sys.executable
 
     # Run the function
@@ -311,9 +292,7 @@ def test_run_in_venv_runs_within_thread(mock_venv_cache_dir, configure_logging, 
 
     # Run the function in a thread
     queue = Queue()
-    thread = threading.Thread(
-        target=function_to_run_within_thread, args=(queue,), daemon=daemon
-    )
+    thread = threading.Thread(target=function_to_run_within_thread, args=(queue,), daemon=daemon)
     thread.start()
     thread.join()
     # Check that the thread has finished
@@ -324,19 +303,13 @@ def test_run_in_venv_runs_within_thread(mock_venv_cache_dir, configure_logging, 
     assert queue.get(timeout=60) == 42
 
 
-def test_run_in_venv_same_pip_deps_from_two_subprocesses_is_safe(
-    mock_venv_cache_dir, configure_logging, run_in_venv_script_source_code
-):
+def test_run_in_venv_same_pip_deps_from_two_subprocesses_is_safe(mock_venv_cache_dir, configure_logging, run_in_venv_script_source_code):
     """Tests that two functions ran from two subprocesses do not interfere with each other"""
     # Spawn the two functions in two subprocesses
     # Repeat 10 times
     for _ in range(10):
-        p1 = subprocess.Popen(
-            [sys.executable, "-c", f"{run_in_venv_script_source_code}"]
-        )
-        p2 = subprocess.Popen(
-            [sys.executable, "-c", f"{run_in_venv_script_source_code}"]
-        )
+        p1 = subprocess.Popen([sys.executable, "-c", f"{run_in_venv_script_source_code}"])
+        p2 = subprocess.Popen([sys.executable, "-c", f"{run_in_venv_script_source_code}"])
         # Wait for the two processes to finish
         p1.wait()
         p2.wait()

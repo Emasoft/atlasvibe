@@ -289,9 +289,7 @@ class CodeIntelligence:
 
         return visitor.symbols
 
-    def get_completions(
-        self, code: str, line: int, column: int, trigger_char: Optional[str] = None
-    ) -> List[CompletionItem]:
+    def get_completions(self, code: str, line: int, column: int, trigger_char: Optional[str] = None) -> List[CompletionItem]:
         """Get context-aware completions for the given position.
 
         Args:
@@ -350,19 +348,13 @@ class CodeIntelligence:
 
         # Filter by prefix if any
         if context.prefix:
-            completions = [
-                c
-                for c in completions
-                if c.label.lower().startswith(context.prefix.lower())
-            ]
+            completions = [c for c in completions if c.label.lower().startswith(context.prefix.lower())]
 
         # Sort and limit
         completions.sort(key=lambda c: (c.sort_text or c.label))
         return completions[:100]  # Limit to 100 items
 
-    def get_hover_info(
-        self, code: str, line: int, column: int
-    ) -> Optional[Dict[str, Any]]:
+    def get_hover_info(self, code: str, line: int, column: int) -> Optional[Dict[str, Any]]:
         """Get hover information for symbol at position.
 
         Args:
@@ -429,9 +421,7 @@ class CodeIntelligence:
 
         return context
 
-    def _get_member_completions(
-        self, context: "CompletionContext"
-    ) -> List[CompletionItem]:
+    def _get_member_completions(self, context: "CompletionContext") -> List[CompletionItem]:
         """Get member completions for object access."""
         completions = []
 
@@ -490,9 +480,7 @@ class CodeIntelligence:
 
         return completions
 
-    def _get_import_completions(
-        self, context: "CompletionContext"
-    ) -> List[CompletionItem]:
+    def _get_import_completions(self, context: "CompletionContext") -> List[CompletionItem]:
         """Get import statement completions."""
         return [
             CompletionItem(
@@ -518,9 +506,7 @@ class CodeIntelligence:
             ),
         ]
 
-    def _get_type_completions(
-        self, context: "CompletionContext"
-    ) -> List[CompletionItem]:
+    def _get_type_completions(self, context: "CompletionContext") -> List[CompletionItem]:
         """Get type hint completions."""
         types = [
             "int",
@@ -560,9 +546,7 @@ class CodeIntelligence:
 
         return completions
 
-    def _find_symbol_at_position(
-        self, code: str, line: int, column: int
-    ) -> Optional[Symbol]:
+    def _find_symbol_at_position(self, code: str, line: int, column: int) -> Optional[Symbol]:
         """Find symbol at the given position."""
         symbols = self.extract_symbols(code)
 
@@ -575,17 +559,11 @@ class CodeIntelligence:
 
         # Extract word at position
         start = column
-        while (
-            start > 0
-            and current_line[start - 1].isalnum()
-            or current_line[start - 1] == "_"
-        ):
+        while start > 0 and current_line[start - 1].isalnum() or current_line[start - 1] == "_":
             start -= 1
 
         end = column
-        while end < len(current_line) and (
-            current_line[end].isalnum() or current_line[end] == "_"
-        ):
+        while end < len(current_line) and (current_line[end].isalnum() or current_line[end] == "_"):
             end += 1
 
         word = current_line[start:end]
@@ -722,9 +700,7 @@ def get_completions(
     ]
 
 
-def get_hover_info(
-    code: str, line: int, column: int, project_path: Optional[str] = None
-) -> Optional[Dict[str, Any]]:
+def get_hover_info(code: str, line: int, column: int, project_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get hover information in API format.
 
     Args:

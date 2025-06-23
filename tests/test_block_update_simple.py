@@ -72,9 +72,7 @@ def test_project_structure_validation():
         assert not invalid_project.name.endswith(".atlasvibe")
 
         # Custom block path validation
-        custom_block_path = str(
-            Path(tmpdir) / "atlasvibe_blocks" / "BLOCK" / "BLOCK.py"
-        )
+        custom_block_path = str(Path(tmpdir) / "atlasvibe_blocks" / "BLOCK" / "BLOCK.py")
         assert "atlasvibe_blocks" in custom_block_path
 
         blueprint_path = str(Path(tmpdir) / "blocks" / "MATH" / "ADD" / "ADD.py")
@@ -89,9 +87,7 @@ def test_metadata_files():
 
         # Create metadata files
         app_json = block_dir / "app.json"
-        app_json.write_text(
-            json.dumps({"name": "TEST", "type": "default", "category": "PROJECT"})
-        )
+        app_json.write_text(json.dumps({"name": "TEST", "type": "default", "category": "PROJECT"}))
 
         block_data_json = block_dir / "block_data.json"
         block_data_json.write_text(

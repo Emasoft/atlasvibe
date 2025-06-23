@@ -93,29 +93,21 @@ def REPORT_GENERATION(
                 title = ""
                 caption = ""
                 if "layout" in fig:
-                    title = (
-                        fig["layout"]["title"].text if "title" in fig["layout"] else ""
-                    )
+                    title = fig["layout"]["title"].text if "title" in fig["layout"] else ""
                     if len(fig["layout"]["annotations"]) > 0:
                         caption = fig["layout"]["annotations"][0].text
                 PLOTLY_JSON = json.dumps(plotly.io.to_json(figures[i], validate=False))
                 FIGURES_HTML += "<h2>{0}</h2>".format(title)
                 FIGURES_HTML += "<div id='figure{0}'></div>".format(i)
                 FIGURES_HTML += "<p>{0}</p>".format(caption)
-                PLOTLY_SCRIPT += "Plotly.newPlot(document.getElementById('figure{0}'), JSON.parse({1})['fig'])".format(
-                    i, PLOTLY_JSON
-                )
+                PLOTLY_SCRIPT += "Plotly.newPlot(document.getElementById('figure{0}'), JSON.parse({1})['fig'])".format(i, PLOTLY_JSON)
                 PLOTLY_SCRIPT += ";\n\n"
             html = html.replace("{{FIGURES}}", FIGURES_HTML)
             html = html.replace("{{SCRIPT}}", PLOTLY_SCRIPT)
 
         # Find the user's Desktop
         desktop_dir = os.path.expanduser("~/Desktop")
-        fn = (
-            "report_"
-            + "".join(random.choices(string.ascii_uppercase + string.digits, k=5))
-            + ".html"
-        )
+        fn = "report_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=5)) + ".html"
         full_dir = os.path.join(desktop_dir, fn)
 
         # Write the HTML app

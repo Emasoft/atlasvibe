@@ -107,9 +107,7 @@ class BlocksWatcher:
         if Path(blocks_path).exists():
             paths_to_watch.append(blocks_path)
 
-        custom_path_file = (
-            Path.home() / ".atlasvibe" / "custom_blocks_path.txt"
-        )  # CHANGED .atlasvibe to .atlasvibe
+        custom_path_file = Path.home() / ".atlasvibe" / "custom_blocks_path.txt"  # CHANGED .atlasvibe to .atlasvibe
         if Path.exists(custom_path_file):
             with open(custom_path_file) as f:
                 custom_path = f.read().strip()
@@ -132,9 +130,7 @@ class BlocksWatcher:
                 if path.name == "atlasvibe_blocks" and path.is_dir():
                     # Check if directory is empty or only has __init__.py
                     contents = list(path.iterdir())
-                    if len(contents) == 0 or (
-                        len(contents) == 1 and contents[0].name == "__init__.py"
-                    ):
+                    if len(contents) == 0 or (len(contents) == 1 and contents[0].name == "__init__.py"):
                         logger.debug(f"Ignoring empty directory creation: {path}")
                         continue
 
@@ -143,9 +139,7 @@ class BlocksWatcher:
             if not meaningful_changes:
                 continue
 
-            logger.info(
-                f"Detected {len(meaningful_changes)} meaningful file changes in {paths_to_watch}.."
-            )
+            logger.info(f"Detected {len(meaningful_changes)} meaningful file changes in {paths_to_watch}..")
 
             # Extract block paths from the changed files
             block_paths = set()
@@ -160,38 +154,23 @@ class BlocksWatcher:
                     block_dir = str(path.parent)
 
                     # Check if this is a new block (no metadata files exist)
-                    has_metadata = any(
-                        (path.parent / f).exists()
-                        for f in ["block_data.json", "app.json", "example.md"]
-                    )
+                    has_metadata = any((path.parent / f).exists() for f in ["block_data.json", "app.json", "example.md"])
 
                     if not has_metadata:
                         # This is a new block, generate all metadata files
-                        logger.info(
-                            f"New block detected: {path.stem}, generating metadata files..."
-                        )
-                        success, generated_files = generate_all_metadata_files(
-                            block_dir
-                        )
+                        logger.info(f"New block detected: {path.stem}, generating metadata files...")
+                        success, generated_files = generate_all_metadata_files(block_dir)
                         if success:
-                            logger.info(
-                                f"Generated metadata files for {path.stem}: {', '.join(generated_files)}"
-                            )
+                            logger.info(f"Generated metadata files for {path.stem}: {', '.join(generated_files)}")
                         else:
-                            logger.error(
-                                f"Failed to generate some metadata files for {path.stem}"
-                            )
+                            logger.error(f"Failed to generate some metadata files for {path.stem}")
                     else:
                         # Existing block modified, regenerate block_data.json
-                        logger.info(
-                            f"Block {path.stem} modified, regenerating block_data.json..."
-                        )
+                        logger.info(f"Block {path.stem} modified, regenerating block_data.json...")
                         if regenerate_block_data_json(block_dir):
                             logger.info(f"Regenerated block_data.json for {path.stem}")
                         else:
-                            logger.error(
-                                f"Failed to regenerate block_data.json for {path.stem}"
-                            )
+                            logger.error(f"Failed to regenerate block_data.json for {path.stem}")
 
                     # Extract the relative path from the blocks directory
                     for watch_path in paths_to_watch:
@@ -212,9 +191,7 @@ class BlocksWatcher:
                             relative_path = path.relative_to(watch_path)
                             block_path = str(relative_path.parent).replace(os.sep, "/")
                             block_paths.add(block_path)
-                            logger.info(
-                                f"Block {block_path} metadata has been modified"
-                            )
+                            logger.info(f"Block {block_path} metadata has been modified")
                             break
                         except ValueError:
                             continue

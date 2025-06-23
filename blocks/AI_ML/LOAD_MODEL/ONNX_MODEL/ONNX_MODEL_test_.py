@@ -15,9 +15,7 @@ except ImportError:
 # machine learning tasks. The models are stored in ONNX format.
 # The repository is not updated frequently.
 # See: https://github.com/onnx/models/commits/69c5d3751dda5349fd3fc53f525395d180420c07/
-ONNX_MODEL_ZOO_BASE_URL = (
-    "https://github.com/onnx/models/raw/69c5d3751dda5349fd3fc53f525395d180420c07"
-)
+ONNX_MODEL_ZOO_BASE_URL = "https://github.com/onnx/models/raw/69c5d3751dda5349fd3fc53f525395d180420c07"
 
 ALEX_NET_MODEL = f"{ONNX_MODEL_ZOO_BASE_URL}/vision/classification/alexnet/model/bvlcalexnet-12-int8.onnx"
 

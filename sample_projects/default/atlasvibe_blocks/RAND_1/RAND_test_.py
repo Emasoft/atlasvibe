@@ -22,9 +22,7 @@ def test_RAND_array_value_uniform(mock_atlasvibe_decorator):
 def test_RAND_single_value_normal(mock_atlasvibe_decorator):
     import RAND
 
-    res = RAND.RAND(
-        size=1, distribution="normal", normal_mean=0, normal_standard_deviation=1
-    )
+    res = RAND.RAND(size=1, distribution="normal", normal_mean=0, normal_standard_deviation=1)
     assert abs(res.c) < 5
 
 
@@ -32,9 +30,7 @@ def test_RAND_array_value_normal(mock_atlasvibe_decorator):
     import RAND
 
     size = 100000
-    res = RAND.RAND(
-        size=size, distribution="normal", normal_mean=0, normal_standard_deviation=1
-    )
+    res = RAND.RAND(size=size, distribution="normal", normal_mean=0, normal_standard_deviation=1)
     # Test for shape
     assert res.v.shape[0] == size
     # Test for mean and std

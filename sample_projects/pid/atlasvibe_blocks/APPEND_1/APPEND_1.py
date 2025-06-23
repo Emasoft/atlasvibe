@@ -48,13 +48,7 @@ def APPEND_1(
         y1 = secondary_dp.y
 
         if y1.shape[0] != 1:
-            raise ValueError(
-                (
-                    "To append, APPEND node the requires the non-array "
-                    "input to have a single point. "
-                    f"The data passed has a shape of: {y1.shape}"
-                )
-            )
+            raise ValueError((f"To append, APPEND node the requires the non-array input to have a single point. The data passed has a shape of: {y1.shape}"))
 
         x = append(x0, x1)
         y = append(y0, y1)
@@ -102,9 +96,4 @@ def APPEND_1(
         return secondary_dp
 
     else:
-        raise ValueError(
-            (
-                "The APPEND node requires the two inputs to be the same type. "
-                f"The types passed were: {type(primary_dp)} and {type(secondary_dp)}"
-            )
-        )
+        raise ValueError((f"The APPEND node requires the two inputs to be the same type. The types passed were: {type(primary_dp)} and {type(secondary_dp)}"))

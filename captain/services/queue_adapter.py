@@ -43,9 +43,7 @@ class AsyncQueueAdapter:
 
         self._running = True
         self._stop_event.clear()
-        self._thread = threading.Thread(
-            target=self._transfer_items, args=(loop,), daemon=True
-        )
+        self._thread = threading.Thread(target=self._transfer_items, args=(loop,), daemon=True)
         self._thread.start()
         logger.debug(f"AsyncQueueAdapter started for queue {id(self.sync_queue)}")
 

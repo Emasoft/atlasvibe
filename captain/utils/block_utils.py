@@ -48,9 +48,7 @@ def add_to_sys_path(path: Path, prepend: bool = False) -> bool:
     return False
 
 
-def find_block_directories(
-    root_path: Path, check_init: bool = False
-) -> Dict[str, Path]:
+def find_block_directories(root_path: Path, check_init: bool = False) -> Dict[str, Path]:
     """Find all block directories in a given path.
 
     Args:
@@ -105,9 +103,7 @@ def construct_module_path(block_path: Path, base_path: Path) -> str:
         raise
 
 
-def find_blueprint_in_categories(
-    blocks_dir: Path, blueprint_key: str
-) -> Optional[Path]:
+def find_blueprint_in_categories(blocks_dir: Path, blueprint_key: str) -> Optional[Path]:
     """Find a blueprint block in category directories.
 
     Args:

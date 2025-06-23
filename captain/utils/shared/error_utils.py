@@ -137,16 +137,12 @@ def with_retry(
                         last_exception = e
                         if attempt < max_attempts - 1:
                             if logger:
-                                logger.warning(
-                                    f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
-                                )
+                                logger.warning(f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}")
                             await asyncio.sleep(current_delay)
                             current_delay *= backoff
                         else:
                             if logger:
-                                logger.error(
-                                    f"All {max_attempts} attempts failed for {func.__name__}: {e}"
-                                )
+                                logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
 
                 if last_exception:
                     raise last_exception
@@ -166,16 +162,12 @@ def with_retry(
                         last_exception = e
                         if attempt < max_attempts - 1:
                             if logger:
-                                logger.warning(
-                                    f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}"
-                                )
+                                logger.warning(f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {e}")
                             time.sleep(current_delay)
                             current_delay *= backoff
                         else:
                             if logger:
-                                logger.error(
-                                    f"All {max_attempts} attempts failed for {func.__name__}: {e}"
-                                )
+                                logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
 
                 if last_exception:
                     raise last_exception
@@ -186,9 +178,7 @@ def with_retry(
 
 
 @contextmanager
-def error_context(
-    operation: str, logger: Optional[logging.Logger] = None, reraise: bool = True
-):
+def error_context(operation: str, logger: Optional[logging.Logger] = None, reraise: bool = True):
     """
     Context manager for error handling with descriptive operation names.
 
@@ -227,9 +217,7 @@ class ErrorAccumulator:
         """Add an error with context."""
         self.errors.append((context, error))
 
-    def add_from_callable(
-        self, context: str, func: Callable[..., Any], *args, **kwargs
-    ) -> Any:
+    def add_from_callable(self, context: str, func: Callable[..., Any], *args, **kwargs) -> Any:
         """Execute a function and capture any errors."""
         try:
             return func(*args, **kwargs)
@@ -278,11 +266,7 @@ def format_exception_chain(e: Exception, include_traceback: bool = False) -> str
 
     while current is not None:
         if include_traceback:
-            parts.append(
-                traceback.format_exception(
-                    type(current), current, current.__traceback__
-                )
-            )
+            parts.append(traceback.format_exception(type(current), current, current.__traceback__))
         else:
             parts.append(f"{type(current).__name__}: {current}")
 

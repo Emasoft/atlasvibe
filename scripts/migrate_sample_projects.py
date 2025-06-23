@@ -32,9 +32,7 @@ from captain.utils.project_migration import (
 from captain.utils.logger import logger
 
 
-def create_project_folder_structure(
-    source_json: Path, target_dir: Path, project_name: str
-) -> Path:
+def create_project_folder_structure(source_json: Path, target_dir: Path, project_name: str) -> Path:
     """Create the new folder-based project structure.
 
     Args:
@@ -81,9 +79,7 @@ def migrate_sample_project(source_path: Path, target_base_dir: Path) -> bool:
         project_name = source_path.stem
 
         # Create folder structure
-        project_file = create_project_folder_structure(
-            source_path, target_base_dir, project_name
-        )
+        project_file = create_project_folder_structure(source_path, target_base_dir, project_name)
 
         logger.info(f"Migrating project: {project_name}")
 
@@ -100,18 +96,13 @@ def migrate_sample_project(source_path: Path, target_base_dir: Path) -> bool:
             json.dump(project_data, f, indent=2)
 
         # Migrate the project
-        migrated_data, created_blocks = migrate_project_to_new_format(
-            str(project_file), project_data, dry_run=False
-        )
+        migrated_data, created_blocks = migrate_project_to_new_format(str(project_file), project_data, dry_run=False)
 
         # Save the migrated project
         with open(project_file, "w") as f:
             json.dump(migrated_data, f, indent=2)
 
-        logger.info(
-            f"Successfully migrated {project_name}. "
-            f"Created {len(created_blocks)} custom blocks."
-        )
+        logger.info(f"Successfully migrated {project_name}. Created {len(created_blocks)} custom blocks.")
 
         return True
 

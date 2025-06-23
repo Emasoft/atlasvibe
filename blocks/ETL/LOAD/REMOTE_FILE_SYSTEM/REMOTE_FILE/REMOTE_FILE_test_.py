@@ -5,9 +5,7 @@ import requests.exceptions
 from pkgs.atlasvibe.atlasvibe.data_container import Image, DataFrame, Grayscale
 
 # Using public test images for testing
-PUBLIC_TEST_IMAGES_BASE_URL = (
-    "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images"
-)
+PUBLIC_TEST_IMAGES_BASE_URL = "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images"
 
 
 @pytest.mark.parametrize(
@@ -23,9 +21,7 @@ PUBLIC_TEST_IMAGES_BASE_URL = (
         ("JSON", DataFrame, "https://jsonplaceholder.typicode.com/users"),
     ],
 )
-def test_REMOTE_FILE_valid_usage(
-    mock_atlasvibe_decorator, file_type, output_type, file_url
-):
+def test_REMOTE_FILE_valid_usage(mock_atlasvibe_decorator, file_type, output_type, file_url):
     import REMOTE_FILE
 
     output = REMOTE_FILE.REMOTE_FILE(file_url=file_url, file_type=file_type)
@@ -48,9 +44,7 @@ def test_REMOTE_FILE_not_valid(file_url, mock_atlasvibe_decorator):
         REMOTE_FILE.REMOTE_FILE(file_url=file_url, file_type="Image")
 
 
-@pytest.mark.parametrize(
-    "file_url", ["gcp://not_yet_supported", "s3://not_yet_supported"]
-)
+@pytest.mark.parametrize("file_url", ["gcp://not_yet_supported", "s3://not_yet_supported"])
 def test_REMOTE_FILE_not_yet_supported(file_url, mock_atlasvibe_decorator):
     import REMOTE_FILE
 

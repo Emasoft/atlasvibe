@@ -10,8 +10,6 @@ def test_2DFFT(mock_atlasvibe_decorator):
     m = np.mgrid[:5, :5][0]
     element = Matrix(m=m)
 
-    res = TWO_DIMENSIONAL_FFT.TWO_DIMENSIONAL_FFT(
-        default=element, real_signal=False, color="red"
-    )
+    res = TWO_DIMENSIONAL_FFT.TWO_DIMENSIONAL_FFT(default=element, real_signal=False, color="red")
     expected = fft.fft2(m).real
     assert (expected == res.m).all()

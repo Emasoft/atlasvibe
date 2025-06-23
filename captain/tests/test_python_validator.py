@@ -31,9 +31,7 @@ def test_func():
         errors = validator.validate_code(code, "test.py")
 
         assert len(errors) > 0
-        assert any(
-            e.severity == "error" and "syntax" in e.category.lower() for e in errors
-        )
+        assert any(e.severity == "error" and "syntax" in e.category.lower() for e in errors)
 
     def test_validate_undefined_variable(self):
         """Test that undefined variables are detected."""

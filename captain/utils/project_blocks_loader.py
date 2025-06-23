@@ -92,9 +92,7 @@ class ProjectBlocksLoader:
                             func_name = file[:-3]
                             self.blueprint_mapping[func_name] = module_path
                         except Exception as e:
-                            logger.error(
-                                f"Failed to process blueprint block {file}: {e}"
-                            )
+                            logger.error(f"Failed to process blueprint block {file}: {e}")
 
             logger.info(f"Loaded {len(self.blueprint_mapping)} blueprint blocks")
         except Exception as e:
@@ -127,20 +125,14 @@ class ProjectBlocksLoader:
                         # Check for __init__.py
                         init_file = block_dir / "__init__.py"
                         if not init_file.exists():
-                            logger.warning(
-                                f"Block {block_dir.name} missing __init__.py, creating one"
-                            )
+                            logger.warning(f"Block {block_dir.name} missing __init__.py, creating one")
                             init_file.write_text("")
 
                         # Create module path relative to project directory
-                        module_path = (
-                            f"atlasvibe_blocks.{block_dir.name}.{block_dir.name}"
-                        )
+                        module_path = f"atlasvibe_blocks.{block_dir.name}.{block_dir.name}"
                         self.project_mapping[block_dir.name] = module_path
                 except Exception as e:
-                    logger.error(
-                        f"Failed to process project block {block_dir.name}: {e}"
-                    )
+                    logger.error(f"Failed to process project block {block_dir.name}: {e}")
 
             logger.info(f"Loaded {len(self.project_mapping)} project-specific blocks")
         except Exception as e:

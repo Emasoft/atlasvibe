@@ -14,9 +14,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame
 
 @atlasvibe()
 def SCIKIT_LEARN_DATASET(
-    dataset_name: Literal[
-        "iris", "diabetes", "digits", "linnerud", "wine", "breast_cancer"
-    ] = "iris",
+    dataset_name: Literal["iris", "diabetes", "digits", "linnerud", "wine", "breast_cancer"] = "iris",
 ) -> DataFrame:
     """Retrieve a pandas DataFrame from the scikit-learn sample datasets.
 

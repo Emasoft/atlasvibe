@@ -99,9 +99,7 @@ class TestTextUtils:
 
         # Append to non-existent file with create=True
         new_file = tmp_path / "new_append.txt"
-        assert (
-            append_text_file(new_file, "First line\n", create_if_missing=True) is True
-        )
+        assert append_text_file(new_file, "First line\n", create_if_missing=True) is True
         assert load_text_file(new_file) == "First line\n"
 
     def test_append_without_creation(self, tmp_path):

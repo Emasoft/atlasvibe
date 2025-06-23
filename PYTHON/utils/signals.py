@@ -24,10 +24,6 @@ class Signals:
 
     def are_signals_on(self, child_id):
         child_signal_ids = self.get_child_signal_ids(child_id)
-        off_signals = [
-            signal
-            for signal in child_signal_ids
-            if not self.signal_states.get(signal, False)
-        ]
+        off_signals = [signal for signal in child_signal_ids if not self.signal_states.get(signal, False)]
 
         return len(off_signals) == 0

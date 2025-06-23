@@ -28,11 +28,7 @@ def pre_import_functions(topology: Topology, project_path: str | None = None):
         func = getattr(module, cmd)
 
         preflight = next(
-            (
-                f
-                for f in module.__dict__.values()
-                if callable(f) and getattr(f, "is_atlasvibe_preflight", False)
-            ),
+            (f for f in module.__dict__.values() if callable(f) and getattr(f, "is_atlasvibe_preflight", False)),
             None,
         )
 
@@ -45,9 +41,7 @@ def pre_import_functions(topology: Topology, project_path: str | None = None):
         # check if the func has an init function, and initialize it if it does to the specified node id
         try:
             init_func = get_node_init_function(func)
-            init_func.run(
-                block_id, block["init_ctrls"]
-            )  # node id is used to specify storage: each node of the same type will have its own storage
+            init_func.run(block_id, block["init_ctrls"])  # node id is used to specify storage: each node of the same type will have its own storage
         except NoInitFunctionError:
             pass
         except Exception as e:
