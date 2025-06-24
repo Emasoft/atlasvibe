@@ -12,6 +12,7 @@ import { ElectronApplication, _electron as electron } from "playwright";
 import { test, expect } from "@playwright/test";
 import fs from "fs";
 import { join } from "path";
+import { execSync } from "child_process";
 import {
   STARTUP_TIMEOUT,
   getExecutablePath,
@@ -28,6 +29,29 @@ test.describe(`${productName} startup test`, () => {
     const executablePath = getExecutablePath();
     console.log(`Executable path: ${executablePath}`);
     console.log(`File exists: ${fs.existsSync(executablePath)}`);
+
+    if (fs.existsSync(executablePath)) {
+      // Check file permissions
+      try {
+        const stats = fs.statSync(executablePath);
+        console.log(`File permissions: ${(stats.mode & parseInt('777', 8)).toString(8)}`);
+        console.log(`Is file: ${stats.isFile()}`);
+        console.log(`File size: ${stats.size} bytes`);
+      } catch (e) {
+        console.error(`Error checking file stats: ${e}`);
+      }
+
+      // Try to execute the file directly to see what error we get
+      if (process.platform === "linux") {
+        try {
+          // First try just getting version or help
+          const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, { encoding: 'utf-8' });
+          console.log(`ldd output:\n${lddOutput}`);
+        } catch (e) {
+          console.error(`Error running ldd: ${e}`);
+        }
+      }
+    }
 
     if (!fs.existsSync(executablePath)) {
       // List contents of dist directory to help debug
