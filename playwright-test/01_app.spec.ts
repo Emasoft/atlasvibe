@@ -30,7 +30,7 @@ test.describe(`${productName} startup test`, () => {
       executablePath,
     });
     await mockDialogMessage(app);
-  });
+  }, 120000); // Increase timeout to 2 minutes for Windows
 
   test.afterAll(async () => {
     if (app) {

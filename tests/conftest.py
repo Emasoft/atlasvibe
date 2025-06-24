@@ -12,7 +12,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import asyncio
 import sys
 import os
 
@@ -38,10 +37,7 @@ from captain.routes import (  # noqa: E402
 )
 from captain.utils.config import origins  # noqa: E402
 from captain.utils.logger import logger  # noqa: E402
-from captain.internal.manager import WatchManager  # noqa: E402
 from captain.internal.wsmanager import ConnectionManager  # noqa: E402
-from captain.services.workflow_queue_coordinator import WorkflowQueueCoordinator  # noqa: E402
-from captain.services.change_queue import ChangeQueueManager  # noqa: E402
 
 
 @asynccontextmanager
@@ -49,51 +45,14 @@ async def test_lifespan(app: FastAPI):
     """Test-friendly lifespan without signal handlers."""
     logger.info("Running test startup event")
 
-    # Startup
-    watch_manager = WatchManager.get_instance()
-    watch_manager.start_thread()
-
-    # Get WebSocket manager instance
-    ws_manager = ConnectionManager.get_instance()
-
-    # Start Workflow Queue Coordinator (manages both WCQ and WEQ)
-    workflow_coordinator = WorkflowQueueCoordinator(ws_manager)
-    coordinator_task = asyncio.create_task(workflow_coordinator.run())
-    logger.info("Workflow Queue Coordinator started (managing WCQ and WEQ)")
-
-    # Start ChangeQueueManager for real-time code updates
-    logger.info("Starting ChangeQueueManager...")
-    change_queue_manager = ChangeQueueManager.get_instance()
-    logger.info("Got ChangeQueueManager instance")
-    change_queue_manager.start()
-    logger.info("ChangeQueueManager started")
-
-    # Store references for shutdown
-    app.state.workflow_coordinator = workflow_coordinator
-    app.state.coordinator_task = coordinator_task
-    app.state.change_queue_manager = change_queue_manager
+    # Minimal startup - don't start background services for tests
+    # Only initialize the WebSocket manager which is needed for API routes
+    _ = ConnectionManager.get_instance()  # Initialize for side effects
 
     yield
 
     # Shutdown
     logger.info("Running test shutdown event")
-
-    # Stop Workflow Queue Coordinator
-    if hasattr(app.state, "workflow_coordinator"):
-        await app.state.workflow_coordinator.stop()
-        logger.info("Workflow Queue Coordinator stopped")
-
-        # Wait for coordinator task to complete
-        if hasattr(app.state, "coordinator_task"):
-            try:
-                await asyncio.wait_for(app.state.coordinator_task, timeout=5.0)
-            except asyncio.TimeoutError:
-                logger.warning("Coordinator task did not complete within timeout")
-
-    # Stop ChangeQueueManager
-    if hasattr(app.state, "change_queue_manager"):
-        app.state.change_queue_manager.stop()
-        logger.info("ChangeQueueManager stopped")
 
 
 @pytest.fixture

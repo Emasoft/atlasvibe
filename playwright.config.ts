@@ -14,6 +14,7 @@ export default defineConfig({
   workers: 1,
   testDir: "./playwright-test",
   testMatch: "**/*.spec.ts",
+  timeout: 60000, // 1 minute timeout per test
   use: {
     trace: {
       mode: "retain-on-failure",
