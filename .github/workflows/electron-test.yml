@@ -3,17 +3,17 @@ name: E2E Testing
 on:
   push:
     paths-ignore:
-      - "docs/**"
+    - "docs/**"
     branches:
-      - main
+    - main
   pull_request:
     paths-ignore:
-      - "docs/**"
+    - "docs/**"
     types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
 # When pushing new commits, cancel any running builds on that branch
 concurrency:
   group: ${{ github.ref }}
@@ -33,76 +33,76 @@ jobs:
         os: [macos-latest, windows-latest, "ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    - name: Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.0.6
-          run_install: false
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.0.6
+        run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
 
-      - name: Cache pnpm
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+    - name: Cache pnpm
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
-      - name: Install Python Dependencies
-        run: uv sync --locked --all-extras --dev
+    - name: Install Python Dependencies
+      run: uv sync --locked --all-extras --dev
 
-      - name: Install Node Dependencies
-        run: pnpm install
+    - name: Install Node Dependencies
+      run: pnpm install
 
-      - name: Build executable
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: pnpm run electron-package:mac
+    - name: Build executable
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: pnpm run electron-package:mac
 
-      - name: Build executable
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: pnpm run electron-package:windows
+    - name: Build executable
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: pnpm run electron-package:windows
 
-      - name: Build executable
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: pnpm run electron-package:linux
+    - name: Build executable
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: pnpm run electron-package:linux
 
-      - name: Set up Xvfb and Linux dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0 libxss1 libasound2
-          Xvfb -screen 0 1024x768x24 :0 &
-          sleep 5
+    - name: Set up Xvfb and Linux dependencies
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0 libxss1 libasound2t64
+        Xvfb -screen 0 1024x768x24 :0 &
+        sleep 5
 
-      - name: Run Test
-        run: pnpm run e2e
+    - name: Run Test
+      run: pnpm run e2e
 
-      - name: Upload outputs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-${{ matrix.os }}-output
-          path: test-results
+    - name: Upload outputs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-${{ matrix.os }}-output
+        path: test-results
