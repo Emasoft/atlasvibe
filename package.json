@@ -27,8 +27,11 @@
     "electron-dev": "electron .",
     "electron-package": "pnpm run build && electron-builder build -m --universal -lw",
     "electron-package:windows": "pnpm run build && electron-builder build --win",
+    "electron-package:windows-portable": "pnpm run build && electron-builder build --win --config electron-builder-portable.yaml",
     "electron-package:linux": "pnpm run build && electron-builder build --linux",
+    "electron-package:linux-portable": "pnpm run build && electron-builder build --linux --config electron-builder-portable.yaml",
     "electron-package:mac": "pnpm run build && electron-builder build --mac --universal",
+    "electron-package:portable": "pnpm run build && electron-builder build --win --linux --config electron-builder-portable.yaml",
     "electron-publish": "electron-builder build --publish always -mwl",
     "electron:test": "npx playwright test"
   },

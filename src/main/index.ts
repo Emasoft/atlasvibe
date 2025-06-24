@@ -17,9 +17,13 @@ import { logListener } from "./logging";
 import { createWindow } from "./window";
 import { registerIpcMainHandlers } from "./ipc-main-handlers";
 import { cleanup } from "./utils";
+import { setupPortableMode } from "./portable";
 // import installExtension, {
 //   REACT_DEVELOPER_TOOLS,
 // } from "electron-devtools-assembler";
+
+// Setup portable mode before anything else
+setupPortableMode();
 
 log.initialize({ preload: true });
 log.info("Welcome to Atlasvibe Studio!");

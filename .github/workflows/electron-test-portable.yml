@@ -1,0 +1,130 @@
+name: E2E Testing (Portable)
+
+on:
+  push:
+    paths-ignore:
+    - "docs/**"
+    branches:
+    - main
+  pull_request:
+    paths-ignore:
+    - "docs/**"
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
+
+# When pushing new commits, cancel any running builds on that branch
+concurrency:
+  group: portable-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NODE_ENV: "production"
+  DISPLAY: :0
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  electron_portable:
+    if: ${{ (!github.event.pull_request.draft && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9
+        run_install: false
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+    - name: Cache pnpm
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install Python Dependencies
+      run: uv sync --locked --all-extras --dev
+
+    - name: Install Node Dependencies
+      run: pnpm install
+
+    - name: Build portable executable
+      run: pnpm run electron-package:windows-portable
+
+    - name: List portable build contents
+      shell: pwsh
+      run: |
+        echo "Contents of dist-portable:"
+        dir dist-portable
+        if (Test-Path "dist-portable\AtlasVibe Portable*.exe") {
+          echo "Found portable executable"
+          Get-ChildItem "dist-portable\AtlasVibe Portable*.exe" | ForEach-Object { echo "Portable file: $_" }
+        }
+
+    - name: Extract portable build
+      shell: pwsh
+      run: |
+        $portableExe = Get-ChildItem "dist-portable\AtlasVibe Portable*.exe" | Select-Object -First 1
+        if ($portableExe) {
+          echo "Extracting $($portableExe.Name)..."
+          # Portable exe extracts itself when run
+          Start-Process -FilePath $portableExe.FullName -ArgumentList "/S", "/D=dist-portable\extracted" -Wait -NoNewWindow
+          echo "Contents after extraction:"
+          dir "dist-portable\extracted"
+        }
+
+    - name: Test portable launcher
+      shell: pwsh
+      run: |
+        if (Test-Path "dist-portable\start-atlasvibe.bat") {
+          echo "Testing batch launcher..."
+          # Just check if it can run, don't actually start the app
+          cmd /c "dist-portable\start-atlasvibe.bat --version"
+        }
+
+    - name: Run E2E Test (Portable)
+      run: pnpm exec playwright test playwright-test/01_app_portable.spec.ts
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-portable-${{ matrix.os }}-output
+        path: test-results
+
+    - name: Upload portable build
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: portable-build-${{ matrix.os }}
+        path: dist-portable/
