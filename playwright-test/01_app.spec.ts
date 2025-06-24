@@ -26,6 +26,29 @@ test.describe(`${productName} startup test`, () => {
   let app: ElectronApplication;
   test.beforeAll(async () => {
     const executablePath = getExecutablePath();
+    console.log(`Executable path: ${executablePath}`);
+    console.log(`File exists: ${fs.existsSync(executablePath)}`);
+
+    if (!fs.existsSync(executablePath)) {
+      // List contents of dist directory to help debug
+      const distPath = join(process.cwd(), "dist");
+      if (fs.existsSync(distPath)) {
+        console.log(`Contents of dist directory:`);
+        const dirs = fs.readdirSync(distPath);
+        dirs.forEach(dir => {
+          console.log(`  - ${dir}`);
+          const subdirPath = join(distPath, dir);
+          if (fs.statSync(subdirPath).isDirectory() && dir.includes("linux")) {
+            console.log(`    Contents of ${dir}:`);
+            const files = fs.readdirSync(subdirPath);
+            files.forEach(file => {
+              console.log(`      - ${file}`);
+            });
+          }
+        });
+      }
+    }
+
     app = await electron.launch({
       executablePath,
     });

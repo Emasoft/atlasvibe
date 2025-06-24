@@ -62,6 +62,13 @@ export const getExecutablePath = () => {
 
 export const launchApp = async (): Promise<ElectronAppInfo> => {
   const appPath = getExecutablePath();
+  console.log(`Attempting to launch Electron app from: ${appPath}`);
+
+  // Check if the executable exists
+  if (!fs.existsSync(appPath)) {
+    throw new Error(`Executable not found at: ${appPath}`);
+  }
+
   const app = await electron.launch({
     executablePath: appPath,
     args: ["."], // Add any necessary startup arguments
