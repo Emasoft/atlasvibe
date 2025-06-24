@@ -16,7 +16,7 @@ import tempfile
 import json
 from pathlib import Path
 from datetime import datetime
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
 from captain.utils.venv_manager import (
     VenvManager,
@@ -50,10 +50,10 @@ def TEST_BLOCK():
 class TestVenvManagerJSONRefactoring:
     """Test refactoring of JSON operations in venv_manager module."""
 
-    @patch("json.dump")
-    @patch("builtins.open", new_callable=mock_open)
-    def test_save_log_uses_json_dump(self, mock_file, mock_dump, temp_block_dir):
-        """Test that _save_log currently uses json.dump (to be refactored)."""
+    @patch("captain.utils.venv_manager.save_json_file")
+    def test_save_log_uses_json_dump(self, mock_save, temp_block_dir):
+        """Test that _save_log uses save_json_file."""
+        mock_save.return_value = True
         manager = VenvManager(temp_block_dir)
 
         log_data = {
@@ -64,10 +64,12 @@ class TestVenvManagerJSONRefactoring:
 
         manager._save_log(log_data)
 
-        # Verify json.dump was called
-        mock_dump.assert_called_once()
-
-        # After refactoring, this should use save_json_file instead
+        # Verify save_json_file was called with correct parameters
+        mock_save.assert_called()
+        # Check that it was called with atomic=True first
+        call_args = mock_save.call_args_list[0]
+        assert call_args[1]["atomic"] is True
+        assert call_args[1]["indent"] == 2
 
     @patch("captain.utils.venv_manager.save_json_file")
     def test_save_log_refactored(self, mock_save, temp_block_dir):
@@ -96,10 +98,9 @@ class TestVenvManagerJSONRefactoring:
 
         assert True
 
-    @patch("captain.utils.venv_manager.json.load")
-    @patch("builtins.open", new_callable=mock_open)
-    def test_get_logs_uses_json_load(self, mock_file, mock_load, temp_block_dir):
-        """Test that get_logs currently uses json.load (to be refactored)."""
+    @patch("captain.utils.venv_manager.load_json_file")
+    def test_get_logs_uses_json_load(self, mock_load, temp_block_dir):
+        """Test that get_logs uses load_json_file."""
         manager = VenvManager(temp_block_dir)
 
         # Create a fake log file
@@ -108,12 +109,13 @@ class TestVenvManagerJSONRefactoring:
 
         mock_load.return_value = {"test": "data"}
 
-        manager.get_logs(limit=1)
+        logs = manager.get_logs(limit=1)
 
-        # Verify json.load was called
+        # Verify load_json_file was called
         mock_load.assert_called()
-
-        # After refactoring, this should use load_json_file instead
+        # Verify it returns the mocked data
+        assert len(logs) == 1
+        assert logs[0]["test"] == "data"
 
     @patch("captain.utils.venv_manager.load_json_file")
     def test_get_logs_refactored(self, mock_load, temp_block_dir):

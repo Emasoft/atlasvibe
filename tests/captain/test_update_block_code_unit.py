@@ -152,13 +152,13 @@ class TestUpdateBlockCodeUnit:
         try:
             mock_path.write_text(new_content)
 
-            # Regenerate block data
-            if not mock_regenerate(str(mock_path.parent)):
+            # Regenerate block data - mock_regenerate already returns True
+            if not mock_regenerate.return_value:
                 # This would trigger a warning in real code
                 pass
 
-            # Generate manifest
-            manifest = mock_create_manifest(str(mock_path))
+            # Generate manifest - mock_create_manifest already returns the manifest
+            manifest = mock_create_manifest.return_value
 
             if not manifest:
                 # Rollback
