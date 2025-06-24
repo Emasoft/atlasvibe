@@ -55,7 +55,7 @@ repos:
       # Run ruff formatter
       - id: ruff-format
         name: Run ruff formatter
-        args: [--line-length=400]
+        args: [--line-length=320]
 
   # Gitleaks for secret detection
   - repo: https://github.com/gitleaks/gitleaks
