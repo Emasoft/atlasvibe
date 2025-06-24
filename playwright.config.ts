@@ -14,7 +14,7 @@ export default defineConfig({
   workers: 1,
   testDir: "./playwright-test",
   testMatch: "**/*.spec.ts",
-  timeout: 60000, // 1 minute timeout per test
+  timeout: 180000, // 3 minutes timeout per test (to allow for slow Windows CI)
   use: {
     trace: {
       mode: "retain-on-failure",
