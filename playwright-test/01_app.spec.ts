@@ -47,8 +47,33 @@ test.describe(`${productName} startup test`, () => {
           // First try just getting version or help
           const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, { encoding: 'utf-8' });
           console.log(`ldd output:\n${lddOutput}`);
+
+          // Try running the app directly to see what happens
+          console.log("\nTrying to run the app directly to check for errors...");
+          try {
+            // Run with --version or --help to see if it starts at all
+            const helpOutput = execSync(`"${executablePath}" --help 2>&1 || true`, {
+              encoding: 'utf-8',
+              timeout: 5000
+            });
+            console.log(`Help output: ${helpOutput}`);
+          } catch (helpError) {
+            console.error(`Error running --help: ${helpError}`);
+          }
+
+          // Check if there's a crash log
+          try {
+            const crashCheck = execSync(`"${executablePath}" --no-sandbox 2>&1 || echo "Exit code: $?"`, {
+              encoding: 'utf-8',
+              timeout: 5000,
+              env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' }
+            });
+            console.log(`Direct run output: ${crashCheck}`);
+          } catch (runError) {
+            console.error(`Error running directly: ${runError}`);
+          }
         } catch (e) {
-          console.error(`Error running ldd: ${e}`);
+          console.error(`Error during debug checks: ${e}`);
         }
       }
     }
@@ -73,9 +98,24 @@ test.describe(`${productName} startup test`, () => {
       }
     }
 
-    app = await electron.launch({
-      executablePath,
-    });
+    // Try launching with additional flags for CI environment
+    console.log("\nAttempting to launch Electron app...");
+    try {
+      app = await electron.launch({
+        executablePath,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage'
+        ],
+        timeout: 30000 // 30 seconds timeout for launch
+      });
+      console.log("Electron app launched successfully!");
+    } catch (launchError) {
+      console.error(`Failed to launch Electron app: ${launchError}`);
+      throw launchError;
+    }
     await mockDialogMessage(app);
   }, 120000); // Increase timeout to 2 minutes for Windows
 
