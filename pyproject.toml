@@ -9,7 +9,7 @@ name = "atlasvibe"
 version = "0.1.0"
 description = "General-purpose visual programming IDE for Python with an Agent node flow approach"
 authors = [
-    {name = "Emasoft", email = "your-email@example.com"}, # Please update with your actual email
+    {name = "Emasoft", email = "713559+Emasoft@users.noreply.github.com"},
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -134,5 +134,5 @@ dev = [
 ]
 # For now, keep configuration minimal until we understand the correct format
 
-[tool.ruff]
-line-length = 320
+# Ruff configuration removed per CLAUDE.md rules
+# Line length is specified via command line args

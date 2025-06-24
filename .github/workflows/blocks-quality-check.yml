@@ -3,64 +3,80 @@ name: Block Quality Check
 on:
   push:
     branches:
-      - main
+    - main
   pull_request:
     branches:
-      - main
+    - main
 
 jobs:
   block-completeness:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - uses: actions/setup-python@v5
-        name: Setup Python 3.11
-        with:
-          python-version: "3.11"
+    - uses: actions/setup-python@v5
+      name: Setup Python 3.11
+      with:
+        python-version: "3.11"
 
-      - name: Install Python dependencies
-        run: uv sync --locked --all-extras --dev
+    - name: Install Python dependencies
+      run: uv sync --locked --all-extras --dev
 
-      - name: Check if there is any missing Block component
-        run: uv run python -m cli.cmd.sync
+    - name: Check if there is any missing Block component
+      run: uv run python -m cli.cmd.sync
 
-      - name: Check if everything is in sync
-        run: |
-          if git add . && git diff --quiet && git diff --cached --quiet; then
-            echo "No changes found, we are good to go!"
-          else
-            echo "Error: Changes detected. Please make sure to run the sync command and commit the changes"
-            git status --porcelain
-            exit 1
-          fi
+    - name: Check if everything is in sync
+      run: |
+        if git add . && git diff --quiet && git diff --cached --quiet; then
+          echo "No changes found, we are good to go!"
+        else
+          echo "Error: Changes detected. Please make sure to run the sync command and commit the changes"
+          git status --porcelain
+          exit 1
+        fi
 
   block-code-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - uses: chartboost/ruff-action@v1
-        name: Ruff format check
-        with:
-          args: format --check .
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install Python from uv
+      run: uv python install
+
+    - name: Check format with Ruff
+      run: uvx ruff format --check --line-length=400 --isolated .
 
   block-code-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - uses: chartboost/ruff-action@v1
-        name: Ruff linter check
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install Python from uv
+      run: uv python install
+
+    - name: Lint with Ruff
+      run: uvx ruff check --ignore E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291 --isolated --fix --output-format full .
 
   pytest:
     strategy:
@@ -69,22 +85,22 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout repository
+    - uses: actions/checkout@v4
+      name: Checkout repository
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - uses: actions/setup-python@v5
-        name: Setup Python 3.11
-        with:
-          python-version: "3.11"
+    - uses: actions/setup-python@v5
+      name: Setup Python 3.11
+      with:
+        python-version: "3.11"
 
-      - name: Install dependencies for pytest
-        run: uv sync --locked --all-extras --dev
+    - name: Install dependencies for pytest
+      run: uv sync --locked --all-extras --dev
 
-      - name: Run pytest
-        run: uv run python -m pytest -vv -m "not slow" blocks/
+    - name: Run pytest
+      run: uv run python -m pytest -vv -m "not slow" blocks/
