@@ -10,7 +10,8 @@ repos:
         language: golang
         types: [yaml]
         files: '^\.github/workflows/.*\.(yml|yaml)$'
-        additional_dependencies: ['github.com/google/yamlfmt/cmd/yamlfmt@latest']
+        additional_dependencies:
+          ["github.com/google/yamlfmt/cmd/yamlfmt@latest"]
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
