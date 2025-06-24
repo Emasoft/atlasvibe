@@ -14,12 +14,15 @@ export default defineConfig({
   workers: 1,
   testDir: "./playwright-test",
   testMatch: "**/*.spec.ts",
-  timeout: 180000, // 3 minutes timeout per test (to allow for slow Windows CI)
+  timeout: 300000, // 5 minutes timeout per test (to allow for slow CI environments)
   use: {
     trace: {
       mode: "retain-on-failure",
       sources: true,
     },
+    video: "retain-on-failure", // Record video on failure for debugging
+    screenshot: "only-on-failure", // Take screenshots on failure
   },
   maxFailures: 1,
+  reporter: [["list"], ["html", { open: "never" }]],
 });

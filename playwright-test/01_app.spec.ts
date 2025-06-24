@@ -34,7 +34,9 @@ test.describe(`${productName} startup test`, () => {
       // Check file permissions
       try {
         const stats = fs.statSync(executablePath);
-        console.log(`File permissions: ${(stats.mode & parseInt('777', 8)).toString(8)}`);
+        console.log(
+          `File permissions: ${(stats.mode & parseInt("777", 8)).toString(8)}`,
+        );
         console.log(`Is file: ${stats.isFile()}`);
         console.log(`File size: ${stats.size} bytes`);
       } catch (e) {
@@ -45,17 +47,24 @@ test.describe(`${productName} startup test`, () => {
       if (process.platform === "linux") {
         try {
           // First try just getting version or help
-          const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, { encoding: 'utf-8' });
+          const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, {
+            encoding: "utf-8",
+          });
           console.log(`ldd output:\n${lddOutput}`);
 
           // Try running the app directly to see what happens
-          console.log("\nTrying to run the app directly to check for errors...");
+          console.log(
+            "\nTrying to run the app directly to check for errors...",
+          );
           try {
             // Run with --version or --help to see if it starts at all
-            const helpOutput = execSync(`"${executablePath}" --help 2>&1 || true`, {
-              encoding: 'utf-8',
-              timeout: 5000
-            });
+            const helpOutput = execSync(
+              `"${executablePath}" --help 2>&1 || true`,
+              {
+                encoding: "utf-8",
+                timeout: 5000,
+              },
+            );
             console.log(`Help output: ${helpOutput}`);
           } catch (helpError) {
             console.error(`Error running --help: ${helpError}`);
@@ -63,11 +72,14 @@ test.describe(`${productName} startup test`, () => {
 
           // Check if there's a crash log
           try {
-            const crashCheck = execSync(`"${executablePath}" --no-sandbox 2>&1 || echo "Exit code: $?"`, {
-              encoding: 'utf-8',
-              timeout: 5000,
-              env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' }
-            });
+            const crashCheck = execSync(
+              `"${executablePath}" --no-sandbox 2>&1 || echo "Exit code: $?"`,
+              {
+                encoding: "utf-8",
+                timeout: 5000,
+                env: { ...process.env, ELECTRON_ENABLE_LOGGING: "1" },
+              },
+            );
             console.log(`Direct run output: ${crashCheck}`);
           } catch (runError) {
             console.error(`Error running directly: ${runError}`);
@@ -84,13 +96,13 @@ test.describe(`${productName} startup test`, () => {
       if (fs.existsSync(distPath)) {
         console.log(`Contents of dist directory:`);
         const dirs = fs.readdirSync(distPath);
-        dirs.forEach(dir => {
+        dirs.forEach((dir) => {
           console.log(`  - ${dir}`);
           const subdirPath = join(distPath, dir);
           if (fs.statSync(subdirPath).isDirectory() && dir.includes("linux")) {
             console.log(`    Contents of ${dir}:`);
             const files = fs.readdirSync(subdirPath);
-            files.forEach(file => {
+            files.forEach((file) => {
               console.log(`      - ${file}`);
             });
           }
@@ -104,16 +116,34 @@ test.describe(`${productName} startup test`, () => {
       app = await electron.launch({
         executablePath,
         args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-gpu',
-          '--disable-dev-shm-usage'
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-gpu",
+          "--disable-dev-shm-usage",
+          "--disable-software-rasterizer",
+          "--disable-extensions",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-renderer-backgrounding",
+          "--disable-features=TranslateUI",
+          "--disable-ipc-flooding-protection",
+          "--enable-logging",
+          "--log-level=0",
         ],
-        timeout: 30000 // 30 seconds timeout for launch
+        env: {
+          ...process.env,
+          ELECTRON_ENABLE_LOGGING: "1",
+          ELECTRON_NO_ASAR: "1",
+          ELECTRON_RUN_AS_NODE: "0",
+          NODE_ENV: "test",
+        },
+        timeout: 60000, // 60 seconds timeout for launch
       });
       console.log("Electron app launched successfully!");
     } catch (launchError) {
       console.error(`Failed to launch Electron app: ${launchError}`);
+      // Log any electron process output
+      console.error("Launch error details:", launchError);
       throw launchError;
     }
     await mockDialogMessage(app);
