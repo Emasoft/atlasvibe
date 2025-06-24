@@ -118,7 +118,7 @@ class TestUpdateBlockCodeUnit:
 
     @patch("captain.routes.blocks.Path")
     @patch("captain.routes.blocks.create_manifest")
-    @patch("captain.routes.blocks.regenerate_block_data_json")
+    @patch("captain.utils.block_metadata_generator.regenerate_block_data_json")
     def test_update_block_code_flow(self, mock_regenerate, mock_create_manifest, mock_path_class):
         """Test the complete flow of update_block_code."""
         # Mock setup
