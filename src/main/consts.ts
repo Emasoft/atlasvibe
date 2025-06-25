@@ -12,8 +12,9 @@ import { app } from "electron";
 import { join } from "node:path";
 
 // Without ASAR, the directory structure is different
+// When packaged without ASAR, resources are directly in the app directory
 export const WORKING_DIR = app.isPackaged
-  ? join(app.getAppPath(), "..") // Go up from app directory when packaged
+  ? app.getAppPath() // App directory contains resources directly when not using ASAR
   : join(__dirname, "../../"); // Development mode
 
 export const DIST_ELECTRON = join(WORKING_DIR, "out");

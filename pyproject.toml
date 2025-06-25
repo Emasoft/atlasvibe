@@ -99,6 +99,9 @@ include = [
   "components.json",
 ]
 
+[tool.hatch.build.hooks.custom]
+path = "build_hooks.py"
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-rsxX -l --tb=short --strict-markers"
