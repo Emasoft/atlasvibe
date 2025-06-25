@@ -28,10 +28,23 @@ wait_for_service() {
   echo "Waiting for $name to be ready at $url..."
 
   while [ $attempt -lt $max_attempts ]; do
-    if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q '^[234]'; then
-      echo "$name is ready!"
-      return 0
+    # More verbose health check
+    response=$(curl -s -w "\n%{http_code}" "$url" 2>&1 || echo "CURL_FAILED")
+    http_code=$(echo "$response" | tail -n1)
+
+    if [ "$response" = "CURL_FAILED" ]; then
+      echo "Attempt $attempt: curl failed to connect to $url"
+    else
+      echo "Attempt $attempt: HTTP $http_code from $url"
+      # Check if status code starts with 2, 3, or 4
+      case "$http_code" in
+        2*|3*|4*)
+          echo "$name is ready!"
+          return 0
+          ;;
+      esac
     fi
+
     attempt=$((attempt + 1))
     sleep 1
   done

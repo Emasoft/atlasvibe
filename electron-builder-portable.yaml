@@ -49,8 +49,6 @@ portable:
   unpackDirName: "AtlasVibe-Portable"
   # Don't request elevation
   requestExecutionLevel: user
-  # Use local app data
-  useLocalAppData: true
 
 extraMetadata:
   main: out/main/index.js
