@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 import atexit
+import os
 import signal
 import sys
 from captain.routes import (
@@ -55,8 +56,12 @@ async def lifespan(app: FastAPI):
     logger.info("Running startup event")
 
     # Startup
-    watch_manager = WatchManager.get_instance()
-    watch_manager.start_thread()
+    # Skip file watching in Docker tests - it can cause startup issues
+    if os.environ.get("DISABLE_FILE_WATCHER", "").lower() != "true":
+        watch_manager = WatchManager.get_instance()
+        watch_manager.start_thread()
+    else:
+        logger.info("File watcher disabled by DISABLE_FILE_WATCHER environment variable")
 
     # Get WebSocket manager instance
     ws_manager = ConnectionManager.get_instance()
