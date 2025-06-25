@@ -38,7 +38,7 @@ test.describe("Headless Docker Environment Check", () => {
     expect(successfulEndpoint).toBeTruthy();
   });
 
-  test("Can take screenshot without opening display", async ({ page, context }) => {
+  test("Can take screenshot without opening display", async ({ context }) => {
     // Create a new page - this would fail if trying to open a real window
     const newPage = await context.newPage();
 

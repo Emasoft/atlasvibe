@@ -1,0 +1,25 @@
+Run Headless Tests in Docker	Build test Docker image	﻿2025-06-25T10:41:23.4279846Z ##[group]Run echo "🔧 Building Docker test image..."
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.4280266Z [36;1mecho "🔧 Building Docker test image..."[0m
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.4280940Z [36;1mdocker build -f Dockerfile.test -t atlasvibe-test-ci --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max .[0m
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.4351768Z shell: /usr/bin/bash -e {0}
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.4352018Z ##[endgroup]
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.4434949Z 🔧 Building Docker test image...
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.5370930Z ERROR: Cache export is not supported for the docker driver.
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.5372348Z Switch to a different driver, or turn on the containerd image store, and try again.
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.5373158Z Learn more at https://docs.docker.com/go/build-cache-backends/
+Run Headless Tests in Docker	Build test Docker image	2025-06-25T10:41:23.5418403Z ##[error]Process completed with exit code 1.
+Run Headless Tests in Docker	Display test summary	﻿2025-06-25T10:41:23.9864287Z ##[group]Run echo "📊 Test Results Summary"
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9864679Z [36;1mecho "📊 Test Results Summary"[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9864920Z [36;1mecho "======================"[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9865199Z [36;1mif [ -f test-results/results.json ]; then[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9865532Z [36;1m  python3 .github/scripts/parse_test_results.py[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9865806Z [36;1melse[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9866023Z [36;1m  echo "❌ No test results file found"[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9866260Z [36;1m  exit 1[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9866421Z [36;1mfi[0m
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9916320Z shell: /usr/bin/bash -e {0}
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9916572Z ##[endgroup]
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9999299Z 📊 Test Results Summary
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:23.9999800Z ======================
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:24.0000231Z ❌ No test results file found
+Run Headless Tests in Docker	Display test summary	2025-06-25T10:41:24.0002887Z ##[error]Process completed with exit code 1.

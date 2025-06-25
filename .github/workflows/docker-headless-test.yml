@@ -32,12 +32,7 @@ jobs:
     - name: Build test Docker image
       run: |
         echo "🔧 Building Docker test image..."
-        docker build -f Dockerfile.test -t atlasvibe-test-ci --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max .
-
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        docker build -f Dockerfile.test -t atlasvibe-test-ci .
 
     - name: Run headless tests in Docker
       run: |

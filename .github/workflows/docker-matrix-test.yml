@@ -51,15 +51,9 @@ jobs:
           --platform ${{ matrix.platform }} \
           -f Dockerfile.test \
           -t atlasvibe-test-${{ matrix.cache-key }} \
-          --cache-from type=local,src=/tmp/.buildx-cache \
-          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
           --load \
           .
 
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
     - name: Verify image platform
       run: |
