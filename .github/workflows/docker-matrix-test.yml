@@ -111,13 +111,7 @@ jobs:
         echo "====================================="
         if [ -f "test-results/results.json" ]; then
           export PLATFORM="${{ matrix.platform }}"
-          echo 'import json
-        import os
-        with open("test-results/results.json", "r") as f:
-            data = json.load(f)
-            platform = os.environ.get("PLATFORM", "unknown")
-            print(f"Platform: {platform}")
-            # Add result parsing logic here' | python3
+          python3 .github/scripts/parse_platform_results.py
         else
           echo "❌ No results found for ${{ matrix.platform }}"
         fi
@@ -136,28 +130,26 @@ jobs:
 
     - name: Generate combined report
       run: |
-        echo "# 🐳 Docker Headless Test Summary" > summary.md
-        echo "" >> summary.md
-        echo "## Test Results by Platform" >> summary.md
-        echo "" >> summary.md
+        {
+          echo "# 🐳 Docker Headless Test Summary"
+          echo ""
+          echo "## Test Results by Platform"
+          echo ""
+        } > summary.md
 
         for dir in test-results-*; do
           if [ -d "$dir" ]; then
-            platform=$(echo $dir | sed 's/test-results-//')
-            echo "### Platform: $platform" >> summary.md
-
-            if [ -f "$dir/results.json" ]; then
-              export RESULTS_DIR="$dir"
-              echo 'import json
-        import os
-        results_dir = os.environ.get("RESULTS_DIR", "")
-        with open(f"{results_dir}/results.json", "r") as f:
-            data = json.load(f)
-            # Parse and add results to summary' | python3 >> summary.md
-            else
-              echo "❌ No results found" >> summary.md
-            fi
-            echo "" >> summary.md
+            platform="${dir#test-results-}"
+            {
+              echo "### Platform: $platform"
+              if [ -f "$dir/results.json" ]; then
+                export RESULTS_DIR="$dir"
+                python3 .github/scripts/parse_summary_results.py
+              else
+                echo "❌ No results found"
+              fi
+              echo ""
+            } >> summary.md
           fi
         done
 

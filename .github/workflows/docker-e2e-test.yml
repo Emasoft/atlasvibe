@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "docs/**"
-      - "**.md"
+    - "docs/**"
+    - "**.md"
   pull_request:
     branches: [main]
     paths-ignore:
-      - "docs/**"
-      - "**.md"
+    - "docs/**"
+    - "**.md"
   workflow_dispatch:
 
 concurrency:
@@ -28,188 +28,155 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Free disk space
-        run: |
-          # Free up disk space for Docker builds
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          df -h
+    - name: Free disk space
+      run: |
+        # Free up disk space for Docker builds
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        df -h
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host
-            image=moby/buildkit:master
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: |
+          network=host
+          image=moby/buildkit:master
 
-      - name: Build E2E test image
-        run: |
-          echo "🔧 Building E2E test Docker image..."
-          # Use the full Dockerfile for E2E tests
-          docker build -f Dockerfile -t atlasvibe-e2e-test --target test .
+    - name: Build E2E test image
+      run: |
+        echo "🔧 Building E2E test Docker image..."
+        # Use the full Dockerfile for E2E tests
+        docker build -f Dockerfile -t atlasvibe-e2e-test --target test .
 
-      - name: Run E2E tests in Docker
-        run: |
-          echo "🧪 Running E2E tests in headless Docker..."
+    - name: Run E2E tests in Docker
+      run: |
+        echo "🧪 Running E2E tests in headless Docker..."
 
-          # Create test directories
-          mkdir -p test-results playwright-report screenshots
+        # Create test directories
+        mkdir -p test-results playwright-report screenshots
 
-          # Run with full E2E test suite
-          docker run \
-            --rm \
-            --cap-add=SYS_ADMIN \
-            -e DISPLAY=:99 \
-            -e CI=true \
-            -e NODE_ENV=test \
-            -e ELECTRON_DISABLE_GPU=1 \
-            -e ELECTRON_NO_SANDBOX=1 \
-            -e XVFB_SCREEN_SIZE=1920x1080x24 \
-            -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
-            -v ${{ github.workspace }}/test-results:/app/test-results \
-            -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
-            -v ${{ github.workspace }}/screenshots:/app/screenshots \
-            atlasvibe-e2e-test \
-            bash -c "
-              # Start Xvfb with larger screen for E2E
-              Xvfb :99 -screen 0 1920x1080x24 -ac -nolisten tcp -nolisten unix &
-              XVFB_PID=\$!
-              sleep 3
+        # Run with full E2E test suite
+        docker run \
+          --rm \
+          --cap-add=SYS_ADMIN \
+          -e DISPLAY=:99 \
+          -e CI=true \
+          -e NODE_ENV=test \
+          -e ELECTRON_DISABLE_GPU=1 \
+          -e ELECTRON_NO_SANDBOX=1 \
+          -e XVFB_SCREEN_SIZE=1920x1080x24 \
+          -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+          -v ${{ github.workspace }}/test-results:/app/test-results \
+          -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+          -v ${{ github.workspace }}/screenshots:/app/screenshots \
+          atlasvibe-e2e-test \
+          bash -c "
+            # Start Xvfb with larger screen for E2E
+            Xvfb :99 -screen 0 1920x1080x24 -ac -nolisten tcp -nolisten unix &
+            XVFB_PID=\$!
+            sleep 3
 
-              # Verify display
-              if ! ps -p \$XVFB_PID > /dev/null; then
-                echo '❌ Xvfb failed to start'
-                exit 1
+            # Verify display
+            if ! ps -p \$XVFB_PID > /dev/null; then
+              echo '❌ Xvfb failed to start'
+              exit 1
+            fi
+
+            echo '✅ Virtual display started'
+
+            # Start backend
+            . .venv/bin/activate
+            uv run python main.py &
+            BACKEND_PID=\$!
+
+            # Wait for backend
+            echo 'Waiting for backend to start...'
+            for i in {1..60}; do
+              if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then
+                echo '✅ Backend is ready!'
+                break
               fi
+              echo -n '.'
+              sleep 1
+            done
+            echo ''
 
-              echo '✅ Virtual display started'
+            # Run full E2E test suite
+            echo '🧪 Running E2E tests...'
+            npx playwright test --config=playwright.config.ts --reporter=json,html
+            TEST_EXIT=\$?
 
-              # Start backend
-              . .venv/bin/activate
-              uv run python main.py &
-              BACKEND_PID=\$!
+            # Cleanup
+            kill \$BACKEND_PID || true
+            kill \$XVFB_PID || true
 
-              # Wait for backend
-              echo 'Waiting for backend to start...'
-              for i in {1..60}; do
-                if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then
-                  echo '✅ Backend is ready!'
-                  break
-                fi
-                echo -n '.'
-                sleep 1
-              done
-              echo ''
+            exit \$TEST_EXIT
+          "
 
-              # Run full E2E test suite
-              echo '🧪 Running E2E tests...'
-              npx playwright test --config=playwright.config.ts --reporter=json,html
-              TEST_EXIT=\$?
+    - name: Parse test results
+      if: always()
+      run: |
+        echo "📊 E2E Test Results"
+        echo "=================="
 
-              # Cleanup
-              kill \$BACKEND_PID || true
-              kill \$XVFB_PID || true
+        if [ -f "test-results/results.json" ]; then
+          python3 .github/scripts/parse_e2e_results.py
+        else
+          echo "❌ No test results found"
+          exit 1
+        fi
 
-              exit \$TEST_EXIT
-            "
+    - name: Upload E2E artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-artifacts
+        path: |
+          test-results/
+          playwright-report/
+          screenshots/
+        retention-days: 7
 
-      - name: Parse test results
-        if: always()
-        run: |
-          echo "📊 E2E Test Results"
-          echo "=================="
+    - name: Upload screenshots on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-failure-screenshots
+        path: screenshots/
+        retention-days: 7
 
-          if [ -f "test-results/results.json" ]; then
-            python3 -c "
-import json
-import sys
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |-
+          const fs = require('fs');
+          let comment = '## 🐳 Docker E2E Test Results\n\n';
 
-with open('test-results/results.json', 'r') as f:
-    data = json.load(f)
+          if (fs.existsSync('test-results/results.json')) {
+            // Add result summary
+            comment += '### Test Summary\n';
+            comment += 'See full report in artifacts\n\n';
 
-total = passed = failed = skipped = 0
-
-# Parse Playwright JSON results
-for suite in data.get('suites', []):
-    for spec in suite.get('specs', []):
-        for test in spec.get('tests', []):
-            total += 1
-            results = test.get('results', [])
-            if results:
-                status = results[0].get('status', '').lower()
-                if status == 'passed':
-                    passed += 1
-                elif status == 'failed':
-                    failed += 1
-                    error = results[0].get('error', {}).get('message', '')
-                    print(f'❌ {test.get(\"title\", \"Unknown\")}: {error[:80]}...')
-                elif status == 'skipped':
-                    skipped += 1
-
-print(f'\nTotal: {total}')
-print(f'✅ Passed: {passed}')
-print(f'❌ Failed: {failed}')
-print(f'⏭️  Skipped: {skipped}')
-
-if failed > 0:
-    sys.exit(1)
-"
-          else
-            echo "❌ No test results found"
-            exit 1
-          fi
-
-      - name: Upload E2E artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-test-artifacts
-          path: |
-            test-results/
-            playwright-report/
-            screenshots/
-          retention-days: 7
-
-      - name: Upload screenshots on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-failure-screenshots
-          path: screenshots/
-          retention-days: 7
-
-      - name: Comment PR with results
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let comment = '## 🐳 Docker E2E Test Results\n\n';
-
-            if (fs.existsSync('test-results/results.json')) {
-              // Add result summary
-              comment += '### Test Summary\n';
-              comment += 'See full report in artifacts\n\n';
-
-              if (fs.existsSync('screenshots')) {
-                const screenshots = fs.readdirSync('screenshots');
-                if (screenshots.length > 0) {
-                  comment += '### Screenshots\n';
-                  comment += `${screenshots.length} screenshots captured\n`;
-                }
+            if (fs.existsSync('screenshots')) {
+              const screenshots = fs.readdirSync('screenshots');
+              if (screenshots.length > 0) {
+                comment += '### Screenshots\n';
+                comment += `${screenshots.length} screenshots captured\n`;
               }
-            } else {
-              comment += '❌ Tests did not complete\n';
             }
+          } else {
+            comment += '❌ Tests did not complete\n';
+          }
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

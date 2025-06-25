@@ -20,88 +20,81 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Build minimal test image
-        run: |
-          echo "🔧 Building minimal test Docker image..."
-          docker build -f Dockerfile.test -t atlasvibe-quick-test .
+    - name: Build minimal test image
+      run: |
+        echo "🔧 Building minimal test Docker image..."
+        docker build -f Dockerfile.test -t atlasvibe-quick-test .
 
-      - name: Run specific tests
-        run: |
-          echo "🧪 Running Docker tests..."
+    - name: Run specific tests
+      run: |
+        echo "🧪 Running Docker tests..."
 
-          # Prepare test command
-          if [ -n "${{ inputs.test_pattern }}" ]; then
-            TEST_CMD="pnpm exec playwright test --config=playwright.config.docker.ts ${{ inputs.test_pattern }}"
-          else
-            TEST_CMD="pnpm exec playwright test --config=playwright.config.docker.ts 00_headless_check.spec.ts 00_api_smoke.spec.ts"
-          fi
+        # Prepare test command
+        if [ -n "${{ inputs.test_pattern }}" ]; then
+          TEST_CMD="pnpm exec playwright test --config=playwright.config.docker.ts ${{ inputs.test_pattern }}"
+        else
+          TEST_CMD="pnpm exec playwright test --config=playwright.config.docker.ts 00_headless_check.spec.ts 00_api_smoke.spec.ts"
+        fi
 
-          # Debug mode
-          if [ "${{ inputs.debug }}" == "true" ]; then
-            DEBUG_FLAGS="-e DEBUG=pw:api -e PWDEBUG=1"
-          else
-            DEBUG_FLAGS=""
-          fi
+        # Debug mode - build docker command
+        DOCKER_CMD="docker run --rm -e DISPLAY=:99 -e CI=true -e NODE_ENV=test -e ELECTRON_DISABLE_GPU=1 -e ELECTRON_NO_SANDBOX=1"
 
-          # Run container with custom command
-          docker run \
-            --rm \
-            -e DISPLAY=:99 \
-            -e CI=true \
-            -e NODE_ENV=test \
-            -e ELECTRON_DISABLE_GPU=1 \
-            -e ELECTRON_NO_SANDBOX=1 \
-            $DEBUG_FLAGS \
-            -v ${{ github.workspace }}/test-results:/app/test-results \
-            -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
-            atlasvibe-quick-test \
-            bash -c "
-              Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix &
-              sleep 3
-              . .venv/bin/activate
-              uv run pnpm run backend &
-              BACKEND_PID=\$!
-              echo 'Waiting for backend...'
-              for i in {1..30}; do
-                if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then
-                  echo 'Backend ready!'
-                  break
-                fi
-                sleep 1
-              done
-              echo 'Running tests: $TEST_CMD'
-              $TEST_CMD
-              TEST_EXIT=\$?
-              kill \$BACKEND_PID
-              exit \$TEST_EXIT
-            "
+        if [ "${{ inputs.debug }}" == "true" ]; then
+          DOCKER_CMD="$DOCKER_CMD -e DEBUG=pw:api -e PWDEBUG=1"
+        fi
 
-      - name: Display quick results
-        if: always()
-        run: |
-          echo "📊 Quick Test Results"
-          echo "==================="
-          if [ -f "test-results/results.json" ]; then
-            # Simple result display
-            grep -E "(passed|failed|skipped)" test-results/results.json || echo "No test status found"
-          else
-            echo "No results file generated"
-          fi
+        DOCKER_CMD="$DOCKER_CMD -v ${{ github.workspace }}/test-results:/app/test-results -v ${{ github.workspace }}/playwright-report:/app/playwright-report"
 
-          # List test artifacts
-          echo ""
-          echo "📁 Test Artifacts:"
-          ls -la test-results/ 2>/dev/null || echo "No test results found"
+        # Run container with custom command
+        $DOCKER_CMD \
+          atlasvibe-quick-test \
+          bash -c "
+            Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix &
+            sleep 3
+            . .venv/bin/activate
+            uv run pnpm run backend &
+            BACKEND_PID=\$!
+            echo 'Waiting for backend...'
+            for i in {1..30}; do
+              if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then
+                echo 'Backend ready!'
+                break
+              fi
+              sleep 1
+            done
+            echo 'Running tests: $TEST_CMD'
+            $TEST_CMD
+            TEST_EXIT=\$?
+            kill \$BACKEND_PID
+            exit \$TEST_EXIT
+          "
 
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quick-test-results
-          path: |
-            test-results/
-            playwright-report/
-          retention-days: 3
+    - name: Display quick results
+      if: always()
+      run: |
+        echo "📊 Quick Test Results"
+        echo "==================="
+        if [ -f "test-results/results.json" ]; then
+          # Simple result display
+          grep -E "(passed|failed|skipped)" test-results/results.json || echo "No test status found"
+        else
+          echo "No results file generated"
+        fi
+
+        # List test artifacts
+        echo ""
+        echo "📁 Test Artifacts:"
+        ls -la test-results/ 2>/dev/null || echo "No test results found"
+
+    - name: Upload results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: quick-test-results
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 3
