@@ -10,7 +10,7 @@
 
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 import createPlotlyComponent from "react-plotly.js/factory";
-import Plotly from "plotly.js";
+import Plotly from "plotly.js-dist-min";
 import { plotLayout } from "./layout";
 import { useMemo } from "react";
 import { PlotProps } from "@/renderer/types/plotly";
