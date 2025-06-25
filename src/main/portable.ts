@@ -8,16 +8,18 @@ import fs from "fs";
 
 export function setupPortableMode(): void {
   // Check if running in portable mode
-  const isPortable = process.env.PORTABLE_MODE === "true" ||
-                    process.env.PORTABLE_EXECUTABLE_DIR ||
-                    checkPortableStructure();
+  const isPortable =
+    process.env.PORTABLE_MODE === "true" ||
+    process.env.PORTABLE_EXECUTABLE_DIR ||
+    checkPortableStructure();
 
   if (isPortable) {
     console.log("Running in portable mode");
 
     // Get the portable directory
-    const portableDir = process.env.PORTABLE_EXECUTABLE_DIR ||
-                       path.dirname(path.dirname(app.getPath("exe")));
+    const portableDir =
+      process.env.PORTABLE_EXECUTABLE_DIR ||
+      path.dirname(path.dirname(app.getPath("exe")));
 
     // Override paths to use portable directories
     const userDataPath = path.join(portableDir, "userdata");
@@ -25,7 +27,7 @@ export function setupPortableMode(): void {
     const cachePath = path.join(portableDir, "cache");
 
     // Create directories if they don't exist
-    [userDataPath, tempPath, cachePath].forEach(dir => {
+    [userDataPath, tempPath, cachePath].forEach((dir) => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
@@ -57,10 +59,10 @@ function checkPortableStructure(): boolean {
     "AtlasVibe-Portable",
     "portable.txt",
     "../start-atlasvibe.bat",
-    "../start-atlasvibe.sh"
+    "../start-atlasvibe.sh",
   ];
 
-  return portableMarkers.some(marker => {
+  return portableMarkers.some((marker) => {
     const markerPath = path.join(exeDir, marker);
     return fs.existsSync(markerPath) || exeDir.includes(marker);
   });

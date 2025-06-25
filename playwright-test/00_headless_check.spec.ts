@@ -17,7 +17,7 @@ test.describe("Headless Docker Environment Check", () => {
     // Test that backend is accessible
     const endpoints = [
       "http://localhost:11060/log_level",
-      "http://localhost:5392/log_level"
+      "http://localhost:5392/log_level",
     ];
 
     let successfulEndpoint = null;
@@ -43,7 +43,7 @@ test.describe("Headless Docker Environment Check", () => {
     const newPage = await context.newPage();
 
     // Navigate to a data URL (doesn't require backend)
-    await newPage.goto('data:text/html,<h1>Headless Test</h1>');
+    await newPage.goto("data:text/html,<h1>Headless Test</h1>");
 
     // Take a screenshot - this proves we're rendering headlessly
     const screenshot = await newPage.screenshot();

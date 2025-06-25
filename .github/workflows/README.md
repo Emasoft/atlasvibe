@@ -7,21 +7,25 @@ This directory contains GitHub Actions workflows that run headless tests in Dock
 ### Workflows
 
 1. **docker-headless-test.yml** - Basic Docker headless test runner
+
    - Runs on push/PR to main
    - Uses Dockerfile.test for quick testing
    - Uploads test results as artifacts
 
 2. **docker-compose-test.yml** - Docker Compose based testing
+
    - Uses docker-compose.yml for orchestration
    - Better for complex multi-service tests
    - Includes Docker logs on failure
 
 3. **docker-matrix-test.yml** - Multi-platform testing
+
    - Tests on linux/amd64 and linux/arm64
    - Uses QEMU for cross-platform builds
    - Generates combined test report
 
 4. **docker-quick-test.yml** - Manual quick test runner
+
    - Workflow dispatch with custom test patterns
    - Debug mode support
    - Minimal 15-minute timeout
@@ -42,6 +46,7 @@ This directory contains GitHub Actions workflows that run headless tests in Dock
 ### Environment Variables
 
 All Docker test workflows use these standard variables:
+
 ```yaml
 DISPLAY: :99
 CI: true
@@ -54,6 +59,7 @@ XVFB_SCREEN_SIZE: 1280x1024x24
 ### Usage
 
 The workflows are triggered automatically on:
+
 - Push to main branch
 - Pull requests to main branch
 - Manual workflow dispatch
@@ -61,6 +67,7 @@ The workflows are triggered automatically on:
 ### Debugging
 
 To debug failing tests:
+
 1. Check the uploaded artifacts for test results and screenshots
 2. Use the docker-quick-test.yml workflow with debug mode enabled
 3. Review Docker logs in the workflow output
@@ -68,6 +75,7 @@ To debug failing tests:
 ### Local Testing
 
 To run the same tests locally:
+
 ```bash
 # Using Docker Compose
 npm run docker:test

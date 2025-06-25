@@ -14,6 +14,7 @@ This document explains how AtlasVibe's Docker testing environment is configured 
 ### Docker Configuration
 
 The Dockerfile includes a dedicated test stage with:
+
 - All required X11 and GTK dependencies for headless Electron
 - Playwright base image with browser support
 - Xvfb (X Virtual Framebuffer) for virtual display
@@ -81,16 +82,19 @@ test-docker.sh             # Convenience script
 ## How It Works
 
 1. **Container Startup**:
+
    - Xvfb starts on display :99 with 1280x1024x24 resolution
    - Virtual display is verified before proceeding
    - No TCP/Unix listeners to prevent external connections
 
 2. **Service Launch**:
+
    - Backend (FastAPI) starts on port 5392
    - Frontend (if needed) starts on port 5173
    - Services run inside container network
 
 3. **Test Execution**:
+
    - Playwright runs with headless Chrome
    - Tests interact with virtual display
    - Screenshots/videos saved to mounted volumes

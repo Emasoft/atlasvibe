@@ -7,7 +7,7 @@ test.describe("API Smoke Tests", () => {
       "http://localhost:11060/log_level",
       "http://localhost:11060/blocks/metadata/",
       "http://localhost:5392/log_level",
-      "http://localhost:5392/blocks/metadata/"
+      "http://localhost:5392/blocks/metadata/",
     ];
 
     let successfulEndpoint = null;
@@ -15,7 +15,8 @@ test.describe("API Smoke Tests", () => {
     for (const endpoint of endpoints) {
       try {
         const response = await request.get(endpoint, { timeout: 5000 });
-        if (response.status() < 500) {  // Accept any non-server-error response
+        if (response.status() < 500) {
+          // Accept any non-server-error response
           successfulEndpoint = endpoint;
           break;
         }
@@ -39,7 +40,10 @@ test.describe("API Smoke Tests", () => {
 
       for (const port of ports) {
         try {
-          const response = await request.get(`http://localhost:${port}/blocks/metadata/`, { timeout: 5000 });
+          const response = await request.get(
+            `http://localhost:${port}/blocks/metadata/`,
+            { timeout: 5000 },
+          );
           if (response.status() < 500) {
             successfulResponse = response;
             break;
@@ -66,7 +70,9 @@ test.describe("API Smoke Tests", () => {
 
   test("Frontend dev server should respond", async ({ request }) => {
     try {
-      const response = await request.get("http://localhost:5173", { timeout: 5000 });
+      const response = await request.get("http://localhost:5173", {
+        timeout: 5000,
+      });
       expect(response.ok()).toBeTruthy();
 
       const html = await response.text();

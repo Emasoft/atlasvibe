@@ -26,16 +26,30 @@ test.beforeEach(async () => {
       console.log("Using portable batch launcher:", batchPath);
 
       // For Windows portable, we'll use the actual exe inside the extracted folder
-      const portableExe = join(portableDir, "AtlasVibe-Portable", "atlasvibe.exe");
+      const portableExe = join(
+        portableDir,
+        "AtlasVibe-Portable",
+        "atlasvibe.exe",
+      );
       if (fs.existsSync(portableExe)) {
         executablePath = portableExe;
       } else {
         // Fallback to regular build
-        executablePath = join(process.cwd(), "dist", "win-unpacked", "atlasvibe.exe");
+        executablePath = join(
+          process.cwd(),
+          "dist",
+          "win-unpacked",
+          "atlasvibe.exe",
+        );
       }
     } else {
       // Use regular build
-      executablePath = join(process.cwd(), "dist", "win-unpacked", "atlasvibe.exe");
+      executablePath = join(
+        process.cwd(),
+        "dist",
+        "win-unpacked",
+        "atlasvibe.exe",
+      );
     }
   } else if (process.platform === "darwin") {
     executablePath = join(
@@ -78,7 +92,6 @@ test.beforeEach(async () => {
 
     // Set a reasonable timeout for page operations
     page.setDefaultTimeout(30000);
-
   } catch (error) {
     console.error("Failed to launch app:", error);
 
@@ -129,12 +142,11 @@ test("main window should load", async () => {
     const reactRoot = await page.$("#root");
     expect(reactRoot).toBeTruthy();
     console.log("React root element found");
-
   } catch (error) {
     // Take a screenshot for debugging
     await page.screenshot({
       path: `test-results/portable-launch-failure-${Date.now()}.png`,
-      fullPage: true
+      fullPage: true,
     });
     throw error;
   }

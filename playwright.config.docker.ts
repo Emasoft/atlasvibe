@@ -33,10 +33,10 @@ export default defineConfig({
     // Disable GPU
     launchOptions: {
       args: [
-        '--disable-gpu',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
+        "--disable-gpu",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
       ],
     },
 
