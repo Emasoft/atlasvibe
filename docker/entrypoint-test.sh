@@ -17,8 +17,9 @@ echo 'Virtual display started successfully'
 echo 'Starting backend and frontend services...'
 # Start just the backend first to isolate the issue
 echo 'Starting backend only for testing...'
-# Disable file watcher in Docker to avoid startup issues
+# Disable file watcher and change queue in Docker to avoid startup issues
 export DISABLE_FILE_WATCHER=true
+export DISABLE_CHANGE_QUEUE=true
 uv run python3 main.py &
 BACKEND_PID=$!
 

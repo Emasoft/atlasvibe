@@ -72,9 +72,13 @@ async def lifespan(app: FastAPI):
     logger.info("Workflow Queue Coordinator started (managing WCQ and WEQ)")
 
     # Start ChangeQueueManager for real-time code updates
-    change_queue_manager = ChangeQueueManager.get_instance()
-    change_queue_manager.start()
-    logger.info("ChangeQueueManager started")
+    if os.environ.get("DISABLE_CHANGE_QUEUE", "").lower() != "true":
+        change_queue_manager = ChangeQueueManager.get_instance()
+        change_queue_manager.start()
+        logger.info("ChangeQueueManager started")
+    else:
+        logger.info("ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable")
+        change_queue_manager = None
 
     # Store references for shutdown
     app.state.workflow_coordinator = workflow_coordinator
