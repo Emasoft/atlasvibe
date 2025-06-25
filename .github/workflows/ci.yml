@@ -141,3 +141,51 @@ jobs:
     - name: Verify dependencies
       run: |-
         uv pip check || true
+
+  docker-headless-tests:
+    name: Docker Headless Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout repository
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker test image
+      run: |
+        echo "🔧 Building Docker test image..."
+        docker build -f Dockerfile.test -t atlasvibe-test-ci .
+
+    - name: Run headless tests in Docker
+      run: |
+        echo "🧪 Running headless tests in Docker..."
+        # Ensure no display variable is set
+        unset DISPLAY
+
+        # Create directories for test results
+        mkdir -p test-results playwright-report
+
+        # Run the container with identical settings as local
+        docker run \
+          --rm \
+          -e DISPLAY=:99 \
+          -e CI=true \
+          -e NODE_ENV=test \
+          -e ELECTRON_DISABLE_GPU=1 \
+          -e ELECTRON_NO_SANDBOX=1 \
+          -e XVFB_SCREEN_SIZE=1280x1024x24 \
+          -v ${{ github.workspace }}/test-results:/app/test-results \
+          -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+          atlasvibe-test-ci
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-test-results
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 7

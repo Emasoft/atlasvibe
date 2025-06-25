@@ -2,7 +2,9 @@
 set -euo pipefail
 
 echo "=== AtlasVibe Docker Test Environment ==="
-echo "Starting headless test environment..."
+echo "Starting headless test environment with uv..."
+echo "Python: $(python --version)"
+echo "uv: $(uv --version)"
 
 # Function to cleanup on exit
 cleanup() {
@@ -16,9 +18,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Create config directory if it doesn't exist
+mkdir -p ~/.atlasvibe
+if [ ! -f ~/.atlasvibe/atlasvibe.yaml ]; then
+    echo "docker: true" > ~/.atlasvibe/atlasvibe.yaml
+fi
+
 # Start Xvfb (virtual display) - this prevents any window from opening on host
 echo "Starting Xvfb virtual display..."
-Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix &
+Xvfb :99 -screen 0 ${XVFB_SCREEN_SIZE:-1280x1024x24} -ac -nolisten tcp -nolisten unix &
 XVFB_PID=$!
 
 # Wait for Xvfb to be ready
@@ -40,9 +48,9 @@ export ELECTRON_DISABLE_GPU=1
 export ELECTRON_NO_SANDBOX=1
 export ELECTRON_ENABLE_LOGGING=1
 
-# Start the application services
-echo "Starting AtlasVibe services..."
-pnpm run start-project:ci &
+# Start the application services using uv
+echo "Starting AtlasVibe services with uv..."
+uv run pnpm run start-project:ci &
 SERVER_PID=$!
 
 # Wait for services to be ready
@@ -63,9 +71,9 @@ if ! ps -p $SERVER_PID > /dev/null; then
     exit 1
 fi
 
-# Run the tests
-echo "Running Playwright tests..."
-python3 /app/run_tests_docker.py
+# Run the tests with uv
+echo "Running Playwright tests with uv..."
+uv run python /app/run_tests_docker.py
 TEST_EXIT_CODE=$?
 
 echo "Tests completed with exit code: $TEST_EXIT_CODE"

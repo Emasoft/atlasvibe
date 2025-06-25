@@ -4,10 +4,10 @@ test.describe("API Smoke Tests", () => {
   test("Backend health check should respond", async ({ request }) => {
     // Try multiple possible endpoints - AtlasVibe doesn't have a health endpoint but we can check log_level
     const endpoints = [
-      "http://localhost:5392/log_level",
-      "http://localhost:5392/blocks/metadata/",
       "http://localhost:11060/log_level",
-      "http://localhost:11060/blocks/metadata/"
+      "http://localhost:11060/blocks/metadata/",
+      "http://localhost:5392/log_level",
+      "http://localhost:5392/blocks/metadata/"
     ];
 
     let successfulEndpoint = null;
@@ -31,7 +31,7 @@ test.describe("API Smoke Tests", () => {
   test("Backend API can retrieve blocks metadata", async ({ request }) => {
     try {
       // Try both possible ports with the correct endpoint
-      const ports = ["5392", "11060"];
+      const ports = ["11060", "5392"];
       let successfulResponse = null;
 
       for (const port of ports) {

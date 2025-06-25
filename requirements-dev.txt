@@ -236,7 +236,9 @@ more-itertools==10.7.0
 mypy-extensions==1.1.0
     # via black
 networkx==3.5
-    # via scikit-image
+    # via
+    #   atlasvibe
+    #   scikit-image
 ninja==1.11.1.4
     # via atlasvibe
 nodeenv==1.9.1

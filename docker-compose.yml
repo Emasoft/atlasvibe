@@ -12,9 +12,11 @@ services:
     environment:
       - NODE_ENV=production
       - DISPLAY=:99
+      - UV_SYSTEM_PYTHON=true
     volumes:
       - ./sample_projects:/app/sample_projects
       - atlasvibe_data:/app/data
+      - uv-cache:/root/.cache/uv
     networks:
       - atlasvibe_network
 
@@ -31,13 +33,18 @@ services:
       - ELECTRON_DISABLE_GPU=1
       - ELECTRON_NO_SANDBOX=1
       - ELECTRON_ENABLE_LOGGING=1
+      - UV_SYSTEM_PYTHON=true
+      - XVFB_SCREEN_SIZE=1280x1024x24
     volumes:
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
+      - uv-cache:/root/.cache/uv
     # Prevent any connection to host display
     init: true
     security_opt:
       - no-new-privileges:true
+    # Disable IPC namespace to prevent X11 socket access
+    ipc: none
     command: |
       sh -c "
         # Start Xvfb in background with proper settings
@@ -54,14 +61,14 @@ services:
         echo 'Virtual display started successfully'
 
         echo 'Starting backend and frontend services...'
-        pnpm run start-project:ci &
+        uv run pnpm run start-project:ci &
         SERVER_PID=\$!
 
         echo 'Waiting for services to be ready...'
         sleep 30
 
         echo 'Running tests...'
-        python3 /app/run_tests_docker.py
+        uv run python /app/run_tests_docker.py
         TEST_EXIT_CODE=\$?
 
         # Cleanup
@@ -75,6 +82,7 @@ services:
 
 volumes:
   atlasvibe_data:
+  uv-cache:
 
 networks:
   atlasvibe_network:

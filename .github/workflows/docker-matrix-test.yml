@@ -1,0 +1,171 @@
+name: Docker Matrix Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  docker-matrix-test:
+    name: Docker Test - ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-latest
+          platform: linux/amd64
+          cache-key: linux-amd64
+        - os: ubuntu-latest
+          platform: linux/arm64
+          cache-key: linux-arm64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      if: matrix.platform == 'linux/arm64'
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: ${{ matrix.platform }}
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-${{ matrix.cache-key }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.cache-key }}-buildx-
+
+    - name: Build test image for platform
+      run: |
+        echo "🔧 Building for platform: ${{ matrix.platform }}"
+        docker buildx build \
+          --platform ${{ matrix.platform }} \
+          -f Dockerfile.test \
+          -t atlasvibe-test-${{ matrix.cache-key }} \
+          --cache-from type=local,src=/tmp/.buildx-cache \
+          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+          --load \
+          .
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Verify image platform
+      run: |
+        docker inspect atlasvibe-test-${{ matrix.cache-key }} | jq '.[0].Architecture'
+
+    - name: Run headless tests
+      run: |
+        echo "🧪 Running tests on ${{ matrix.platform }}..."
+        mkdir -p test-results-${{ matrix.cache-key }} playwright-report-${{ matrix.cache-key }}
+
+        docker run \
+          --rm \
+          --platform ${{ matrix.platform }} \
+          -e DISPLAY=:99 \
+          -e CI=true \
+          -e NODE_ENV=test \
+          -e ELECTRON_DISABLE_GPU=1 \
+          -e ELECTRON_NO_SANDBOX=1 \
+          -e XVFB_SCREEN_SIZE=1280x1024x24 \
+          -e TEST_PLATFORM=${{ matrix.platform }} \
+          -v ${{ github.workspace }}/test-results-${{ matrix.cache-key }}:/app/test-results \
+          -v ${{ github.workspace }}/playwright-report-${{ matrix.cache-key }}:/app/playwright-report \
+          atlasvibe-test-${{ matrix.cache-key }}
+
+    - name: Rename artifacts for platform
+      if: always()
+      run: |
+        if [ -d "test-results-${{ matrix.cache-key }}" ]; then
+          mv test-results-${{ matrix.cache-key }} test-results
+        fi
+        if [ -d "playwright-report-${{ matrix.cache-key }}" ]; then
+          mv playwright-report-${{ matrix.cache-key }} playwright-report
+        fi
+
+    - name: Upload platform-specific artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.cache-key }}
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 7
+
+    - name: Display test summary
+      if: always()
+      run: |
+        echo "📊 Test Results for ${{ matrix.platform }}"
+        echo "====================================="
+        if [ -f "test-results/results.json" ]; then
+          export PLATFORM="${{ matrix.platform }}"
+          echo 'import json
+        import os
+        with open("test-results/results.json", "r") as f:
+            data = json.load(f)
+            platform = os.environ.get("PLATFORM", "unknown")
+            print(f"Platform: {platform}")
+            # Add result parsing logic here' | python3
+        else
+          echo "❌ No results found for ${{ matrix.platform }}"
+        fi
+
+  summary:
+    name: Test Summary
+    needs: docker-matrix-test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: test-results-*
+        merge-multiple: true
+
+    - name: Generate combined report
+      run: |
+        echo "# 🐳 Docker Headless Test Summary" > summary.md
+        echo "" >> summary.md
+        echo "## Test Results by Platform" >> summary.md
+        echo "" >> summary.md
+
+        for dir in test-results-*; do
+          if [ -d "$dir" ]; then
+            platform=$(echo $dir | sed 's/test-results-//')
+            echo "### Platform: $platform" >> summary.md
+
+            if [ -f "$dir/results.json" ]; then
+              export RESULTS_DIR="$dir"
+              echo 'import json
+        import os
+        results_dir = os.environ.get("RESULTS_DIR", "")
+        with open(f"{results_dir}/results.json", "r") as f:
+            data = json.load(f)
+            # Parse and add results to summary' | python3 >> summary.md
+            else
+              echo "❌ No results found" >> summary.md
+            fi
+            echo "" >> summary.md
+          fi
+        done
+
+        cat summary.md
+
+    - name: Upload summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-summary
+        path: summary.md
+        retention-days: 7

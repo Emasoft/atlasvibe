@@ -16,8 +16,8 @@ test.describe("Headless Docker Environment Check", () => {
   test("Backend API responds in Docker", async ({ request }) => {
     // Test that backend is accessible
     const endpoints = [
-      "http://localhost:5392/log_level",
-      "http://localhost:11060/log_level"
+      "http://localhost:11060/log_level",
+      "http://localhost:5392/log_level"
     ];
 
     let successfulEndpoint = null;

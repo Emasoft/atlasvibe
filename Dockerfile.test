@@ -1,0 +1,77 @@
+# Minimal test Dockerfile for AtlasVibe
+FROM python:3.11-slim
+
+# Set environment to prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install uv
+RUN pip install uv
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs \
+    npm \
+    xvfb \
+    curl \
+    # Minimal GTK and X11 for headless
+    libgtk-3-0 \
+    libgbm1 \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN npm install -g pnpm@9
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock requirements.txt package.json pnpm-lock.yaml README.md ./
+
+# Create requirements without editable install for Docker
+RUN grep -v "^-e" requirements.txt > requirements-docker.txt
+
+# Install Python dependencies with uv
+RUN uv venv && . .venv/bin/activate && uv pip install -r requirements-docker.txt
+
+# Install Node dependencies
+RUN pnpm install --frozen-lockfile
+
+# Install Playwright browsers
+RUN npx playwright install chromium --with-deps
+
+# Copy application code
+COPY . .
+
+# Set up headless environment
+ENV DISPLAY=:99
+ENV CI=true
+ENV NODE_ENV=test
+ENV ELECTRON_DISABLE_GPU=1
+ENV ELECTRON_NO_SANDBOX=1
+
+# Create config directory
+RUN mkdir -p ~/.atlasvibe && echo "docker: true" > ~/.atlasvibe/atlasvibe.yaml
+
+# Simple entrypoint
+CMD ["bash", "-c", "\
+    Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix & \
+    sleep 3 && \
+    . .venv/bin/activate && \
+    uv run pnpm run backend & \
+    BACKEND_PID=$! && \
+    echo 'Waiting for backend to start...' && \
+    for i in {1..60}; do \
+        if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then \
+            echo 'Backend is ready!'; \
+            break; \
+        fi; \
+        echo -n '.'; \
+        sleep 1; \
+    done && \
+    echo '' && \
+    uv run python run_tests_docker.py && \
+    kill $BACKEND_PID \
+"]

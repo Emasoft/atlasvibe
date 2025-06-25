@@ -1,0 +1,165 @@
+name: Docker Compose Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+env:
+  # Ensure no display connection to host
+  DISPLAY: ""
+
+jobs:
+  docker-compose-test:
+    name: Test with Docker Compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install docker-compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Verify Docker setup
+        run: |
+          docker --version
+          docker-compose --version
+          docker info
+
+      - name: Build test environment
+        run: |
+          echo "🔧 Building Docker Compose test environment..."
+          docker-compose build atlasvibe-test
+
+      - name: Run headless tests
+        id: test
+        run: |
+          echo "🧪 Running tests in Docker Compose..."
+          # Create directories for test results
+          mkdir -p test-results playwright-report
+
+          # Run tests with identical configuration as local
+          docker-compose run \
+            --rm \
+            --no-deps \
+            -e DISPLAY=:99 \
+            -e CI=true \
+            -e NODE_ENV=test \
+            -e ELECTRON_DISABLE_GPU=1 \
+            -e ELECTRON_NO_SANDBOX=1 \
+            -e XVFB_SCREEN_SIZE=1280x1024x24 \
+            atlasvibe-test \
+            || echo "TEST_FAILED=true" >> $GITHUB_OUTPUT
+
+      - name: Copy test artifacts
+        if: always()
+        run: |
+          # Ensure we have the test results
+          if [ -d "test-results" ]; then
+            echo "📁 Test results found:"
+            ls -la test-results/
+          else
+            echo "❌ No test results directory found"
+          fi
+
+      - name: Parse and display results
+        if: always()
+        run: |
+          if [ -f "test-results/results.json" ]; then
+            echo "📊 Parsing test results..."
+            python3 -c "
+import json
+import sys
+
+with open('test-results/results.json', 'r') as f:
+    data = json.load(f)
+
+# Initialize counters
+total = passed = failed = skipped = 0
+
+# Parse results based on Playwright JSON format
+if 'suites' in data:
+    for suite in data['suites']:
+        suite_name = suite.get('title', 'Unknown Suite')
+        for spec in suite.get('specs', []):
+            for test in spec.get('tests', []):
+                total += 1
+                test_name = test.get('title', 'Unknown Test')
+                results = test.get('results', [])
+                if results:
+                    status = results[0].get('status', 'passed').lower()
+                    if status == 'passed':
+                        passed += 1
+                        print(f'✅ PASSED: {suite_name} > {test_name}')
+                    elif status == 'failed':
+                        failed += 1
+                        error = results[0].get('error', {}).get('message', 'Unknown error')
+                        print(f'❌ FAILED: {suite_name} > {test_name}')
+                        print(f'   Error: {error[:100]}...')
+                    elif status == 'skipped':
+                        skipped += 1
+                        print(f'⏭️  SKIPPED: {suite_name} > {test_name}')
+
+print(f'\n{\"=\"*60}')
+print(f'Total: {total} | Passed: {passed} | Failed: {failed} | Skipped: {skipped}')
+print(f'{\"=\"*60}')
+
+if failed > 0:
+    sys.exit(1)
+"
+          else
+            echo "❌ No test results file found at test-results/results.json"
+            exit 1
+          fi
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-test-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+      - name: Upload Docker logs
+        if: failure()
+        run: |
+          echo "📋 Collecting Docker logs..."
+          docker-compose logs > docker-compose.log
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: docker-compose.log
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker resources..."
+          docker-compose down -v
+          docker system prune -f
+
+      - name: Check test status
+        if: steps.test.outputs.TEST_FAILED == 'true'
+        run: |
+          echo "❌ Tests failed! Check artifacts for details."
+          exit 1
