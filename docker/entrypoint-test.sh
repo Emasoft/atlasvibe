@@ -1,80 +1,68 @@
-#!/bin/bash
-set -euo pipefail
+#!/bin/sh
+# Docker test entrypoint script for AtlasVibe
 
-echo "=== AtlasVibe Docker Test Environment ==="
-echo "Starting headless test environment with uv..."
-echo "Python: $(python --version)"
-echo "uv: $(uv --version)"
-
-# Function to cleanup on exit
-cleanup() {
-    echo "Cleaning up..."
-    if [ ! -z "${XVFB_PID:-}" ]; then
-        kill $XVFB_PID 2>/dev/null || true
-    fi
-    if [ ! -z "${SERVER_PID:-}" ]; then
-        kill $SERVER_PID 2>/dev/null || true
-    fi
-}
-trap cleanup EXIT
-
-# Create config directory if it doesn't exist
-mkdir -p ~/.atlasvibe
-if [ ! -f ~/.atlasvibe/atlasvibe.yaml ]; then
-    echo "docker: true" > ~/.atlasvibe/atlasvibe.yaml
-fi
-
-# Start Xvfb (virtual display) - this prevents any window from opening on host
-echo "Starting Xvfb virtual display..."
-Xvfb :99 -screen 0 ${XVFB_SCREEN_SIZE:-1280x1024x24} -ac -nolisten tcp -nolisten unix &
+# Start Xvfb in background with proper settings
+Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix > /dev/null 2>&1 &
 XVFB_PID=$!
-
-# Wait for Xvfb to be ready
-sleep 2
+sleep 3
 
 # Verify Xvfb is running
 if ! ps -p $XVFB_PID > /dev/null; then
-    echo "ERROR: Xvfb failed to start!"
-    exit 1
+  echo 'ERROR: Xvfb failed to start'
+  exit 1
 fi
 
-echo "Virtual display started successfully (PID: $XVFB_PID)"
+echo 'Virtual display started successfully'
 
-# Export display for all child processes
-export DISPLAY=:99
-
-# Additional Electron settings for headless mode
-export ELECTRON_DISABLE_GPU=1
-export ELECTRON_NO_SANDBOX=1
-export ELECTRON_ENABLE_LOGGING=1
-
-# Start the application services using uv
-echo "Starting AtlasVibe services with uv..."
+echo 'Starting backend and frontend services...'
 uv run pnpm run start-project:ci &
 SERVER_PID=$!
 
-# Wait for services to be ready
-echo "Waiting for services to be ready..."
-for i in {1..30}; do
-    if curl -s http://localhost:5392/log_level > /dev/null 2>&1; then
-        echo "Backend is ready!"
-        break
-    fi
-    echo -n "."
-    sleep 1
-done
-echo ""
+# Function to check if a service is ready
+wait_for_service() {
+  local url=$1
+  local name=$2
+  local max_attempts=60  # 60 seconds timeout
+  local attempt=0
 
-# Verify services are running
-if ! ps -p $SERVER_PID > /dev/null; then
-    echo "ERROR: Services failed to start!"
-    exit 1
+  echo "Waiting for $name to be ready at $url..."
+
+  while [ $attempt -lt $max_attempts ]; do
+    if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q '^[234]'; then
+      echo "$name is ready!"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    sleep 1
+  done
+
+  echo "ERROR: $name failed to start after $max_attempts seconds"
+  return 1
+}
+
+# Wait for backend to be ready (AtlasVibe backend runs on port 5392)
+if ! wait_for_service "http://localhost:5392/log_level" "Backend API"; then
+  echo "Backend failed to start on port 5392"
+  kill $SERVER_PID || true
+  kill $XVFB_PID || true
+  exit 1
 fi
 
-# Run the tests with uv
-echo "Running Playwright tests with uv..."
+# Wait for frontend to be ready
+if ! wait_for_service "http://localhost:5173" "Frontend"; then
+  echo "Frontend failed to start"
+  kill $SERVER_PID || true
+  kill $XVFB_PID || true
+  exit 1
+fi
+
+echo 'All services are ready!'
+echo 'Running tests...'
 uv run python /app/run_tests_docker.py
 TEST_EXIT_CODE=$?
 
-echo "Tests completed with exit code: $TEST_EXIT_CODE"
+# Cleanup
+kill $SERVER_PID || true
+kill $XVFB_PID || true
+
 exit $TEST_EXIT_CODE

@@ -45,7 +45,8 @@ services:
       - no-new-privileges:true
     # Disable IPC namespace to prevent X11 socket access
     ipc: none
-    command: ["sh", "-c", "/app/docker-test-entrypoint.sh"]
+    # Entrypoint is already set in Dockerfile, no need for command
+    # command is handled by ENTRYPOINT in Dockerfile
     networks:
       - atlasvibe_network
 
