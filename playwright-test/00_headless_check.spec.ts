@@ -28,7 +28,9 @@ test.describe("Headless Docker Environment Check", () => {
         const response = await request.get(endpoint, { timeout: 10000 });
         if (response.status() < 500) {
           successfulEndpoint = endpoint;
-          console.log(`Backend responding at: ${endpoint} with status ${response.status()}`);
+          console.log(
+            `Backend responding at: ${endpoint} with status ${response.status()}`,
+          );
           break;
         }
       } catch (error) {
