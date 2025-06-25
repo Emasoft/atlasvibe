@@ -91,19 +91,24 @@ jobs:
           Get-ChildItem "dist-portable\AtlasVibe-Portable*.exe" | ForEach-Object { echo "Portable file: $_" }
         }
 
-    - name: Extract portable build
+    - name: Setup portable build
       shell: pwsh
       run: |
         $portableExe = Get-ChildItem "dist-portable\AtlasVibe-Portable*.exe" | Select-Object -First 1
         if ($portableExe) {
-          echo "Extracting $($portableExe.Name)..."
-          # Create extraction directory
-          New-Item -ItemType Directory -Force -Path "dist-portable\AtlasVibe-Portable"
-          # Extract the portable exe (it's a self-extracting archive)
-          # Use 7z to extract the NSIS installer
-          & "C:\Program Files\7-Zip\7z.exe" x $portableExe.FullName -o"dist-portable\AtlasVibe-Portable" -y
-          echo "Contents after extraction:"
-          dir "dist-portable\AtlasVibe-Portable"
+          echo "Found portable exe: $($portableExe.Name)"
+          # Portable builds are self-extracting - they run directly
+          # For testing, we need to set up the expected directory structure
+
+          # Create the expected test directories
+          New-Item -ItemType Directory -Force -Path "dist\win-unpacked"
+
+          # Copy the portable exe to the expected location for the test
+          Copy-Item $portableExe.FullName -Destination "dist\win-unpacked\atlasvibe.exe" -Force
+
+          echo "Copied portable exe to test location"
+          echo "Contents of dist\win-unpacked:"
+          Get-ChildItem "dist\win-unpacked"
         }
 
     - name: Test portable launcher

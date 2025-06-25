@@ -25,13 +25,22 @@ sleep 10
 # Check if the process is still running
 if ! ps -p $SERVER_PID > /dev/null; then
   echo 'ERROR: Server process died during startup'
+  # Check for any error output
+  echo 'Checking for process errors...'
+  ps aux | grep -E 'python|node|pnpm' || true
   exit 1
 fi
 
 # Check what's listening on ports
 echo 'Checking listening ports...'
-netstat -tulpn | grep -E ':(5392|5173)' || echo 'No ports found with netstat'
-ss -tulpn | grep -E ':(5392|5173)' || echo 'No ports found with ss'
+netstat -tulpn 2>/dev/null | grep -E ':(5392|5173)' || echo 'No ports found with netstat'
+ss -tulpn 2>/dev/null | grep -E ':(5392|5173)' || echo 'No ports found with ss'
+# Also check with lsof if available
+which lsof >/dev/null 2>&1 && lsof -i :5392 -i :5173 || echo 'lsof not available'
+
+# Debug: Check if backend process is actually running
+echo 'Checking backend processes...'
+ps aux | grep -E 'python.*main\.py|uvicorn' | grep -v grep || echo 'No Python backend process found'
 
 # Function to check if a service is ready
 wait_for_service() {
@@ -48,14 +57,16 @@ wait_for_service() {
 
     # Try Python first to check if port is open
     if python3 -c "import socket; s=socket.socket(); result=s.connect_ex(('localhost', $port)); s.close(); exit(0 if result==0 else 1)" 2>/dev/null; then
-      echo "Attempt $attempt: Port is open, trying HTTP request..."
-      # Port is open, try curl
-      response=$(curl -s -w "\n%{http_code}" "$url" 2>&1 || echo "CURL_FAILED")
-      http_code=$(echo "$response" | tail -n1)
+      echo "Attempt $attempt: Port $port is open, trying HTTP request..."
+      # Port is open, try curl with verbose error reporting
+      curl_output=$(curl -v -s -w "\nHTTP_CODE:%{http_code}" "$url" 2>&1)
+      curl_exit_code=$?
 
-      if [ "$response" = "CURL_FAILED" ]; then
-        echo "Attempt $attempt: curl failed despite port being open"
+      if [ $curl_exit_code -ne 0 ]; then
+        echo "Attempt $attempt: curl failed with exit code $curl_exit_code"
+        echo "Curl output: $curl_output"
       else
+        http_code=$(echo "$curl_output" | grep "HTTP_CODE:" | cut -d: -f2)
         echo "Attempt $attempt: HTTP $http_code from $url"
         # Check if status code starts with 2, 3, or 4
         case "$http_code" in
@@ -63,10 +74,16 @@ wait_for_service() {
             echo "$name is ready!"
             return 0
             ;;
+          *)
+            echo "Unexpected HTTP code: $http_code"
+            echo "Response preview: $(echo "$curl_output" | head -20)"
+            ;;
         esac
       fi
     else
       echo "Attempt $attempt: Port $port is not open yet"
+      # Try alternative connection test
+      nc -zv localhost $port 2>&1 || echo "nc test also failed"
     fi
 
     attempt=$((attempt + 1))
