@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  atlasvibe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - "5173:5173"
+      - "11060:11060"
+    environment:
+      - NODE_ENV=production
+      - DISPLAY=:99
+    volumes:
+      - ./sample_projects:/app/sample_projects
+      - atlasvibe_data:/app/data
+    networks:
+      - atlasvibe_network
+
+  atlasvibe-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - DISPLAY=:99
+      # Ensure Electron runs headless
+      - ELECTRON_DISABLE_GPU=1
+      - ELECTRON_NO_SANDBOX=1
+      - ELECTRON_ENABLE_LOGGING=1
+    volumes:
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+    # Prevent any connection to host display
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    command: |
+      sh -c "
+        # Start Xvfb in background with proper settings
+        Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix > /dev/null 2>&1 &
+        XVFB_PID=\$!
+        sleep 3
+
+        # Verify Xvfb is running
+        if ! ps -p \$XVFB_PID > /dev/null; then
+          echo 'ERROR: Xvfb failed to start'
+          exit 1
+        fi
+
+        echo 'Virtual display started successfully'
+
+        echo 'Starting backend and frontend services...'
+        pnpm run start-project:ci &
+        SERVER_PID=\$!
+
+        echo 'Waiting for services to be ready...'
+        sleep 30
+
+        echo 'Running tests...'
+        python3 /app/run_tests_docker.py
+        TEST_EXIT_CODE=\$?
+
+        # Cleanup
+        kill \$SERVER_PID || true
+        kill \$XVFB_PID || true
+
+        exit \$TEST_EXIT_CODE
+      "
+    networks:
+      - atlasvibe_network
+
+volumes:
+  atlasvibe_data:
+
+networks:
+  atlasvibe_network:
+    driver: bridge

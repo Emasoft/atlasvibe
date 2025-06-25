@@ -88,18 +88,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # -*- coding: utf-8 -*-
 ```
 
-- always add a short changelog before the imports in of the source code to document all the changes you made to it.
+- always add a short changelog (just before the imports) in each modified code file to document all the changes made to it since the last commit. Each file must only contain the changelog of the changes made to it, not the changes made to other files.
 
 ```python
-# HERE IS THE CHANGELOG FOR THIS VERSION OF THE CODE:
-# <your changelog here…>
+# HERE IS THE CHANGELOG FOR THIS VERSION OF THE FILE:
+# <this file changelog here…>
 #
 ```
 
 ### Formatting Rules
 
 - Use only ruff format for formatting python files. Read how here: https://docs.astral.sh/ruff/formatter/
-- Set ruff format to allows line lenght up to 400 chars, using the `--line-length=400`
+- Set ruff format to allows line lenght up to 320 chars, using the `--line-length=320`
 - Do not use pyproject.toml or ruff.toml to configure ruff, since there are too many variations of the command used in the workflows. Aleays run it in isolated mode with `--isolated` and set all options via cli.
 - Use autofix to format pull-requests automatically. Read how here: https://autofix.ci/setup
 - Use Prettier to format all other code files (except python and yaml).
@@ -152,7 +152,7 @@ yamlfmt -path .github/workflows
 - Use actionlint snd yamllint for yaml
 - Use jsonlint for json
 - Run ruff using this command: `uv run ruff check --ignore E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291 --isolated --fix --output-format full`
-- Run mypy using this command: `COLUMNS=400 uv run mypy --strict --show-error-context --pretty --install-types --no-color-output --non-interactive --show-error-codes --show-error-code-links --no-error-summary --follow-imports=normal <files to test or pattern...>`
+- Run mypy using this command: `COLUMNS=400 uv run mypy --strict --show-error-context --pretty --install-types --no-color-output --show-error-codes --show-error-code-links --no-error-summary --follow-imports=normal <files to test or pattern...>`
 - use shellcheck-py if you need to use shellcheck from a python script
 - Use `pnpm run lint` to run eslint on node.js source files.
 - Add git hooks that uses uv-pre-commit to run the linting at each commit, read the guide here: `https://docs.astral.sh/uv/guides/integration/pre-commit/`
@@ -1226,7 +1226,7 @@ dhtl format --check
 
 uv run ruff format # format with ruff
 uv run ruff check --ignore E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291 --isolated --fix --output-format full
-COLUMNS=400 uv run mypy --strict --show-error-context --pretty --install-types --no-color-output --non-interactive --show-error-codes --show-error-code-links --no-error-summary --follow-imports=normal cli_translator.py >mypy_lint_log.txt
+COLUMNS=400 uv run mypy --strict --show-error-context --pretty --install-types --no-color-output --show-error-codes --show-error-code-links --no-error-summary --follow-imports=normal <files> >mypy_lint_log.txt
 
 # TypeScript/JavaScript formatting and linting commands syntax to use internally in dhtl:
 
