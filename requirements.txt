@@ -27,8 +27,6 @@ attrs==25.3.0
     # via
     #   jsonschema
     #   referencing
-av==14.4.0
-    # via atlasvibe
 backports-tarfile==1.2.0 ; python_full_version < '3.12'
     # via jaraco-context
 black==25.1.0
@@ -225,8 +223,6 @@ more-itertools==10.7.0
 mypy-extensions==1.1.0
     # via black
 networkx==3.5
-    # via atlasvibe
-ninja==1.11.1.4
     # via atlasvibe
 nodeenv==1.9.1
     # via pre-commit
