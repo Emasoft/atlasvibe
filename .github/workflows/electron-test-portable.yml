@@ -22,7 +22,7 @@ concurrency:
 
 env:
   CI: "true"
-  NODE_ENV: "production"
+  NODE_ENV: "test"
   DISPLAY: :0
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
