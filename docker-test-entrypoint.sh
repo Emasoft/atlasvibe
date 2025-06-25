@@ -18,9 +18,45 @@ echo 'Starting backend and frontend services...'
 uv run pnpm run start-project:ci &
 SERVER_PID=$!
 
-echo 'Waiting for services to be ready...'
-sleep 30
+# Function to check if a service is ready
+wait_for_service() {
+  local url=$1
+  local name=$2
+  local max_attempts=60  # 60 seconds timeout
+  local attempt=0
 
+  echo "Waiting for $name to be ready at $url..."
+
+  while [ $attempt -lt $max_attempts ]; do
+    if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q '^[234]'; then
+      echo "$name is ready!"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    sleep 1
+  done
+
+  echo "ERROR: $name failed to start after $max_attempts seconds"
+  return 1
+}
+
+# Wait for backend to be ready (AtlasVibe backend runs on port 5392)
+if ! wait_for_service "http://localhost:5392/log_level" "Backend API"; then
+  echo "Backend failed to start on port 5392"
+  kill $SERVER_PID || true
+  kill $XVFB_PID || true
+  exit 1
+fi
+
+# Wait for frontend to be ready
+if ! wait_for_service "http://localhost:5173" "Frontend"; then
+  echo "Frontend failed to start"
+  kill $SERVER_PID || true
+  kill $XVFB_PID || true
+  exit 1
+fi
+
+echo 'All services are ready!'
 echo 'Running tests...'
 uv run python /app/run_tests_docker.py
 TEST_EXIT_CODE=$?

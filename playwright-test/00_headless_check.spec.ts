@@ -14,24 +14,25 @@ test.describe("Headless Docker Environment Check", () => {
   });
 
   test("Backend API responds in Docker", async ({ request }) => {
-    // Test that backend is accessible
+    // Test that backend is accessible - AtlasVibe backend runs on port 5392
     const endpoints = [
-      "http://localhost:11060/log_level",
       "http://localhost:5392/log_level",
+      "http://127.0.0.1:5392/log_level",
     ];
 
     let successfulEndpoint = null;
 
     for (const endpoint of endpoints) {
       try {
-        const response = await request.get(endpoint, { timeout: 5000 });
+        console.log(`Trying backend endpoint: ${endpoint}`);
+        const response = await request.get(endpoint, { timeout: 10000 });
         if (response.status() < 500) {
           successfulEndpoint = endpoint;
-          console.log(`Backend responding at: ${endpoint}`);
+          console.log(`Backend responding at: ${endpoint} with status ${response.status()}`);
           break;
         }
       } catch (error) {
-        console.log(`Failed to connect to ${endpoint}`);
+        console.log(`Failed to connect to ${endpoint}: ${error}`);
       }
     }
 
