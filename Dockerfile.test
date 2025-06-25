@@ -52,6 +52,20 @@ ENV NODE_ENV=test
 ENV ELECTRON_DISABLE_GPU=1
 ENV ELECTRON_NO_SANDBOX=1
 
+# Create necessary directories
+RUN mkdir -p /root/.atlasvibe && \
+    echo 'test: true' > /root/.atlasvibe/atlasvibe.yaml
+
+# Copy test entrypoint
+COPY docker/entrypoint-test.sh /app/
+RUN chmod +x /app/entrypoint-test.sh
+
+# Copy test runner
+COPY run_tests_docker.py /app/
+
+# Use entrypoint for proper service startup
+ENTRYPOINT ["/app/entrypoint-test.sh"]
+
 # Create config directory
 RUN mkdir -p ~/.atlasvibe && echo "docker: true" > ~/.atlasvibe/atlasvibe.yaml
 
