@@ -19,6 +19,8 @@
     "start-project:win": "concurrently --prefix \"[{time}-{name}]\" -n \"React,FastAPI\" -c auto \"pnpm:start\" \"python manage.py\"",
     "start-project:win:debug": "concurrently --prefix \"[{time}-{name}]\" -n \"React,FastAPI\" -c auto \"pnpm:start\" \"python manage.py --log-level debug\"",
     "start-project:ci": "CI=true concurrently --prefix \"[{time}-{name}]\" -n \"React,FastAPI\" -c auto  \"pnpm:start\" \"pnpm:backend\"",
+    "start-project:docker": "CI=true ELECTRON_DISABLE_SANDBOX=1 concurrently --prefix \"[{time}-{name}]\" -n \"React,FastAPI\" -c auto  \"pnpm:start:docker\" \"pnpm:backend\"",
+    "start:docker": "electron-vite preview -- --no-sandbox",
     "start-project:debug": "DEBUG=true concurrently --prefix \"[{time}-{name}]\" -n \"React,FastAPI\" -c auto  \"pnpm:start\" \"pnpm:backend:debug\"",
     "format": "npx prettier --write .",
     "check": "npx prettier --check .",

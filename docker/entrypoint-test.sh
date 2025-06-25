@@ -15,7 +15,7 @@ fi
 echo 'Virtual display started successfully'
 
 echo 'Starting backend and frontend services...'
-uv run pnpm run start-project:ci &
+uv run pnpm run start-project:docker &
 SERVER_PID=$!
 
 # Function to check if a service is ready
