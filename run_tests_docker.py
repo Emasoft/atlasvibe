@@ -53,7 +53,7 @@ class TestReporter:
 
         # Run Playwright tests with Docker config
         # Run headless check and API tests only in Docker
-        cmd = ["pnpm", "exec", "playwright", "test", "--config=playwright.config.docker.ts", "00_headless_check.spec.ts", "00_api_smoke.spec.ts"]
+        cmd = ["pnpm", "exec", "playwright", "test", "--config=playwright.config.docker.ts", "00_headless_check.spec.docker.ts", "00_api_smoke.spec.ts"]
 
         print("\n📋 Running Playwright tests...")
         process = subprocess.run(cmd, capture_output=True, text=True)

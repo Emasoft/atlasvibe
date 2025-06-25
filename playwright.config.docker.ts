@@ -7,7 +7,7 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   workers: 1,
   testDir: "./playwright-test",
-  testMatch: "**/*.spec.ts",
+  testMatch: ["**/*.spec.ts", "**/*.spec.docker.ts"],
   timeout: 300000, // 5 minutes timeout per test (to allow for slow CI environments)
 
   // Specific output directory for Docker
