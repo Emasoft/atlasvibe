@@ -86,21 +86,24 @@ jobs:
       run: |
         echo "Contents of dist-portable:"
         dir dist-portable
-        if (Test-Path "dist-portable\AtlasVibe Portable*.exe") {
+        if (Test-Path "dist-portable\AtlasVibe-Portable*.exe") {
           echo "Found portable executable"
-          Get-ChildItem "dist-portable\AtlasVibe Portable*.exe" | ForEach-Object { echo "Portable file: $_" }
+          Get-ChildItem "dist-portable\AtlasVibe-Portable*.exe" | ForEach-Object { echo "Portable file: $_" }
         }
 
     - name: Extract portable build
       shell: pwsh
       run: |
-        $portableExe = Get-ChildItem "dist-portable\AtlasVibe Portable*.exe" | Select-Object -First 1
+        $portableExe = Get-ChildItem "dist-portable\AtlasVibe-Portable*.exe" | Select-Object -First 1
         if ($portableExe) {
           echo "Extracting $($portableExe.Name)..."
-          # Portable exe extracts itself when run
-          Start-Process -FilePath $portableExe.FullName -ArgumentList "/S", "/D=dist-portable\extracted" -Wait -NoNewWindow
+          # Create extraction directory
+          New-Item -ItemType Directory -Force -Path "dist-portable\AtlasVibe-Portable"
+          # Extract the portable exe (it's a self-extracting archive)
+          # Use 7z to extract the NSIS installer
+          & "C:\Program Files\7-Zip\7z.exe" x $portableExe.FullName -o"dist-portable\AtlasVibe-Portable" -y
           echo "Contents after extraction:"
-          dir "dist-portable\extracted"
+          dir "dist-portable\AtlasVibe-Portable"
         }
 
     - name: Test portable launcher

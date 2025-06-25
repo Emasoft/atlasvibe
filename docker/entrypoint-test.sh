@@ -18,6 +18,21 @@ echo 'Starting backend and frontend services...'
 uv run pnpm run start-project:docker &
 SERVER_PID=$!
 
+# Give services time to start
+echo 'Waiting 10 seconds for services to initialize...'
+sleep 10
+
+# Check if the process is still running
+if ! ps -p $SERVER_PID > /dev/null; then
+  echo 'ERROR: Server process died during startup'
+  exit 1
+fi
+
+# Check what's listening on ports
+echo 'Checking listening ports...'
+netstat -tulpn | grep -E ':(5392|5173)' || echo 'No ports found with netstat'
+ss -tulpn | grep -E ':(5392|5173)' || echo 'No ports found with ss'
+
 # Function to check if a service is ready
 wait_for_service() {
   local url=$1
@@ -28,21 +43,30 @@ wait_for_service() {
   echo "Waiting for $name to be ready at $url..."
 
   while [ $attempt -lt $max_attempts ]; do
-    # More verbose health check
-    response=$(curl -s -w "\n%{http_code}" "$url" 2>&1 || echo "CURL_FAILED")
-    http_code=$(echo "$response" | tail -n1)
+    # Extract port from URL (e.g., http://localhost:5392/log_level -> 5392)
+    local port=$(echo "$url" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
 
-    if [ "$response" = "CURL_FAILED" ]; then
-      echo "Attempt $attempt: curl failed to connect to $url"
+    # Try Python first to check if port is open
+    if python3 -c "import socket; s=socket.socket(); result=s.connect_ex(('localhost', $port)); s.close(); exit(0 if result==0 else 1)" 2>/dev/null; then
+      echo "Attempt $attempt: Port is open, trying HTTP request..."
+      # Port is open, try curl
+      response=$(curl -s -w "\n%{http_code}" "$url" 2>&1 || echo "CURL_FAILED")
+      http_code=$(echo "$response" | tail -n1)
+
+      if [ "$response" = "CURL_FAILED" ]; then
+        echo "Attempt $attempt: curl failed despite port being open"
+      else
+        echo "Attempt $attempt: HTTP $http_code from $url"
+        # Check if status code starts with 2, 3, or 4
+        case "$http_code" in
+          2*|3*|4*)
+            echo "$name is ready!"
+            return 0
+            ;;
+        esac
+      fi
     else
-      echo "Attempt $attempt: HTTP $http_code from $url"
-      # Check if status code starts with 2, 3, or 4
-      case "$http_code" in
-        2*|3*|4*)
-          echo "$name is ready!"
-          return 0
-          ;;
-      esac
+      echo "Attempt $attempt: Port $port is not open yet"
     fi
 
     attempt=$((attempt + 1))
