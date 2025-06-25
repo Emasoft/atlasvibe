@@ -77,6 +77,9 @@ jobs:
     - name: Install Node Dependencies
       run: pnpm install
 
+    - name: Install Playwright
+      run: pnpm exec playwright install
+
     - name: Build executable
       if: ${{ matrix.os == 'macos-latest' }}
       run: pnpm run electron-package:mac
