@@ -55,7 +55,7 @@ class TestUpdateBlockCodeRealIntegration:
             block_file.write_text("""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
@@ -114,7 +114,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
@@ -212,7 +212,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         bad_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
@@ -244,7 +244,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
@@ -313,7 +313,7 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2, z: int = 3) -> int:
                 new_code = f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: int = 1) -> int:

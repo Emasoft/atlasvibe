@@ -77,7 +77,7 @@ def test_project():
         block_py.write_text("""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(
     name="CUSTOM_PROCESSOR",
@@ -110,7 +110,7 @@ def test_custom_block_update_preserves_path(client, test_project):
     new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(
     name="CUSTOM_PROCESSOR",
@@ -151,7 +151,7 @@ def test_update_custom_block_via_api(client, test_project):
         "content": """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe_node
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
 @atlasvibe_node(
     node_type="CustomBlock"
@@ -236,7 +236,7 @@ def test_custom_block_parameter_update_in_project(client, test_project):
     new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(
     name="CUSTOM_PROCESSOR",
@@ -299,7 +299,7 @@ def test_multiple_projects_with_same_custom_block_name(client):
             block_py.write_text(f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(
     name="PROCESSOR",

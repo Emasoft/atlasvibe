@@ -36,7 +36,7 @@ def temp_block_dir():
         # Create Python file
         py_file = block_dir / "TEST_BLOCK.py"
         py_file.write_text('''
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(deps=["numpy>=1.20.0", "pandas>=1.0.0"])
 def TEST_BLOCK():

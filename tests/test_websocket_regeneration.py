@@ -38,7 +38,7 @@ class TestWebSocketRegenerationState:
             # Create block file
             block_file = block_dir / "TEST_BLOCK.py"
             block_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
@@ -189,7 +189,7 @@ def TEST_BLOCK(x: int = 1) -> int:
 
             block_file = blocks_dir / "CUSTOM_BLOCK.py"
             block_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
@@ -203,7 +203,7 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
             request = UpdateBlockCodeRequest(
                 block_path=str(block_file),
                 content="""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:

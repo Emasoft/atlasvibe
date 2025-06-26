@@ -194,7 +194,7 @@ class TestBlockCodeUpdateIntegration:
             # Create block file
             block_file = blocks_dir / "TEST_BLOCK.py"
             block_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
@@ -217,7 +217,7 @@ def TEST_BLOCK(x: int = 1) -> int:
 
         # New content
         new_content = """#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:

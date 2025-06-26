@@ -78,7 +78,7 @@ class TestMetadataGeneration:
         py_file.write_text("""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_CUSTOM_BLOCK(x: int = 10, y: int = 20) -> int:
@@ -122,7 +122,7 @@ def TEST_CUSTOM_BLOCK(x: int = 10, y: int = 20) -> int:
         initial_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CHANGING_BLOCK(x: int = 1) -> int:
@@ -140,7 +140,7 @@ def CHANGING_BLOCK(x: int = 1) -> int:
         updated_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CHANGING_BLOCK(x: int = 1, multiplier: int = 3, offset: int = 0) -> int:
@@ -205,7 +205,7 @@ def CHANGING_BLOCK(x: int = 1, multiplier: int = 3, offset: int = 0) -> int:
 
             py_file = block_dir / f"{block_name}.py"
             py_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def WATCHED_BLOCK(x: int = 1) -> int:
@@ -239,7 +239,7 @@ def WATCHED_BLOCK(x: int = 1) -> int:
             # Create blueprint files
             (blueprint_path / "__init__.py").write_text("")
             (blueprint_path / "BLUEPRINT_BLOCK.py").write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def BLUEPRINT_BLOCK(x: int = 5) -> int:

@@ -41,7 +41,7 @@ def test_automatic_metadata_generation_demo():
         py_content = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 from atlasvibe.parameter_types import String, Number, DataFrame
 
 

@@ -51,7 +51,7 @@ def temp_blueprint():
         # Create Python file
         py_file = blueprint_dir / "BLUEPRINT_BLOCK.py"
         py_file.write_text('''
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def BLUEPRINT_BLOCK(x: int = 10):

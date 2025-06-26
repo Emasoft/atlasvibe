@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
 
-from atlasvibe import String
+from pkgs.atlasvibe.atlasvibe import String
 
 _robot_handle_map = None
 

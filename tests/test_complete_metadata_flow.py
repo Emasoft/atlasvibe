@@ -84,7 +84,7 @@ class TestCompleteMetadataFlow:
             (blueprint_dir / "CONSTANT.py").write_text("""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CONSTANT(x: int = 42) -> int:
@@ -150,7 +150,7 @@ def CONSTANT(x: int = 42) -> int:
                 new_code = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Custom constant") -> int:
@@ -237,7 +237,7 @@ def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Cus
             (block_dir / "__init__.py").write_text("")
             py_file = block_dir / f"{block_name}.py"
             py_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def DETECTED_BLOCK(value: int = 100) -> int:
@@ -250,7 +250,7 @@ def DETECTED_BLOCK(value: int = 100) -> int:
             # Modify the file
             print("\n=== Modifying Block Code ===")
             py_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def DETECTED_BLOCK(value: int = 100, new_param: str = "detected") -> int:

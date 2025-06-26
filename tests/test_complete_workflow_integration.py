@@ -53,7 +53,7 @@ class TestCompleteWorkflowIntegration:
             py_content = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 from atlasvibe.parameter_types import String, Number, Vector
 
 
@@ -185,7 +185,7 @@ def SAMPLE_BLUEPRINT(
         updated_code = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 from atlasvibe.parameter_types import String, Number, Matrix
 
 

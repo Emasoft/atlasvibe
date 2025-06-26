@@ -60,7 +60,7 @@ class TestBlocksAPI:
 
             block_file = temp_dir / "TEST_BLOCK.py"
             block_file.write_text("""#!/usr/bin/env python3
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:

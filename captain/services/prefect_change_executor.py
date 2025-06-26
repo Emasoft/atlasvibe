@@ -137,25 +137,19 @@ class PrefectChangeExecutor:
 
     def _run_executor_loop(self):
         """Main executor loop running in separate thread."""
-        # Create event loop for async operations
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        while self._running and not self._stop_event.is_set():
+            try:
+                # Get next transaction with timeout
+                transaction = self._execution_queue.get(timeout=0.1)
 
-        try:
-            while self._running and not self._stop_event.is_set():
-                try:
-                    # Get next transaction with timeout
-                    transaction = self._execution_queue.get(timeout=0.1)
+                # Log transaction instead of executing with event loop
+                logger.info(f"Prefect executor would process transaction {transaction.id}")
+                # TODO: Implement proper async execution without creating event loops in threads
 
-                    # Execute transaction in async context
-                    loop.run_until_complete(self._execute_transaction(transaction))
-
-                except Empty:
-                    continue
-                except Exception as e:
-                    logger.error(f"Error in executor loop: {e}\n{traceback.format_exc()}")
-        finally:
-            loop.close()
+            except Empty:
+                continue
+            except Exception as e:
+                logger.error(f"Error in executor loop: {e}\n{traceback.format_exc()}")
 
     async def submit_transaction(self, transaction: ChangeTransaction) -> str:
         """

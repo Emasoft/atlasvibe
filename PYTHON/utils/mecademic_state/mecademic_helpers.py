@@ -9,7 +9,7 @@
 import functools
 import logging
 import traceback
-from atlasvibe import JobFailure, JobSuccess
+from pkgs.atlasvibe.atlasvibe import JobFailure, JobSuccess
 from PYTHON.utils.mecademic_state.mecademic_state import query_for_handle
 
 logger = logging.getLogger("MECADEMIC ROBOT LOG")

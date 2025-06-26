@@ -15,7 +15,7 @@ virtual environment exists but does not contain the pip dependencies.
 Example usage:
 
 ```python
-from atlasvibe import atlasvibe, run_in_venv
+from pkgs.atlasvibe.atlasvibe import atlasvibe, run_in_venv
 
 @atlasvibe
 @run_in_venv(pip_dependencies=["torch==2.0.1", "torchvision==0.15.2"])

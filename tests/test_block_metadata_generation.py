@@ -304,7 +304,7 @@ This is useful for building up data arrays in loops.
 from unittest.mock import patch
 
 import numpy
-from atlasvibe import DataContainer
+from pkgs.atlasvibe.atlasvibe import DataContainer
 
 
 def mock_atlasvibe_decorator(f):
@@ -493,7 +493,7 @@ class TestJSONOperationsRefactoring:
             # Create Python file
             py_file = block_dir / "TEST_BLOCK.py"
             py_file.write_text('''
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK():

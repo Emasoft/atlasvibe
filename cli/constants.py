@@ -13,7 +13,7 @@ BLOCKS_DOCS_FOLDER = "docs/src/content/docs/blocks/"
 BLOCKS_SOURCE_FOLDER = "blocks/"
 
 BLOCK_TEMPLATE = """\
-from atlasvibe import atlasvibe, DataContainer
+from pkgs.atlasvibe.atlasvibe import atlasvibe, DataContainer
 
 
 @atlasvibe

@@ -52,7 +52,7 @@ def create_custom_block(project_dir: Path, block_name: str) -> Path:
     block_py.write_text(f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 from atlasvibe.data_container import DataContainer
 
 @atlasvibe(

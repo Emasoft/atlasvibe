@@ -24,7 +24,7 @@ def test_block_file_update():
         original_content = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
@@ -37,7 +37,7 @@ def TEST_BLOCK(x: int = 1) -> int:
         new_content = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:

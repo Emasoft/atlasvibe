@@ -2,18 +2,59 @@
 
 ## Executive Summary
 
-This report provides a comprehensive analysis of the AtlasVibe codebase, examining errors, potential issues, duplicated code, antipatterns, bad practices, and missing/unimplemented features. The codebase demonstrates **good overall quality (8.5/10)** with excellent practices in error handling, resource management, and architecture design.
+This comprehensive analysis identifies critical issues in the AtlasVibe codebase that may prevent the application from running correctly or cause maintenance difficulties. While the codebase shows good architecture and practices in many areas, there are **several critical issues that need immediate attention**, particularly around import paths, missing package files, and runtime startup problems.
 
-## 1. TODO/FIXME Analysis
+## 1. CRITICAL: Import and Path Issues
+
+### Import Path Migration Problem
+The codebase has undergone a major refactoring from `atlasvibe` to `pkgs.atlasvibe.atlasvibe` but the migration is incomplete:
+
+- **360+ files** still contain old import patterns
+- Test file `test_build_manifest_import_fix.py` implements a workaround but doesn't fix the root cause
+- This **will cause ModuleNotFoundError** at runtime for many components
+
+### Missing __init__.py Files
+Critical Python package files are missing:
+
+- `/blocks/` directory itself lacks `__init__.py`
+- `/blocks/COMPUTER_VISION/` and at least 20+ subdirectories
+- This **prevents Python from recognizing these as packages**
+
+### Circular Import Risk
+- 164+ files contain relative imports that could lead to circular dependencies
+- No systematic approach to preventing import cycles
+
+## 2. TODO/FIXME Analysis
 
 ### Summary Statistics
 
-- **TODO**: 27 occurrences
+- **TODO**: 68 occurrences (updated count)
 - **FIXME**: 2 occurrences
 - **HACK**: 0 occurrences
 - **XXX**: 4 occurrences
+- **BUG**: Multiple references
+- **REFACTOR**: Multiple references
 
-### Critical TODOs Requiring Attention
+### New Critical Issues Found
+
+1. **ChangeQueueManager Startup Hang**
+   - Recent commit: "fix: Disable ChangeQueueManager in Docker tests to prevent startup hang"
+   - This is a **critical runtime issue** that prevents the application from starting
+   - Located in `captain/services/change_queue.py`
+   - May affect production deployments
+
+2. **Configuration Issues**
+   - **pyproject.toml** Line 2: Incorrectly attributes copyright to "Atlasvibe" instead of "Flojoy" (the original project)
+   - This violates the fork relationship documented in CLAUDE.md
+   - Build configuration may not align with actual project structure
+
+3. **Environment Variable Management**
+   - 200+ files reference environment variables
+   - `OPENROUTER_API_KEY` and other critical variables are undocumented
+   - No `.env.example` file exists
+   - No startup validation of required environment variables
+
+### Original TODOs Requiring Attention
 
 #### High Priority
 
@@ -99,7 +140,53 @@ function apiCall<T>(
 }
 ```
 
-## 3. Antipatterns and Bad Practices
+## 3. Test Coverage Crisis
+
+### Missing Tests (Critical)
+A significant portion of the codebase lacks test coverage:
+
+**Core Blocks Without Tests:**
+- LOGARITHMIC_ADJUSTMENT
+- EXTREMA_DETERMINATION
+- REGION_PROPERTIES
+- GAMMA_ADJUSTMENT
+- ROTATE_IMAGE
+- IMAGE_SWIRL
+
+**ETL Components Without Tests:**
+- BATCH_PROCESSOR
+- ORDERED_PAIR_INDEXING
+- ORDERED_PAIR_LENGTH
+- ORDERED_PAIR_DELETE
+
+**AI/ML Blocks Without Tests:**
+- TRAIN_TEST_SPLIT
+- SUPPORT_VECTOR_MACHINE
+- ACCURACY
+- SPEECH_2_TEXT
+- OBJECT_DETECTION
+- LEAST_SQUARES
+
+### Test Quality Issues
+- Many test files contain `ImportError` handling, indicating dependency problems
+- Excessive mocking violates project guidelines in CLAUDE.md
+- Docker tests disabled due to ChangeQueueManager issues
+- 25 files contain error handling for missing modules in tests
+
+## 4. Security Vulnerabilities
+
+### Potential Exposed Secrets
+- 3 files contain patterns matching API keys or tokens
+- 158 files reference password/token/secret strings
+- No pre-commit hooks for secret scanning
+- No `.gitleaks.toml` configuration
+
+### Hardcoded Values
+- 7 files contain hardcoded localhost/127.0.0.1 addresses
+- Port numbers (8080, 3000) hardcoded instead of configuration
+- Magic numbers scattered throughout the codebase
+
+## 5. Antipatterns and Bad Practices
 
 ### ✅ Good Practices Found
 
@@ -208,23 +295,52 @@ The entire Phase 3 of the development plan is unimplemented:
 
 | Category         | Score | Notes                                        |
 | ---------------- | ----- | -------------------------------------------- |
-| Error Handling   | 9/10  | Excellent use of neverthrow and Result types |
-| Type Safety      | 7/10  | Good but some `any` usage remains            |
+| Import System    | 2/10  | Critical: 360+ broken imports, missing __init__.py |
+| Runtime Stability| 3/10  | ChangeQueueManager prevents startup          |
+| Test Coverage    | 4/10  | Many core blocks completely untested         |
+| Configuration    | 3/10  | No env validation, hardcoded values          |
+| Security         | 5/10  | Exposed secrets, input validation issues     |
 | Code Duplication | 6/10  | Significant duplication in utilities         |
-| Test Coverage    | 7/10  | Good coverage but many skipped tests         |
-| Documentation    | 8/10  | Well-documented but some TODOs remain        |
-| Security         | 8/10  | One critical issue, otherwise solid          |
-| Performance      | 7/10  | Good patterns but missing optimizations      |
-| Accessibility    | 5/10  | Needs significant improvement                |
+| Documentation    | 6/10  | Missing critical setup/env documentation     |
+| Error Handling   | 8/10  | Good use of neverthrow and Result types     |
+| Architecture     | 8/10  | Well-designed but poorly implemented         |
 
-**Overall Score: 8.5/10** - A mature codebase with room for improvement in utilities consolidation and frontend optimization.
+**Updated Overall Score: 5/10** - Good architecture severely undermined by critical implementation issues.
 
-## 8. Action Plan
+## 8. Updated Priority Action Plan
 
-1. **Week 1**: Address security vulnerability and critical TODOs
-2. **Week 2-3**: Create shared utilities and reduce duplication
-3. **Week 4-6**: Implement Phase 3 code intelligence features
-4. **Week 7-8**: Frontend optimization and accessibility improvements
-5. **Ongoing**: Convert TODOs to GitHub issues for tracking
+### CRITICAL - Immediate (Day 1-2)
+1. **Fix Import Paths**: Systematically update all 360+ files from `atlasvibe` to `pkgs.atlasvibe.atlasvibe`
+2. **Add Missing __init__.py**: Create __init__.py files in all Python package directories
+3. **Investigate ChangeQueueManager**: Debug and fix the startup hang issue
 
-This analysis provides a roadmap for improving the AtlasVibe codebase while acknowledging its existing strengths in architecture and error handling.
+### HIGH - This Week
+1. **Create .env.example**: Document all required environment variables
+2. **Fix Copyright Headers**: Update pyproject.toml to properly acknowledge Flojoy
+3. **Security Scan**: Implement gitleaks pre-commit hooks
+4. **Fix PingTab Security**: Sanitize user input to prevent command injection
+
+### MEDIUM - Next 2 Weeks
+1. **Test Coverage**: Write tests for all untested blocks (priority on AI/ML and ETL)
+2. **Extract Utilities**: Create shared modules for JSON operations, venv management
+3. **Replace Hardcoded Values**: Move all hardcoded values to configuration
+4. **Fix Docker Tests**: Re-enable tests after ChangeQueueManager fix
+
+### LONG TERM - Next Month
+1. **Implement Phase 3**: Complete code intelligence features
+2. **Refactor Duplicated Code**: Extract base classes for common patterns
+3. **Accessibility Audit**: Add ARIA labels, keyboard navigation
+4. **Complete Documentation**: Add missing docstrings, update import examples
+
+## 9. Conclusion
+
+The AtlasVibe codebase faces several **critical issues that prevent it from running correctly**:
+
+1. **Broken imports** across 360+ files will cause ModuleNotFoundError
+2. **Missing __init__.py** files prevent Python package recognition
+3. **ChangeQueueManager hang** blocks application startup
+4. **Inadequate test coverage** risks undetected bugs
+
+While the architecture shows good design principles, these fundamental issues must be addressed before the application can function properly. The updated action plan prioritizes fixes that will get the application running, followed by improvements to security, testing, and code quality.
+
+**Revised Overall Score: 5/10** - The codebase has good architecture but critical runtime issues severely impact its usability.

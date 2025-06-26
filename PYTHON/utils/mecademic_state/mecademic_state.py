@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
 
-from atlasvibe import String
+from pkgs.atlasvibe.atlasvibe import String
 import mecademicpy.robot as mdr
 
 from PYTHON.utils.mecademic_state.mecademic_mock import MockRobot

@@ -215,7 +215,7 @@ The block was automatically generated when the Python file was created.
 
         # Generate test file
         test_content = f"""import pytest
-from atlasvibe import DataContainer, Vector, Scalar
+from pkgs.atlasvibe.atlasvibe import DataContainer, Vector, Scalar
 import numpy as np
 
 def test_{block_name}():

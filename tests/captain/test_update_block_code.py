@@ -17,7 +17,7 @@ from unittest.mock import patch, MagicMock
 INITIAL_BLOCK_CODE = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
@@ -35,7 +35,7 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
 UPDATED_BLOCK_CODE = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:

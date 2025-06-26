@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
 
-from atlasvibe import atlasvibe, DataContainer
+from pkgs.atlasvibe.atlasvibe import atlasvibe, DataContainer
 
 
 @atlasvibe

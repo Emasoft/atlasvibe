@@ -95,7 +95,7 @@ class TestJSONRefactoringIntegration:
             # Create Python file
             py_file = block_dir / "TEST_BLOCK.py"
             py_file.write_text('''
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK():
@@ -188,7 +188,7 @@ def TEST_BLOCK():
             # Create Python file with docstring
             py_file = block_dir / "TEST_BLOCK.py"
             py_file.write_text('''
-from atlasvibe import atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 10):

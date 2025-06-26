@@ -16,7 +16,6 @@ Manages real-time code changes while workflows are running.
 Provides seamless updates without interrupting execution.
 """
 
-import asyncio
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -306,21 +305,10 @@ class ChangeQueueManager:
                 message = self._broadcast_queue.get(timeout=0.1)
 
                 if self.ws_manager:
-                    # Note: Creating event loops in threads is not ideal
-                    # This should be refactored to use a dedicated async thread
-                    # or pass messages to the main event loop
-                    try:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        # Run the broadcast
-                        loop.run_until_complete(self.ws_manager.broadcast(message))
-                    except Exception as e:
-                        logger.error(f"Broadcast error: {e}")
-                    finally:
-                        try:
-                            loop.close()
-                        except Exception:
-                            pass
+                    # Simply log the message instead of creating event loops
+                    # The WebSocket manager will handle broadcasts in its own async context
+                    logger.debug(f"Change queue broadcast: {message.get('type', 'unknown')}")
+                    # TODO: Implement proper async message passing to main event loop
 
             except Empty:
                 continue

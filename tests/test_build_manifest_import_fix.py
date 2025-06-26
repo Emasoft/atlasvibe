@@ -29,8 +29,8 @@ class TestImportNamespaceFix:
         """Test that 'import atlasvibe' is redirected correctly."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
-import atlasvibe
-from atlasvibe import atlasvibe_node, DataContainer
+import pkgs.atlasvibe.atlasvibe as atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node, DataContainer
 
 @atlasvibe_node(node_type="TEST", deps={"numpy": "1.0.0"})
 def TEST_IMPORT():
@@ -55,7 +55,7 @@ def TEST_IMPORT():
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 from atlasvibe.data_container import OrderedPair, Scalar
-from atlasvibe import atlasvibe_node
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
 @atlasvibe_node(node_type="MATH")
 def MATH_OP(a: Scalar, b: Scalar) -> OrderedPair:
@@ -80,7 +80,7 @@ def MATH_OP(a: Scalar, b: Scalar) -> OrderedPair:
         """Test importing parameter types from atlasvibe."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
-from atlasvibe import atlasvibe_node, TextArea, Secret, File, Directory
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node, TextArea, Secret, File, Directory
 
 @atlasvibe_node
 def PARAM_TEST(text: TextArea = TextArea("default text"),
@@ -108,7 +108,7 @@ def PARAM_TEST(text: TextArea = TextArea("default text"),
         """Test importing hardware-related types."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
-from atlasvibe import (
+from pkgs.atlasvibe.atlasvibe import (
     atlasvibe_node,
     CameraDevice,
     SerialDevice,
@@ -143,7 +143,7 @@ def HARDWARE_TEST(
         """Test that @atlasvibe decorator works (not just @atlasvibe_node)."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
-from atlasvibe import atlasvibe, Matrix, Vector
+from pkgs.atlasvibe.atlasvibe import atlasvibe, Matrix, Vector
 
 @atlasvibe(deps={"scipy": "1.10.0"})
 def SIGNAL_PROCESS(signal: Vector) -> Matrix:
@@ -166,7 +166,7 @@ def SIGNAL_PROCESS(signal: Vector) -> Matrix:
         """Test all DataContainer subclasses can be imported."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
-from atlasvibe import (
+from pkgs.atlasvibe.atlasvibe import (
     atlasvibe_node,
     OrderedPair,
     Scalar,
@@ -204,7 +204,7 @@ def ALL_TYPES_TEST() -> DataContainer:
 import numpy as np
 import pandas as pd
 from typing import Any
-from atlasvibe import atlasvibe_node, Vector
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node, Vector
 
 @atlasvibe_node
 def NUMPY_TEST(data: Vector) -> Vector:
@@ -228,8 +228,8 @@ def NUMPY_TEST(data: Vector) -> Vector:
         """Test that invalid imports still raise appropriate errors."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("""
-from atlasvibe import NonExistentClass  # This should fail
-from atlasvibe import atlasvibe_node
+from pkgs.atlasvibe.atlasvibe import NonExistentClass  # This should fail
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
 @atlasvibe_node
 def ERROR_TEST():
@@ -248,9 +248,9 @@ def ERROR_TEST():
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('''
 # Test various import styles
-import atlasvibe
-from atlasvibe import atlasvibe_node
-from atlasvibe import *  # Should work but not recommended
+import pkgs.atlasvibe.atlasvibe as atlasvibe
+from pkgs.atlasvibe.atlasvibe import atlasvibe_node
+from pkgs.atlasvibe.atlasvibe import *  # Should work but not recommended
 
 @atlasvibe_node
 def FROMLIST_TEST() -> DataContainer:
