@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright configuration for Electron tests in Docker
@@ -50,7 +50,7 @@ export default defineConfig({
     {
       name: "chromium-docker",
       use: {
-        ...require("@playwright/test").devices["Desktop Chrome"],
+        ...devices["Desktop Chrome"],
         // Override any device-specific settings that might cause issues
         viewport: { width: 1280, height: 720 },
         hasTouch: false,
