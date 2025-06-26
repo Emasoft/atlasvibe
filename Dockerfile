@@ -65,6 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11-dev \
     xvfb \
     curl \
+    netcat-openbsd \
     # GTK and X11 dependencies for Electron
     libgtk-3-0 \
     libgbm1 \

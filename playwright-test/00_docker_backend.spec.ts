@@ -48,21 +48,41 @@ test.describe("Docker Backend Tests", () => {
         timeout: 10000,
       });
 
+      console.log(`Response status: ${response.status()}`);
+      console.log(`Response ok: ${response.ok()}`);
+
+      if (!response.ok()) {
+        const body = await response.text();
+        console.error(`Response body: ${body}`);
+      }
+
       expect(response.ok()).toBeTruthy();
 
-      const blocks = await response.json();
-      expect(Array.isArray(blocks)).toBeTruthy();
-      console.log(`Found ${blocks.length} blocks in metadata`);
+      const data = await response.json();
+      console.log(`Response data type: ${typeof data}`);
+      console.log(`Response data keys:`, Object.keys(data).slice(0, 5));
+
+      // The metadata endpoint returns a dictionary where keys are block filenames
+      // and values contain metadata, path, and full_path
+      expect(typeof data).toBe('object');
+      expect(data).not.toBeNull();
+
+      const blockKeys = Object.keys(data);
+      console.log(`Found ${blockKeys.length} blocks in metadata`);
 
       // Check that we have at least some blocks
-      expect(blocks.length).toBeGreaterThan(0);
+      expect(blockKeys.length).toBeGreaterThan(0);
 
-      // Verify block structure
-      if (blocks.length > 0) {
-        const firstBlock = blocks[0];
-        expect(firstBlock).toHaveProperty("name");
-        expect(firstBlock).toHaveProperty("key");
-        expect(firstBlock).toHaveProperty("category");
+      // Verify block metadata structure
+      if (blockKeys.length > 0) {
+        const firstKey = blockKeys[0];
+        const firstBlock = data[firstKey];
+        console.log(`First block key: ${firstKey}`);
+        console.log(`First block structure:`, Object.keys(firstBlock));
+
+        expect(firstBlock).toHaveProperty("metadata");
+        expect(firstBlock).toHaveProperty("path");
+        expect(firstBlock).toHaveProperty("full_path");
       }
     } catch (error) {
       console.error("Failed to get blocks metadata:", error);
