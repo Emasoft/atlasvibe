@@ -17,16 +17,58 @@ from PIL import Image as PIL_Image
 
 
 def get_file_path(file_path: str, default_path: str | None = None):
-    # TODO: We should not do this, this is too fragile
-    # We need to get an actual file picker going to get the absolute path
+    """Resolve file path with proper error handling and validation.
 
+    Args:
+        file_path: The file path to resolve (absolute or relative)
+        default_path: Default path to use if file_path is empty
+
+    Returns:
+        Absolute path to the file
+
+    Raises:
+        ValueError: If no valid path is provided
+        FileNotFoundError: If the resolved path doesn't exist
+    """
     f_path = file_path if file_path != "" else default_path
     if not f_path:
-        raise ValueError("The file path of the input file is missing. Please provide a input String or a provide `file_path` with a value!")
-    if not os.path.isabs(f_path):
-        path_to_nodes = __file__[: __file__.rfind("blocks") + 6]
-        return os.path.abspath(os.path.join(path_to_nodes, f_path))
-    return f_path
+        raise ValueError("The file path of the input file is missing. Please provide an input String or provide `file_path` with a value!")
+
+    # If already absolute, validate and return
+    if os.path.isabs(f_path):
+        if not os.path.exists(f_path):
+            raise FileNotFoundError(f"File not found: {f_path}")
+        return f_path
+
+    # For relative paths, try multiple resolution strategies
+    # 1. Relative to current working directory
+    cwd_path = os.path.abspath(f_path)
+    if os.path.exists(cwd_path):
+        return cwd_path
+
+    # 2. Relative to the blocks directory
+    try:
+        # Use pathlib for more robust path handling
+        from pathlib import Path
+
+        current_file = Path(__file__).resolve()
+        blocks_dir = current_file.parent.parent.parent.parent.parent  # Navigate up to blocks/
+        blocks_path = blocks_dir / f_path
+        if blocks_path.exists():
+            return str(blocks_path.resolve())
+    except Exception:
+        pass
+
+    # 3. Relative to the current block's directory
+    block_dir = os.path.dirname(os.path.abspath(__file__))
+    block_path = os.path.abspath(os.path.join(block_dir, f_path))
+    if os.path.exists(block_path):
+        return block_path
+
+    # If none of the strategies work, raise an error with helpful message
+    raise FileNotFoundError(
+        f"File not found: {f_path}\nTried paths:\n  - {cwd_path} (relative to current directory)\n  - {blocks_path if 'blocks_path' in locals() else 'N/A'} (relative to blocks directory)\n  - {block_path} (relative to current block)\nPlease provide an absolute path or ensure the file exists in one of these locations."
+    )
 
 
 @atlasvibe(

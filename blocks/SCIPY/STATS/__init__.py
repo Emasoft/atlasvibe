@@ -1,26 +1,7 @@
-__all__ = [
-    "ANDERSON",
-    "BINOM_TEST",
-    "DESCRIBE",
-    "GSTD",
-    "GZSCORE",
-    "JARQUE_BERA",
-    "KURTOSIS",
-    "KURTOSISTEST",
-    "MOMENT",
-    "NORMALTEST",
-    "SEM",
-    "SHAPIRO",
-    "SIGMACLIP",
-    "SKEW",
-    "SKEWTEST",
-    "TMAX",
-    "TMIN",
-    "TRIM1",
-    "TRIM_MEAN",
-    "TRIMBOTH",
-    "TTEST_1SAMP",
-    "VARIATION",
-    "YEOJOHNSON",
-    "ZSCORE",
-]
+# Copyright (c) 2024 Emasoft
+#
+# This file is part of AtlasVibe, which is based on Flojoy Studio
+# Original Copyright (c) 2023-2024 Flojoy
+#
+# SPDX-License-Identifier: MIT
+# See the LICENSE file for details.

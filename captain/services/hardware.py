@@ -235,20 +235,45 @@ class MacDeviceFinder(DefaultDeviceFinder):
 
 class LinuxDeviceFinder(DefaultDeviceFinder):
     def get_cameras(self) -> list[CameraDevice]:
-        command = r"v4l2-ctl --list-devices | grep -A1 -P '^[^\s-][^:]+'"
-        result = subprocess.run(command, shell=True, text=True, stdout=subprocess.PIPE)
+        # Use subprocess without shell=True for security
+        try:
+            # First run v4l2-ctl --list-devices
+            v4l2_result = subprocess.run(["v4l2-ctl", "--list-devices"], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
-        # fall back to OpenCV if v4l2-ctl is not installed
-        if result.returncode != 0:
+            if v4l2_result.returncode != 0:
+                return super().get_cameras()
+
+            # Then pipe to grep using Python instead of shell
+            import re
+
+            lines = v4l2_result.stdout.strip().split("\n")
+            filtered_lines = []
+
+            # Pattern matches lines that don't start with space or dash and don't end with colon
+            pattern = re.compile(r"^[^\s-][^:]+$")
+
+            for i, line in enumerate(lines):
+                if pattern.match(line):
+                    filtered_lines.append(line)
+                    # Add the next line (equivalent to grep -A1)
+                    if i + 1 < len(lines):
+                        filtered_lines.append(lines[i + 1])
+
+            result_stdout = "\n".join(filtered_lines)
+
+        except (subprocess.SubprocessError, FileNotFoundError):
+            # v4l2-ctl not found or failed, fall back to OpenCV
             return super().get_cameras()
 
         # filter out empty lines
-        lines = list(filter(None, result.stdout.split("\n")))
+        lines = list(filter(None, result_stdout.split("\n")))
 
         # output is formatted in groups of 2 lines
         # {camera name}
         # {port}
-        cameras = [CameraDevice(name=lines[i].strip(), id=lines[i + 1].strip()) for i in range(len(lines) // 2)]
+        cameras = []
+        for i in range(0, len(lines) - 1, 2):
+            cameras.append(CameraDevice(name=lines[i].strip(), id=lines[i + 1].strip()))
 
         return cameras
 
