@@ -5,6 +5,7 @@
 The following directories are missing `__init__.py` files, which may cause import issues:
 
 ### Blocks Module Structure
+
 - `./blocks/COMPUTER_VISION` and all subdirectories
 - `./blocks/ETL` and all subdirectories
 - `./blocks/AI_ML` and subdirectories
@@ -24,15 +25,19 @@ The following directories are missing `__init__.py` files, which may cause impor
 Found TODO/FIXME comments in the following critical files:
 
 ### High Priority TODOs
+
 1. **`blocks/ETL/LOAD/LOCAL_FILE_SYSTEM/LOCAL_FILE/LOCAL_FILE.py`**
+
    - Line 20: `# TODO: We should not do this, this is too fragile`
    - Line 109: `# TODO: we might add support for following file types later`
    - Issue: Fragile file path handling that needs proper file picker implementation
 
 2. **`blocks/AI_ML/LOAD_MODEL/ONNX_MODEL/ONNX_MODEL.py`**
+
    - Contains TODO comments about model loading implementation
 
 3. **`captain/utils/test_sequencer/run_test_sequence.py`**
+
    - Test sequencer implementation needs completion
 
 4. **`captain/utils/manifest/build_ast.py`**
@@ -43,6 +48,7 @@ Found TODO/FIXME comments in the following critical files:
 The following blocks are missing test files:
 
 ### Computer Vision
+
 - `EXTREMA_DETERMINATION`
 - `REGION_PROPERTIES`
 - `GAMMA_ADJUSTMENT`
@@ -50,6 +56,7 @@ The following blocks are missing test files:
 - `IMAGE_SWIRL`
 
 ### ETL
+
 - `BATCH_PROCESSOR`
 - `ORDERED_PAIR_2_VECTOR`
 - `ORDERED_PAIR_INDEXING`
@@ -57,6 +64,7 @@ The following blocks are missing test files:
 - `ORDERED_PAIR_DELETE`
 
 ### AI/ML
+
 - `TRAIN_TEST_SPLIT`
 - `SUPPORT_VECTOR_MACHINE`
 - `ACCURACY`
@@ -65,16 +73,19 @@ The following blocks are missing test files:
 - `LEAST_SQUARES`
 
 ### Control Flow
+
 - `CONDITIONAL`
 - `TIMER`
 - `BREAK`
 
 ### Others
+
 - `PRINT_DATACONTAINER`
 
 ## 4. Import and Reference Issues
 
 ### Potential Import Path Issues
+
 - The codebase has been migrated from `atlasvibe` to `pkgs.atlasvibe.atlasvibe`
 - All imports appear to have been updated successfully
 - No broken imports detected by static analysis
@@ -82,12 +93,14 @@ The following blocks are missing test files:
 ## 5. Duplicate Code Patterns
 
 ### Common Duplicate Patterns Found
+
 - Multiple class definitions with same names (mostly from standard libraries in .venv)
 - No significant duplicate function/class definitions in the main codebase
 
 ## 6. Configuration Inconsistencies
 
 ### Multiple Configuration Files
+
 - `./pyproject.toml` - Main project configuration
 - `./requirements.txt` - Python dependencies
 - `./requirements-docker.txt` - Docker-specific dependencies
@@ -101,6 +114,7 @@ The following blocks are missing test files:
 ## 7. Security Issues
 
 ### No Critical Security Issues Found
+
 - No `subprocess` calls with `shell=True`
 - No direct use of `eval()` or `exec()`
 - No unsafe `pickle.load()` or `yaml.load()` usage detected
@@ -109,6 +123,7 @@ The following blocks are missing test files:
 ## 8. File Structure Issues
 
 ### Test File Naming Convention
+
 - Using `*_test_.py` pattern (1509 test files found)
 - All test files checked compile without syntax errors
 - Test coverage appears comprehensive
@@ -116,6 +131,7 @@ The following blocks are missing test files:
 ## 9. Code Quality Observations
 
 ### Positive Findings
+
 - Consistent use of type hints
 - Well-structured module organization
 - Comprehensive test coverage
@@ -123,6 +139,7 @@ The following blocks are missing test files:
 - Clean separation of concerns
 
 ### Areas for Improvement
+
 1. Add missing `__init__.py` files to make all directories proper Python packages
 2. Address TODO/FIXME comments, especially the fragile file path handling
 3. Add missing test files for untested blocks
@@ -132,16 +149,19 @@ The following blocks are missing test files:
 ## 10. Recommendations
 
 ### Immediate Actions
+
 1. **Add `__init__.py` files**: Run a script to add empty `__init__.py` files to all Python directories
 2. **Fix file path handling**: Replace the fragile path logic in `LOCAL_FILE.py` with proper file picker
 3. **Add missing tests**: Create test stubs for all blocks missing tests
 
 ### Medium-term Actions
+
 1. **Consolidate configurations**: Migrate all dependencies to `pyproject.toml` using uv's features
 2. **Address TODOs**: Create issues for each TODO/FIXME and prioritize them
 3. **Document import structure**: Add documentation explaining the `pkgs.atlasvibe.atlasvibe` structure
 
 ### Long-term Actions
+
 1. **Refactor block structure**: Consider if all blocks need to be Python packages
 2. **Improve test organization**: Consider grouping tests by functionality
 3. **Add integration tests**: Test block interactions and workflows

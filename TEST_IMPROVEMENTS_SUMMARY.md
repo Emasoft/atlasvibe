@@ -69,11 +69,13 @@ This document summarizes the improvements made to fix Docker and Playwright test
 // OLD - Failed in CI
 app = await electron.launch({
   executablePath,
-  args: [/* many flags */],
+  args: [
+    /* many flags */
+  ],
   env: {
     ELECTRON_RUN_AS_NODE: "0", // This prevented GUI apps
     // ...
-  }
+  },
 });
 
 // NEW - Works in CI
@@ -91,6 +93,7 @@ app = await electron.launch({
 ### Docker Test Strategy
 
 Instead of trying to run full Electron tests in Docker, we now:
+
 1. Run backend-only API tests
 2. Verify headless browser functionality
 3. Skip Electron-specific tests in Docker environments
@@ -124,6 +127,7 @@ Instead of trying to run full Electron tests in Docker, we now:
 ## Monitoring
 
 After deployment, monitor these workflows:
+
 - E2E Testing (especially Windows)
 - Docker Matrix Tests
 - Docker Headless Tests

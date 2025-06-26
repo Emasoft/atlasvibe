@@ -31,7 +31,12 @@ test.describe("AtlasVibe CI Tests", () => {
 
     // Determine executable path based on platform
     if (platform === "win32") {
-      executablePath = join(process.cwd(), "dist", "win-unpacked", "atlasvibe.exe");
+      executablePath = join(
+        process.cwd(),
+        "dist",
+        "win-unpacked",
+        "atlasvibe.exe",
+      );
     } else if (platform === "darwin") {
       executablePath = join(
         process.cwd(),
@@ -40,10 +45,15 @@ test.describe("AtlasVibe CI Tests", () => {
         "atlasvibe.app",
         "Contents",
         "MacOS",
-        "atlasvibe"
+        "atlasvibe",
       );
     } else {
-      executablePath = join(process.cwd(), "dist", "linux-unpacked", "atlasvibe");
+      executablePath = join(
+        process.cwd(),
+        "dist",
+        "linux-unpacked",
+        "atlasvibe",
+      );
     }
 
     console.log(`Testing executable: ${executablePath}`);
@@ -115,7 +125,9 @@ test.describe("AtlasVibe CI Tests", () => {
         console.log(`✅ Successfully launched with strategy: ${strategy.name}`);
 
         // Basic validation that app started
-        const isPackaged = await app.evaluate(async ({ app: _app }) => _app.isPackaged);
+        const isPackaged = await app.evaluate(
+          async ({ app: _app }) => _app.isPackaged,
+        );
         expect(isPackaged).toBeTruthy();
 
         // If we got here, the app launched successfully
@@ -177,10 +189,12 @@ test.describe("AtlasVibe CI Tests", () => {
         const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, {
           encoding: "utf-8",
         });
-        const missingLibs = lddOutput.split("\n").filter(line => line.includes("not found"));
+        const missingLibs = lddOutput
+          .split("\n")
+          .filter((line) => line.includes("not found"));
         if (missingLibs.length > 0) {
           console.error("❌ Missing libraries:");
-          missingLibs.forEach(lib => console.error(`  - ${lib}`));
+          missingLibs.forEach((lib) => console.error(`  - ${lib}`));
         } else {
           console.log("✅ All shared libraries found");
         }
@@ -192,7 +206,7 @@ test.describe("AtlasVibe CI Tests", () => {
     // Throw the last error with context
     throw new Error(
       `Failed to launch Electron app after trying ${launchStrategies.length} strategies. ` +
-      `Last error: ${lastError?.message || "Unknown error"}`
+        `Last error: ${lastError?.message || "Unknown error"}`,
     );
   });
 

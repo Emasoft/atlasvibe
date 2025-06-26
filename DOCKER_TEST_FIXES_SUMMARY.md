@@ -5,16 +5,19 @@
 ### Issues Fixed
 
 1. **Docker Backend Test - Incorrect Endpoint**
+
    - **Issue**: The test was trying to access `/blocks` which returned 404
    - **Fix**: Changed to `/blocks/metadata/` which returns 200 OK
    - **File**: `playwright-test/00_docker_backend.spec.ts`
 
 2. **Docker E2E Test - Wrong Backend Port**
+
    - **Issue**: The test was trying to connect to port 11060 instead of 5392
    - **Fix**: Updated the curl command to use `http://localhost:5392/log_level`
    - **File**: `.github/workflows/docker-e2e-test.yml`
 
 3. **Docker Smoke Test - Wrong Backend Port**
+
    - **Issue**: The test was using port 11060 and wrong endpoint
    - **Fix**: Updated to use port 5392 and `/log_level` endpoint
    - **File**: `playwright-test/00_docker_smoke.spec.docker.ts`
@@ -27,6 +30,7 @@
 ### Workflows Affected
 
 These fixes should resolve failures in:
+
 - Docker Headless Tests
 - Docker E2E Tests
 - Docker Matrix Tests

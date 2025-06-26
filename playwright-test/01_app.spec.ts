@@ -119,7 +119,9 @@ test.describe(`${productName} startup test`, () => {
     try {
       // For CI environments, use minimal configuration
       if (process.env.CI) {
-        console.log("CI environment detected - using minimal launch configuration");
+        console.log(
+          "CI environment detected - using minimal launch configuration",
+        );
         app = await electron.launch({
           executablePath,
           timeout: 60000,

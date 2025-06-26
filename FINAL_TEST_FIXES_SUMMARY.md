@@ -5,12 +5,14 @@
 ### All Fixes Applied
 
 #### 1. **test.skip() Error Fix** (First Commit)
+
 - **Issue**: `test.skip()` with function can only be called inside describe block
 - **Fix**: Changed to `test.skip(true, "App not launched")`
 - **File**: `playwright-test/01_app_ci.spec.ts`
 - **Status**: ✅ Fixed
 
 #### 2. **Docker Backend Port Fix** (First Commit)
+
 - **Issue**: Tests were using wrong port 11060 instead of 5392
 - **Fix**: Updated all references to use correct port 5392
 - **Files**:
@@ -19,12 +21,14 @@
 - **Status**: ✅ Fixed
 
 #### 3. **Docker Backend Endpoint Fix** (First Commit)
+
 - **Issue**: Tests were using `/blocks` which returns 404
 - **Fix**: Changed to `/blocks/metadata/` which returns 200
 - **File**: `playwright-test/00_docker_backend.spec.ts`
 - **Status**: ✅ Fixed
 
 #### 4. **Docker Test Response Format Fix** (Second Commit)
+
 - **Issue**: Test expected array but API returns dictionary/object
 - **Fix**: Updated test to expect correct metadata format:
   - Dictionary with block filenames as keys
@@ -33,6 +37,7 @@
 - **Status**: ✅ Fixed
 
 #### 5. **Missing netcat Dependency** (Second Commit)
+
 - **Issue**: Docker container missing `nc` command for port checks
 - **Fix**: Added `netcat-openbsd` to Docker test image
 - **File**: `Dockerfile`
@@ -41,6 +46,7 @@
 ### Key Insights Learned
 
 1. **API Response Format**: The `/blocks/metadata/` endpoint returns a dictionary where:
+
    - Keys are Python filenames (e.g., "BLOCK_NAME.py")
    - Values contain: `{metadata: string, path: string, full_path: string}`
 
@@ -53,6 +59,7 @@
 ### Workflows Fixed
 
 These commits should resolve failures in:
+
 - ✅ Docker Headless Tests
 - ✅ Docker E2E Tests
 - ✅ Docker Matrix Tests

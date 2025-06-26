@@ -6,7 +6,10 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("Docker Backend Tests", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Backend tests only need one browser");
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "Backend tests only need one browser",
+  );
 
   test("Backend health check", async ({ request }) => {
     // Skip if not in Docker
@@ -24,17 +27,21 @@ test.describe("Docker Backend Tests", () => {
         });
 
         expect(response.status()).toBeLessThan(500);
-        console.log(`Backend health check passed with status: ${response.status()}`);
+        console.log(
+          `Backend health check passed with status: ${response.status()}`,
+        );
         return;
       } catch (error) {
         lastError = error as Error;
         console.log(`Attempt ${i + 1}/${maxRetries} failed: ${error}`);
         // Wait a bit before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
-    throw new Error(`Backend health check failed after ${maxRetries} attempts: ${lastError}`);
+    throw new Error(
+      `Backend health check failed after ${maxRetries} attempts: ${lastError}`,
+    );
   });
 
   test("Backend API - get blocks metadata", async ({ request }) => {
@@ -44,9 +51,12 @@ test.describe("Docker Backend Tests", () => {
     }
 
     try {
-      const response = await request.get("http://localhost:5392/blocks/metadata/", {
-        timeout: 10000,
-      });
+      const response = await request.get(
+        "http://localhost:5392/blocks/metadata/",
+        {
+          timeout: 10000,
+        },
+      );
 
       console.log(`Response status: ${response.status()}`);
       console.log(`Response ok: ${response.ok()}`);
@@ -64,7 +74,7 @@ test.describe("Docker Backend Tests", () => {
 
       // The metadata endpoint returns a dictionary where keys are block filenames
       // and values contain metadata, path, and full_path
-      expect(typeof data).toBe('object');
+      expect(typeof data).toBe("object");
       expect(data).not.toBeNull();
 
       const blockKeys = Object.keys(data);
@@ -104,7 +114,9 @@ test.describe("Docker Backend Tests", () => {
 
       // Even if no projects exist, the endpoint should respond
       expect(response.status()).toBeLessThan(500);
-      console.log(`Project list endpoint responded with status: ${response.status()}`);
+      console.log(
+        `Project list endpoint responded with status: ${response.status()}`,
+      );
     } catch (error) {
       console.error("Failed to access project endpoints:", error);
       throw error;
@@ -122,8 +134,8 @@ test.describe("Docker Backend Tests", () => {
     try {
       const response = await request.get("http://localhost:5392/ws", {
         headers: {
-          "Upgrade": "websocket",
-          "Connection": "Upgrade",
+          Upgrade: "websocket",
+          Connection: "Upgrade",
           // This is a standard test value from RFC 6455 WebSocket spec, not a secret
           "Sec-WebSocket-Key": "x3JJHMbDL1EzLkh9GBhXDw==",
           "Sec-WebSocket-Version": "13",
@@ -134,7 +146,9 @@ test.describe("Docker Backend Tests", () => {
       // WebSocket endpoints typically return 400 or 426 when accessed via regular HTTP
       // This is expected and indicates the endpoint exists
       expect([400, 426]).toContain(response.status());
-      console.log("WebSocket endpoint exists (returned expected upgrade required status)");
+      console.log(
+        "WebSocket endpoint exists (returned expected upgrade required status)",
+      );
     } catch (error) {
       // Some errors are expected for WebSocket endpoints
       console.log("WebSocket endpoint check completed");
