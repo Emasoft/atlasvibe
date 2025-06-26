@@ -30,7 +30,7 @@ def test_logarithmic_adjustment_basic():
     input_image = Image(r=r, g=g, b=b, a=None)
 
     # Import and run the function
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     result = LOGARITHMIC_ADJUSTMENT(input_image)
 
