@@ -19,7 +19,7 @@ import pytest
 from pkgs.atlasvibe.atlasvibe.data_container import Image
 
 
-def test_logarithmic_adjustment_basic():
+def test_logarithmic_adjustment_basic(mock_atlasvibe_decorator):
     """Test basic logarithmic adjustment with default parameters."""
     # Create a test image
     test_shape = (100, 100)
@@ -46,7 +46,7 @@ def test_logarithmic_adjustment_basic():
     assert not np.array_equal(result.b, b)
 
 
-def test_logarithmic_adjustment_with_gain():
+def test_logarithmic_adjustment_with_gain(mock_atlasvibe_decorator):
     """Test logarithmic adjustment with custom gain parameter."""
     # Create a test image
     test_shape = (50, 50)
@@ -56,7 +56,7 @@ def test_logarithmic_adjustment_with_gain():
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     # Test with different gain values
     result_low_gain = LOGARITHMIC_ADJUSTMENT(input_image, gain=0.5)
@@ -66,7 +66,7 @@ def test_logarithmic_adjustment_with_gain():
     assert not np.array_equal(result_low_gain.r, result_high_gain.r)
 
 
-def test_logarithmic_adjustment_inverse():
+def test_logarithmic_adjustment_inverse(mock_atlasvibe_decorator):
     """Test inverse logarithmic adjustment."""
     # Create a test image
     test_shape = (30, 30)
@@ -76,7 +76,7 @@ def test_logarithmic_adjustment_inverse():
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     # Test normal vs inverse
     result_normal = LOGARITHMIC_ADJUSTMENT(input_image, inv=False)
@@ -86,7 +86,7 @@ def test_logarithmic_adjustment_inverse():
     assert not np.array_equal(result_normal.r, result_inverse.r)
 
 
-def test_logarithmic_adjustment_with_alpha():
+def test_logarithmic_adjustment_with_alpha(mock_atlasvibe_decorator):
     """Test logarithmic adjustment with alpha channel."""
     # Create a test image with alpha
     test_shape = (40, 40)
@@ -97,7 +97,7 @@ def test_logarithmic_adjustment_with_alpha():
 
     input_image = Image(r=r, g=g, b=b, a=a)
 
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     result = LOGARITHMIC_ADJUSTMENT(input_image)
 
@@ -106,7 +106,7 @@ def test_logarithmic_adjustment_with_alpha():
     assert result.a.shape == test_shape
 
 
-def test_logarithmic_adjustment_invalid_dtype():
+def test_logarithmic_adjustment_invalid_dtype(mock_atlasvibe_decorator):
     """Test that function raises error for invalid image dtype."""
     # Create a test image with wrong dtype
     test_shape = (20, 20)
@@ -116,14 +116,14 @@ def test_logarithmic_adjustment_invalid_dtype():
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     # Should raise ValueError
     with pytest.raises(ValueError, match="Image must be in uint8 format"):
         LOGARITHMIC_ADJUSTMENT(input_image)
 
 
-def test_logarithmic_adjustment_edge_values():
+def test_logarithmic_adjustment_edge_values(mock_atlasvibe_decorator):
     """Test logarithmic adjustment with edge values (0 and 255)."""
     # Create a test image with edge values
     test_shape = (10, 10)
@@ -133,7 +133,7 @@ def test_logarithmic_adjustment_edge_values():
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from .LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
 
     # Should not raise any errors
     result = LOGARITHMIC_ADJUSTMENT(input_image)
