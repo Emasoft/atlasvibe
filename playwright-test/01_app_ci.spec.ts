@@ -198,9 +198,12 @@ test.describe("AtlasVibe CI Tests", () => {
 
   test("App window becomes responsive after launch", async () => {
     // This test depends on the previous test passing
-    test.skip(() => !app, "App not launched");
+    if (!app) {
+      test.skip(true, "App not launched");
+      return;
+    }
 
-    const firstWindow = await app!.firstWindow();
+    const firstWindow = await app.firstWindow();
     expect(firstWindow).toBeTruthy();
 
     // Wait for window to be ready

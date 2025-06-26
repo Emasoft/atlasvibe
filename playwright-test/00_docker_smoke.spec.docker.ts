@@ -18,7 +18,7 @@ test.describe("Docker Smoke Tests", () => {
 
   test("Backend API should respond", async ({ request }) => {
     // Check if the backend is running
-    const response = await request.get("http://localhost:11060/health");
+    const response = await request.get("http://localhost:5392/log_level");
 
     // For now, just check if we get any response
     // The actual endpoint might be different

@@ -44,7 +44,7 @@ test.describe("Docker Backend Tests", () => {
     }
 
     try {
-      const response = await request.get("http://localhost:5392/blocks", {
+      const response = await request.get("http://localhost:5392/blocks/metadata/", {
         timeout: 10000,
       });
 

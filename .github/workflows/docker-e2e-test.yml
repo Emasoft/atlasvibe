@@ -97,7 +97,7 @@ jobs:
             # Wait for backend
             echo 'Waiting for backend to start...'
             for i in {1..60}; do
-              if curl -s http://localhost:11060/log_level > /dev/null 2>&1; then
+              if curl -s http://localhost:5392/log_level > /dev/null 2>&1; then
                 echo '✅ Backend is ready!'
                 break
               fi
