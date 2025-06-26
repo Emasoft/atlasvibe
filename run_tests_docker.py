@@ -51,9 +51,26 @@ class TestReporter:
         # Ensure test results directory exists
         Path("/app/test-results").mkdir(exist_ok=True)
 
-        # Run Playwright tests with Docker config
-        # Run headless check and API tests only in Docker
-        cmd = ["pnpm", "exec", "playwright", "test", "--config=playwright.config.docker.ts", "00_headless_check.spec.docker.ts", "00_api_smoke.spec.ts"]
+        # Check if Docker Electron config exists, otherwise use fallback
+        docker_config = Path("/app/playwright.config.docker.electron.ts")
+        if docker_config.exists():
+            config_file = "playwright.config.docker.electron.ts"
+        else:
+            config_file = "playwright.config.docker.ts"
+            print(f"⚠️  Docker Electron config not found, using fallback: {config_file}")
+
+        # Run Playwright tests with appropriate config
+        cmd = [
+            "pnpm",
+            "exec",
+            "playwright",
+            "test",
+            f"--config={config_file}",
+            # Explicitly list Docker-safe tests as fallback
+            "00_headless_check.spec.docker.ts",
+            "00_docker_backend.spec.ts",
+            "00_api_smoke.spec.ts",
+        ]
 
         print("\n📋 Running Playwright tests...")
         process = subprocess.run(cmd, capture_output=True, text=True)

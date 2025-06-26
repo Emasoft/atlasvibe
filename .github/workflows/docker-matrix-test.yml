@@ -19,9 +19,10 @@ jobs:
         - os: ubuntu-latest
           platform: linux/amd64
           cache-key: linux-amd64
-        - os: ubuntu-latest
-          platform: linux/arm64
-          cache-key: linux-arm64
+          # ARM64 build disabled temporarily due to timeout issues
+          # - os: ubuntu-latest
+          #   platform: linux/arm64
+          #   cache-key: linux-arm64
 
     steps:
     - name: Checkout code

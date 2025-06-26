@@ -48,6 +48,10 @@ regexes = [
     '''YOUR[-_]?API[-_]?KEY[-_]?HERE''',
     '''<your[-_]?(api[-_]?)?key>''',
     '''REPLACE[-_]?WITH[-_]?YOUR[-_]?(KEY|TOKEN|SECRET)''',
+
+    # WebSocket test values from RFC 6455
+    '''x3JJHMbDL1EzLkh9GBhXDw==''',  # Standard WebSocket test key
+    '''dGhlIHNhbXBsZSBub25jZQ==''',  # "the sample nonce" in base64
     '''xxx+''',
     '''abc123''',
     '''placeholder''',

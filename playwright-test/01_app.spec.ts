@@ -115,28 +115,23 @@ test.describe(`${productName} startup test`, () => {
     // Try launching with additional flags for CI environment
     console.log("\nAttempting to launch Electron app...");
 
-    // On Windows CI, try a minimal launch first
-    if (process.platform === "win32" && process.env.CI) {
-      console.log("Windows CI detected - trying minimal launch configuration");
-      try {
+    // Use simplified launch strategy that works in portable tests
+    try {
+      // For CI environments, use minimal configuration
+      if (process.env.CI) {
+        console.log("CI environment detected - using minimal launch configuration");
         app = await electron.launch({
           executablePath,
           timeout: 60000,
           env: {
             ...process.env,
+            NODE_ENV: "production",
             ELECTRON_ENABLE_LOGGING: "1",
-            ELECTRON_NO_ASAR: "1",
+            // Don't set ELECTRON_RUN_AS_NODE as it prevents GUI apps from launching
           },
         });
-        console.log("Minimal launch successful!");
-      } catch (minimalError) {
-        console.error("Minimal launch failed:", minimalError);
-        console.log("Trying with full args...");
-      }
-    }
-
-    if (!app) {
-      try {
+      } else {
+        // For local development, use more debugging flags
         app = await electron.launch({
           executablePath,
           args: [
@@ -144,32 +139,35 @@ test.describe(`${productName} startup test`, () => {
             "--disable-setuid-sandbox",
             "--disable-gpu",
             "--disable-dev-shm-usage",
-            "--disable-software-rasterizer",
-            "--disable-extensions",
-            "--disable-background-timer-throttling",
-            "--disable-backgrounding-occluded-windows",
-            "--disable-renderer-backgrounding",
-            "--disable-features=TranslateUI",
-            "--disable-ipc-flooding-protection",
             "--enable-logging",
-            "--log-level=0",
           ],
           env: {
             ...process.env,
             ELECTRON_ENABLE_LOGGING: "1",
-            ELECTRON_NO_ASAR: "1",
-            ELECTRON_RUN_AS_NODE: "0",
             NODE_ENV: "test",
           },
-          timeout: 60000, // 60 seconds timeout for launch
+          timeout: 60000,
         });
-        console.log("Electron app launched successfully!");
-      } catch (launchError) {
-        console.error(`Failed to launch Electron app: ${launchError}`);
-        // Log any electron process output
-        console.error("Launch error details:", launchError);
-        throw launchError;
       }
+      console.log("Electron app launched successfully!");
+    } catch (launchError) {
+      console.error(`Failed to launch Electron app: ${launchError}`);
+
+      // Additional debugging for Windows
+      if (process.platform === "win32" && fs.existsSync(executablePath)) {
+        try {
+          console.log("\nChecking if executable responds to --version...");
+          const versionOutput = execSync(`"${executablePath}" --version 2>&1`, {
+            encoding: "utf-8",
+            timeout: 5000,
+          }).trim();
+          console.log("Version output:", versionOutput);
+        } catch (versionErr) {
+          console.error("Version check failed:", versionErr);
+        }
+      }
+
+      throw launchError;
     }
     await mockDialogMessage(app);
   }, 120000); // Increase timeout to 2 minutes for Windows
