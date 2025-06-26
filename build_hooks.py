@@ -53,6 +53,21 @@ class CustomBuildHook(BuildHookInterface):
 
     def _build_electron_app(self) -> None:
         """Build the Electron app without ASAR packaging."""
+        import os
+
+        # Skip Electron build in CI environments
+        if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+            print("Skipping Electron app build in CI environment")
+            return
+
+        # Check if pnpm is available
+        try:
+            subprocess.run(["pnpm", "--version"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("Warning: pnpm not found, skipping Electron app build")
+            print("To build Electron app, install pnpm: https://pnpm.io/installation")
+            return
+
         print("Building Electron app...")
 
         # Ensure Node.js dependencies are installed
