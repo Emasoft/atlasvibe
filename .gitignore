@@ -19,6 +19,7 @@ temp_test/
 /.pnp
 .pnp.js
 dist-electron/*
+electron_dist/
 
 # testing
 /coverage

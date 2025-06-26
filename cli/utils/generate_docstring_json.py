@@ -8,7 +8,6 @@
 # SPDX-License-Identifier: MIT
 # See the LICENSE file for details.
 
-import json
 import os
 
 from rich import print
@@ -77,16 +76,17 @@ def generate_docstring_json() -> bool:
             # Write the data to a JSON file in the same directory
             output_file_path = os.path.join(root, "block_data.json")
 
-            if os.path.exists(output_file_path):
-                with open(output_file_path, "r") as output_file:
-                    existing_json_data = json.load(output_file)
-            else:
-                existing_json_data = {}
+            # Use shared JSON utilities for proper error handling and atomic writes
+            from captain.utils.shared.json_utils import load_json_file, save_json_file
 
+            # Load existing data if file exists, otherwise start with empty dict
+            existing_json_data = load_json_file(output_file_path, default={})
+
+            # Update the docstring field
             existing_json_data["docstring"] = docstring_json_data
 
-            with open(output_file_path, "w") as output_file:
-                json.dump(existing_json_data, output_file, indent=2)
+            # Save with atomic write
+            save_json_file(output_file_path, existing_json_data)
 
     if error > 0:
         print(f"Found {error} [bold red]ERRORS[/bold red] with docstring formatting!")
