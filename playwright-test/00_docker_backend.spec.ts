@@ -5,6 +5,24 @@ import { test, expect } from "@playwright/test";
  * These tests only check backend functionality without Electron
  */
 
+// Constants
+const BACKEND_URL = "http://localhost:5392";
+const MAX_RETRIES = 30;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 5000; // 5 seconds
+// WebSocket test key from RFC 6455 (standard test value, not a secret)
+const WS_TEST_KEY = "x3JJHMbDL1EzLkh9GBhXDw==";
+
+// Helper function to check if running in Docker CI
+function isDockerCI(): boolean {
+  return !!process.env.CI && process.env.NODE_ENV === "test";
+}
+
+// Helper function for exponential backoff
+function getBackoffDelay(attempt: number): number {
+  return Math.min(INITIAL_RETRY_DELAY * Math.pow(1.5, attempt), MAX_RETRY_DELAY);
+}
+
 test.describe("Docker Backend Tests", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
@@ -13,16 +31,15 @@ test.describe("Docker Backend Tests", () => {
 
   test("Backend health check", async ({ request }) => {
     // Skip if not in Docker
-    if (!process.env.CI || process.env.NODE_ENV !== "test") {
+    if (!isDockerCI()) {
       test.skip();
     }
 
-    const maxRetries = 30;
     let lastError: Error | null = null;
 
-    for (let i = 0; i < maxRetries; i++) {
+    for (let i = 0; i < MAX_RETRIES; i++) {
       try {
-        const response = await request.get("http://localhost:5392/log_level", {
+        const response = await request.get(`${BACKEND_URL}/log_level`, {
           timeout: 5000,
         });
 
@@ -33,26 +50,27 @@ test.describe("Docker Backend Tests", () => {
         return;
       } catch (error) {
         lastError = error as Error;
-        console.log(`Attempt ${i + 1}/${maxRetries} failed: ${error}`);
-        // Wait a bit before retrying
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log(`Attempt ${i + 1}/${MAX_RETRIES} failed: ${error}`);
+        // Wait with exponential backoff
+        const delay = getBackoffDelay(i);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
     throw new Error(
-      `Backend health check failed after ${maxRetries} attempts: ${lastError}`,
+      `Backend health check failed after ${MAX_RETRIES} attempts: ${lastError}`,
     );
   });
 
   test("Backend API - get blocks metadata", async ({ request }) => {
     // Skip if not in Docker
-    if (!process.env.CI || process.env.NODE_ENV !== "test") {
+    if (!isDockerCI()) {
       test.skip();
     }
 
     try {
       const response = await request.get(
-        "http://localhost:5392/blocks/metadata/",
+        `${BACKEND_URL}/blocks/metadata/`,
         {
           timeout: 10000,
         },
@@ -63,6 +81,9 @@ test.describe("Docker Backend Tests", () => {
 
       if (!response.ok()) {
         const body = await response.text();
+        const headers = response.headers();
+        console.error(`Response status: ${response.status()}`);
+        console.error(`Response headers:`, headers);
         console.error(`Response body: ${body}`);
       }
 
@@ -102,13 +123,13 @@ test.describe("Docker Backend Tests", () => {
 
   test("Backend API - project management endpoints", async ({ request }) => {
     // Skip if not in Docker
-    if (!process.env.CI || process.env.NODE_ENV !== "test") {
+    if (!isDockerCI()) {
       test.skip();
     }
 
     // Test project list endpoint
     try {
-      const response = await request.get("http://localhost:5392/project/list", {
+      const response = await request.get(`${BACKEND_URL}/project/list`, {
         timeout: 10000,
       });
 
@@ -125,19 +146,18 @@ test.describe("Docker Backend Tests", () => {
 
   test("Backend WebSocket endpoint exists", async ({ request }) => {
     // Skip if not in Docker
-    if (!process.env.CI || process.env.NODE_ENV !== "test") {
+    if (!isDockerCI()) {
       test.skip();
     }
 
     // We can't easily test WebSocket with Playwright's request API,
     // but we can at least check if the upgrade would be accepted
     try {
-      const response = await request.get("http://localhost:5392/ws", {
+      const response = await request.get(`${BACKEND_URL}/ws`, {
         headers: {
           Upgrade: "websocket",
           Connection: "Upgrade",
-          // This is a standard test value from RFC 6455 WebSocket spec, not a secret
-          "Sec-WebSocket-Key": "x3JJHMbDL1EzLkh9GBhXDw==",
+          "Sec-WebSocket-Key": WS_TEST_KEY,
           "Sec-WebSocket-Version": "13",
         },
         timeout: 5000,

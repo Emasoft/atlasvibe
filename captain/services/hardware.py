@@ -63,14 +63,16 @@ class DefaultDeviceFinder:
         cameras = []
 
         while True:
-            camera = cv2.VideoCapture(i)
+            camera = None
             try:
+                camera = cv2.VideoCapture(i)
                 if not camera.read()[0]:
                     break
                 else:
                     cameras.append(i)
             finally:
-                camera.release()
+                if camera is not None:
+                    camera.release()
             i += 1
 
         return [CameraDevice(name=f"Camera {i}", id=i) for i in cameras]
@@ -140,7 +142,7 @@ class DefaultDeviceFinder:
                 try:
                     description = f"{device.product_type} - {device.compact_daq_chassis_device}/{device.compact_daq_slot_num}"
                 except Exception as e:
-                    logging.warn("Can't extract device description: " + str(e))
+                    logging.warning("Can't extract device description: " + str(e))
                 return NIDAQmxDevice(
                     name=f"{device.product_type} - {channel.name.split('/')[-1]}",
                     address=channel.name,
@@ -159,7 +161,7 @@ class DefaultDeviceFinder:
             logging.info(f"Devices found are: {devices}")
             return devices
         except nidaqmx.errors.DaqNotFoundError as e:
-            logging.warn(f"NI-DAQmx driver not installed - {e}")
+            logging.warning(f"NI-DAQmx driver not installed - {e}")
         except Exception as e:
             logging.error(f"Error in get_nidaqmx_devices: {e}")
         return []

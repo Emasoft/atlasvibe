@@ -15,8 +15,15 @@ and other common testing patterns used across block tests.
 
 import numpy as np
 import pandas as pd
-from typing import Any
+from typing import Any, Optional
 from functools import wraps
+
+try:
+    import pytest
+
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
 
 from pkgs.atlasvibe.atlasvibe.data_container import (
     DataContainer,
@@ -106,16 +113,19 @@ def create_test_matrix(rows: int = 10, cols: int = 10, value: float = 1.0) -> Ma
     return Matrix(m=np.full((rows, cols), value))
 
 
-def create_test_dataframe(rows: int = 10, cols: int = 3) -> DataFrame:
+def create_test_dataframe(rows: int = 10, cols: int = 3, seed: Optional[int] = None) -> DataFrame:
     """Create a test DataFrame DataContainer.
 
     Args:
         rows: Number of rows
         cols: Number of columns
+        seed: Random seed for reproducible data (optional)
 
     Returns:
         A DataFrame DataContainer with sample data
     """
+    if seed is not None:
+        np.random.seed(seed)
     data = {f"col_{i}": np.random.randn(rows) for i in range(cols)}
     df = pd.DataFrame(data)
     return DataFrame(df=df)
@@ -235,7 +245,8 @@ def parametrize_datacontainer_types():
             dc = datacontainer_factory()
             # ... test with dc
     """
-    import pytest
+    if not HAS_PYTEST:
+        raise ImportError("pytest is required to use parametrize_datacontainer_types")
 
     factories = [
         ("scalar", create_test_scalar),

@@ -47,6 +47,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
         return cwd_path
 
     # 2. Relative to the blocks directory
+    blocks_path_str = "N/A"
     try:
         # Use pathlib for more robust path handling
         from pathlib import Path
@@ -54,10 +55,14 @@ def get_file_path(file_path: str, default_path: str | None = None):
         current_file = Path(__file__).resolve()
         blocks_dir = current_file.parent.parent.parent.parent.parent  # Navigate up to blocks/
         blocks_path = blocks_dir / f_path
+        blocks_path_str = str(blocks_path)
         if blocks_path.exists():
             return str(blocks_path.resolve())
-    except Exception:
-        pass
+    except Exception as e:
+        # Log the error for debugging but continue trying other paths
+        import logging
+
+        logging.debug(f"Failed to resolve path relative to blocks directory: {e}")
 
     # 3. Relative to the current block's directory
     block_dir = os.path.dirname(os.path.abspath(__file__))
@@ -66,9 +71,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
         return block_path
 
     # If none of the strategies work, raise an error with helpful message
-    raise FileNotFoundError(
-        f"File not found: {f_path}\nTried paths:\n  - {cwd_path} (relative to current directory)\n  - {blocks_path if 'blocks_path' in locals() else 'N/A'} (relative to blocks directory)\n  - {block_path} (relative to current block)\nPlease provide an absolute path or ensure the file exists in one of these locations."
-    )
+    raise FileNotFoundError(f"File not found: {f_path}\nTried paths:\n  - {cwd_path} (relative to current directory)\n  - {blocks_path_str} (relative to blocks directory)\n  - {block_path} (relative to current block)\nPlease provide an absolute path or ensure the file exists in one of these locations.")
 
 
 @atlasvibe(
