@@ -128,6 +128,12 @@ tags = ["env", "secret"]
 [rules.allowlist]
 regexes = [
     '''(test|example|demo|sample|placeholder)''',
+    '''<your[_\-]?token[_\-]?here?>''',
+    '''<your[_\-]?token>''',
+]
+paths = [
+    '''DOCKER_TEST.*\.md$''',  # Docker test documentation files
+    '''.*TEST.*\.md$''',        # Test documentation files
 ]
 
 # Separate rule for git author variables (always allowed)

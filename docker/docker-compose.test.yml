@@ -1,0 +1,101 @@
+# Docker Compose configuration for testing AtlasVibe
+# Supports both local and remote (GitHub CI) profiles
+
+services:
+  # Base test service configuration
+  atlasvibe-test-base:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: test
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    environment:
+      - CI=${CI:-false}
+      - NODE_ENV=test
+      - DISPLAY=:99
+      - ELECTRON_DISABLE_GPU=1
+      - ELECTRON_NO_SANDBOX=1
+      - DISABLE_FILE_WATCHER=true
+      - DISABLE_CHANGE_QUEUE=true
+      - TEST_PROFILE=${TEST_PROFILE:-local}
+      - GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    volumes:
+      - ../test-results:/app/test-results
+      - ../test-logs:/app/test-logs
+      - test-cache:/root/.cache
+    networks:
+      - test-network
+
+  # Local testing profile
+  atlasvibe-test-local:
+    extends: atlasvibe-test-base
+    environment:
+      - TEST_PROFILE=local
+      - MAX_RETRIES=10
+      - TIMEOUT_MULTIPLIER=2
+      - SKIP_SLOW_TESTS=false
+      - RUN_INTEGRATION_TESTS=true
+    command: ["/app/entrypoint-test-local.sh"]
+    profiles: ["local"]
+
+  # Remote (GitHub CI) testing profile
+  atlasvibe-test-remote:
+    extends: atlasvibe-test-base
+    environment:
+      - TEST_PROFILE=remote
+      - CI=true
+      - GITHUB_ACTIONS=true
+      - MAX_RETRIES=3
+      - TIMEOUT_MULTIPLIER=1
+      - SKIP_SLOW_TESTS=true
+      - RUN_INTEGRATION_TESTS=false
+    command: ["/app/entrypoint-test-remote.sh"]
+    profiles: ["remote"]
+
+  # Integration test service (includes GitHub repo cloning test)
+  atlasvibe-test-integration:
+    extends: atlasvibe-test-base
+    environment:
+      - TEST_PROFILE=integration
+      - RUN_GITHUB_CLONE_TEST=true
+      - TEST_REPO_URL=${TEST_REPO_URL:-https://github.com/astral-sh/ruff}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    volumes:
+      - ../test-results:/app/test-results
+      - ../test-logs:/app/test-logs
+      - test-cache:/root/.cache
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker-in-Docker tests
+    command: ["/app/entrypoint-test-integration.sh"]
+    profiles: ["integration"]
+
+  # UI testing profile (headless Electron app tests)
+  atlasvibe-test-ui:
+    extends: atlasvibe-test-base
+    environment:
+      - TEST_PROFILE=ui
+      - RUN_UI_TESTS=true
+      - DISPLAY=:99
+      - ELECTRON_ENABLE_LOGGING=1
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1  # We'll use the one in the image
+      - MAX_RETRIES=5
+      - TIMEOUT_MULTIPLIER=2
+      - SKIP_SLOW_TESTS=false
+      - HEADLESS=true
+    volumes:
+      - ../test-results:/app/test-results
+      - ../test-logs:/app/test-logs
+      - test-cache:/root/.cache
+      - ../playwright-test:/app/playwright-test:ro  # Mount UI tests read-only
+    command: ["/app/entrypoint-test-ui.sh"]
+    profiles: ["ui"]
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  test-cache:
+    driver: local

@@ -1,0 +1,138 @@
+Virtual display started successfully
+Starting backend and frontend services...
+Starting backend only for testing...
+Backend started with PID 12
+Waiting 10 seconds for services to initialize...
+warning: Ignoring existing virtual environment linked to non-existent Python interpreter: .venv/bin/python3 -> python
+Using CPython 3.11.13 interpreter at: /usr/bin/python3.11
+Removed virtual environment at: .venv
+Creating virtual environment at: .venv
+   Building atlasvibe @ file:///app
+Downloading virtualenv (5.8MiB)
+Downloading cryptography (4.0MiB)
+Downloading watchfiles (1.3MiB)
+Downloading tokenizers (2.8MiB)
+Downloading asyncpg (2.9MiB)
+Downloading uv (15.9MiB)
+Downloading hf-xet (2.8MiB)
+Downloading plotly (18.2MiB)
+Downloading pycryptodome (2.1MiB)
+Downloading debugpy (5.0MiB)
+Downloading apprise (1.3MiB)
+Downloading sqlalchemy (3.1MiB)
+Downloading numpy (13.6MiB)
+Downloading uvloop (3.8MiB)
+Downloading zeroconf (10.8MiB)
+Downloading pygments (1.2MiB)
+Downloading pandas (14.9MiB)
+Downloading prefect (5.7MiB)
+Downloading transformers (10.0MiB)
+Downloading networkx (1.9MiB)
+Downloading pydantic-core (1.8MiB)
+Downloading tm-devices (7.5MiB)
+ Downloading pygments
+   Building keyrings-cryptfile==1.3.9
+ Downloading apprise
+ Downloading watchfiles
+ Downloading pydantic-core
+ Downloading networkx
+      Built atlasvibe @ file:///app
+ Downloading pycryptodome
+ Downloading tokenizers
+ Downloading hf-xet
+ Downloading asyncpg
+ Downloading sqlalchemy
+ Downloading uvloop
+ Downloading cryptography
+      Built keyrings-cryptfile==1.3.9
+ Downloading debugpy
+ Downloading virtualenv
+ Downloading prefect
+ Downloading tm-devices
+ Downloading transformers
+ Downloading zeroconf
+ Downloading numpy
+ Downloading uv
+ Downloading pandas
+ Downloading plotly
+Installed 167 packages in 242ms
+/app/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+Checking listening ports...
+No ports found with netstat
+No ports found with ss
+lsof not available
+Checking backend processes...
+root        12 54.3  1.0 722528 83228 ?        Sl   13:34   0:05 uv run python3 main.py
+root        92  110  4.5 962980 368280 ?       Rl   13:34   0:04 python3 main.py
+Waiting for Backend API to be ready at http://localhost:5392/log_level...
+Attempt 0: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+INFO:     Started server process [92]
+INFO:     Waiting for application startup.
+[2025-06-27 13:34:33] - atlasvibe - INFO - Running startup event
+[2025-06-27 13:34:33] - atlasvibe - INFO - File watcher disabled by DISABLE_FILE_WATCHER environment variable
+[2025-06-27 13:34:33] - atlasvibe - INFO - Workflow Queue Coordinator started (managing WCQ and WEQ)
+[2025-06-27 13:34:33] - atlasvibe - INFO - ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable
+[2025-06-27 13:34:33] - captain.services.workflow_queue_coordinator - INFO - WorkflowQueueCoordinator started
+INFO:     Application startup complete.
+[2025-06-27 13:34:33] - captain.services.workflow_changes_queue - INFO - Starting WorkflowChangesQueue processing
+INFO:     Uvicorn running on http://0.0.0.0:5392 (Press CTRL+C to quit)
+Attempt 1: Port 5392 is open, trying HTTP request...
+INFO:     127.0.0.1:38470 - "GET /log_level HTTP/1.1" 200 OK
+Attempt 1: HTTP 200 from http://localhost:5392/log_level
+Backend API is ready!
+Skipping frontend check - only testing backend
+All services are ready!
+Running tests...
+INFO:     127.0.0.1:38478 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38482 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38498 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40362 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40364 - "GET /project/list HTTP/1.1" 404 Not Found
+INFO:     ('127.0.0.1', 40370) - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:40374 - "GET /log_level HTTP/1.1" 200 OK
+
+🚀 Starting AtlasVibe Docker Tests...
+⏰ Start time: 2025-06-27 13:34:34
+================================================================================
+
+📋 Running Playwright tests...
+
+================================================================================
+📊 TEST RESULTS SUMMARY
+================================================================================
+Total Tests: 10
+✅ Passed: 9
+❌ Failed: 0
+⏭️  Skipped: 1
+⏱️  Duration: 4.19s
+================================================================================
+
+📋 DETAILED TEST RESULTS
+========================================================================================================================
+Status     Suite                     Test Name                                Description                         Duration
+========================================================================================================================
+✅ PASSED  00_api_smoke.spec.ts > .. Backend health check should respond: U.. Backend health check should respo.. 0.330s
+✅ PASSED  00_api_smoke.spec.ts > .. Backend API can retrieve blocks metada.. Backend api can retrieve blocks m.. 0.387s
+⏭️ SKIPPED 00_api_smoke.spec.ts > .. Frontend dev server should respond: Un.. Frontend dev server should respon.. 0.309s
+✅ PASSED  00_docker_backend.spec... Backend health check: Unknown Test       Backend health check: unknown test  0.312s
+✅ PASSED  00_docker_backend.spec... Backend API - get blocks metadata: Unk.. Backend api - get blocks metadata.. 0.336s
+✅ PASSED  00_docker_backend.spec... Backend API - project management endpo.. Backend api - project management .. 0.310s
+✅ PASSED  00_docker_backend.spec... Backend WebSocket endpoint exists: Unk.. Backend websocket endpoint exists.. 0.312s
+✅ PASSED  00_headless_check.spec... Verify running in headless mode: Unkno.. Verify running in headless mode: .. 0.001s
+✅ PASSED  00_headless_check.spec... Backend API responds in Docker: Unknow.. Backend api responds in docker: u.. 0.308s
+✅ PASSED  00_headless_check.spec... Can take screenshot without opening di.. Can take screenshot without openi.. 0.182s
+========================================================================================================================
+
+📁 Test Artifacts:
+  - results.json
+
+================================================================================
+🎉 ALL TESTS PASSED! 🎉
+================================================================================

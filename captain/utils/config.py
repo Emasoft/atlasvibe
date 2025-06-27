@@ -24,10 +24,31 @@ ___________________
 Used for communicating with the Test Sequencer UI
 """
 
-# Get CORS origins from environment variable, default to localhost:5391
-default_origin = "http://localhost:5391"
-env_origins = os.environ.get("CORS_ORIGINS", default_origin)
-origins = [origin.strip() for origin in env_origins.split(",")]
+# Get CORS origins from environment variable, default to localhost origins
+# Include common localhost ports and WebSocket protocols
+default_origins = [
+    "http://localhost:5391",
+    "http://localhost:5392",
+    "http://localhost:3000",
+    "http://127.0.0.1:5391",
+    "http://127.0.0.1:5392",
+    "http://127.0.0.1:3000",
+    "ws://localhost:5391",
+    "ws://localhost:5392",
+    "ws://127.0.0.1:5391",
+    "ws://127.0.0.1:5392",
+]
+
+# Allow additional origins from environment variable
+env_origins = os.environ.get("CORS_ORIGINS", "")
+if env_origins:
+    additional_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+    origins = default_origins + additional_origins
+else:
+    origins = default_origins
+
+# Remove duplicates while preserving order
+origins = list(dict.fromkeys(origins))
 """
 CORS CONFIG
 ___________________

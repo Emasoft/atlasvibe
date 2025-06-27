@@ -1,0 +1,927 @@
+[0;34m🐳 AtlasVibe Docker Test Runner[0m
+[0;34m===============================[0m
+Profile: local
+Skip build: true
+Verbose: false
+
+[1;33m⏭️  Skipping Docker image build[0m
+[0;34m
+🧪 Running local profile tests...[0m
+[0;34m==========================================[0m
+ Network docker_test-network  Creating
+ Network docker_test-network  Created
+ Volume "docker_test-cache"  Creating
+ Volume "docker_test-cache"  Created
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [atlasvibe-test-local internal] load build definition from Dockerfile
+#1 transferring dockerfile: 4.73kB 0.0s done
+#1 DONE 0.0s
+
+#2 [atlasvibe-test-local internal] load metadata for mcr.microsoft.com/playwright:v1.40.0-jammy
+#2 DONE 0.1s
+
+#3 [atlasvibe-test-local internal] load metadata for ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+#3 ...
+
+#4 [atlasvibe-test-local internal] load metadata for ghcr.io/astral-sh/uv:latest
+#4 DONE 0.3s
+
+#3 [atlasvibe-test-local internal] load metadata for ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+#3 DONE 0.7s
+
+#5 [atlasvibe-test-local] FROM ghcr.io/astral-sh/uv:latest@sha256:9653efd4380d5a0e5511e337dcfc3b8ba5bc4e6ea7fa3be7716598261d5503fa
+#5 resolve ghcr.io/astral-sh/uv:latest@sha256:9653efd4380d5a0e5511e337dcfc3b8ba5bc4e6ea7fa3be7716598261d5503fa done
+#5 DONE 0.0s
+
+#6 [atlasvibe-test-local internal] load .dockerignore
+#6 transferring context: 357B done
+#6 DONE 0.0s
+
+#7 [atlasvibe-test-local test  1/15] FROM mcr.microsoft.com/playwright:v1.40.0-jammy@sha256:9dcc823ba14151eecb81eedb3a0abcb4fac942ae7fa9c9f96fdfcc7f5db9d239
+#7 resolve mcr.microsoft.com/playwright:v1.40.0-jammy@sha256:9dcc823ba14151eecb81eedb3a0abcb4fac942ae7fa9c9f96fdfcc7f5db9d239 0.0s done
+#7 DONE 0.0s
+
+#8 [atlasvibe-test-local test  2/15] COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+#8 CACHED
+
+#9 [atlasvibe-test-local builder  1/10] FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:cde296622d8e850995cce202e77444ec6a63f136886e6f810f282b206911e5f3
+#9 resolve ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:cde296622d8e850995cce202e77444ec6a63f136886e6f810f282b206911e5f3 0.0s done
+#9 DONE 0.0s
+
+#10 [atlasvibe-test-local internal] load build context
+#10 transferring context: 9.50MB 3.5s done
+#10 DONE 3.7s
+
+#11 [atlasvibe-test-local builder  4/10] WORKDIR /app
+#11 CACHED
+
+#12 [atlasvibe-test-local builder  5/10] RUN --mount=type=cache,target=/root/.cache/uv     --mount=type=bind,source=uv.lock,target=uv.lock     --mount=type=bind,source=pyproject.toml,target=pyproject.toml     uv sync --frozen --no-install-project --no-dev
+#12 CACHED
+
+#13 [atlasvibe-test-local builder  6/10] COPY package.json pnpm-lock.yaml ./
+#13 CACHED
+
+#14 [atlasvibe-test-local builder  2/10] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     git     curl     nodejs     npm     && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [atlasvibe-test-local builder  3/10] RUN npm install -g pnpm@9
+#15 CACHED
+
+#16 [atlasvibe-test-local builder  7/10] RUN pnpm install --frozen-lockfile
+#16 CACHED
+
+#17 [atlasvibe-test-local builder  8/10] COPY . .
+#17 ...
+
+#18 [atlasvibe-test-local test  3/15] RUN apt-get update && apt-get install -y --no-install-recommends     software-properties-common     && add-apt-repository ppa:deadsnakes/ppa     && apt-get update && apt-get install -y --no-install-recommends     python3.11     python3.11-venv     python3.11-dev     xvfb     curl     netcat-openbsd     git     jq     libgtk-3-0     libgbm1     libnss3     libxss1     libasound2     libx11-xcb1     libxcb-dri3-0     libdrm2     libxcomposite1     libxdamage1     libxfixes3     libxrandr2     libatk1.0-0     libatk-bridge2.0-0     libcups2     libatspi2.0-0     libxkbcommon0     libpango-1.0-0     libcairo2     && rm -rf /var/lib/apt/lists/*
+#18 0.455 Get:1 https://deb.nodesource.com/node_20.x nodistro InRelease [12.1 kB]
+#18 0.523 Get:2 https://deb.nodesource.com/node_20.x nodistro/main arm64 Packages [12.0 kB]
+#18 0.586 Get:3 http://ports.ubuntu.com/ubuntu-ports jammy InRelease [270 kB]
+#18 1.195 Get:4 http://ports.ubuntu.com/ubuntu-ports jammy-updates InRelease [128 kB]
+#18 1.342 Get:5 http://ports.ubuntu.com/ubuntu-ports jammy-backports InRelease [127 kB]
+#18 1.490 Get:6 http://ports.ubuntu.com/ubuntu-ports jammy-security InRelease [129 kB]
+#18 1.648 Get:7 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 Packages [1758 kB]
+#18 2.006 Get:8 http://ports.ubuntu.com/ubuntu-ports jammy/restricted arm64 Packages [24.2 kB]
+#18 2.006 Get:9 http://ports.ubuntu.com/ubuntu-ports jammy/universe arm64 Packages [17.2 MB]
+#18 2.569 Get:10 http://ports.ubuntu.com/ubuntu-ports jammy/multiverse arm64 Packages [224 kB]
+#18 2.574 Get:11 http://ports.ubuntu.com/ubuntu-ports jammy-updates/multiverse arm64 Packages [32.8 kB]
+#18 2.575 Get:12 http://ports.ubuntu.com/ubuntu-ports jammy-updates/restricted arm64 Packages [4071 kB]
+#18 2.688 Get:13 http://ports.ubuntu.com/ubuntu-ports jammy-updates/universe arm64 Packages [1541 kB]
+#18 2.734 Get:14 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 Packages [3036 kB]
+#18 2.822 Get:15 http://ports.ubuntu.com/ubuntu-ports jammy-backports/universe arm64 Packages [33.3 kB]
+#18 2.822 Get:16 http://ports.ubuntu.com/ubuntu-ports jammy-backports/main arm64 Packages [82.8 kB]
+#18 2.823 Get:17 http://ports.ubuntu.com/ubuntu-ports jammy-security/restricted arm64 Packages [3928 kB]
+#18 2.933 Get:18 http://ports.ubuntu.com/ubuntu-ports jammy-security/universe arm64 Packages [1241 kB]
+#18 2.963 Get:19 http://ports.ubuntu.com/ubuntu-ports jammy-security/multiverse arm64 Packages [26.5 kB]
+#18 2.964 Get:20 http://ports.ubuntu.com/ubuntu-ports jammy-security/main arm64 Packages [2733 kB]
+#18 3.404 Fetched 36.6 MB in 3s (11.9 MB/s)
+#18 3.404 Reading package lists...
+#18 3.932 Reading package lists...
+#18 4.426 Building dependency tree...
+#18 4.575 Reading state information...
+#18 4.700 The following additional packages will be installed:
+#18 4.700   distro-info-data gir1.2-glib-2.0 gir1.2-packagekitglib-1.0 libappstream4
+#18 4.700   libgirepository-1.0-1 libglib2.0-0 libglib2.0-bin libglib2.0-data
+#18 4.700   libpackagekit-glib2-18 libpolkit-agent-1-0 libpolkit-gobject-1-0
+#18 4.700   libstemmer0d libxmlb2 libyaml-0-2 lsb-release packagekit pkexec policykit-1
+#18 4.700   polkitd python-apt-common python3-apt python3-blinker python3-cffi-backend
+#18 4.700   python3-cryptography python3-dbus python3-distro python3-gi python3-httplib2
+#18 4.700   python3-importlib-metadata python3-jeepney python3-jwt python3-keyring
+#18 4.700   python3-launchpadlib python3-lazr.restfulclient python3-lazr.uri
+#18 4.700   python3-more-itertools python3-oauthlib python3-pkg-resources
+#18 4.700   python3-pyparsing python3-secretstorage python3-six
+#18 4.700   python3-software-properties python3-wadllib python3-zipp
+#18 4.701 Suggested packages:
+#18 4.701   appstream python3-apt-dbg python-apt-doc python-blinker-doc
+#18 4.701   python-cryptography-doc python3-cryptography-vectors python-dbus-doc
+#18 4.701   python3-crypto gir1.2-secret-1 gnome-keyring libkf5wallet-bin
+#18 4.701   python3-keyrings.alt python3-testresources python3-setuptools
+#18 4.701   python-pyparsing-doc python-secretstorage-doc
+#18 4.701 Recommended packages:
+#18 4.701   xdg-user-dirs packagekit-tools unattended-upgrades
+#18 4.858 The following NEW packages will be installed:
+#18 4.858   distro-info-data gir1.2-glib-2.0 gir1.2-packagekitglib-1.0 libappstream4
+#18 4.858   libgirepository-1.0-1 libglib2.0-bin libglib2.0-data libpackagekit-glib2-18
+#18 4.859   libpolkit-agent-1-0 libpolkit-gobject-1-0 libstemmer0d libxmlb2 libyaml-0-2
+#18 4.859   lsb-release packagekit pkexec policykit-1 polkitd python-apt-common
+#18 4.859   python3-apt python3-blinker python3-cffi-backend python3-cryptography
+#18 4.859   python3-dbus python3-distro python3-gi python3-httplib2
+#18 4.859   python3-importlib-metadata python3-jeepney python3-jwt python3-keyring
+#18 4.859   python3-launchpadlib python3-lazr.restfulclient python3-lazr.uri
+#18 4.859   python3-more-itertools python3-oauthlib python3-pkg-resources
+#18 4.859   python3-pyparsing python3-secretstorage python3-six
+#18 4.859   python3-software-properties python3-wadllib python3-zipp
+#18 4.859   software-properties-common
+#18 4.859 The following packages will be upgraded:
+#18 4.859   libglib2.0-0
+#18 5.082 1 upgraded, 44 newly installed, 0 to remove and 133 not upgraded.
+#18 5.082 Need to get 4554 kB of archives.
+#18 5.082 After this operation, 15.6 MB of additional disk space will be used.
+#18 5.082 Get:1 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 distro-info-data all 0.52ubuntu0.9 [5336 B]
+#18 5.186 Get:2 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libglib2.0-0 arm64 2.72.4-0ubuntu2.5 [1435 kB]
+#18 5.859 Get:3 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libgirepository-1.0-1 arm64 1.72.0-1 [53.5 kB]
+#18 5.865 Get:4 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 gir1.2-glib-2.0 arm64 1.72.0-1 [165 kB]
+#18 5.879 Get:5 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libglib2.0-data all 2.72.4-0ubuntu2.5 [4656 B]
+#18 5.879 Get:6 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libyaml-0-2 arm64 0.2.2-1build2 [51.0 kB]
+#18 5.884 Get:7 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 lsb-release all 11.1.0ubuntu4 [10.8 kB]
+#18 5.884 Get:8 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python-apt-common all 2.4.0ubuntu4 [14.6 kB]
+#18 5.887 Get:9 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-apt arm64 2.4.0ubuntu4 [161 kB]
+#18 5.902 Get:10 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-dbus arm64 1.2.18-3build1 [98.5 kB]
+#18 5.909 Get:11 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-gi arm64 3.42.1-0ubuntu1 [228 kB]
+#18 5.963 Get:12 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-pkg-resources all 59.6.0-1.2ubuntu0.22.04.3 [133 kB]
+#18 5.970 Get:13 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libpackagekit-glib2-18 arm64 1.2.5-2ubuntu3 [116 kB]
+#18 5.982 Get:14 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 gir1.2-packagekitglib-1.0 arm64 1.2.5-2ubuntu3 [25.3 kB]
+#18 5.984 Get:15 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libstemmer0d arm64 2.2.0-1build1 [166 kB]
+#18 5.992 Get:16 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libxmlb2 arm64 0.3.6-2build1 [66.5 kB]
+#18 5.994 Get:17 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libappstream4 arm64 0.15.2-2 [190 kB]
+#18 6.001 Get:18 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libglib2.0-bin arm64 2.72.4-0ubuntu2.5 [79.4 kB]
+#18 6.005 Get:19 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libpolkit-gobject-1-0 arm64 0.105-33 [42.4 kB]
+#18 6.011 Get:20 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libpolkit-agent-1-0 arm64 0.105-33 [16.0 kB]
+#18 6.037 Get:21 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 polkitd arm64 0.105-33 [77.7 kB]
+#18 6.073 Get:22 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 pkexec arm64 0.105-33 [14.8 kB]
+#18 6.081 Get:23 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 policykit-1 arm64 0.105-33 [2424 B]
+#18 6.088 Get:24 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-blinker all 1.4+dfsg1-0.4 [14.0 kB]
+#18 6.093 Get:25 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-cffi-backend arm64 1.15.0-1build2 [81.0 kB]
+#18 6.098 Get:26 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-cryptography arm64 3.4.8-1ubuntu2.2 [223 kB]
+#18 6.106 Get:27 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-pyparsing all 2.4.7-1 [61.4 kB]
+#18 6.110 Get:28 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-httplib2 all 0.20.2-2 [30.4 kB]
+#18 6.110 Get:29 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-more-itertools all 8.10.0-2 [47.9 kB]
+#18 6.121 Get:30 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-zipp all 1.0.0-3ubuntu0.1 [6288 B]
+#18 6.146 Get:31 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-importlib-metadata all 4.6.4-1 [16.2 kB]
+#18 6.180 Get:32 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-jeepney all 0.7.1-3 [36.8 kB]
+#18 6.184 Get:33 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-jwt all 2.3.0-1ubuntu0.2 [17.1 kB]
+#18 6.199 Get:34 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-secretstorage all 3.3.1-1 [13.2 kB]
+#18 6.201 Get:35 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-keyring all 23.5.0-1 [35.7 kB]
+#18 6.208 Get:36 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-lazr.uri all 1.0.6-2 [14.4 kB]
+#18 6.211 Get:37 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-wadllib all 1.3.6-1 [36.4 kB]
+#18 6.213 Get:38 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-distro all 1.7.0-1 [17.0 kB]
+#18 6.216 Get:39 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-oauthlib all 3.2.0-1ubuntu0.1 [89.9 kB]
+#18 6.222 Get:40 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-six all 1.16.0-3ubuntu1 [12.6 kB]
+#18 6.248 Get:41 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-lazr.restfulclient all 0.14.4-1 [51.2 kB]
+#18 6.288 Get:42 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 python3-launchpadlib all 1.10.16-1 [125 kB]
+#18 6.291 Get:43 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-software-properties all 0.99.22.9 [28.8 kB]
+#18 6.304 Get:44 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 packagekit arm64 1.2.5-2ubuntu3 [425 kB]
+#18 6.318 Get:45 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 software-properties-common all 0.99.22.9 [14.1 kB]
+#18 6.715 debconf: delaying package configuration, since apt-utils is not installed
+#18 6.739 Fetched 4554 kB in 1s (3131 kB/s)
+#18 6.770 Selecting previously unselected package distro-info-data.
+#18 6.770 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 34736 files and directories currently installed.)
+#18 6.892 Preparing to unpack .../00-distro-info-data_0.52ubuntu0.9_all.deb ...
+#18 6.902 Unpacking distro-info-data (0.52ubuntu0.9) ...
+#18 6.946 Preparing to unpack .../01-libglib2.0-0_2.72.4-0ubuntu2.5_arm64.deb ...
+#18 6.951 Unpacking libglib2.0-0:arm64 (2.72.4-0ubuntu2.5) over (2.72.4-0ubuntu2.2) ...
+#18 7.018 Selecting previously unselected package libgirepository-1.0-1:arm64.
+#18 7.020 Preparing to unpack .../02-libgirepository-1.0-1_1.72.0-1_arm64.deb ...
+#18 7.023 Unpacking libgirepository-1.0-1:arm64 (1.72.0-1) ...
+#18 7.039 Selecting previously unselected package gir1.2-glib-2.0:arm64.
+#18 7.042 Preparing to unpack .../03-gir1.2-glib-2.0_1.72.0-1_arm64.deb ...
+#18 7.045 Unpacking gir1.2-glib-2.0:arm64 (1.72.0-1) ...
+#18 7.066 Selecting previously unselected package libglib2.0-data.
+#18 7.068 Preparing to unpack .../04-libglib2.0-data_2.72.4-0ubuntu2.5_all.deb ...
+#18 7.070 Unpacking libglib2.0-data (2.72.4-0ubuntu2.5) ...
+#18 7.086 Selecting previously unselected package libyaml-0-2:arm64.
+#18 7.088 Preparing to unpack .../05-libyaml-0-2_0.2.2-1build2_arm64.deb ...
+#18 7.090 Unpacking libyaml-0-2:arm64 (0.2.2-1build2) ...
+#18 7.105 Selecting previously unselected package lsb-release.
+#18 7.107 Preparing to unpack .../06-lsb-release_11.1.0ubuntu4_all.deb ...
+#18 7.110 Unpacking lsb-release (11.1.0ubuntu4) ...
+#18 7.134 Selecting previously unselected package python-apt-common.
+#18 7.136 Preparing to unpack .../07-python-apt-common_2.4.0ubuntu4_all.deb ...
+#18 7.139 Unpacking python-apt-common (2.4.0ubuntu4) ...
+#18 7.153 Selecting previously unselected package python3-apt.
+#18 7.155 Preparing to unpack .../08-python3-apt_2.4.0ubuntu4_arm64.deb ...
+#18 7.156 Unpacking python3-apt (2.4.0ubuntu4) ...
+#18 7.173 Selecting previously unselected package python3-dbus.
+#18 7.176 Preparing to unpack .../09-python3-dbus_1.2.18-3build1_arm64.deb ...
+#18 7.178 Unpacking python3-dbus (1.2.18-3build1) ...
+#18 7.194 Selecting previously unselected package python3-gi.
+#18 7.197 Preparing to unpack .../10-python3-gi_3.42.1-0ubuntu1_arm64.deb ...
+#18 7.201 Unpacking python3-gi (3.42.1-0ubuntu1) ...
+#18 7.217 Selecting previously unselected package python3-pkg-resources.
+#18 7.219 Preparing to unpack .../11-python3-pkg-resources_59.6.0-1.2ubuntu0.22.04.3_all.deb ...
+#18 7.220 Unpacking python3-pkg-resources (59.6.0-1.2ubuntu0.22.04.3) ...
+#18 7.234 Selecting previously unselected package libpackagekit-glib2-18:arm64.
+#18 7.236 Preparing to unpack .../12-libpackagekit-glib2-18_1.2.5-2ubuntu3_arm64.deb ...
+#18 7.241 Unpacking libpackagekit-glib2-18:arm64 (1.2.5-2ubuntu3) ...
+#18 7.251 Selecting previously unselected package gir1.2-packagekitglib-1.0.
+#18 7.253 Preparing to unpack .../13-gir1.2-packagekitglib-1.0_1.2.5-2ubuntu3_arm64.deb ...
+#18 7.254 Unpacking gir1.2-packagekitglib-1.0 (1.2.5-2ubuntu3) ...
+#18 7.268 Selecting previously unselected package libstemmer0d:arm64.
+#18 7.270 Preparing to unpack .../14-libstemmer0d_2.2.0-1build1_arm64.deb ...
+#18 7.271 Unpacking libstemmer0d:arm64 (2.2.0-1build1) ...
+#18 7.291 Selecting previously unselected package libxmlb2:arm64.
+#18 7.291 Preparing to unpack .../15-libxmlb2_0.3.6-2build1_arm64.deb ...
+#18 7.293 Unpacking libxmlb2:arm64 (0.3.6-2build1) ...
+#18 7.308 Selecting previously unselected package libappstream4:arm64.
+#18 7.310 Preparing to unpack .../16-libappstream4_0.15.2-2_arm64.deb ...
+#18 7.311 Unpacking libappstream4:arm64 (0.15.2-2) ...
+#18 7.327 Selecting previously unselected package libglib2.0-bin.
+#18 7.330 Preparing to unpack .../17-libglib2.0-bin_2.72.4-0ubuntu2.5_arm64.deb ...
+#18 7.331 Unpacking libglib2.0-bin (2.72.4-0ubuntu2.5) ...
+#18 7.344 Selecting previously unselected package libpolkit-gobject-1-0:arm64.
+#18 7.346 Preparing to unpack .../18-libpolkit-gobject-1-0_0.105-33_arm64.deb ...
+#18 7.348 Unpacking libpolkit-gobject-1-0:arm64 (0.105-33) ...
+#18 7.360 Selecting previously unselected package libpolkit-agent-1-0:arm64.
+#18 7.362 Preparing to unpack .../19-libpolkit-agent-1-0_0.105-33_arm64.deb ...
+#18 7.363 Unpacking libpolkit-agent-1-0:arm64 (0.105-33) ...
+#18 7.376 Selecting previously unselected package polkitd.
+#18 7.379 Preparing to unpack .../20-polkitd_0.105-33_arm64.deb ...
+#18 7.381 Unpacking polkitd (0.105-33) ...
+#18 7.409 Selecting previously unselected package pkexec.
+#18 7.411 Preparing to unpack .../21-pkexec_0.105-33_arm64.deb ...
+#18 7.413 Unpacking pkexec (0.105-33) ...
+#18 7.425 Selecting previously unselected package policykit-1.
+#18 7.428 Preparing to unpack .../22-policykit-1_0.105-33_arm64.deb ...
+#18 7.434 Unpacking policykit-1 (0.105-33) ...
+#18 7.447 Selecting previously unselected package python3-blinker.
+#18 7.449 Preparing to unpack .../23-python3-blinker_1.4+dfsg1-0.4_all.deb ...
+#18 7.452 Unpacking python3-blinker (1.4+dfsg1-0.4) ...
+#18 7.467 Selecting previously unselected package python3-cffi-backend:arm64.
+#18 7.469 Preparing to unpack .../24-python3-cffi-backend_1.15.0-1build2_arm64.deb ...
+#18 7.470 Unpacking python3-cffi-backend:arm64 (1.15.0-1build2) ...
+#18 7.482 Selecting previously unselected package python3-cryptography.
+#18 7.490 Preparing to unpack .../25-python3-cryptography_3.4.8-1ubuntu2.2_arm64.deb ...
+#18 7.491 Unpacking python3-cryptography (3.4.8-1ubuntu2.2) ...
+#18 7.513 Selecting previously unselected package python3-pyparsing.
+#18 7.515 Preparing to unpack .../26-python3-pyparsing_2.4.7-1_all.deb ...
+#18 7.517 Unpacking python3-pyparsing (2.4.7-1) ...
+#18 7.531 Selecting previously unselected package python3-httplib2.
+#18 7.533 Preparing to unpack .../27-python3-httplib2_0.20.2-2_all.deb ...
+#18 7.534 Unpacking python3-httplib2 (0.20.2-2) ...
+#18 7.549 Selecting previously unselected package python3-more-itertools.
+#18 7.551 Preparing to unpack .../28-python3-more-itertools_8.10.0-2_all.deb ...
+#18 7.552 Unpacking python3-more-itertools (8.10.0-2) ...
+#18 7.565 Selecting previously unselected package python3-zipp.
+#18 7.567 Preparing to unpack .../29-python3-zipp_1.0.0-3ubuntu0.1_all.deb ...
+#18 7.569 Unpacking python3-zipp (1.0.0-3ubuntu0.1) ...
+#18 7.583 Selecting previously unselected package python3-importlib-metadata.
+#18 7.585 Preparing to unpack .../30-python3-importlib-metadata_4.6.4-1_all.deb ...
+#18 7.587 Unpacking python3-importlib-metadata (4.6.4-1) ...
+#18 7.600 Selecting previously unselected package python3-jeepney.
+#18 7.602 Preparing to unpack .../31-python3-jeepney_0.7.1-3_all.deb ...
+#18 7.604 Unpacking python3-jeepney (0.7.1-3) ...
+#18 7.617 Selecting previously unselected package python3-jwt.
+#18 7.619 Preparing to unpack .../32-python3-jwt_2.3.0-1ubuntu0.2_all.deb ...
+#18 7.624 Unpacking python3-jwt (2.3.0-1ubuntu0.2) ...
+#18 7.637 Selecting previously unselected package python3-secretstorage.
+#18 7.640 Preparing to unpack .../33-python3-secretstorage_3.3.1-1_all.deb ...
+#18 7.642 Unpacking python3-secretstorage (3.3.1-1) ...
+#18 7.660 Selecting previously unselected package python3-keyring.
+#18 7.662 Preparing to unpack .../34-python3-keyring_23.5.0-1_all.deb ...
+#18 7.663 Unpacking python3-keyring (23.5.0-1) ...
+#18 7.677 Selecting previously unselected package python3-lazr.uri.
+#18 7.679 Preparing to unpack .../35-python3-lazr.uri_1.0.6-2_all.deb ...
+#18 7.680 Unpacking python3-lazr.uri (1.0.6-2) ...
+#18 7.692 Selecting previously unselected package python3-wadllib.
+#18 7.694 Preparing to unpack .../36-python3-wadllib_1.3.6-1_all.deb ...
+#18 7.695 Unpacking python3-wadllib (1.3.6-1) ...
+#18 7.713 Selecting previously unselected package python3-distro.
+#18 7.715 Preparing to unpack .../37-python3-distro_1.7.0-1_all.deb ...
+#18 7.717 Unpacking python3-distro (1.7.0-1) ...
+#18 7.730 Selecting previously unselected package python3-oauthlib.
+#18 7.732 Preparing to unpack .../38-python3-oauthlib_3.2.0-1ubuntu0.1_all.deb ...
+#18 7.734 Unpacking python3-oauthlib (3.2.0-1ubuntu0.1) ...
+#18 7.750 Selecting previously unselected package python3-six.
+#18 7.752 Preparing to unpack .../39-python3-six_1.16.0-3ubuntu1_all.deb ...
+#18 7.753 Unpacking python3-six (1.16.0-3ubuntu1) ...
+#18 7.764 Selecting previously unselected package python3-lazr.restfulclient.
+#18 7.766 Preparing to unpack .../40-python3-lazr.restfulclient_0.14.4-1_all.deb ...
+#18 7.767 Unpacking python3-lazr.restfulclient (0.14.4-1) ...
+#18 7.779 Selecting previously unselected package python3-launchpadlib.
+#18 7.782 Preparing to unpack .../41-python3-launchpadlib_1.10.16-1_all.deb ...
+#18 7.786 Unpacking python3-launchpadlib (1.10.16-1) ...
+#18 7.805 Selecting previously unselected package python3-software-properties.
+#18 7.808 Preparing to unpack .../42-python3-software-properties_0.99.22.9_all.deb ...
+#18 7.809 Unpacking python3-software-properties (0.99.22.9) ...
+#18 7.823 Selecting previously unselected package packagekit.
+#18 7.824 Preparing to unpack .../43-packagekit_1.2.5-2ubuntu3_arm64.deb ...
+#18 7.826 Unpacking packagekit (1.2.5-2ubuntu3) ...
+#18 7.849 Selecting previously unselected package software-properties-common.
+#18 7.851 Preparing to unpack .../44-software-properties-common_0.99.22.9_all.deb ...
+#18 7.852 Unpacking software-properties-common (0.99.22.9) ...
+#18 7.871 Setting up python3-pkg-resources (59.6.0-1.2ubuntu0.22.04.3) ...
+#18 7.978 Setting up python3-more-itertools (8.10.0-2) ...
+#18 8.036 Setting up python3-jwt (2.3.0-1ubuntu0.2) ...
+#18 8.093 Setting up libyaml-0-2:arm64 (0.2.2-1build2) ...
+#18 8.095 Setting up libglib2.0-0:arm64 (2.72.4-0ubuntu2.5) ...
+#18 8.116 Setting up distro-info-data (0.52ubuntu0.9) ...
+#18 8.119 Setting up libxmlb2:arm64 (0.3.6-2build1) ...
+#18 8.122 Setting up libpackagekit-glib2-18:arm64 (1.2.5-2ubuntu3) ...
+#18 8.124 Setting up python3-lazr.uri (1.0.6-2) ...
+#18 8.177 Setting up python3-zipp (1.0.0-3ubuntu0.1) ...
+#18 8.224 Setting up python3-six (1.16.0-3ubuntu1) ...
+#18 8.273 Setting up libglib2.0-data (2.72.4-0ubuntu2.5) ...
+#18 8.275 Setting up python3-pyparsing (2.4.7-1) ...
+#18 8.339 Setting up python3-wadllib (1.3.6-1) ...
+#18 8.393 Setting up python3-jeepney (0.7.1-3) ...
+#18 8.463 Setting up python-apt-common (2.4.0ubuntu4) ...
+#18 8.470 Setting up python3-httplib2 (0.20.2-2) ...
+#18 8.542 Setting up libgirepository-1.0-1:arm64 (1.72.0-1) ...
+#18 8.545 Setting up libstemmer0d:arm64 (2.2.0-1build1) ...
+#18 8.563 Setting up lsb-release (11.1.0ubuntu4) ...
+#18 8.586 Setting up libpolkit-gobject-1-0:arm64 (0.105-33) ...
+#18 8.589 Setting up python3-cffi-backend:arm64 (1.15.0-1build2) ...
+#18 8.591 Setting up python3-blinker (1.4+dfsg1-0.4) ...
+#18 8.646 Setting up python3-dbus (1.2.18-3build1) ...
+#18 8.699 Setting up python3-importlib-metadata (4.6.4-1) ...
+#18 8.752 Setting up python3-distro (1.7.0-1) ...
+#18 8.803 Setting up python3-apt (2.4.0ubuntu4) ...
+#18 8.866 Setting up libglib2.0-bin (2.72.4-0ubuntu2.5) ...
+#18 8.868 Setting up libappstream4:arm64 (0.15.2-2) ...
+#18 8.870 Setting up python3-cryptography (3.4.8-1ubuntu2.2) ...
+#18 8.975 Setting up gir1.2-glib-2.0:arm64 (1.72.0-1) ...
+#18 8.978 Setting up libpolkit-agent-1-0:arm64 (0.105-33) ...
+#18 8.980 Setting up polkitd (0.105-33) ...
+#18 8.991 Setting up pkexec (0.105-33) ...
+#18 8.995 Setting up gir1.2-packagekitglib-1.0 (1.2.5-2ubuntu3) ...
+#18 9.005 Setting up python3-oauthlib (3.2.0-1ubuntu0.1) ...
+#18 9.078 Setting up python3-secretstorage (3.3.1-1) ...
+#18 9.128 Setting up python3-gi (3.42.1-0ubuntu1) ...
+#18 9.197 Setting up python3-keyring (23.5.0-1) ...
+#18 9.258 Setting up python3-lazr.restfulclient (0.14.4-1) ...
+#18 9.316 Setting up policykit-1 (0.105-33) ...
+#18 9.323 Setting up python3-launchpadlib (1.10.16-1) ...
+#18 9.389 Setting up python3-software-properties (0.99.22.9) ...
+#18 9.459 Setting up packagekit (1.2.5-2ubuntu3) ...
+#18 9.471 invoke-rc.d: could not determine current runlevel
+#18 9.474 invoke-rc.d: policy-rc.d denied execution of force-reload.
+#18 9.476 Failed to open connection to "system" message bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+#18 9.530 Created symlink /etc/systemd/user/sockets.target.wants/pk-debconf-helper.socket → /usr/lib/systemd/user/pk-debconf-helper.socket.
+#18 9.534 Setting up software-properties-common (0.99.22.9) ...
+#18 9.591 Processing triggers for libc-bin (2.35-0ubuntu3.4) ...
+#18 9.781 Processing triggers for dbus (1.12.20-2ubuntu4.1) ...
+#18 11.56 Hit:1 https://deb.nodesource.com/node_20.x nodistro InRelease
+#18 11.69 Get:2 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy InRelease [18.1 kB]
+#18 ...
+
+#17 [atlasvibe-test-local builder  8/10] COPY . .
+#17 DONE 8.0s
+
+#18 [atlasvibe-test-local test  3/15] RUN apt-get update && apt-get install -y --no-install-recommends     software-properties-common     && add-apt-repository ppa:deadsnakes/ppa     && apt-get update && apt-get install -y --no-install-recommends     python3.11     python3.11-venv     python3.11-dev     xvfb     curl     netcat-openbsd     git     jq     libgtk-3-0     libgbm1     libnss3     libxss1     libasound2     libx11-xcb1     libxcb-dri3-0     libdrm2     libxcomposite1     libxdamage1     libxfixes3     libxrandr2     libatk1.0-0     libatk-bridge2.0-0     libcups2     libatspi2.0-0     libxkbcommon0     libpango-1.0-0     libcairo2     && rm -rf /var/lib/apt/lists/*
+#18 11.69 Hit:3 http://ports.ubuntu.com/ubuntu-ports jammy InRelease
+#18 11.80 Hit:4 http://ports.ubuntu.com/ubuntu-ports jammy-updates InRelease
+#18 ...
+
+#19 [atlasvibe-test-local builder  9/10] RUN --mount=type=cache,target=/root/.cache/uv     uv sync --frozen --no-dev
+#19 0.368    Building atlasvibe @ file:///app
+#19 ...
+
+#18 [atlasvibe-test-local test  3/15] RUN apt-get update && apt-get install -y --no-install-recommends     software-properties-common     && add-apt-repository ppa:deadsnakes/ppa     && apt-get update && apt-get install -y --no-install-recommends     python3.11     python3.11-venv     python3.11-dev     xvfb     curl     netcat-openbsd     git     jq     libgtk-3-0     libgbm1     libnss3     libxss1     libasound2     libx11-xcb1     libxcb-dri3-0     libdrm2     libxcomposite1     libxdamage1     libxfixes3     libxrandr2     libatk1.0-0     libatk-bridge2.0-0     libcups2     libatspi2.0-0     libxkbcommon0     libpango-1.0-0     libcairo2     && rm -rf /var/lib/apt/lists/*
+#18 11.81 Get:5 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 Packages [33.2 kB]
+#18 11.91 Hit:6 http://ports.ubuntu.com/ubuntu-ports jammy-backports InRelease
+#18 12.02 Hit:7 http://ports.ubuntu.com/ubuntu-ports jammy-security InRelease
+#18 12.06 Fetched 51.3 kB in 1s (85.9 kB/s)
+#18 12.06 Reading package lists...
+#18 12.56 Repository: 'deb https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu/ jammy main'
+#18 12.56 Description:
+#18 12.56 This PPA contains more recent Python versions packaged for Ubuntu.
+#18 12.56
+#18 12.56 Disclaimer: there's no guarantee of timely updates in case of security problems or other issues. If you want to use them in a security-or-otherwise-critical environment (say, on a production server), you do so at your own risk.
+#18 12.56
+#18 12.56 Update Note
+#18 12.56 ===========
+#18 12.56 Please use this repository instead of ppa:fkrull/deadsnakes.
+#18 12.56
+#18 12.56 Reporting Issues
+#18 12.56 ================
+#18 12.56
+#18 12.56 Issues can be reported in the master issue tracker at:
+#18 12.56 https://github.com/deadsnakes/issues/issues
+#18 12.56
+#18 12.56 Supported Ubuntu and Python Versions
+#18 12.56 ====================================
+#18 12.56
+#18 12.56 - Ubuntu 20.04 (focal) Python3.5 - Python3.7, Python3.9 - Python3.13
+#18 12.56 - Ubuntu 22.04 (jammy) Python3.7 - Python3.9, Python3.11 - Python3.13
+#18 12.56 - Ubuntu 24.04 (noble) Python3.7 - Python3.11, Python3.13
+#18 12.56 - Note: Python2.7 (focal, jammy), Python 3.8 (focal), Python 3.10 (jammy), Python3.12 (noble) are not provided by deadsnakes as upstream ubuntu provides those packages.
+#18 12.56
+#18 12.56 Why some packages aren't built:
+#18 12.56 - Note: for focal, older python versions require libssl<1.1 so they are not currently built
+#18 12.56 - Note: for jammy and noble, older python versions requre libssl<3 so they are not currently built
+#18 12.56 - If you need these, reach out to asottile to set up a private ppa
+#18 12.56
+#18 12.56 The packages may also work on other versions of Ubuntu or Debian, but that is not tested or supported.
+#18 12.56
+#18 12.56 Packages
+#18 12.56 ========
+#18 12.56
+#18 12.56 The packages provided here are loosely based on the debian upstream packages with some modifications to make them more usable as non-default pythons and on ubuntu.  As such, the packages follow debian's patterns and often do not include a full python distribution with just `apt install python#.#`.  Here is a list of packages that may be useful along with the default install:
+#18 12.56
+#18 12.56 - `python#.#-dev`: includes development headers for building C extensions
+#18 12.56 - `python#.#-venv`: provides the standard library `venv` module
+#18 12.56 - `python#.#-distutils`: provides the standard library `distutils` module
+#18 12.56 - `python#.#-lib2to3`: provides the `2to3-#.#` utility as well as the standard library `lib2to3` module
+#18 12.56 - `python#.#-gdbm`: provides the standard library `dbm.gnu` module
+#18 12.56 - `python#.#-tk`: provides the standard library `tkinter` module
+#18 12.56
+#18 12.56 Third-Party Python Modules
+#18 12.56 ==========================
+#18 12.56
+#18 12.56 Python modules in the official Ubuntu repositories are packaged to work with the Python interpreters from the official repositories. Accordingly, they generally won't work with the Python interpreters from this PPA. As an exception, pure-Python modules for Python 3 will work, but any compiled extension modules won't.
+#18 12.56
+#18 12.56 To install 3rd-party Python modules, you should use the common Python packaging tools.  For an introduction into the Python packaging ecosystem and its tools, refer to the Python Packaging User Guide:
+#18 12.56 https://packaging.python.org/installing/
+#18 12.56
+#18 12.56 Sources
+#18 12.56 =======
+#18 12.56 The package sources are available at:
+#18 12.56 https://github.com/deadsnakes/
+#18 12.56
+#18 12.56 Nightly Builds
+#18 12.56 ==============
+#18 12.56
+#18 12.56 For nightly builds, see ppa:deadsnakes/nightly https://launchpad.net/~deadsnakes/+archive/ubuntu/nightly
+#18 12.56 More info: https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa
+#18 12.56 Adding repository.
+#18 12.56 Adding deb entry to /etc/apt/sources.list.d/deadsnakes-ubuntu-ppa-jammy.list
+#18 12.56 Adding disabled deb-src entry to /etc/apt/sources.list.d/deadsnakes-ubuntu-ppa-jammy.list
+#18 12.56 Adding key to /etc/apt/trusted.gpg.d/deadsnakes-ubuntu-ppa.gpg with fingerprint F23C5A6CF475977595C89F51BA6932366A755776
+#18 12.75 Hit:1 https://deb.nodesource.com/node_20.x nodistro InRelease
+#18 12.80 Hit:2 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy InRelease
+#18 12.90 Hit:3 http://ports.ubuntu.com/ubuntu-ports jammy InRelease
+#18 13.01 Hit:4 http://ports.ubuntu.com/ubuntu-ports jammy-updates InRelease
+#18 13.12 Hit:5 http://ports.ubuntu.com/ubuntu-ports jammy-backports InRelease
+#18 13.23 Hit:6 http://ports.ubuntu.com/ubuntu-ports jammy-security InRelease
+#18 13.27 Reading package lists...
+#18 13.82 Reading package lists...
+#18 14.33 Building dependency tree...
+#18 14.48 Reading state information...
+#18 14.66 libasound2 is already the newest version (1.2.6.1-1ubuntu1).
+#18 14.66 libatk-bridge2.0-0 is already the newest version (2.38.0-3).
+#18 14.66 libatk1.0-0 is already the newest version (2.36.0-3build1).
+#18 14.66 libatspi2.0-0 is already the newest version (2.44.0-3).
+#18 14.66 libcairo2 is already the newest version (1.16.0-5ubuntu2).
+#18 14.66 libxcb-dri3-0 is already the newest version (1.14-3ubuntu3).
+#18 14.66 libxcb-dri3-0 set to manually installed.
+#18 14.66 libxcomposite1 is already the newest version (1:0.4.5-1build2).
+#18 14.66 libxdamage1 is already the newest version (1:1.1.5-2build2).
+#18 14.66 libxfixes3 is already the newest version (1:6.0.0-1).
+#18 14.66 libxkbcommon0 is already the newest version (1.4.0-1).
+#18 14.66 libxrandr2 is already the newest version (2:1.5.2-1build1).
+#18 14.66 libxss1 is already the newest version (1:1.2.3-1build2).
+#18 14.66 libxss1 set to manually installed.
+#18 14.66 libdrm2 is already the newest version (2.4.113-2~ubuntu0.22.04.1).
+#18 14.66 libpango-1.0-0 is already the newest version (1.50.6+ds-2ubuntu1).
+#18 14.66 libx11-xcb1 is already the newest version (2:1.7.5-1ubuntu0.3).
+#18 14.66 The following additional packages will be installed:
+#18 14.66   libc-dev-bin libc6 libc6-dev libcrypt-dev libcurl4 libegl-mesa0 libexpat1
+#18 14.66   libexpat1-dev libgl1-mesa-dri libglapi-mesa libglx-mesa0 libgtk-3-common
+#18 14.66   libjq1 libnsl-dev libnspr4 libonig5 libpython3.11 libpython3.11-dev
+#18 14.66   libpython3.11-minimal libpython3.11-stdlib libtirpc-dev linux-libc-dev
+#18 14.66   mailcap mime-support python3-distutils python3-lib2to3 python3.11-minimal
+#18 14.66   rpcsvc-proto tzdata xserver-common
+#18 14.66 Suggested packages:
+#18 14.66   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+#18 14.66   gitk gitweb git-cvs git-mediawiki git-svn glibc-doc locales manpages-dev
+#18 14.66   cups-common gvfs binutils binfmt-support
+#18 14.66 Recommended packages:
+#18 14.66   patch less manpages manpages-dev libc-devtools libnss-nis libnss-nisplus
+#18 14.66   libgl1-amber-dri libgtk-3-bin librsvg2-common bzip2 file xz-utils
+#18 14.66   xfonts-base
+#18 14.72 The following NEW packages will be installed:
+#18 14.72   jq libc-dev-bin libc6-dev libcrypt-dev libexpat1-dev libjq1 libnsl-dev
+#18 14.72   libonig5 libpython3.11 libpython3.11-dev libpython3.11-minimal
+#18 14.72   libpython3.11-stdlib libtirpc-dev linux-libc-dev mailcap mime-support
+#18 14.72   netcat-openbsd python3-distutils python3-lib2to3 python3.11 python3.11-dev
+#18 14.72   python3.11-minimal python3.11-venv rpcsvc-proto tzdata
+#18 14.72 The following packages will be upgraded:
+#18 14.72   curl git libc6 libcups2 libcurl4 libegl-mesa0 libexpat1 libgbm1
+#18 14.72   libgl1-mesa-dri libglapi-mesa libglx-mesa0 libgtk-3-0 libgtk-3-common
+#18 14.72   libnspr4 libnss3 xserver-common xvfb
+#18 14.90 17 upgraded, 25 newly installed, 0 to remove and 116 not upgraded.
+#18 14.90 Need to get 41.4 MB of archives.
+#18 14.90 After this operation, 84.3 MB of additional disk space will be used.
+#18 14.90 Get:1 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 libpython3.11-minimal arm64 3.11.13-1+jammy1 [885 kB]
+#18 14.95 Get:2 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libc6 arm64 2.35-0ubuntu3.10 [2705 kB]
+#18 15.35 Get:3 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 python3.11-minimal arm64 3.11.13-1+jammy1 [2397 kB]
+#18 15.92 Get:4 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libexpat1 arm64 2.4.7-1ubuntu0.6 [77.8 kB]
+#18 15.92 Get:5 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 netcat-openbsd arm64 1.218-4ubuntu1 [39.0 kB]
+#18 15.92 Get:6 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 tzdata all 2025b-0ubuntu0.22.04.1 [347 kB]
+#18 15.93 Get:7 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 curl arm64 7.81.0-1ubuntu1.20 [190 kB]
+#18 15.94 Get:8 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libcurl4 arm64 7.81.0-1ubuntu1.20 [284 kB]
+#18 15.95 Get:9 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 git arm64 1:2.34.1-1ubuntu1.12 [3224 kB]
+#18 16.07 Get:10 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libonig5 arm64 6.9.7.1-2build1 [169 kB]
+#18 16.07 Get:11 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libjq1 arm64 1.6-2.1ubuntu3 [125 kB]
+#18 16.08 Get:12 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 jq arm64 1.6-2.1ubuntu3 [52.1 kB]
+#18 16.08 Get:13 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libc-dev-bin arm64 2.35-0ubuntu3.10 [19.6 kB]
+#18 16.08 Get:14 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 linux-libc-dev arm64 5.15.0-142.152 [1297 kB]
+#18 16.13 Get:15 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libcrypt-dev arm64 1:4.4.27-1 [119 kB]
+#18 16.13 Get:16 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 rpcsvc-proto arm64 1.4.2-0ubuntu6 [65.4 kB]
+#18 16.13 Get:17 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libtirpc-dev arm64 1.3.2-2ubuntu0.1 [199 kB]
+#18 16.14 Get:18 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 libnsl-dev arm64 1.3.0-2build2 [72.1 kB]
+#18 16.17 Get:19 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libc6-dev arm64 2.35-0ubuntu3.10 [1544 kB]
+#18 16.20 Get:20 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libcups2 arm64 2.4.1op1-1ubuntu4.11 [265 kB]
+#18 16.21 Get:21 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libegl-mesa0 arm64 23.2.1-1ubuntu3.1~22.04.3 [117 kB]
+#18 16.21 Get:22 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libgbm1 arm64 23.2.1-1ubuntu3.1~22.04.3 [33.7 kB]
+#18 16.21 Get:23 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libgl1-mesa-dri arm64 23.2.1-1ubuntu3.1~22.04.3 [8091 kB]
+#18 16.44 Get:24 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libglx-mesa0 arm64 23.2.1-1ubuntu3.1~22.04.3 [165 kB]
+#18 16.44 Get:25 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libglapi-mesa arm64 23.2.1-1ubuntu3.1~22.04.3 [52.2 kB]
+#18 16.44 Get:26 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libexpat1-dev arm64 2.4.7-1ubuntu0.6 [130 kB]
+#18 16.45 Get:27 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libgtk-3-common all 3.24.33-1ubuntu2.2 [239 kB]
+#18 16.45 Get:28 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libgtk-3-0 arm64 3.24.33-1ubuntu2.2 [2990 kB]
+#18 16.54 Get:29 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libnspr4 arm64 2:4.35-0ubuntu0.22.04.1 [116 kB]
+#18 16.54 Get:30 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 libnss3 arm64 2:3.98-0ubuntu0.22.04.2 [1239 kB]
+#18 16.57 Get:31 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 mailcap all 3.70+nmu1ubuntu1 [23.8 kB]
+#18 16.57 Get:32 http://ports.ubuntu.com/ubuntu-ports jammy/main arm64 mime-support all 3.66 [3696 B]
+#18 16.57 Get:33 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-lib2to3 all 3.10.8-1~22.04 [77.6 kB]
+#18 16.57 Get:34 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 python3-distutils all 3.10.8-1~22.04 [139 kB]
+#18 16.57 Get:35 http://ports.ubuntu.com/ubuntu-ports jammy-updates/main arm64 xserver-common all 2:21.1.4-2ubuntu1.7~22.04.15 [29.5 kB]
+#18 16.57 Get:36 http://ports.ubuntu.com/ubuntu-ports jammy-updates/universe arm64 xvfb arm64 2:21.1.4-2ubuntu1.7~22.04.15 [857 kB]
+#18 17.09 Get:37 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 libpython3.11-stdlib arm64 3.11.13-1+jammy1 [1938 kB]
+#18 18.43 Get:38 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 libpython3.11 arm64 3.11.13-1+jammy1 [2170 kB]
+#18 20.16 Get:39 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 libpython3.11-dev arm64 3.11.13-1+jammy1 [5276 kB]
+#18 23.89 Get:40 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 python3.11 arm64 3.11.13-1+jammy1 [94.3 kB]
+#18 23.90 Get:41 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 python3.11-dev arm64 3.11.13-1+jammy1 [500 kB]
+#18 24.50 Get:42 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy/main arm64 python3.11-venv arm64 3.11.13-1+jammy1 [3017 kB]
+#18 26.97 debconf: delaying package configuration, since apt-utils is not installed
+#18 26.99 Fetched 41.4 MB in 12s (3401 kB/s)
+#18 27.00 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 35714 files and directories currently installed.)
+#18 27.01 Preparing to unpack .../libc6_2.35-0ubuntu3.10_arm64.deb ...
+#18 27.05 Unpacking libc6:arm64 (2.35-0ubuntu3.10) over (2.35-0ubuntu3.4) ...
+#18 27.30 Setting up libc6:arm64 (2.35-0ubuntu3.10) ...
+#18 28.37 Selecting previously unselected package libpython3.11-minimal:arm64.
+#18 28.37 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 35714 files and directories currently installed.)
+#18 28.38 Preparing to unpack .../00-libpython3.11-minimal_3.11.13-1+jammy1_arm64.deb ...
+#18 28.38 Unpacking libpython3.11-minimal:arm64 (3.11.13-1+jammy1) ...
+#18 28.42 Preparing to unpack .../01-libexpat1_2.4.7-1ubuntu0.6_arm64.deb ...
+#18 28.42 Unpacking libexpat1:arm64 (2.4.7-1ubuntu0.6) over (2.4.7-1ubuntu0.2) ...
+#18 28.44 Selecting previously unselected package python3.11-minimal.
+#18 28.44 Preparing to unpack .../02-python3.11-minimal_3.11.13-1+jammy1_arm64.deb ...
+#18 28.45 Unpacking python3.11-minimal (3.11.13-1+jammy1) ...
+#18 28.48 Selecting previously unselected package netcat-openbsd.
+#18 28.49 Preparing to unpack .../03-netcat-openbsd_1.218-4ubuntu1_arm64.deb ...
+#18 28.49 Unpacking netcat-openbsd (1.218-4ubuntu1) ...
+#18 28.51 Selecting previously unselected package tzdata.
+#18 28.51 Preparing to unpack .../04-tzdata_2025b-0ubuntu0.22.04.1_all.deb ...
+#18 28.51 Unpacking tzdata (2025b-0ubuntu0.22.04.1) ...
+#18 28.60 Preparing to unpack .../05-curl_7.81.0-1ubuntu1.20_arm64.deb ...
+#18 28.61 Unpacking curl (7.81.0-1ubuntu1.20) over (7.81.0-1ubuntu1.14) ...
+#18 28.63 Preparing to unpack .../06-libcurl4_7.81.0-1ubuntu1.20_arm64.deb ...
+#18 28.63 Unpacking libcurl4:arm64 (7.81.0-1ubuntu1.20) over (7.81.0-1ubuntu1.14) ...
+#18 28.65 Preparing to unpack .../07-git_1%3a2.34.1-1ubuntu1.12_arm64.deb ...
+#18 28.66 Unpacking git (1:2.34.1-1ubuntu1.12) over (1:2.34.1-1ubuntu1.10) ...
+#18 28.82 Selecting previously unselected package libonig5:arm64.
+#18 28.82 Preparing to unpack .../08-libonig5_6.9.7.1-2build1_arm64.deb ...
+#18 28.83 Unpacking libonig5:arm64 (6.9.7.1-2build1) ...
+#18 28.84 Selecting previously unselected package libjq1:arm64.
+#18 28.84 Preparing to unpack .../09-libjq1_1.6-2.1ubuntu3_arm64.deb ...
+#18 28.84 Unpacking libjq1:arm64 (1.6-2.1ubuntu3) ...
+#18 28.85 Selecting previously unselected package jq.
+#18 28.85 Preparing to unpack .../10-jq_1.6-2.1ubuntu3_arm64.deb ...
+#18 28.85 Unpacking jq (1.6-2.1ubuntu3) ...
+#18 28.86 Selecting previously unselected package libc-dev-bin.
+#18 28.87 Preparing to unpack .../11-libc-dev-bin_2.35-0ubuntu3.10_arm64.deb ...
+#18 28.87 Unpacking libc-dev-bin (2.35-0ubuntu3.10) ...
+#18 28.88 Selecting previously unselected package linux-libc-dev:arm64.
+#18 28.88 Preparing to unpack .../12-linux-libc-dev_5.15.0-142.152_arm64.deb ...
+#18 28.88 Unpacking linux-libc-dev:arm64 (5.15.0-142.152) ...
+#18 28.95 Selecting previously unselected package libcrypt-dev:arm64.
+#18 28.95 Preparing to unpack .../13-libcrypt-dev_1%3a4.4.27-1_arm64.deb ...
+#18 28.96 Unpacking libcrypt-dev:arm64 (1:4.4.27-1) ...
+#18 28.97 Selecting previously unselected package rpcsvc-proto.
+#18 28.97 Preparing to unpack .../14-rpcsvc-proto_1.4.2-0ubuntu6_arm64.deb ...
+#18 28.97 Unpacking rpcsvc-proto (1.4.2-0ubuntu6) ...
+#18 28.98 Selecting previously unselected package libtirpc-dev:arm64.
+#18 28.99 Preparing to unpack .../15-libtirpc-dev_1.3.2-2ubuntu0.1_arm64.deb ...
+#18 28.99 Unpacking libtirpc-dev:arm64 (1.3.2-2ubuntu0.1) ...
+#18 29.01 Selecting previously unselected package libnsl-dev:arm64.
+#18 29.01 Preparing to unpack .../16-libnsl-dev_1.3.0-2build2_arm64.deb ...
+#18 29.02 Unpacking libnsl-dev:arm64 (1.3.0-2build2) ...
+#18 29.04 Selecting previously unselected package libc6-dev:arm64.
+#18 29.04 Preparing to unpack .../17-libc6-dev_2.35-0ubuntu3.10_arm64.deb ...
+#18 29.04 Unpacking libc6-dev:arm64 (2.35-0ubuntu3.10) ...
+#18 29.11 Preparing to unpack .../18-libcups2_2.4.1op1-1ubuntu4.11_arm64.deb ...
+#18 29.12 Unpacking libcups2:arm64 (2.4.1op1-1ubuntu4.11) over (2.4.1op1-1ubuntu4.7) ...
+#18 29.14 Preparing to unpack .../19-libegl-mesa0_23.2.1-1ubuntu3.1~22.04.3_arm64.deb ...
+#18 29.15 Unpacking libegl-mesa0:arm64 (23.2.1-1ubuntu3.1~22.04.3) over (23.0.4-0ubuntu1~22.04.1) ...
+#18 29.17 Preparing to unpack .../20-libgbm1_23.2.1-1ubuntu3.1~22.04.3_arm64.deb ...
+#18 29.18 Unpacking libgbm1:arm64 (23.2.1-1ubuntu3.1~22.04.3) over (23.0.4-0ubuntu1~22.04.1) ...
+#18 29.21 Preparing to unpack .../21-libgl1-mesa-dri_23.2.1-1ubuntu3.1~22.04.3_arm64.deb ...
+#18 29.22 Unpacking libgl1-mesa-dri:arm64 (23.2.1-1ubuntu3.1~22.04.3) over (23.0.4-0ubuntu1~22.04.1) ...
+#18 29.99 Preparing to unpack .../22-libglx-mesa0_23.2.1-1ubuntu3.1~22.04.3_arm64.deb ...
+#18 30.00 Unpacking libglx-mesa0:arm64 (23.2.1-1ubuntu3.1~22.04.3) over (23.0.4-0ubuntu1~22.04.1) ...
+#18 30.01 Preparing to unpack .../23-libglapi-mesa_23.2.1-1ubuntu3.1~22.04.3_arm64.deb ...
+#18 30.02 Unpacking libglapi-mesa:arm64 (23.2.1-1ubuntu3.1~22.04.3) over (23.0.4-0ubuntu1~22.04.1) ...
+#18 30.03 Selecting previously unselected package libexpat1-dev:arm64.
+#18 30.03 Preparing to unpack .../24-libexpat1-dev_2.4.7-1ubuntu0.6_arm64.deb ...
+#18 30.03 Unpacking libexpat1-dev:arm64 (2.4.7-1ubuntu0.6) ...
+#18 30.05 Preparing to unpack .../25-libgtk-3-common_3.24.33-1ubuntu2.2_all.deb ...
+#18 30.05 Unpacking libgtk-3-common (3.24.33-1ubuntu2.2) over (3.24.33-1ubuntu2) ...
+#18 30.07 Preparing to unpack .../26-libgtk-3-0_3.24.33-1ubuntu2.2_arm64.deb ...
+#18 30.08 Unpacking libgtk-3-0:arm64 (3.24.33-1ubuntu2.2) over (3.24.33-1ubuntu2) ...
+#18 30.20 Preparing to unpack .../27-libnspr4_2%3a4.35-0ubuntu0.22.04.1_arm64.deb ...
+#18 30.20 Unpacking libnspr4:arm64 (2:4.35-0ubuntu0.22.04.1) over (2:4.32-3build1) ...
+#18 30.22 Preparing to unpack .../28-libnss3_2%3a3.98-0ubuntu0.22.04.2_arm64.deb ...
+#18 30.22 Unpacking libnss3:arm64 (2:3.98-0ubuntu0.22.04.2) over (2:3.68.2-0ubuntu1.2) ...
+#18 30.32 Selecting previously unselected package mailcap.
+#18 30.32 Preparing to unpack .../29-mailcap_3.70+nmu1ubuntu1_all.deb ...
+#18 30.32 Unpacking mailcap (3.70+nmu1ubuntu1) ...
+#18 30.33 Selecting previously unselected package mime-support.
+#18 30.33 Preparing to unpack .../30-mime-support_3.66_all.deb ...
+#18 30.33 Unpacking mime-support (3.66) ...
+#18 30.34 Selecting previously unselected package libpython3.11-stdlib:arm64.
+#18 30.34 Preparing to unpack .../31-libpython3.11-stdlib_3.11.13-1+jammy1_arm64.deb ...
+#18 30.34 Unpacking libpython3.11-stdlib:arm64 (3.11.13-1+jammy1) ...
+#18 30.39 Selecting previously unselected package libpython3.11:arm64.
+#18 30.39 Preparing to unpack .../32-libpython3.11_3.11.13-1+jammy1_arm64.deb ...
+#18 30.39 Unpacking libpython3.11:arm64 (3.11.13-1+jammy1) ...
+#18 30.42 Selecting previously unselected package libpython3.11-dev:arm64.
+#18 30.43 Preparing to unpack .../33-libpython3.11-dev_3.11.13-1+jammy1_arm64.deb ...
+#18 30.43 Unpacking libpython3.11-dev:arm64 (3.11.13-1+jammy1) ...
+#18 30.51 Selecting previously unselected package python3-lib2to3.
+#18 30.51 Preparing to unpack .../34-python3-lib2to3_3.10.8-1~22.04_all.deb ...
+#18 30.51 Unpacking python3-lib2to3 (3.10.8-1~22.04) ...
+#18 30.53 Selecting previously unselected package python3-distutils.
+#18 30.53 Preparing to unpack .../35-python3-distutils_3.10.8-1~22.04_all.deb ...
+#18 30.53 Unpacking python3-distutils (3.10.8-1~22.04) ...
+#18 30.55 Selecting previously unselected package python3.11.
+#18 30.55 Preparing to unpack .../36-python3.11_3.11.13-1+jammy1_arm64.deb ...
+#18 30.55 Unpacking python3.11 (3.11.13-1+jammy1) ...
+#18 30.56 Selecting previously unselected package python3.11-dev.
+#18 30.56 Preparing to unpack .../37-python3.11-dev_3.11.13-1+jammy1_arm64.deb ...
+#18 30.58 Unpacking python3.11-dev (3.11.13-1+jammy1) ...
+#18 30.59 Selecting previously unselected package python3.11-venv.
+#18 30.60 Preparing to unpack .../38-python3.11-venv_3.11.13-1+jammy1_arm64.deb ...
+#18 30.60 Unpacking python3.11-venv (3.11.13-1+jammy1) ...
+#18 30.62 Preparing to unpack .../39-xserver-common_2%3a21.1.4-2ubuntu1.7~22.04.15_all.deb ...
+#18 30.62 Unpacking xserver-common (2:21.1.4-2ubuntu1.7~22.04.15) over (2:21.1.4-2ubuntu1.7~22.04.2) ...
+#18 30.64 Preparing to unpack .../40-xvfb_2%3a21.1.4-2ubuntu1.7~22.04.15_arm64.deb ...
+#18 30.64 Unpacking xvfb (2:21.1.4-2ubuntu1.7~22.04.15) over (2:21.1.4-2ubuntu1.7~22.04.2) ...
+#18 30.67 Setting up libexpat1:arm64 (2.4.7-1ubuntu0.6) ...
+#18 30.67 Setting up libgbm1:arm64 (23.2.1-1ubuntu3.1~22.04.3) ...
+#18 30.67 Setting up netcat-openbsd (1.218-4ubuntu1) ...
+#18 30.68 update-alternatives: using /bin/nc.openbsd to provide /bin/nc (nc) in auto mode
+#18 30.68 update-alternatives: warning: skip creation of /usr/share/man/man1/nc.1.gz because associated file /usr/share/man/man1/nc_openbsd.1.gz (of link group nc) doesn't exist
+#18 30.68 update-alternatives: warning: skip creation of /usr/share/man/man1/netcat.1.gz because associated file /usr/share/man/man1/nc_openbsd.1.gz (of link group nc) doesn't exist
+#18 30.68 Setting up linux-libc-dev:arm64 (5.15.0-142.152) ...
+#18 30.68 Setting up tzdata (2025b-0ubuntu0.22.04.1) ...
+#18 30.73
+#18 30.73 Current default time zone: 'Etc/UTC'
+#18 30.74 Local time is now:      Fri Jun 27 14:42:16 UTC 2025.
+#18 30.74 Universal Time is now:  Fri Jun 27 14:42:16 UTC 2025.
+#18 30.74 Run 'dpkg-reconfigure tzdata' if you wish to change it.
+#18 30.74
+#18 30.74 Setting up libtirpc-dev:arm64 (1.3.2-2ubuntu0.1) ...
+#18 30.75 Setting up rpcsvc-proto (1.4.2-0ubuntu6) ...
+#18 30.75 Setting up libnspr4:arm64 (2:4.35-0ubuntu0.22.04.1) ...
+#18 30.75 Setting up git (1:2.34.1-1ubuntu1.12) ...
+#18 30.76 Setting up libglapi-mesa:arm64 (23.2.1-1ubuntu3.1~22.04.3) ...
+#18 30.76 Setting up libcups2:arm64 (2.4.1op1-1ubuntu4.11) ...
+#18 30.76 Setting up libnsl-dev:arm64 (1.3.0-2build2) ...
+#18 30.76 Setting up libcrypt-dev:arm64 (1:4.4.27-1) ...
+#18 30.77 Setting up libcurl4:arm64 (7.81.0-1ubuntu1.20) ...
+#18 30.77 Setting up libpython3.11-minimal:arm64 (3.11.13-1+jammy1) ...
+#18 30.77 Setting up curl (7.81.0-1ubuntu1.20) ...
+#18 30.78 Setting up xserver-common (2:21.1.4-2ubuntu1.7~22.04.15) ...
+#18 30.78 Setting up libc-dev-bin (2.35-0ubuntu3.10) ...
+#18 30.78 Setting up python3-lib2to3 (3.10.8-1~22.04) ...
+#18 30.92 Setting up mailcap (3.70+nmu1ubuntu1) ...
+#18 30.93 Setting up libonig5:arm64 (6.9.7.1-2build1) ...
+#18 30.93 Setting up libgtk-3-common (3.24.33-1ubuntu2.2) ...
+#18 30.94 Setting up python3-distutils (3.10.8-1~22.04) ...
+#18 31.04 Setting up python3.11-minimal (3.11.13-1+jammy1) ...
+#18 31.33 Setting up mime-support (3.66) ...
+#18 31.34 Setting up libjq1:arm64 (1.6-2.1ubuntu3) ...
+#18 31.34 Setting up libpython3.11-stdlib:arm64 (3.11.13-1+jammy1) ...
+#18 31.34 Setting up xvfb (2:21.1.4-2ubuntu1.7~22.04.15) ...
+#18 31.34 Setting up libgl1-mesa-dri:arm64 (23.2.1-1ubuntu3.1~22.04.3) ...
+#18 31.35 Setting up libnss3:arm64 (2:3.98-0ubuntu0.22.04.2) ...
+#18 31.35 Setting up libegl-mesa0:arm64 (23.2.1-1ubuntu3.1~22.04.3) ...
+#18 31.35 Setting up jq (1.6-2.1ubuntu3) ...
+#18 31.36 Setting up libc6-dev:arm64 (2.35-0ubuntu3.10) ...
+#18 31.36 Setting up python3.11 (3.11.13-1+jammy1) ...
+#18 31.72 Setting up libglx-mesa0:arm64 (23.2.1-1ubuntu3.1~22.04.3) ...
+#18 31.72 Setting up libpython3.11:arm64 (3.11.13-1+jammy1) ...
+#18 31.73 Setting up libexpat1-dev:arm64 (2.4.7-1ubuntu0.6) ...
+#18 31.73 Setting up python3.11-venv (3.11.13-1+jammy1) ...
+#18 31.75 Setting up libpython3.11-dev:arm64 (3.11.13-1+jammy1) ...
+#18 31.76 Setting up python3.11-dev (3.11.13-1+jammy1) ...
+#18 31.76 Processing triggers for libc-bin (2.35-0ubuntu3.4) ...
+#18 31.77 Processing triggers for libglib2.0-0:arm64 (2.72.4-0ubuntu2.5) ...
+#18 31.78 Setting up libgtk-3-0:arm64 (3.24.33-1ubuntu2.2) ...
+#18 31.80 Processing triggers for libc-bin (2.35-0ubuntu3.4) ...
+#18 DONE 31.9s
+
+#19 [atlasvibe-test-local builder  9/10] RUN --mount=type=cache,target=/root/.cache/uv     uv sync --frozen --no-dev
+#19 ...
+
+#20 [atlasvibe-test-local test  4/15] RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+#20 0.131 update-alternatives: using /usr/bin/python3.11 to provide /usr/bin/python3 (python3) in auto mode
+#20 DONE 0.2s
+
+#21 [atlasvibe-test-local test  5/15] RUN npm install -g pnpm@9
+#21 1.239
+#21 1.239 added 1 package in 755ms
+#21 1.239
+#21 1.239 1 package is looking for funding
+#21 1.239   run `npm fund` for details
+#21 1.239 npm notice
+#21 1.239 npm notice New major version of npm available! 10.1.0 -> 11.4.2
+#21 1.240 npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.4.2>
+#21 1.240 npm notice Run `npm install -g npm@11.4.2` to update!
+#21 1.240 npm notice
+#21 DONE 1.3s
+
+#22 [atlasvibe-test-local test  6/15] WORKDIR /app
+#22 DONE 0.0s
+
+#19 [atlasvibe-test-local builder  9/10] RUN --mount=type=cache,target=/root/.cache/uv     uv sync --frozen --no-dev
+#19 24.34       Built atlasvibe @ file:///app
+#19 24.35 Prepared 1 package in 23.98s
+#19 24.35 Installed 1 package in 4ms
+#19 25.47 Bytecode compiled 25802 files in 1.11s
+#19 25.47  + atlasvibe==0.1.0 (from file:///app)
+#19 DONE 25.7s
+
+#23 [atlasvibe-test-local builder 10/10] RUN pnpm run build || echo "Build step completed (may have warnings)"
+#23 0.326
+#23 0.326 > atlasvibe@0.1.0 build /app
+#23 0.326 > tsc && electron-vite build
+#23 0.326
+#23 6.838 vite v5.2.8 building SSR bundle for production...
+#23 6.980 transforming...
+#23 7.073 ✓ 17 modules transformed.
+#23 7.102 rendering chunks...
+#23 7.106 out/main/index.js  59.35 kB
+#23 7.106 ✓ built in 255ms
+#23 7.108 vite v5.2.8 building SSR bundle for production...
+#23 7.113 transforming...
+#23 7.126 ✓ 3 modules transformed.
+#23 7.131 rendering chunks...
+#23 7.132 out/preload/index.js  9.04 kB
+#23 7.132 ✓ built in 23ms
+#23 7.135 vite v5.2.8 building for production...
+#23 7.150 transforming...
+#23 7.430 Browserslist: caniuse-lite is outdated. Please run:
+#23 7.430   npx update-browserslist-db@latest
+#23 7.430   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#23 10.09 src/renderer/components/ui/radio-group.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#23 21.34 ✓ 4015 modules transformed.
+#23 21.83 rendering chunks...
+#23 22.70 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.70 (!) /app/src/renderer/assets/blocks/numpy/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/components/blocks/numpy-block.tsx, /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.70
+#23 22.70 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.70 (!) /app/src/renderer/assets/blocks/scipy/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/components/blocks/scipy-block.tsx, /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.70
+#23 22.70 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.70 (!) /app/src/renderer/assets/blocks/ai-ml/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.70
+#23 22.70 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.70 (!) /app/src/renderer/assets/blocks/data/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.70
+#23 22.71 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.71 (!) /app/src/renderer/assets/blocks/dsp/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.71
+#23 22.71 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.71 (!) /app/src/renderer/assets/blocks/debugging/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.71
+#23 22.71 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.71 (!) /app/src/renderer/assets/blocks/etl/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.71
+#23 22.71 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.71 (!) /app/src/renderer/assets/blocks/visualization/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.71
+#23 22.71 [plugin:vite:reporter] [plugin vite:reporter]
+#23 22.71 (!) /app/src/renderer/assets/blocks/hardware/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#23 22.71
+#23 22.94 ../out/renderer/index.html                                  1.42 kB
+#23 22.94 ../out/renderer/assets/index-dJw-_YyK.css                 108.79 kB
+#23 22.94 ../out/renderer/assets/default-JXyWUv-O.js                  0.82 kB
+#23 22.94 ../out/renderer/assets/default-3KGhq3y4.js                  0.82 kB
+#23 22.94 ../out/renderer/assets/HISTOGRAM-BJCNYRkg.js                0.82 kB
+#23 22.94 ../out/renderer/assets/SCATTER-05J8e0au.js                  0.86 kB
+#23 22.94 ../out/renderer/assets/BAR-eIqY50i5.js                      0.96 kB
+#23 22.94 ../out/renderer/assets/CONSTANT-CAPeNIx8.js                 1.10 kB
+#23 22.94 ../out/renderer/assets/TABLE-BLCluO06.js                    1.23 kB
+#23 22.94 ../out/renderer/assets/PROPHET_COMPONENTS-Dt-Un5PG.js       1.38 kB
+#23 22.94 ../out/renderer/assets/SURFACE3D-RAH8_Iz9.js                1.49 kB
+#23 22.94 ../out/renderer/assets/LINE-BtBcugRG.js                     1.58 kB
+#23 22.94 ../out/renderer/assets/COMPOSITE-CeQpFWgi.js                2.05 kB
+#23 22.94 ../out/renderer/assets/FEEDBACK-BsW--1HN.js                 2.27 kB
+#23 22.94 ../out/renderer/assets/IMAGE-D4fxOkfb.js                    2.28 kB
+#23 22.94 ../out/renderer/assets/default-DnA93ahO.js                  2.33 kB
+#23 22.94 ../out/renderer/assets/LINSPACE-DVXqtwHc.js                 2.66 kB
+#23 22.94 ../out/renderer/assets/default-3zffWN55.js                  2.70 kB
+#23 22.94 ../out/renderer/assets/default--HgtOtsk.js                  2.76 kB
+#23 22.94 ../out/renderer/assets/default-Bypn3xt8.js                  2.85 kB
+#23 22.94 ../out/renderer/assets/default-B01aKgex.js                  3.08 kB
+#23 22.94 ../out/renderer/assets/SINE-ePV4SqzE.js                     3.12 kB
+#23 22.94 ../out/renderer/assets/default-C6nFzyW0.js                  3.31 kB
+#23 22.94 ../out/renderer/assets/HEATMAP-DvDfPbqm.js                  3.49 kB
+#23 22.94 ../out/renderer/assets/TEXT_VIEW-DXmT9yqe.js                3.49 kB
+#23 22.94 ../out/renderer/assets/MATRIX-BEPGSts9.js                   3.83 kB
+#23 22.94 ../out/renderer/assets/BIG_NUMBER-Cu5LvrPS.js               4.12 kB
+#23 22.94 ../out/renderer/assets/RAND-BKxbNqvY.js                     4.58 kB
+#23 22.94 ../out/renderer/assets/default-DO8i_5e6.js                  5.06 kB
+#23 22.94 ../out/renderer/assets/default-JwYJ2ssp.js                  5.06 kB
+#23 22.94 ../out/renderer/assets/ARRAY_VIEW-B5RvCwqo.js               5.42 kB
+#23 22.94 ../out/renderer/assets/default-T70bidZ8.js                  5.49 kB
+#23 22.94 ../out/renderer/assets/MATRIX_VIEW-D53gB-bH.js              5.77 kB
+#23 22.94 ../out/renderer/assets/BOX-2LgCPLxc.js                      6.40 kB
+#23 22.94 ../out/renderer/assets/default-Bicf-cJ-.js                  6.41 kB
+#23 22.94 ../out/renderer/assets/SCATTER3D-DPtpq_3n.js               11.73 kB
+#23 22.94 ../out/renderer/assets/PROPHET_PLOT-CCAHA_xN.js            29.54 kB
+#23 22.94 ../out/renderer/assets/index-CV63xfqJ.js               10,487.68 kB
+#23 22.94 ✓ built in 15.81s
+#23 DONE 23.4s
+
+#24 [atlasvibe-test-local test  7/15] COPY --from=builder --chown=app:app /app /app
+#24 DONE 16.6s
+
+#25 [atlasvibe-test-local test  8/15] RUN pnpm install --frozen-lockfile
+#25 1.100 [?25l[36m?[39m [1mThe modules directory at "/app/node_modules" will be removed and reinstalled from scratch. Proceed?[22m [2m(Y/n)[22m [2m‣[22m [36mtrue[39m[4D
+#25 1.275    ╭───────────────────────────────────────────────────────────────────╮
+#25 1.275    │                                                                   │
+#25 1.275    │                Update available! 9.15.9 → 10.12.4.                │
+#25 1.275    │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.12.4   │
+#25 1.275    │                 Run "pnpm add -g pnpm" to update.                 │
+#25 1.275    │                                                                   │
+#25 1.275    ╰───────────────────────────────────────────────────────────────────╯
+#25 1.275
+#25 1.284 [?25h
+#25 DONE 1.3s
+
+#26 [atlasvibe-test-local test  9/15] RUN npx playwright install chromium
+#26 0.567 Removing unused browser at /ms-playwright/chromium-1091
+#26 0.567 Removing unused browser at /ms-playwright/firefox-1429
+#26 0.567 Removing unused browser at /ms-playwright/webkit-1944
+#26 0.588 Downloading Chromium 124.0.6367.29 (playwright build v1112) from https://playwright.azureedge.net/builds/chromium/1112/chromium-linux-arm64.zip
+#26 0.829 |                                                                                |   0% of 161.3 MiB
+#26 1.256 |■■■■■■■■                                                                        |  10% of 161.3 MiB
+#26 1.545 |■■■■■■■■■■■■■■■■                                                                |  20% of 161.3 MiB
+#26 1.802 |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 161.3 MiB
+#26 2.057 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 161.3 MiB
+#26 2.316 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 161.3 MiB
+#26 2.612 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 161.3 MiB
+#26 2.890 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 161.3 MiB
+#26 3.149 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 161.3 MiB
+#26 3.407 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 161.3 MiB
+#26 3.656 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 161.3 MiB
+#26 7.348 Chromium 124.0.6367.29 (playwright build v1112) downloaded to /ms-playwright/chromium-1112
+#26 DONE 7.5s
+
+#27 [atlasvibe-test-local test 10/15] RUN uv pip install --system httpx pytest-asyncio
+#27 0.213 Using Python 3.11.13 environment at: /usr
+#27 0.338 Resolved 14 packages in 118ms
+#27 0.357 Downloading pygments (1.2MiB)
+#27 0.444  Downloading pygments
+#27 0.444 Prepared 14 packages in 105ms
+#27 0.455 Installed 14 packages in 11ms
+#27 0.456  + anyio==4.9.0
+#27 0.456  + certifi==2025.6.15
+#27 0.456  + h11==0.16.0
+#27 0.456  + httpcore==1.0.9
+#27 0.456  + httpx==0.28.1
+#27 0.456  + idna==3.10
+#27 0.456  + iniconfig==2.1.0
+#27 0.456  + packaging==25.0
+#27 0.456  + pluggy==1.6.0
+#27 0.456  + pygments==2.19.2
+#27 0.456  + pytest==8.4.1
+#27 0.456  + pytest-asyncio==1.0.0
+#27 0.456  + sniffio==1.3.1
+#27 0.456  + typing-extensions==4.14.0
+#27 DONE 0.5s
+
+#28 [atlasvibe-test-local test 11/15] RUN mkdir -p /root/.atlasvibe &&     echo 'test: true' > /root/.atlasvibe/atlasvibe.yaml
+#28 DONE 0.1s
+
+#29 [atlasvibe-test-local test 12/15] COPY docker/entrypoint-test*.sh /app/
+#29 DONE 0.0s
+
+#30 [atlasvibe-test-local test 13/15] RUN chmod +x /app/entrypoint-test*.sh
+#30 DONE 0.1s
+
+#31 [atlasvibe-test-local test 14/15] COPY run_tests_docker.py /app/
+#31 DONE 0.1s
+
+#32 [atlasvibe-test-local test 15/15] COPY run_integration_tests.py* /app/
+#32 DONE 0.7s
+
+#33 [atlasvibe-test-local] exporting to image
+#33 exporting layers

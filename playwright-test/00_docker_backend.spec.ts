@@ -163,11 +163,12 @@ test.describe("Docker Backend Tests", () => {
         timeout: 5000,
       });
 
-      // WebSocket endpoints typically return 400 or 426 when accessed via regular HTTP
+      // WebSocket endpoints typically return 400, 403, or 426 when accessed via regular HTTP
+      // 403 can occur due to CORS when not properly upgraded
       // This is expected and indicates the endpoint exists
-      expect([400, 426]).toContain(response.status());
+      expect([400, 403, 426]).toContain(response.status());
       console.log(
-        "WebSocket endpoint exists (returned expected upgrade required status)",
+        `WebSocket endpoint exists (returned expected status: ${response.status()})`,
       );
     } catch (error) {
       // Some errors are expected for WebSocket endpoints

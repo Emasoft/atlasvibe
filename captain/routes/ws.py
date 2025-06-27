@@ -17,6 +17,22 @@ from captain.utils.status_codes import STATUS_CODES
 router = APIRouter(tags=["ws"])
 
 
+@router.websocket("/ws")
+async def websocket_endpoint_test(websocket: WebSocket):
+    """Simple WebSocket endpoint for testing connectivity."""
+    await websocket.accept()
+    try:
+        # Send a test message
+        await websocket.send_text(json.dumps({"type": "test_connection", "msg": "WebSocket test endpoint connected"}))
+        # Keep connection alive
+        while True:
+            data = await websocket.receive_text()
+            # Echo back for testing
+            await websocket.send_text(data)
+    except WebSocketDisconnect:
+        logger.info("Test WebSocket disconnected")
+
+
 @router.websocket("/ws/{socket_id}")
 async def websocket_endpoint(websocket: WebSocket, socket_id: str):
     if socket_id in list(manager.ws.active_connections_map.keys()):

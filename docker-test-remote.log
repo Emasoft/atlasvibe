@@ -1,0 +1,445 @@
+[0;34m🐳 AtlasVibe Docker Test Runner[0m
+[0;34m===============================[0m
+Profile: remote
+Skip build: true
+Verbose: false
+
+[1;33m⏭️  Skipping Docker image build[0m
+[0;34m
+🧪 Running remote profile tests...[0m
+[0;34m==========================================[0m
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [atlasvibe-test-remote internal] load build definition from Dockerfile
+#1 transferring dockerfile: 4.73kB 0.0s done
+#1 DONE 0.0s
+
+#2 [atlasvibe-test-remote internal] load metadata for mcr.microsoft.com/playwright:v1.40.0-jammy
+#2 DONE 0.2s
+
+#3 [atlasvibe-test-remote internal] load metadata for ghcr.io/astral-sh/uv:latest
+#3 ...
+
+#4 [atlasvibe-test-remote internal] load metadata for ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+#4 DONE 1.1s
+
+#3 [atlasvibe-test-remote internal] load metadata for ghcr.io/astral-sh/uv:latest
+#3 DONE 1.1s
+
+#5 [atlasvibe-test-remote internal] load .dockerignore
+#5 transferring context: 357B done
+#5 DONE 0.0s
+
+#6 [atlasvibe-test-remote builder  1/10] FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:cde296622d8e850995cce202e77444ec6a63f136886e6f810f282b206911e5f3
+#6 resolve ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:cde296622d8e850995cce202e77444ec6a63f136886e6f810f282b206911e5f3 0.0s done
+#6 DONE 0.0s
+
+#7 [atlasvibe-test-remote] FROM ghcr.io/astral-sh/uv:latest@sha256:9653efd4380d5a0e5511e337dcfc3b8ba5bc4e6ea7fa3be7716598261d5503fa
+#7 resolve ghcr.io/astral-sh/uv:latest@sha256:9653efd4380d5a0e5511e337dcfc3b8ba5bc4e6ea7fa3be7716598261d5503fa 0.0s done
+#7 DONE 0.0s
+
+#8 [atlasvibe-test-remote test  1/15] FROM mcr.microsoft.com/playwright:v1.40.0-jammy@sha256:9dcc823ba14151eecb81eedb3a0abcb4fac942ae7fa9c9f96fdfcc7f5db9d239
+#8 resolve mcr.microsoft.com/playwright:v1.40.0-jammy@sha256:9dcc823ba14151eecb81eedb3a0abcb4fac942ae7fa9c9f96fdfcc7f5db9d239 0.0s done
+#8 DONE 0.0s
+
+#9 [atlasvibe-test-remote internal] load build context
+#9 transferring context: 9.12MB 3.0s done
+#9 DONE 3.1s
+
+#10 [atlasvibe-test-remote builder  3/10] RUN npm install -g pnpm@9
+#10 CACHED
+
+#11 [atlasvibe-test-remote builder  4/10] WORKDIR /app
+#11 CACHED
+
+#12 [atlasvibe-test-remote builder  5/10] RUN --mount=type=cache,target=/root/.cache/uv     --mount=type=bind,source=uv.lock,target=uv.lock     --mount=type=bind,source=pyproject.toml,target=pyproject.toml     uv sync --frozen --no-install-project --no-dev
+#12 CACHED
+
+#13 [atlasvibe-test-remote builder  6/10] COPY package.json pnpm-lock.yaml ./
+#13 CACHED
+
+#14 [atlasvibe-test-remote builder  2/10] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     git     curl     nodejs     npm     && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [atlasvibe-test-remote builder  7/10] RUN pnpm install --frozen-lockfile
+#15 CACHED
+
+#16 [atlasvibe-test-remote builder  8/10] COPY . .
+#16 DONE 7.2s
+
+#17 [atlasvibe-test-remote builder  9/10] RUN --mount=type=cache,target=/root/.cache/uv     uv sync --frozen --no-dev
+#17 0.495    Building atlasvibe @ file:///app
+#17 20.97       Built atlasvibe @ file:///app
+#17 20.97 Prepared 1 package in 20.47s
+#17 20.97 Installed 1 package in 6ms
+#17 21.94 Bytecode compiled 25802 files in 962ms
+#17 21.94  + atlasvibe==0.1.0 (from file:///app)
+#17 DONE 22.1s
+
+#18 [atlasvibe-test-remote builder 10/10] RUN pnpm run build || echo "Build step completed (may have warnings)"
+#18 0.330
+#18 0.330 > atlasvibe@0.1.0 build /app
+#18 0.330 > tsc && electron-vite build
+#18 0.330
+#18 5.419 vite v5.2.8 building SSR bundle for production...
+#18 5.549 transforming...
+#18 5.626 ✓ 17 modules transformed.
+#18 5.648 rendering chunks...
+#18 5.650 out/main/index.js  59.35 kB
+#18 5.650 ✓ built in 218ms
+#18 5.652 vite v5.2.8 building SSR bundle for production...
+#18 5.655 transforming...
+#18 5.663 ✓ 3 modules transformed.
+#18 5.667 rendering chunks...
+#18 5.668 out/preload/index.js  9.04 kB
+#18 5.668 ✓ built in 16ms
+#18 5.670 vite v5.2.8 building for production...
+#18 5.684 transforming...
+#18 5.737 Browserslist: caniuse-lite is outdated. Please run:
+#18 5.737   npx update-browserslist-db@latest
+#18 5.737   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#18 8.034 src/renderer/components/ui/radio-group.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#18 16.51 ✓ 4015 modules transformed.
+#18 16.94 rendering chunks...
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/numpy/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/components/blocks/numpy-block.tsx, /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/scipy/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/components/blocks/scipy-block.tsx, /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/ai-ml/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/data/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/dsp/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/debugging/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/etl/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/visualization/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.66 [plugin:vite:reporter] [plugin vite:reporter]
+#18 17.66 (!) /app/src/renderer/assets/blocks/hardware/default.svg?react is dynamically imported by /app/src/renderer/hooks/useBlockIcon.ts but also statically imported by /app/src/renderer/routes/common/Sidebar/SidebarNode.tsx, dynamic import will not move module into another chunk.
+#18 17.66
+#18 17.86 ../out/renderer/index.html                                  1.42 kB
+#18 17.86 ../out/renderer/assets/index-dJw-_YyK.css                 108.79 kB
+#18 17.86 ../out/renderer/assets/default-3KGhq3y4.js                  0.82 kB
+#18 17.86 ../out/renderer/assets/default-JXyWUv-O.js                  0.82 kB
+#18 17.86 ../out/renderer/assets/HISTOGRAM-BJCNYRkg.js                0.82 kB
+#18 17.86 ../out/renderer/assets/SCATTER-05J8e0au.js                  0.86 kB
+#18 17.86 ../out/renderer/assets/BAR-eIqY50i5.js                      0.96 kB
+#18 17.86 ../out/renderer/assets/CONSTANT-CAPeNIx8.js                 1.10 kB
+#18 17.86 ../out/renderer/assets/TABLE-BLCluO06.js                    1.23 kB
+#18 17.86 ../out/renderer/assets/PROPHET_COMPONENTS-Dt-Un5PG.js       1.38 kB
+#18 17.86 ../out/renderer/assets/SURFACE3D-RAH8_Iz9.js                1.49 kB
+#18 17.86 ../out/renderer/assets/LINE-BtBcugRG.js                     1.58 kB
+#18 17.86 ../out/renderer/assets/COMPOSITE-CeQpFWgi.js                2.05 kB
+#18 17.86 ../out/renderer/assets/FEEDBACK-BsW--1HN.js                 2.27 kB
+#18 17.86 ../out/renderer/assets/IMAGE-D4fxOkfb.js                    2.28 kB
+#18 17.86 ../out/renderer/assets/default-DnA93ahO.js                  2.33 kB
+#18 17.86 ../out/renderer/assets/LINSPACE-DVXqtwHc.js                 2.66 kB
+#18 17.86 ../out/renderer/assets/default-3zffWN55.js                  2.70 kB
+#18 17.86 ../out/renderer/assets/default--HgtOtsk.js                  2.76 kB
+#18 17.86 ../out/renderer/assets/default-Bypn3xt8.js                  2.85 kB
+#18 17.86 ../out/renderer/assets/default-B01aKgex.js                  3.08 kB
+#18 17.86 ../out/renderer/assets/SINE-ePV4SqzE.js                     3.12 kB
+#18 17.86 ../out/renderer/assets/default-C6nFzyW0.js                  3.31 kB
+#18 17.86 ../out/renderer/assets/HEATMAP-DvDfPbqm.js                  3.49 kB
+#18 17.86 ../out/renderer/assets/TEXT_VIEW-DXmT9yqe.js                3.49 kB
+#18 17.86 ../out/renderer/assets/MATRIX-BEPGSts9.js                   3.83 kB
+#18 17.86 ../out/renderer/assets/BIG_NUMBER-Cu5LvrPS.js               4.12 kB
+#18 17.86 ../out/renderer/assets/RAND-BKxbNqvY.js                     4.58 kB
+#18 17.86 ../out/renderer/assets/default-DO8i_5e6.js                  5.06 kB
+#18 17.86 ../out/renderer/assets/default-JwYJ2ssp.js                  5.06 kB
+#18 17.86 ../out/renderer/assets/ARRAY_VIEW-B5RvCwqo.js               5.42 kB
+#18 17.86 ../out/renderer/assets/default-T70bidZ8.js                  5.49 kB
+#18 17.86 ../out/renderer/assets/MATRIX_VIEW-D53gB-bH.js              5.77 kB
+#18 17.86 ../out/renderer/assets/BOX-2LgCPLxc.js                      6.40 kB
+#18 17.86 ../out/renderer/assets/default-Bicf-cJ-.js                  6.41 kB
+#18 17.86 ../out/renderer/assets/SCATTER3D-DPtpq_3n.js               11.73 kB
+#18 17.86 ../out/renderer/assets/PROPHET_PLOT-CCAHA_xN.js            29.54 kB
+#18 17.86 ../out/renderer/assets/index-CV63xfqJ.js               10,487.68 kB
+#18 17.86 ✓ built in 12.19s
+#18 DONE 18.2s
+
+#19 [atlasvibe-test-remote test  2/15] COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+#19 CACHED
+
+#20 [atlasvibe-test-remote test  3/15] RUN apt-get update && apt-get install -y --no-install-recommends     software-properties-common     && add-apt-repository ppa:deadsnakes/ppa     && apt-get update && apt-get install -y --no-install-recommends     python3.11     python3.11-venv     python3.11-dev     xvfb     curl     netcat-openbsd     git     jq     libgtk-3-0     libgbm1     libnss3     libxss1     libasound2     libx11-xcb1     libxcb-dri3-0     libdrm2     libxcomposite1     libxdamage1     libxfixes3     libxrandr2     libatk1.0-0     libatk-bridge2.0-0     libcups2     libatspi2.0-0     libxkbcommon0     libpango-1.0-0     libcairo2     && rm -rf /var/lib/apt/lists/*
+#20 CACHED
+
+#21 [atlasvibe-test-remote test  4/15] RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+#21 CACHED
+
+#22 [atlasvibe-test-remote test  5/15] RUN npm install -g pnpm@9
+#22 CACHED
+
+#23 [atlasvibe-test-remote test  6/15] WORKDIR /app
+#23 CACHED
+
+#24 [atlasvibe-test-remote test  7/15] COPY --from=builder --chown=app:app /app /app
+#24 DONE 34.0s
+
+#25 [atlasvibe-test-remote test  8/15] RUN pnpm install --frozen-lockfile
+#25 1.042 [?25l[36m?[39m [1mThe modules directory at "/app/node_modules" will be removed and reinstalled from scratch. Proceed?[22m [2m(Y/n)[22m [2m‣[22m [36mtrue[39m[4D
+#25 1.187    ╭───────────────────────────────────────────────────────────────────╮
+#25 1.187    │                                                                   │
+#25 1.187    │                Update available! 9.15.9 → 10.12.4.                │
+#25 1.187    │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.12.4   │
+#25 1.187    │                 Run "pnpm add -g pnpm" to update.                 │
+#25 1.187    │                                                                   │
+#25 1.187    ╰───────────────────────────────────────────────────────────────────╯
+#25 1.187
+#25 1.196 [?25h
+#25 DONE 1.3s
+
+#26 [atlasvibe-test-remote test  9/15] RUN npx playwright install chromium
+#26 0.631 Removing unused browser at /ms-playwright/chromium-1091
+#26 0.631 Removing unused browser at /ms-playwright/firefox-1429
+#26 0.631 Removing unused browser at /ms-playwright/webkit-1944
+#26 0.661 Downloading Chromium 124.0.6367.29 (playwright build v1112) from https://playwright.azureedge.net/builds/chromium/1112/chromium-linux-arm64.zip
+#26 0.888 |                                                                                |   0% of 161.3 MiB
+#26 1.278 |■■■■■■■■                                                                        |  10% of 161.3 MiB
+#26 1.532 |■■■■■■■■■■■■■■■■                                                                |  20% of 161.3 MiB
+#26 2.033 |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 161.3 MiB
+#26 2.393 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 161.3 MiB
+#26 2.647 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 161.3 MiB
+#26 2.907 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 161.3 MiB
+#26 3.163 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 161.3 MiB
+#26 3.660 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 161.3 MiB
+#26 4.852 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 161.3 MiB
+#26 5.900 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 161.3 MiB
+#26 17.85 Chromium 124.0.6367.29 (playwright build v1112) downloaded to /ms-playwright/chromium-1112
+#26 DONE 18.1s
+
+#27 [atlasvibe-test-remote test 10/15] RUN uv pip install --system httpx pytest-asyncio
+#27 0.258 Using Python 3.11.13 environment at: /usr
+#27 0.447 Resolved 14 packages in 177ms
+#27 0.475 Downloading pygments (1.2MiB)
+#27 0.552  Downloading pygments
+#27 0.552 Prepared 14 packages in 104ms
+#27 0.573 Installed 14 packages in 20ms
+#27 0.574  + anyio==4.9.0
+#27 0.574  + certifi==2025.6.15
+#27 0.574  + h11==0.16.0
+#27 0.574  + httpcore==1.0.9
+#27 0.574  + httpx==0.28.1
+#27 0.574  + idna==3.10
+#27 0.574  + iniconfig==2.1.0
+#27 0.574  + packaging==25.0
+#27 0.574  + pluggy==1.6.0
+#27 0.574  + pygments==2.19.2
+#27 0.574  + pytest==8.4.1
+#27 0.574  + pytest-asyncio==1.0.0
+#27 0.574  + sniffio==1.3.1
+#27 0.574  + typing-extensions==4.14.0
+#27 DONE 0.6s
+
+#28 [atlasvibe-test-remote test 11/15] RUN mkdir -p /root/.atlasvibe &&     echo 'test: true' > /root/.atlasvibe/atlasvibe.yaml
+#28 DONE 0.1s
+
+#29 [atlasvibe-test-remote test 12/15] COPY docker/entrypoint-test*.sh /app/
+#29 DONE 0.0s
+
+#30 [atlasvibe-test-remote test 13/15] RUN chmod +x /app/entrypoint-test*.sh
+#30 DONE 0.1s
+
+#31 [atlasvibe-test-remote test 14/15] COPY run_tests_docker.py /app/
+#31 DONE 0.1s
+
+#32 [atlasvibe-test-remote test 15/15] COPY run_integration_tests.py* /app/
+#32 DONE 12.0s
+
+#33 [atlasvibe-test-remote] exporting to image
+#33 exporting layers
+#33 exporting layers 102.5s done
+#33 preparing layers for inline cache
+#33 preparing layers for inline cache 0.1s done
+#33 exporting manifest sha256:acb46b8a72be29b37c07e02843c8ca4939b430143785421cb80f3b40b5a7bfdc
+#33 exporting manifest sha256:acb46b8a72be29b37c07e02843c8ca4939b430143785421cb80f3b40b5a7bfdc done
+#33 exporting config sha256:07d75f3fa7ef1b724efc7dcba11fbbf5501a0f0beff6cf6657fd86eda83c0e3f done
+#33 exporting attestation manifest sha256:b746ed36fbd35c103a93962230dda3336c7b4a43241a099b945294f82d203bbc done
+#33 exporting manifest list sha256:f6f60cccecf585d5f9a0038f4bfd4c26c3fc88a1270fb9dc7d343d114fa13c66 done
+#33 naming to docker.io/library/docker-atlasvibe-test-remote:latest done
+#33 unpacking to docker.io/library/docker-atlasvibe-test-remote:latest
+#33 unpacking to docker.io/library/docker-atlasvibe-test-remote:latest 20.4s done
+#33 DONE 123.1s
+
+#34 [atlasvibe-test-remote] resolving provenance for metadata file
+#34 DONE 0.0s
+Virtual display started successfully
+Starting backend and frontend services...
+Starting backend only for testing...
+Backend started with PID 12
+Waiting 10 seconds for services to initialize...
+warning: Ignoring existing virtual environment linked to non-existent Python interpreter: .venv/bin/python3 -> python
+Using CPython 3.11.13 interpreter at: /usr/bin/python3.11
+Removed virtual environment at: .venv
+Creating virtual environment at: .venv
+   Building atlasvibe @ file:///app
+Downloading apprise (1.3MiB)
+Downloading pycryptodome (2.1MiB)
+Downloading debugpy (5.0MiB)
+Downloading asyncpg (2.9MiB)
+Downloading virtualenv (5.8MiB)
+Downloading sqlalchemy (3.1MiB)
+Downloading watchfiles (1.3MiB)
+Downloading uvloop (3.8MiB)
+Downloading numpy (13.6MiB)
+Downloading transformers (10.0MiB)
+Downloading tokenizers (2.8MiB)
+Downloading pygments (1.2MiB)
+Downloading pandas (14.9MiB)
+Downloading tm-devices (7.5MiB)
+Downloading plotly (18.2MiB)
+Downloading pydantic-core (1.8MiB)
+Downloading cryptography (4.0MiB)
+Downloading prefect (5.7MiB)
+Downloading zeroconf (10.8MiB)
+Downloading networkx (1.9MiB)
+Downloading uv (15.9MiB)
+Downloading hf-xet (2.8MiB)
+ Downloading watchfiles
+ Downloading apprise
+ Downloading pygments
+   Building keyrings-cryptfile==1.3.9
+ Downloading pydantic-core
+ Downloading networkx
+      Built atlasvibe @ file:///app
+ Downloading pycryptodome
+ Downloading tokenizers
+ Downloading hf-xet
+ Downloading asyncpg
+ Downloading sqlalchemy
+ Downloading uvloop
+ Downloading cryptography
+      Built keyrings-cryptfile==1.3.9
+ Downloading debugpy
+ Downloading virtualenv
+ Downloading prefect
+ Downloading tm-devices
+Checking listening ports...
+No ports found with netstat
+No ports found with ss
+lsof not available
+Checking backend processes...
+root        12 46.3  1.0 650660 81152 ?        Sl   14:49   0:04 uv run python3 main.py
+Waiting for Backend API to be ready at http://localhost:5392/log_level...
+Attempt 0: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+ Downloading transformers
+ Downloading zeroconf
+ Downloading numpy
+ Downloading uv
+ Downloading pandas
+Attempt 1: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+ Downloading plotly
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Attempt 2: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+Installed 167 packages in 614ms
+Attempt 3: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+Attempt 4: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+Attempt 5: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+Attempt 6: Port 5392 is not open yet
+nc: connect to localhost (::1) port 5392 (tcp) failed: Connection refused
+nc: connect to localhost (127.0.0.1) port 5392 (tcp) failed: Connection refused
+nc test also failed
+/app/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [118]
+INFO:     Waiting for application startup.
+[2025-06-27 14:49:45] - atlasvibe - INFO - Running startup event
+[2025-06-27 14:49:45] - atlasvibe - INFO - File watcher disabled by DISABLE_FILE_WATCHER environment variable
+[2025-06-27 14:49:45] - atlasvibe - INFO - Workflow Queue Coordinator started (managing WCQ and WEQ)
+[2025-06-27 14:49:45] - atlasvibe - INFO - ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable
+[2025-06-27 14:49:45] - captain.services.workflow_queue_coordinator - INFO - WorkflowQueueCoordinator started
+INFO:     Application startup complete.
+[2025-06-27 14:49:45] - captain.services.workflow_changes_queue - INFO - Starting WorkflowChangesQueue processing
+INFO:     Uvicorn running on http://0.0.0.0:5392 (Press CTRL+C to quit)
+Attempt 7: Port 5392 is open, trying HTTP request...
+INFO:     127.0.0.1:40684 - "GET /log_level HTTP/1.1" 200 OK
+Attempt 7: HTTP 200 from http://localhost:5392/log_level
+Backend API is ready!
+Skipping frontend check - only testing backend
+All services are ready!
+Running tests...
+INFO:     127.0.0.1:40694 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40706 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40722 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40726 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39078 - "GET /project/list HTTP/1.1" 404 Not Found
+INFO:     ('127.0.0.1', 39086) - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:39090 - "GET /log_level HTTP/1.1" 200 OK
+
+🚀 Starting AtlasVibe Docker Tests...
+⏰ Start time: 2025-06-27 14:49:45
+================================================================================
+
+📋 Running Playwright tests...
+
+================================================================================
+📊 TEST RESULTS SUMMARY
+================================================================================
+Total Tests: 10
+✅ Passed: 9
+❌ Failed: 0
+⏭️  Skipped: 1
+⏱️  Duration: 9.70s
+================================================================================
+
+📋 DETAILED TEST RESULTS
+========================================================================================================================
+Status     Suite                     Test Name                                Description                         Duration
+========================================================================================================================
+✅ PASSED  00_api_smoke.spec.ts > .. Backend health check should respond: U.. Backend health check should respo.. 0.330s
+✅ PASSED  00_api_smoke.spec.ts > .. Backend API can retrieve blocks metada.. Backend api can retrieve blocks m.. 0.406s
+⏭️ SKIPPED 00_api_smoke.spec.ts > .. Frontend dev server should respond: Un.. Frontend dev server should respon.. 0.311s
+✅ PASSED  00_docker_backend.spec... Backend health check: Unknown Test       Backend health check: unknown test  0.313s
+✅ PASSED  00_docker_backend.spec... Backend API - get blocks metadata: Unk.. Backend api - get blocks metadata.. 0.358s
+✅ PASSED  00_docker_backend.spec... Backend API - project management endpo.. Backend api - project management .. 0.311s
+✅ PASSED  00_docker_backend.spec... Backend WebSocket endpoint exists: Unk.. Backend websocket endpoint exists.. 0.314s
+✅ PASSED  00_headless_check.spec... Verify running in headless mode: Unkno.. Verify running in headless mode: .. 0.001s
+✅ PASSED  00_headless_check.spec... Backend API responds in Docker: Unknow.. Backend api responds in docker: u.. 0.310s
+✅ PASSED  00_headless_check.spec... Can take screenshot without opening di.. Can take screenshot without openi.. 0.229s
+========================================================================================================================
+
+📁 Test Artifacts:
+  - results.json
+
+================================================================================
+🎉 ALL TESTS PASSED! 🎉
+================================================================================
+[0;32m✅ remote tests passed![0m
+[0;32m
+✅ All tests passed![0m

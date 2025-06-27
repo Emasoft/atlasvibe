@@ -66,6 +66,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     curl \
     netcat-openbsd \
+    git \
+    jq \
     # GTK and X11 dependencies for Electron
     libgtk-3-0 \
     libgbm1 \
@@ -105,6 +107,9 @@ RUN pnpm install --frozen-lockfile
 # Install Playwright browsers explicitly
 RUN npx playwright install chromium
 
+# Install additional Python test dependencies
+RUN uv pip install --system httpx pytest-asyncio
+
 # Set up environment for headless execution
 ENV DISPLAY=:99
 ENV CI=true
@@ -119,12 +124,16 @@ ENV ELECTRON_ENABLE_LOGGING=1
 RUN mkdir -p /root/.atlasvibe && \
     echo 'test: true' > /root/.atlasvibe/atlasvibe.yaml
 
-# Copy test entrypoint
-COPY docker/entrypoint-test.sh /app/
-RUN chmod +x /app/entrypoint-test.sh
+# Copy all test entrypoints
+COPY docker/entrypoint-test*.sh /app/
+RUN chmod +x /app/entrypoint-test*.sh
 
-# Copy test runner
+# Copy test runners
 COPY run_tests_docker.py /app/
+# Copy integration test runner if it exists
+COPY run_integration_tests.py* /app/
+# Copy UI test report generator if it exists
+COPY run_ui_tests_report.py* /app/
 
 # Use entrypoint for proper headless setup
 ENTRYPOINT ["/app/entrypoint-test.sh"]

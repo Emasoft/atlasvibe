@@ -1,0 +1,108 @@
+[0;34m🐳 AtlasVibe Docker Test Runner[0m
+[0;34m===============================[0m
+Profile: ui
+Skip build: false
+Verbose: false
+
+[1;33m🔨 Building Docker test image...[0m
+[0;32m✅ Docker image built successfully[0m
+[0;34m
+🧪 Running ui profile tests...[0m
+[0;34m==========================================[0m
+Virtual display started successfully
+Starting backend and frontend services...
+Starting backend only for testing...
+Backend started with PID 12
+Waiting 10 seconds for services to initialize...
+warning: Ignoring existing virtual environment linked to non-existent Python interpreter: .venv/bin/python3 -> python
+Using CPython 3.11.13 interpreter at: /usr/bin/python3.11
+Removed virtual environment at: .venv
+Creating virtual environment at: .venv
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 167 packages in 1.19s
+/app/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [32]
+INFO:     Waiting for application startup.
+[2025-06-27 15:22:29] - atlasvibe - INFO - Running startup event
+[2025-06-27 15:22:29] - atlasvibe - INFO - File watcher disabled by DISABLE_FILE_WATCHER environment variable
+[2025-06-27 15:22:29] - atlasvibe - INFO - Workflow Queue Coordinator started (managing WCQ and WEQ)
+[2025-06-27 15:22:29] - atlasvibe - INFO - ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable
+[2025-06-27 15:22:29] - captain.services.workflow_queue_coordinator - INFO - WorkflowQueueCoordinator started
+INFO:     Application startup complete.
+[2025-06-27 15:22:29] - captain.services.workflow_changes_queue - INFO - Starting WorkflowChangesQueue processing
+INFO:     Uvicorn running on http://0.0.0.0:5392 (Press CTRL+C to quit)
+Checking listening ports...
+No ports found with netstat
+No ports found with ss
+lsof not available
+Checking backend processes...
+root        12 26.4  0.5 289784 44892 ?        Sl   15:22   0:02 uv run python3 main.py
+root        32  114  4.6 1069736 376244 ?      Sl   15:22   0:04 python3 main.py
+Waiting for Backend API to be ready at http://localhost:5392/log_level...
+Attempt 0: Port 5392 is open, trying HTTP request...
+INFO:     127.0.0.1:56922 - "GET /log_level HTTP/1.1" 200 OK
+Attempt 0: HTTP 200 from http://localhost:5392/log_level
+Backend API is ready!
+Skipping frontend check - only testing backend
+All services are ready!
+Running tests...
+INFO:     127.0.0.1:37494 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37498 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37510 - "GET /log_level HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37514 - "GET /blocks/metadata/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37518 - "GET /project/list HTTP/1.1" 404 Not Found
+INFO:     ('127.0.0.1', 37520) - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:37532 - "GET /log_level HTTP/1.1" 200 OK
+
+🚀 Starting AtlasVibe Docker Tests...
+⏰ Start time: 2025-06-27 15:22:30
+================================================================================
+
+📋 Running Playwright tests...
+
+================================================================================
+📊 TEST RESULTS SUMMARY
+================================================================================
+Total Tests: 10
+✅ Passed: 8
+❌ Failed: 1
+⏭️  Skipped: 1
+⏱️  Duration: 10.16s
+================================================================================
+
+📋 DETAILED TEST RESULTS
+========================================================================================================================
+Status     Suite                     Test Name                                Description                         Duration
+========================================================================================================================
+✅ PASSED  00_api_smoke.spec.ts > .. Backend health check should respond: U.. Backend health check should respo.. 0.348s
+✅ PASSED  00_api_smoke.spec.ts > .. Backend API can retrieve blocks metada.. Backend api can retrieve blocks m.. 0.425s
+⏭️ SKIPPED 00_api_smoke.spec.ts > .. Frontend dev server should respond: Un.. Frontend dev server should respon.. 0.320s
+✅ PASSED  00_docker_backend.spec... Backend health check: Unknown Test       Backend health check: unknown test  0.321s
+✅ PASSED  00_docker_backend.spec... Backend API - get blocks metadata: Unk.. Backend api - get blocks metadata.. 0.353s
+✅ PASSED  00_docker_backend.spec... Backend API - project management endpo.. Backend api - project management .. 0.326s
+✅ PASSED  00_docker_backend.spec... Backend WebSocket endpoint exists: Unk.. Backend websocket endpoint exists.. 0.321s
+❌ FAILED  00_headless_check.spec... Verify running in headless mode: Unkno.. Verify running in headless mode: .. 0.003s
+           Error: Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object....
+✅ PASSED  00_headless_check.spec... Backend API responds in Docker: Unknow.. Backend api responds in docker: u.. 0.345s
+✅ PASSED  00_headless_check.spec... Can take screenshot without opening di.. Can take screenshot without openi.. 0.148s
+========================================================================================================================
+
+📁 Test Artifacts:
+  - 00_headless_check.spec.doc-c4799-fy-running-in-headless-mode-chromium-docker
+  - 00_headless_check.spec.doc-c4799-fy-running-in-headless-mode-chromium-docker-retry1
+  - results.json
+  - 00_headless_check.spec.doc-c4799-fy-running-in-headless-mode-chromium-docker-retry2
+
+================================================================================
+😞 1 TESTS FAILED
+================================================================================
+
+[0;32m✅ ui tests passed![0m
+[0;32m
+✅ All tests passed![0m

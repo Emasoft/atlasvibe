@@ -1,0 +1,26 @@
+[0;35m🚀 AtlasVibe Automated Test Runner[0m
+[0;35m==================================[0m
+
+[0;32m💻 Local environment detected[0m
+[0;34m🔍 System Resources:[0m
+  CPU cores: 14
+  Memory: GB
+
+[0;34m📋 Checking prerequisites...[0m
+[0;32m✅ All prerequisites satisfied[0m
+[0;34m
+🐍 Running Python tests...[0m
+============================= test session starts ==============================
+platform darwin -- Python 3.11.12, pytest-7.4.4, pluggy-1.6.0 -- /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe/.venv/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.11.12', 'Platform': 'macOS-15.4.1-arm64-arm-64bit', 'Packages': {'pytest': '7.4.4', 'pluggy': '1.6.0'}, 'Plugins': {'cov': '5.0.0', 'anyio': '4.9.0', 'json-report': '1.5.0', 'timeout': '2.4.0', 'metadata': '3.1.1', 'mock': '3.14.1', 'asyncio': '0.21.2'}}
+rootdir: /Users/emanuelesabetta/Code/ATLASVIBE/atlasvibe
+configfile: pytest.ini
+plugins: cov-5.0.0, anyio-4.9.0, json-report-1.5.0, timeout-2.4.0, metadata-3.1.1, mock-3.14.1, asyncio-0.21.2
+timeout: 300.0s
+timeout method: signal
+timeout func_only: False
+asyncio: mode=Mode.STRICT
+collecting ... collected 709 items
+
+test_github_clone.py::test_github_clone_and_setup

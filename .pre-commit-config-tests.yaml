@@ -1,0 +1,57 @@
+# Additional pre-commit hooks for automated testing
+# This extends the main .pre-commit-config.yaml
+
+repos:
+  # Smart test detection
+  - repo: local
+    hooks:
+      - id: detect-tests
+        name: Detect Required Tests
+        entry: python detect-tests.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+  # Quick Python tests for changed files
+  - repo: local
+    hooks:
+      - id: python-quick-tests
+        name: Quick Python Tests
+        entry: bash -c 'uv run pytest -xvs --tb=short'
+        language: system
+        files: \.py$
+        types: [python]
+        pass_filenames: true
+        stages: [commit]
+
+  # JavaScript/TypeScript tests
+  - repo: local
+    hooks:
+      - id: js-tests
+        name: JavaScript Tests
+        entry: pnpm test
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        pass_filenames: false
+        stages: [push]
+
+  # Block metadata validation
+  - repo: local
+    hooks:
+      - id: block-metadata
+        name: Validate Block Metadata
+        entry: python -c "import sys; from captain.utils.block_metadata_generator import validate_all_blocks; sys.exit(0 if validate_all_blocks() else 1)"
+        language: python
+        files: ^blocks/.*\.py$
+        additional_dependencies: [docstring_parser]
+
+  # UI test screenshots
+  - repo: local
+    hooks:
+      - id: ui-test-screenshots
+        name: Update UI Test Screenshots
+        entry: bash -c 'if [ -f playwright-test/ui-docker-tests.spec.ts ]; then echo "UI tests updated - remember to update screenshots"; fi'
+        language: system
+        files: playwright-test/ui-docker-tests\.spec\.ts$
+        pass_filenames: false

@@ -1,6 +1,6 @@
 import os
-from atlasvibe.atlasvibe_python import cache_huggingface_to_atlasvibe
-from atlasvibe.utils import get_hf_hub_cache_path
+from pkgs.atlasvibe.atlasvibe.atlasvibe_python import cache_huggingface_to_atlasvibe
+from pkgs.atlasvibe.atlasvibe.utils import get_hf_hub_cache_path
 
 
 def test_cache_huggingface_to_atlasvibe_decorator():
