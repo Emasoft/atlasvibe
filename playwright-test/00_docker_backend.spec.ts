@@ -20,7 +20,10 @@ function isDockerCI(): boolean {
 
 // Helper function for exponential backoff
 function getBackoffDelay(attempt: number): number {
-  return Math.min(INITIAL_RETRY_DELAY * Math.pow(1.5, attempt), MAX_RETRY_DELAY);
+  return Math.min(
+    INITIAL_RETRY_DELAY * Math.pow(1.5, attempt),
+    MAX_RETRY_DELAY,
+  );
 }
 
 test.describe("Docker Backend Tests", () => {
@@ -69,12 +72,9 @@ test.describe("Docker Backend Tests", () => {
     }
 
     try {
-      const response = await request.get(
-        `${BACKEND_URL}/blocks/metadata/`,
-        {
-          timeout: 10000,
-        },
-      );
+      const response = await request.get(`${BACKEND_URL}/blocks/metadata/`, {
+        timeout: 10000,
+      });
 
       console.log(`Response status: ${response.status()}`);
       console.log(`Response ok: ${response.ok()}`);
