@@ -103,4 +103,6 @@ jobs:
       run: uv sync --locked --all-extras --dev
 
     - name: Run pytest
-      run: uv run python -m pytest -vv -m "not slow" blocks/
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+      run: uv run python -m pytest -vv -m "not slow" --tb=short blocks/
