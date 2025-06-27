@@ -83,13 +83,15 @@ def BIG_NUMBER(
             value=big_num,
             domain={"y": [0, 1], "x": [0, 1]},
             number={"prefix": prefix, "suffix": suffix, "valueformat": val_format},
-            delta=None
-            if prev_num is None
-            else {
-                "reference": float(prev_num),
-                "relative": relative_delta,
-                "valueformat": delta_val_format,
-            },
+            delta=(
+                None
+                if prev_num is None
+                else {
+                    "reference": float(prev_num),
+                    "relative": relative_delta,
+                    "valueformat": delta_val_format,
+                }
+            ),
         )
     )
     SmallMemory().write_to_memory(job_id, MEMORY_KEY, str(float(big_num)))

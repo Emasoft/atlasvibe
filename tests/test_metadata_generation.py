@@ -75,7 +75,8 @@ class TestMetadataGeneration:
 
         # Create the Python file
         py_file = block_dir / f"{block_name}.py"
-        py_file.write_text("""#!/usr/bin/env python3
+        py_file.write_text(
+            """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -92,7 +93,8 @@ def TEST_CUSTOM_BLOCK(x: int = 10, y: int = 20) -> int:
         int: Sum of x and y
     '''
     return x + y
-""")
+"""
+        )
 
         # Generate manifest
         manifest = create_manifest(str(py_file))
@@ -204,13 +206,15 @@ def CHANGING_BLOCK(x: int = 1, multiplier: int = 3, offset: int = 0) -> int:
             block_dir.mkdir()
 
             py_file = block_dir / f"{block_name}.py"
-            py_file.write_text("""#!/usr/bin/env python3
+            py_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def WATCHED_BLOCK(x: int = 1) -> int:
     return x
-""")
+"""
+            )
 
             # Give watcher time to detect the change
             await asyncio.sleep(1.0)
@@ -238,14 +242,16 @@ def WATCHED_BLOCK(x: int = 1) -> int:
 
             # Create blueprint files
             (blueprint_path / "__init__.py").write_text("")
-            (blueprint_path / "BLUEPRINT_BLOCK.py").write_text("""#!/usr/bin/env python3
+            (blueprint_path / "BLUEPRINT_BLOCK.py").write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def BLUEPRINT_BLOCK(x: int = 5) -> int:
     '''Blueprint block for testing.'''
     return x ** 2
-""")
+"""
+            )
 
             # Create metadata files
             (blueprint_path / "app.json").write_text(json.dumps({"name": "BLUEPRINT_BLOCK", "type": "default", "category": "MATH"}))

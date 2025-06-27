@@ -1,25 +1,55 @@
-# .yamllint
+# yamllint configuration for AtlasVibe
 extends: default
 
 rules:
+  # Allow longer lines for readability
   line-length:
-    max: 800 # Increased to accommodate very long deptry ignore lists in GitHub workflows
+    max: 320
     level: warning
 
-  indentation:
-    spaces: 2
-    indent-sequences: false # This matches yamlfmt's indentless_arrays: true
+  # Don't require document start marker
+  document-start: disable
 
+  # Allow both single and double quotes
+  quoted-strings:
+    quote-type: any
+    required: false
+
+  # Truthy values configuration
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+
+  # Comments formatting
   comments:
     min-spaces-from-content: 1
 
-  truthy:
-    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
-
+  # Brackets and braces
   brackets:
-    forbid: false
     min-spaces-inside: 0
     max-spaces-inside: 1
 
-  document-start: disable # Don't require --- at start
-  document-end: disable # Don't require ... at end
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Indentation - Allow GitHub Actions style
+  indentation:
+    spaces: 2
+    indent-sequences: false  # GitHub Actions uses unindented sequences
+
+  # Empty lines
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+# Ignore certain paths
+ignore: |
+  .venv/
+  venv/
+  node_modules/
+  dist/
+  out/
+  build/
+  *.egg-info/
+  .git/

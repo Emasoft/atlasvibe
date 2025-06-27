@@ -52,7 +52,8 @@ class TestUpdateBlockCodeRealIntegration:
 
             # Create block Python file
             block_file = custom_block_dir / "MY_CUSTOM_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -71,7 +72,8 @@ def MY_CUSTOM_BLOCK(x: int = 1, y: int = 2) -> int:
         int: Sum of x and y
     '''
     return x + y
-""")
+"""
+            )
 
             # Create metadata files
             (custom_block_dir / "app.json").write_text(

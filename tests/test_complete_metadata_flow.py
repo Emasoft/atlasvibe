@@ -81,7 +81,8 @@ class TestCompleteMetadataFlow:
 
             # Create blueprint files
             (blueprint_dir / "__init__.py").write_text("")
-            (blueprint_dir / "CONSTANT.py").write_text("""#!/usr/bin/env python3
+            (blueprint_dir / "CONSTANT.py").write_text(
+                """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -97,7 +98,8 @@ def CONSTANT(x: int = 42) -> int:
         int: The constant value
     '''
     return x
-""")
+"""
+            )
 
             # Create metadata files
             (blueprint_dir / "app.json").write_text(json.dumps({"name": "CONSTANT", "type": "default", "category": "MATH"}))
@@ -236,27 +238,31 @@ def MY_CUSTOM_CONSTANT(x: int = 42, multiplier: int = 2, description: str = "Cus
             # Create files
             (block_dir / "__init__.py").write_text("")
             py_file = block_dir / f"{block_name}.py"
-            py_file.write_text("""#!/usr/bin/env python3
+            py_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def DETECTED_BLOCK(value: int = 100) -> int:
     return value
-""")
+"""
+            )
 
             # Wait for detection
             await asyncio.sleep(1.5)
 
             # Modify the file
             print("\n=== Modifying Block Code ===")
-            py_file.write_text("""#!/usr/bin/env python3
+            py_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def DETECTED_BLOCK(value: int = 100, new_param: str = "detected") -> int:
     print(new_param)
     return value * 2
-""")
+"""
+            )
 
             # Wait for detection
             await asyncio.sleep(1.5)

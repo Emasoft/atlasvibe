@@ -3,8 +3,8 @@ name: CD
 on:
   push:
     tags:
-      # Build on every tag in the form v1.2.3-something.4
-      - "v*"
+    # Build on every tag in the form v1.2.3-something.4
+    - "v*"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -22,53 +22,53 @@ jobs:
     name: Pre-release Quality Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.7.13"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.7.13"
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Install Python from uv
-        run: uv python install 3.11
+    - name: Install Python from uv
+      run: uv python install 3.11
 
-      - name: Install dependencies
-        run: |
-          uv sync --locked --all-extras --dev
-          uv pip install pre-commit
+    - name: Install dependencies
+      run: |
+        uv sync --locked --all-extras --dev
+        uv pip install pre-commit
 
-      - name: Run pre-commit checks
-        run: uv run pre-commit run --all-files
+    - name: Run pre-commit checks
+      run: uv run pre-commit run --all-files
 
-      - name: Run deptry dependency check
-        run: |
-          uv run deptry . \
-            --extend-exclude "tests" \
-            --extend-exclude ".*_test.*\.py" \
-            --extend-exclude "node_modules" \
-            --extend-exclude "playwright-test" \
-            --extend-exclude "examples" \
-            --extend-exclude "public" \
-            --extend-exclude "out" \
-            --extend-exclude "dist" \
-            --extend-exclude "PYTHON/tests" \
-            --known-first-party atlasvibe \
-            --known-first-party atlasvibe_sdk \
-            --known-first-party atlasvibe_engine \
-            --known-first-party atlasvibe_cli \
-            --known-first-party captain \
-            --known-first-party cli \
-            --ignore DEP003 \
-            --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
+    - name: Run deptry dependency check
+      run: |
+        uv run deptry . \
+          --extend-exclude "tests" \
+          --extend-exclude ".*_test.*\.py" \
+          --extend-exclude "node_modules" \
+          --extend-exclude "playwright-test" \
+          --extend-exclude "examples" \
+          --extend-exclude "public" \
+          --extend-exclude "out" \
+          --extend-exclude "dist" \
+          --extend-exclude "PYTHON/tests" \
+          --known-first-party atlasvibe \
+          --known-first-party atlasvibe_sdk \
+          --known-first-party atlasvibe_engine \
+          --known-first-party atlasvibe_cli \
+          --known-first-party captain \
+          --known-first-party cli \
+          --ignore DEP003 \
+          --per-rule-ignores "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring"
 
   buildElectron:
     needs: pre-release-checks # Only build if checks pass
@@ -79,58 +79,58 @@ jobs:
     env:
       DEBUG: electron-builder
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 9.0.6
-          run_install: false
+    - uses: pnpm/action-setup@v4
+      name: Install pnpm
+      with:
+        version: 9.0.6
+        run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
 
-      - uses: actions/cache@v4
-        name: Cache pnpm
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+    - uses: actions/cache@v4
+      name: Cache pnpm
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.7.13"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.7.13"
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
-      - name: Install Python from uv
-        run: uv python install 3.11
+    - name: Install Python from uv
+      run: uv python install 3.11
 
-      - name: Install Python Dependencies
-        run: uv sync --locked --all-extras --dev
+    - name: Install Python Dependencies
+      run: uv sync --locked --all-extras --dev
 
-      - name: Install Node Dependencies
-        run: pnpm install
+    - name: Install Node Dependencies
+      run: pnpm install
 
-      # Azure SignTool not needed - no code signing
+    # Azure SignTool not needed - no code signing
 
-      - name: Build/release Electron app
-        uses: atlasvibe-ai/action-electron-builder@main
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release: true
-          skip_install: true
-          skip_build: true
-          # No code signing certificates or notarization credentials needed
+    - name: Build/release Electron app
+      uses: atlasvibe-ai/action-electron-builder@main
+      with:
+        # GitHub token, automatically provided to the action
+        # (No need to define this secret in the repo settings)
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        release: true
+        skip_install: true
+        skip_build: true
+        # No code signing certificates or notarization credentials needed

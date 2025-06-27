@@ -106,15 +106,7 @@ def browse_directories(dir_path: str, cur_type: Optional[str] = None, depth: int
             if entry.name.startswith(".") or entry.name.startswith("_") or entry.name == "assets" or entry.name == "utils" or entry.name == "MANIFEST" or "examples" in entry.path or "a1-[autogen]" in entry.path or "appendix" in entry.path or not os.listdir(entry):
                 continue
 
-            cur_type = (
-                basename
-                if basename in ALLOWED_TYPES  # give current type precedence
-                else (
-                    cur_type
-                    if cur_type in ALLOWED_TYPES  # otherwise inherit if allowed
-                    else "default"
-                )  # else use default
-            )
+            cur_type = basename if basename in ALLOWED_TYPES else (cur_type if cur_type in ALLOWED_TYPES else "default")  # give current type precedence  # otherwise inherit if allowed  # else use default
 
             subdir = browse_directories(entry.path, cur_type, depth=depth + 1)
             result["children"].append(subdir)

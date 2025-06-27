@@ -88,9 +88,7 @@ def OVERLOAD(size, lower_bound, upper_bound, distribution="uniform") -> None:
 
 
 @display
-def OVERLOAD(  # noqa: F811
-    size, normal_mean, normal_standard_deviation, distribution="normal"
-) -> None:
+def OVERLOAD(size, normal_mean, normal_standard_deviation, distribution="normal") -> None:  # noqa: F811
     return None
 
 

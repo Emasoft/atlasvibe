@@ -54,7 +54,8 @@ class TestBlockMetadataGeneration:
 
         # Step 1: Create the Python source file (this is the only required file)
         py_file = test_block_dir / "TEST_BLOCK.py"
-        py_file.write_text("""from atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
+        py_file.write_text(
+            """from atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
 
 
 @atlasvibe
@@ -91,7 +92,8 @@ def TEST_BLOCK(
 
     # ... other implementations
     return primary_dp
-""")
+"""
+        )
 
         # Step 2: Generate block_data.json from the docstring
         self._generate_block_data_json(py_file)
@@ -210,22 +212,24 @@ def TEST_BLOCK(
                                 }
                                 for param in parsed.params
                             ],
-                            "returns": [
-                                {
-                                    "name": rtn.return_name,
-                                    "type": rtn.type_name,
-                                    "description": rtn.description,
-                                }
-                                for rtn in parsed.many_returns
-                            ]
-                            if parsed.many_returns
-                            else [
-                                {
-                                    "name": None,
-                                    "type": parsed.returns.type_name if parsed.returns else None,
-                                    "description": parsed.returns.description if parsed.returns else None,
-                                }
-                            ],
+                            "returns": (
+                                [
+                                    {
+                                        "name": rtn.return_name,
+                                        "type": rtn.type_name,
+                                        "description": rtn.description,
+                                    }
+                                    for rtn in parsed.many_returns
+                                ]
+                                if parsed.many_returns
+                                else [
+                                    {
+                                        "name": None,
+                                        "type": parsed.returns.type_name if parsed.returns else None,
+                                        "description": parsed.returns.description if parsed.returns else None,
+                                    }
+                                ]
+                            ),
                         }
                     }
 
@@ -340,7 +344,8 @@ def test_TEST_BLOCK():
 
         # Create initial Python file
         py_file = test_block_dir / "CHANGING_BLOCK.py"
-        py_file.write_text("""from atlasvibe import atlasvibe
+        py_file.write_text(
+            """from atlasvibe import atlasvibe
 
 @atlasvibe
 def CHANGING_BLOCK(x: int = 10) -> int:
@@ -357,7 +362,8 @@ def CHANGING_BLOCK(x: int = 10) -> int:
         The doubled value
     \"\"\"
     return x * 2
-""")
+"""
+        )
 
         # Generate initial metadata
         self._generate_block_data_json(py_file)
@@ -367,7 +373,8 @@ def CHANGING_BLOCK(x: int = 10) -> int:
         print(f"Parameters: {list(initial_manifest['parameters'].keys())}")
 
         # Modify the Python file
-        py_file.write_text("""from atlasvibe import atlasvibe
+        py_file.write_text(
+            """from atlasvibe import atlasvibe
 
 @atlasvibe(deps={"numpy": ">=1.20.0"})
 def CHANGING_BLOCK(x: int = 10, multiplier: int = 3, offset: float = 0.5) -> float:
@@ -391,7 +398,8 @@ def CHANGING_BLOCK(x: int = 10, multiplier: int = 3, offset: float = 0.5) -> flo
     \"\"\"
     import numpy as np
     return float(x * multiplier + offset)
-""")
+"""
+        )
 
         # Regenerate metadata
         self._generate_block_data_json(py_file)
@@ -492,7 +500,8 @@ class TestJSONOperationsRefactoring:
 
             # Create Python file
             py_file = block_dir / "TEST_BLOCK.py"
-            py_file.write_text('''
+            py_file.write_text(
+                '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
@@ -505,7 +514,8 @@ def TEST_BLOCK():
         Test output
     """
     return "test"
-''')
+'''
+            )
 
             yield block_dir, "TEST_BLOCK"
 

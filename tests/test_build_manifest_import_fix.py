@@ -28,7 +28,8 @@ class TestImportNamespaceFix:
     def test_atlasvibe_import_redirection(self):
         """Test that 'import atlasvibe' is redirected correctly."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 import pkgs.atlasvibe.atlasvibe as atlasvibe
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node, DataContainer
 
@@ -36,7 +37,8 @@ from pkgs.atlasvibe.atlasvibe import atlasvibe_node, DataContainer
 def TEST_IMPORT():
     """Test function with atlasvibe imports."""
     return DataContainer(type="scalar", value=42)
-''')
+'''
+            )
             f.flush()
 
             # Should not raise ImportError
@@ -53,7 +55,8 @@ def TEST_IMPORT():
     def test_atlasvibe_submodule_import(self):
         """Test that 'from atlasvibe.data_container import ...' works."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 from atlasvibe.data_container import OrderedPair, Scalar
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
@@ -61,7 +64,8 @@ from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 def MATH_OP(a: Scalar, b: Scalar) -> OrderedPair:
     """Math operation using atlasvibe types."""
     return OrderedPair(x=a.value, y=b.value)
-''')
+'''
+            )
             f.flush()
 
             # Should successfully parse types
@@ -79,7 +83,8 @@ def MATH_OP(a: Scalar, b: Scalar) -> OrderedPair:
     def test_parameter_types_import(self):
         """Test importing parameter types from atlasvibe."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node, TextArea, Secret, File, Directory
 
 @atlasvibe_node
@@ -89,7 +94,8 @@ def PARAM_TEST(text: TextArea = TextArea("default text"),
                directory: Directory = Directory("")):
     """Test various parameter types."""
     pass
-''')
+'''
+            )
             f.flush()
 
             manifest = create_manifest(f.name)
@@ -107,7 +113,8 @@ def PARAM_TEST(text: TextArea = TextArea("default text"),
     def test_hardware_types_import(self):
         """Test importing hardware-related types."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 from pkgs.atlasvibe.atlasvibe import (
     atlasvibe_node,
     CameraDevice,
@@ -125,7 +132,8 @@ def HARDWARE_TEST(
 ):
     """Test hardware parameter types."""
     pass
-''')
+'''
+            )
             f.flush()
 
             manifest = create_manifest(f.name)
@@ -142,14 +150,16 @@ def HARDWARE_TEST(
     def test_atlasvibe_decorator_import(self):
         """Test that @atlasvibe decorator works (not just @atlasvibe_node)."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe, Matrix, Vector
 
 @atlasvibe(deps={"scipy": "1.10.0"})
 def SIGNAL_PROCESS(signal: Vector) -> Matrix:
     """Process signal data."""
     return Matrix([[1, 2], [3, 4]])
-''')
+'''
+            )
             f.flush()
 
             manifest = create_manifest(f.name)
@@ -165,7 +175,8 @@ def SIGNAL_PROCESS(signal: Vector) -> Matrix:
     def test_data_container_types_comprehensive(self):
         """Test all DataContainer subclasses can be imported."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 from pkgs.atlasvibe.atlasvibe import (
     atlasvibe_node,
     OrderedPair,
@@ -185,7 +196,8 @@ def ALL_TYPES_TEST() -> DataContainer:
     """Test that all types are available."""
     # Just checking imports work
     return Scalar(42)
-''')
+'''
+            )
             f.flush()
 
             # Should not raise any import errors
@@ -200,7 +212,8 @@ def ALL_TYPES_TEST() -> DataContainer:
     def test_non_atlasvibe_imports_unchanged(self):
         """Test that non-atlasvibe imports are not affected."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 import numpy as np
 import pandas as pd
 from typing import Any
@@ -212,7 +225,8 @@ def NUMPY_TEST(data: Vector) -> Vector:
     # numpy and pandas imports should work normally
     arr = np.array([1, 2, 3])
     return Vector(arr)
-''')
+'''
+            )
             f.flush()
 
             manifest = create_manifest(f.name)
@@ -227,14 +241,16 @@ def NUMPY_TEST(data: Vector) -> Vector:
     def test_import_error_handling(self):
         """Test that invalid imports still raise appropriate errors."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write("""
+            f.write(
+                """
 from pkgs.atlasvibe.atlasvibe import NonExistentClass  # This should fail
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
 @atlasvibe_node
 def ERROR_TEST():
     pass
-""")
+"""
+            )
             f.flush()
 
             # Should raise AttributeError since NonExistentClass doesn't exist
@@ -246,7 +262,8 @@ def ERROR_TEST():
     def test_fromlist_handling(self):
         """Test that fromlist parameter is handled correctly in imports."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 # Test various import styles
 import pkgs.atlasvibe.atlasvibe as atlasvibe
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node
@@ -256,7 +273,8 @@ from pkgs.atlasvibe.atlasvibe import *  # Should work but not recommended
 def FROMLIST_TEST() -> DataContainer:
     """Test fromlist handling."""
     return Scalar(123)
-''')
+'''
+            )
             f.flush()
 
             manifest = create_manifest(f.name)

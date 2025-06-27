@@ -50,7 +50,8 @@ def temp_blueprint():
 
         # Create Python file
         py_file = blueprint_dir / "BLUEPRINT_BLOCK.py"
-        py_file.write_text('''
+        py_file.write_text(
+            '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
@@ -68,7 +69,8 @@ def BLUEPRINT_BLOCK(x: int = 10):
         Doubled value
     """
     return x * 2
-''')
+'''
+        )
 
         # Create app.json
         app_json = blueprint_dir / "app.json"

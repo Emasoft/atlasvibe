@@ -193,13 +193,15 @@ class TestBlockCodeUpdateIntegration:
 
             # Create block file
             block_file = blocks_dir / "TEST_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
     return x * 2
-""")
+"""
+            )
 
             # Create __init__.py
             (blocks_dir / "__init__.py").touch()

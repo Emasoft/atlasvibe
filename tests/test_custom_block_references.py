@@ -49,7 +49,8 @@ def create_custom_block(project_dir: Path, block_name: str) -> Path:
 
     # Create block Python file
     block_py = block_dir / f"{block_name}.py"
-    block_py.write_text(f'''#!/usr/bin/env python3
+    block_py.write_text(
+        f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -70,7 +71,8 @@ def {block_name}(input_value: float = 0.0) -> float:
         float: The doubled value
     """
     return input_value * 2.0
-''')
+'''
+    )
 
     # Create block metadata files
     app_json = block_dir / "app.json"

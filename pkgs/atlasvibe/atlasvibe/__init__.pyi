@@ -18,8 +18,7 @@ from .atlasvibe_cloud import *  # noqa: F403
 from .models import *  # noqa: F403
 
 def atlasvibe(
-    original_function: Callable[..., DataContainer | dict[str, Any] | TypedDict | None]  # noqa: F405
-    | None = None,
+    original_function: Callable[..., DataContainer | dict[str, Any] | TypedDict | None] | None = None,  # noqa: F405
     *,
     node_type: Optional[str] = None,
     deps: Optional[list[str]] = None,

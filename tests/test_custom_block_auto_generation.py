@@ -322,13 +322,15 @@ def test_{block_name}():
         (block_dir / "__init__.py").write_text("")
 
         py_file = block_dir / f"{block_name}.py"
-        py_file.write_text("""from atlasvibe import atlasvibe
+        py_file.write_text(
+            """from atlasvibe import atlasvibe
 
 @atlasvibe
 def WATCHED_BLOCK() -> str:
     \"\"\"A watched block.\"\"\"
     return "watched"
-""")
+"""
+        )
 
         # The file watcher should detect this and broadcast manifest_update
         # In the real system, the watcher runs continuously

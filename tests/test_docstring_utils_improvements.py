@@ -88,7 +88,8 @@ class TestImprovedErrorHandling:
     def test_extract_docstring_data_logs_parsing_errors(self, caplog):
         """Test that parsing errors are logged, not silently ignored."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 def func():
     """
     Malformed docstring
@@ -98,7 +99,8 @@ def func():
     Missing type annotation
     """
     pass
-''')
+'''
+            )
             f.flush()
 
             # Enable logging capture

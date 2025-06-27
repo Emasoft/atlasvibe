@@ -65,7 +65,8 @@ class TestCustomBlockRuntimeGeneration:
 
         # User writes only the Python file
         py_file = custom_block_dir / "MY_CUSTOM_BLOCK.py"
-        py_file.write_text("""from atlasvibe import atlasvibe, Scalar
+        py_file.write_text(
+            """from atlasvibe import atlasvibe, Scalar
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
@@ -86,7 +87,8 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
         The sum of x and y
     \"\"\"
     return x + y
-""")
+"""
+        )
 
         print("\n=== Initial state (user created only Python file) ===")
         self._list_block_files(custom_block_dir)
@@ -168,7 +170,8 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
         custom_block_dir.mkdir(parents=True)
 
         py_file = custom_block_dir / "WORKFLOW_BLOCK.py"
-        py_file.write_text("""from atlasvibe import atlasvibe
+        py_file.write_text(
+            """from atlasvibe import atlasvibe
 
 @atlasvibe
 def WORKFLOW_BLOCK(input_data: str = "hello") -> str:
@@ -185,7 +188,8 @@ def WORKFLOW_BLOCK(input_data: str = "hello") -> str:
         Processed output
     \"\"\"
     return input_data.upper()
-""")
+"""
+        )
 
         # Mock the generation functions to track calls
         mock_manifest.return_value = {

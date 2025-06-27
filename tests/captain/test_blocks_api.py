@@ -59,13 +59,15 @@ class TestBlocksAPI:
             temp_dir.mkdir(parents=True, exist_ok=True)
 
             block_file = temp_dir / "TEST_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
     return x * 2
-""")
+"""
+            )
             yield str(block_file)
 
             # Cleanup

@@ -94,14 +94,16 @@ class TestJSONRefactoringIntegration:
 
             # Create Python file
             py_file = block_dir / "TEST_BLOCK.py"
-            py_file.write_text('''
+            py_file.write_text(
+                '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK():
     """Test block."""
     return "test"
-''')
+'''
+            )
 
             manager = VenvManager(block_dir)
 
@@ -187,7 +189,8 @@ def TEST_BLOCK():
 
             # Create Python file with docstring
             py_file = block_dir / "TEST_BLOCK.py"
-            py_file.write_text('''
+            py_file.write_text(
+                '''
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
@@ -207,7 +210,8 @@ def TEST_BLOCK(x: int = 10):
         Output value
     """
     return x * 2
-''')
+'''
+            )
 
             # Create existing block_data.json with custom fields
             block_data_file = block_dir / "block_data.json"

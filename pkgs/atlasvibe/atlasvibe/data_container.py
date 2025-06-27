@@ -360,9 +360,7 @@ class ParametricScalar(DataContainer):
     c: int | float
     t: DCNpArrayType
 
-    def __init__(  # type: ignore
-        self, c: int | float, t: DCNpArrayType, extra: ExtraType = None
-    ):
+    def __init__(self, c: int | float, t: DCNpArrayType, extra: ExtraType = None):  # type: ignore
         super().__init__(type="ParametricScalar", c=c, t=t, extra=extra)
 
 
@@ -376,9 +374,7 @@ class Vector(DataContainer):
 class ParametricVector(DataContainer):
     v: DCNpArrayType
 
-    def __init__(  # type: ignore
-        self, v: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
-    ):
+    def __init__(self, v: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None):  # type: ignore
         super().__init__(type="ParametricVector", v=v, t=t, extra=extra)
 
 
@@ -393,9 +389,7 @@ class ParametricMatrix(DataContainer):
     m: DCNpArrayType
     t: DCNpArrayType
 
-    def __init__(  # type: ignore
-        self, m: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
-    ):
+    def __init__(self, m: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None):  # type: ignore
         super().__init__(type="ParametricMatrix", m=m, t=t, extra=extra)
 
 

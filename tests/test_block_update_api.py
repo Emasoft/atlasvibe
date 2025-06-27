@@ -64,7 +64,8 @@ class TestBlockUpdateAPI:
             (block_dir / "__init__.py").write_text("")
 
             block_file = block_dir / "TEST_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Simple test block without atlasvibe decorator to avoid import issues
@@ -78,7 +79,8 @@ def TEST_BLOCK(x: int = 1) -> int:
         int: Doubled value
     '''
     return x * 2
-""")
+"""
+            )
 
             (block_dir / "app.json").write_text(json.dumps({"name": "TEST_BLOCK", "type": "default"}))
 

@@ -37,14 +37,16 @@ class TestWebSocketRegenerationState:
 
             # Create block file
             block_file = block_dir / "TEST_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def TEST_BLOCK(x: int = 1) -> int:
     '''Test block.'''
     return x * 2
-""")
+"""
+            )
 
             # Create __init__.py
             (block_dir / "__init__.py").touch()
@@ -188,13 +190,15 @@ def TEST_BLOCK(x: int = 1) -> int:
             blocks_dir.mkdir(parents=True)
 
             block_file = blocks_dir / "CUSTOM_BLOCK.py"
-            block_file.write_text("""#!/usr/bin/env python3
+            block_file.write_text(
+                """#!/usr/bin/env python3
 from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CUSTOM_BLOCK(x: int = 1) -> int:
     return x * 2
-""")
+"""
+            )
 
             project_file = project_dir / "test.atlasvibe"
             project_file.write_text(json.dumps({"nodes": [], "edges": []}))

@@ -147,22 +147,24 @@ class TestAppendBlockMetadataGeneration:
                                 }
                                 for param in parsed.params
                             ],
-                            "returns": [
-                                {
-                                    "name": rtn.return_name,
-                                    "type": rtn.type_name,
-                                    "description": rtn.description,
-                                }
-                                for rtn in parsed.many_returns
-                            ]
-                            if parsed.many_returns
-                            else [
-                                {
-                                    "name": "",
-                                    "type": parsed.returns.type_name if parsed.returns else "",
-                                    "description": parsed.returns.description if parsed.returns else "",
-                                }
-                            ],
+                            "returns": (
+                                [
+                                    {
+                                        "name": rtn.return_name,
+                                        "type": rtn.type_name,
+                                        "description": rtn.description,
+                                    }
+                                    for rtn in parsed.many_returns
+                                ]
+                                if parsed.many_returns
+                                else [
+                                    {
+                                        "name": "",
+                                        "type": parsed.returns.type_name if parsed.returns else "",
+                                        "description": parsed.returns.description if parsed.returns else "",
+                                    }
+                                ]
+                            ),
                         }
                     }
 

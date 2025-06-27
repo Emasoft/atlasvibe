@@ -405,12 +405,14 @@ class WorkflowChangesQueue:
         return {
             "queue_length": self._queue.qsize(),
             "is_processing": self._current_change is not None,
-            "current_change": {
-                "id": self._current_change.id,
-                "type": self._current_change.type.value,
-                "block_id": self._current_change.block_id,
-            }
-            if self._current_change
-            else None,
+            "current_change": (
+                {
+                    "id": self._current_change.id,
+                    "type": self._current_change.type.value,
+                    "block_id": self._current_change.block_id,
+                }
+                if self._current_change
+                else None
+            ),
             "total_processed": self._total_processed,
         }

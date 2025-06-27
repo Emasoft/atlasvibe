@@ -84,11 +84,13 @@ def test_func():
     def test_parse_python_file(self):
         """Test parsing Python file and extracting function."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 def my_function():
     """My docstring"""
     return 42
-''')
+'''
+            )
             f.flush()
 
             # Test successful parsing
@@ -325,7 +327,8 @@ class TestHighLevelFunctions:
     def test_extract_docstring_data(self):
         """Test the high-level extraction function."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 def MY_BLOCK():
     """
     Process data block.
@@ -343,7 +346,8 @@ def MY_BLOCK():
         Processed data
     """
     return data * 2
-''')
+'''
+            )
             f.flush()
 
             # Test extraction with auto style detection
@@ -374,7 +378,8 @@ def MY_BLOCK():
     def test_extract_docstring_data_google_style(self):
         """Test extraction with Google-style docstring."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write('''
+            f.write(
+                '''
 def process():
     """
     Process data.
@@ -386,7 +391,8 @@ def process():
         Processed data
     """
     pass
-''')
+'''
+            )
             f.flush()
 
             result = extract_docstring_data(f.name, "process", style="google")

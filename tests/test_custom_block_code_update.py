@@ -17,6 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from captain.main import app
+
 # BlockUpdateRequest would be defined in the actual implementation
 
 # Skip all tests in this file due to hanging issues with FastAPI app initialization
@@ -74,7 +75,8 @@ def test_project():
 
         # Create initial block code
         block_py = custom_block_dir / "CUSTOM_PROCESSOR.py"
-        block_py.write_text("""#!/usr/bin/env python3
+        block_py.write_text(
+            """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -94,7 +96,8 @@ def CUSTOM_PROCESSOR(input: float) -> float:
         float: Processed value
     \"\"\"
     return input * 2.0
-""")
+"""
+        )
 
         yield {
             "project_dir": project_dir,
@@ -296,7 +299,8 @@ def test_multiple_projects_with_same_custom_block_name(client):
 
             # Different implementations
             block_py = block_dir / "PROCESSOR.py"
-            block_py.write_text(f"""#!/usr/bin/env python3
+            block_py.write_text(
+                f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
@@ -309,7 +313,8 @@ from pkgs.atlasvibe.atlasvibe import atlasvibe
 def PROCESSOR(input: float) -> float:
     \"\"\"Project {i + 1} processor.\"\"\"
     return input * {i + 2}  # Different multipliers
-""")
+"""
+            )
 
             # Create project file
             project_file = project_dir / f"project_{i + 1}.atlasvibe"

@@ -21,7 +21,8 @@ class TestBlockMetadataTextOperations:
 
         # Create a Python file with docstring
         py_file = block_dir / "TEST_BLOCK.py"
-        py_file.write_text('''#!/usr/bin/env python3
+        py_file.write_text(
+            '''#!/usr/bin/env python3
 """
 Test block for demonstration.
 
@@ -30,7 +31,8 @@ This is a longer description.
 
 def TEST_BLOCK():
     pass
-''')
+'''
+        )
 
         # Mock save_text_file to verify it's called
         with patch("captain.utils.block_metadata_generator.save_text_file") as mock_save:
@@ -59,12 +61,14 @@ def TEST_BLOCK():
 
         # Create a Python file
         py_file = block_dir / "TEST_BLOCK.py"
-        py_file.write_text('''#!/usr/bin/env python3
+        py_file.write_text(
+            '''#!/usr/bin/env python3
 """Test block."""
 
 def TEST_BLOCK(param1: int, param2: str):
     pass
-''')
+'''
+        )
 
         # Mock save_text_file to verify it's called
         with patch("captain.utils.block_metadata_generator.save_text_file") as mock_save:
