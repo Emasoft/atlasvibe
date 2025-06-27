@@ -9,19 +9,23 @@ I have successfully set up a robust Docker container testing environment for Atl
 ### 1. Docker Test Infrastructure
 
 #### Configuration Files
+
 - **`docker/docker-compose.test.yml`**: Main Docker Compose configuration with three profiles:
   - `atlasvibe-test-local`: Comprehensive tests with higher timeouts and retries
   - `atlasvibe-test-remote`: Optimized for CI/GitHub Actions with faster execution
   - `atlasvibe-test-integration`: Integration tests including GitHub repo cloning
 
 #### Entrypoint Scripts
+
 - **`docker/entrypoint-test-local.sh`**: Local profile test runner
+
   - Starts both backend and frontend services
   - Runs comprehensive test suite with coverage
   - Higher retry counts (10) and timeout multipliers (2x)
   - Includes slow tests and integration tests
 
 - **`docker/entrypoint-test-remote.sh`**: Remote/CI profile test runner
+
   - Backend-only testing (skips frontend)
   - Fast test execution with lower timeouts
   - Skips slow tests for CI efficiency
@@ -35,12 +39,14 @@ I have successfully set up a robust Docker container testing environment for Atl
 ### 2. Test Runners
 
 - **`test-docker-comprehensive.sh`**: Main test orchestrator
+
   - Supports running individual profiles or all profiles
   - Handles Docker image building
   - Generates combined test reports
   - Color-coded output for better readability
 
 - **`run_integration_tests.py`**: Python integration test suite
+
   - Tests AtlasVibe API endpoints
   - Tests project creation and management
   - Tests workflow execution
@@ -63,6 +69,7 @@ I have successfully set up a robust Docker container testing environment for Atl
 ## Test Results
 
 ### ✅ Basic Docker Tests (Completed)
+
 - **Total Tests**: 10
 - **Passed**: 9
 - **Failed**: 0
@@ -70,6 +77,7 @@ I have successfully set up a robust Docker container testing environment for Atl
 - **Duration**: 4.19 seconds
 
 All backend API tests passed successfully:
+
 - Health check endpoint
 - Blocks metadata retrieval
 - Project management endpoints
@@ -77,6 +85,7 @@ All backend API tests passed successfully:
 - Headless mode verification
 
 ### 🔄 Comprehensive Test Suite (In Progress)
+
 - Local profile tests: Building
 - Remote profile tests: Building
 - Integration tests: Pending
@@ -84,21 +93,25 @@ All backend API tests passed successfully:
 ## Key Features Implemented
 
 ### 1. Profile-Based Testing
+
 - **Local Profile**: Full test suite with comprehensive coverage
 - **Remote Profile**: Optimized for CI with fast execution
 - **Integration Profile**: Tests real-world scenarios like GitHub cloning
 
 ### 2. Environment Isolation
+
 - Each test runs in a clean Docker container
 - Proper virtual display setup with Xvfb
 - File watcher and change queue disabled for stability
 
 ### 3. Flexible Configuration
+
 - Environment variables for test customization
 - Configurable retry counts and timeouts
 - Skip slow tests option for CI
 
 ### 4. GitHub Integration Testing
+
 - Tests cloning repositories from GitHub
 - Sets up projects with uv
 - Builds packages and verifies installation
@@ -172,9 +185,11 @@ docker compose -f docker/docker-compose.test.yml down -v
 ## Known Issues and Solutions
 
 1. **Docker Build Time**: Initial builds take time due to dependency installation
+
    - Solution: Use `--skip-build` flag after first run
 
 2. **Port Conflicts**: Backend might fail if port 5392 is already in use
+
    - Solution: Stop other services or modify port in configuration
 
 3. **Slow Tests on CI**: Some tests might timeout on slower CI runners

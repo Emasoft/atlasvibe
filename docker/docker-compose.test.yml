@@ -67,7 +67,7 @@ services:
       - ../test-results:/app/test-results
       - ../test-logs:/app/test-logs
       - test-cache:/root/.cache
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker-in-Docker tests
+      - /var/run/docker.sock:/var/run/docker.sock:ro # For Docker-in-Docker tests
     command: ["/app/entrypoint-test-integration.sh"]
     profiles: ["integration"]
 
@@ -79,7 +79,7 @@ services:
       - RUN_UI_TESTS=true
       - DISPLAY=:99
       - ELECTRON_ENABLE_LOGGING=1
-      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1  # We'll use the one in the image
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 # We'll use the one in the image
       - MAX_RETRIES=5
       - TIMEOUT_MULTIPLIER=2
       - SKIP_SLOW_TESTS=false
@@ -88,7 +88,7 @@ services:
       - ../test-results:/app/test-results
       - ../test-logs:/app/test-logs
       - test-cache:/root/.cache
-      - ../playwright-test:/app/playwright-test:ro  # Mount UI tests read-only
+      - ../playwright-test:/app/playwright-test:ro # Mount UI tests read-only
     command: ["/app/entrypoint-test-ui.sh"]
     profiles: ["ui"]
 

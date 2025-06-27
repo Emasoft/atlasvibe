@@ -7,12 +7,14 @@
 Created a comprehensive Docker testing environment with multiple profiles:
 
 - **Local Profile**:
+
   - Full test suite with extended timeouts
   - Includes both backend and frontend testing
   - Runs slow tests and integration tests
   - Higher retry counts (10) for reliability
 
 - **Remote Profile (GitHub CI)**:
+
   - Optimized for fast CI execution
   - Backend-only testing
   - Skips slow tests
@@ -51,6 +53,7 @@ test_github_clone.py                  # GitHub clone verification
 ### 4. **Test Results**
 
 #### Basic Docker Tests ✅
+
 ```
 Total Tests: 10
 Passed: 9
@@ -60,6 +63,7 @@ Duration: 4.19s
 ```
 
 All critical backend functionality verified:
+
 - API health checks
 - Block metadata retrieval
 - Project management endpoints
@@ -68,6 +72,7 @@ All critical backend functionality verified:
 ### 5. **GitHub Clone Test Implementation**
 
 Created a standalone test that:
+
 - Clones the astral-sh/ruff repository
 - Creates virtual environment with uv
 - Installs dependencies
@@ -77,6 +82,7 @@ Created a standalone test that:
 ### 6. **Integration Test Suite**
 
 Comprehensive integration tests covering:
+
 - API endpoint verification
 - Project creation and structure
 - Custom block creation
