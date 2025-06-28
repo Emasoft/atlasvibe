@@ -112,48 +112,69 @@ test.describe(`${productName} startup test`, () => {
       }
     }
 
-    // Try launching with additional flags for CI environment
+    // Try launching with the minimal configuration that works in CI
     console.log("\nAttempting to launch Electron app...");
 
-    // Use simplified launch strategy that works in portable tests
-    try {
-      // For CI environments, use minimal configuration
-      if (process.env.CI) {
-        console.log(
-          "CI environment detected - using minimal launch configuration",
-        );
-        app = await electron.launch({
+    // Use the minimal launch strategy that has been proven to work
+    const launchStrategies = [
+      {
+        name: "Minimal (CI-proven)",
+        config: {
           executablePath,
+          timeout: 60000,
+        },
+      },
+      {
+        name: "With basic flags",
+        config: {
+          executablePath,
+          args: ["--no-sandbox"],
           timeout: 60000,
           env: {
             ...process.env,
             NODE_ENV: "production",
-            ELECTRON_ENABLE_LOGGING: "1",
-            // Don't set ELECTRON_RUN_AS_NODE as it prevents GUI apps from launching
           },
-        });
-      } else {
-        // For local development, use more debugging flags
-        app = await electron.launch({
+        },
+      },
+      {
+        name: "With all flags",
+        config: {
           executablePath,
           args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",
-            "--disable-gpu",
             "--disable-dev-shm-usage",
-            "--enable-logging",
+            "--disable-gpu",
           ],
+          timeout: 60000,
           env: {
             ...process.env,
-            ELECTRON_ENABLE_LOGGING: "1",
-            NODE_ENV: "test",
+            NODE_ENV: "production",
+            ELECTRON_DISABLE_GPU: "1",
           },
-          timeout: 60000,
-        });
+        },
+      },
+    ];
+
+    let lastError: Error | null = null;
+    let launched = false;
+
+    // Try each launch strategy
+    for (const strategy of launchStrategies) {
+      console.log(`Trying launch strategy: ${strategy.name}`);
+      try {
+        app = await electron.launch(strategy.config);
+        console.log(`✅ Successfully launched with strategy: ${strategy.name}`);
+        launched = true;
+        break;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ Strategy "${strategy.name}" failed:`, error);
       }
-      console.log("Electron app launched successfully!");
-    } catch (launchError) {
-      console.error(`Failed to launch Electron app: ${launchError}`);
+    }
+
+    if (!launched) {
+      console.error("Failed to launch Electron app with any strategy");
 
       // Additional debugging for Windows
       if (process.platform === "win32" && fs.existsSync(executablePath)) {
@@ -169,7 +190,7 @@ test.describe(`${productName} startup test`, () => {
         }
       }
 
-      throw launchError;
+      throw lastError || new Error("Failed to launch app with any strategy");
     }
     await mockDialogMessage(app);
   }, 120000); // Increase timeout to 2 minutes for Windows
