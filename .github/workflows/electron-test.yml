@@ -96,9 +96,14 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0 libxss1 libasound2t64
-        Xvfb -screen 0 1024x768x24 :0 &
+        # Install dependencies - use libasound2 instead of libasound2t64
+        sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0 libxss1 libasound2
+        # Start Xvfb and wait for it to be ready
+        Xvfb -ac -screen scrn 1024x768x24 :0 &
+        export DISPLAY=:0
         sleep 5
+        # Verify Xvfb is running
+        ps aux | grep Xvfb || echo "Warning: Xvfb may not be running"
 
     - name: Run Test
       run: pnpm run e2e

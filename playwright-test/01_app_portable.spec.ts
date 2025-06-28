@@ -77,7 +77,8 @@ test.beforeEach(async () => {
   console.log("\nLaunching Electron app (portable mode)...");
 
   try {
-    app = await electron.launch({
+    // Use platform-specific launch config
+    const launchConfig: any = {
       executablePath,
       timeout: 30000,
       env: {
@@ -85,7 +86,21 @@ test.beforeEach(async () => {
         NODE_ENV: "production",
         PORTABLE_MODE: "true",
       },
-    });
+    };
+
+    // Add Linux-specific flags
+    if (process.platform === "linux") {
+      launchConfig.args = [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+      ];
+      launchConfig.env.DISPLAY = ":0";
+      launchConfig.env.ELECTRON_DISABLE_GPU = "1";
+    }
+
+    app = await electron.launch(launchConfig);
 
     console.log("App launched successfully!");
     page = await app.firstWindow();

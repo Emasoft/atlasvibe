@@ -115,6 +115,51 @@ test.describe("AtlasVibe CI Tests", () => {
       },
     ];
 
+    // Add Linux-specific strategies
+    if (platform === "linux") {
+      launchStrategies.push(
+        {
+          name: "Linux with display and GPU flags",
+          config: {
+            executablePath,
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-gpu",
+              "--disable-gpu-sandbox",
+              "--disable-software-rasterizer",
+              "--disable-dev-shm-usage",
+            ],
+            timeout: 60000,
+            env: {
+              ...process.env,
+              DISPLAY: ":0",
+              NODE_ENV: "production",
+              ELECTRON_DISABLE_GPU: "1",
+              ELECTRON_NO_SANDBOX: "1",
+            },
+          },
+        },
+        {
+          name: "Linux headless mode",
+          config: {
+            executablePath,
+            args: [
+              "--headless",
+              "--no-sandbox",
+              "--disable-gpu",
+              "--disable-setuid-sandbox",
+            ],
+            timeout: 60000,
+            env: {
+              ...process.env,
+              NODE_ENV: "production",
+            },
+          },
+        },
+      );
+    }
+
     let lastError: Error | null = null;
 
     // Try each launch strategy

@@ -156,6 +156,32 @@ test.describe(`${productName} startup test`, () => {
       },
     ];
 
+    // Add Linux-specific strategies
+    if (process.platform === "linux") {
+      launchStrategies.push({
+        name: "Linux with display flags",
+        config: {
+          executablePath,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-gpu",
+            "--disable-gpu-sandbox",
+            "--disable-software-rasterizer",
+            "--disable-dev-shm-usage",
+          ],
+          timeout: 60000,
+          env: {
+            ...process.env,
+            DISPLAY: ":0",
+            NODE_ENV: "production",
+            ELECTRON_DISABLE_GPU: "1",
+            ELECTRON_NO_SANDBOX: "1",
+          },
+        },
+      });
+    }
+
     let lastError: Error | null = null;
     let launched = false;
 
