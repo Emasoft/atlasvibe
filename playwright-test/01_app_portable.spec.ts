@@ -76,39 +76,96 @@ test.beforeEach(async () => {
   // Simple launch without complex args
   console.log("\nLaunching Electron app (portable mode)...");
 
-  try {
-    // Use platform-specific launch config
-    const launchConfig: any = {
-      executablePath,
-      timeout: 30000,
-      env: {
-        ...process.env,
-        NODE_ENV: "production",
-        PORTABLE_MODE: "true",
+  // Try different launch strategies like the CI test
+  const launchStrategies = [
+    {
+      name: "With basic flags",
+      config: {
+        executablePath,
+        args: ["--no-sandbox"],
+        timeout: 60000,
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+          PORTABLE_MODE: "true",
+        },
       },
-    };
+    },
+  ];
 
-    // Add Linux-specific flags
-    if (process.platform === "linux") {
-      launchConfig.args = [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-gpu",
-        "--disable-dev-shm-usage",
-      ];
-      launchConfig.env.DISPLAY = ":0";
-      launchConfig.env.ELECTRON_DISABLE_GPU = "1";
+  // Add Linux-specific strategies
+  if (process.platform === "linux") {
+    launchStrategies.push(
+      {
+        name: "Linux with all flags",
+        config: {
+          executablePath,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-gpu",
+            "--disable-gpu-sandbox",
+            "--disable-software-rasterizer",
+            "--disable-dev-shm-usage",
+          ],
+          timeout: 60000,
+          env: {
+            ...process.env,
+            DISPLAY: ":0",
+            NODE_ENV: "production",
+            PORTABLE_MODE: "true",
+            ELECTRON_DISABLE_GPU: "1",
+            ELECTRON_NO_SANDBOX: "1",
+          },
+        },
+      },
+      {
+        name: "Minimal Linux",
+        config: {
+          executablePath,
+          timeout: 60000,
+          env: {
+            ...process.env,
+            NODE_ENV: "production",
+            PORTABLE_MODE: "true",
+          },
+        },
+      },
+    );
+  }
+
+  let lastError: Error | null = null;
+  let launched = false;
+
+  // Try each launch strategy
+  for (const strategy of launchStrategies) {
+    console.log(`\nTrying launch strategy: ${strategy.name}`);
+    try {
+      app = await electron.launch(strategy.config);
+      console.log(`✅ Successfully launched with strategy: ${strategy.name}`);
+      page = await app.firstWindow();
+      
+      // Set a reasonable timeout for page operations
+      page.setDefaultTimeout(30000);
+      launched = true;
+      break;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`❌ Strategy "${strategy.name}" failed:`, error);
+      
+      if (app) {
+        try {
+          await app.close();
+        } catch (e) {
+          // Ignore close errors
+        }
+        app = null;
+      }
     }
+  }
 
-    app = await electron.launch(launchConfig);
-
-    console.log("App launched successfully!");
-    page = await app.firstWindow();
-
-    // Set a reasonable timeout for page operations
-    page.setDefaultTimeout(30000);
-  } catch (error) {
-    console.error("Failed to launch app:", error);
+  if (!launched) {
+    console.error("Failed to launch app with any strategy");
 
     // Try to run executable directly for debugging
     if (process.platform === "win32" && fs.existsSync(executablePath)) {
@@ -124,7 +181,31 @@ test.beforeEach(async () => {
       }
     }
 
-    throw error;
+    // Linux-specific checks
+    if (process.platform === "linux") {
+      try {
+        console.log("\nChecking shared library dependencies...");
+        const lddOutput = execSync(`ldd "${executablePath}" 2>&1 || true`, {
+          encoding: "utf-8",
+        });
+        const missingLibs = lddOutput
+          .split("\n")
+          .filter((line) => line.includes("not found"));
+        if (missingLibs.length > 0) {
+          console.error("❌ Missing libraries:");
+          missingLibs.forEach((lib) => console.error(`  - ${lib}`));
+        } else {
+          console.log("✅ All shared libraries found");
+        }
+      } catch (e) {
+        console.error("Error checking libraries:", e);
+      }
+    }
+
+    throw new Error(
+      `Failed to launch Electron app after trying ${launchStrategies.length} strategies. ` +
+        `Last error: ${lastError?.message || "Unknown error"}`,
+    );
   }
 });
 
