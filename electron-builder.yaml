@@ -69,8 +69,6 @@ nsis:
   allowToChangeInstallationDirectory: true
   # Use faster compression to avoid timeout issues in CI
   packElevateHelper: false
-  # Reduce compression level for CI builds
-  compression: normal
 extraMetadata:
   main: out/main/index.js
 extends: null
