@@ -79,7 +79,7 @@ test.beforeEach(async () => {
   try {
     // In CI environments, we need --no-sandbox due to container restrictions
     // But we still want to test the simplest possible launch configuration
-    const launchConfig: any = {
+    const launchConfig: Parameters<typeof electron.launch>[0] = {
       executablePath,
       timeout: 30000,
       env: {
