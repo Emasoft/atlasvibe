@@ -21,6 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - _CRITICAL_: **Ultrathink before acting**: always ultrathink! Your thinking capabilities are not just for show. USE THEM!!!
 - _CRITICAL_: Never use GREP! Use RIPGREP instead!
 - _CRITICAL_: Never use pip. Use `uv pip <commands>` instead. Consider pip deprecated in favor of uv pip.
+- _CRITICAL_: Never spawn multiple subagents that need to use git at the same time. It can cause conflicting git operations that lead to repo corruption.
 - be extremely meticulous and accurate. always check twice any line of code for errors when you edit it.
 - never output code that is abridged or with parts replaced by placeholder comments like `# ... rest of the code ...`, `# ... rest of the function as before ...`, `# ... rest of the code remains the same ...`, or similar. You are not chatting. The code you output is going to be saved and linted, so omitting parts of it will cause errors and broken files.
 - Be conservative. only change the code that it is strictly necessary to change to implement a feature or fix an issue. Do not change anything else. You must report the user if there is a way to improve certain parts of the code, but do not attempt to do it unless the user explicitly asks you to.
@@ -199,7 +200,9 @@ yamlfmt -path .github/workflows
 - Let the tests autodetect the environment (local or remote/github)
 - Make sure the tests have a configuration for remote run on github that is different from the local one. Make API tests flexible so they can use different parameters when run locally and remotely.
 - Let the test retry counts and all retry logic in the code be configurable with different max values for local and remote for faster CI execution
-- After committing and pushing the project to github, always check if the push passed the github actions and checks. Wait few seconds, according to the average time needed for the lint and tests to run, then use the following commands to retrieve the last logs of the last actions:
+- After committing and pushing the project to github, always check if the push passed the github actions and checks. Wait few seconds, according to the average time needed for the lint and tests to run, and retrieve the results.
+- If you can, spawn a subagent that will monitor the GitHub Actions execution and will report back once the workflows transition from queued status. So you don't have to wait without doing nothing.
+- use the following commands to retrieve the last logs of the last actions:
 
 ```
 gh run list --limit <..max number of recent actions logs to list...>
@@ -216,6 +219,89 @@ etc..
 ```
 
 Then examine the log files saved in the ./logs/ subdir. Think ultrahard to find the causes of the failures. Use actionlint, yamllint and act to test and verify the workflows issues. Then report the issues causing the failings.
+
+## Using Gemini CLI for Large Codebase Analysis
+
+- When analyzing large codebases or multiple files that might exceed context limits, use the Gemini CLI with its massive
+  context window. Use `gemini -p` to leverage Google Gemini's large context capacity.
+- _CRITICAL_: Remember that GEMINI CLI is in free plan and is limited to 60 requests per minute and max 1000 requests per day! Use it wisely! Always put ut all your questions inside a single prompt each time if you can, to consume less requests. There is a 1M tokens limit to the prompt lenght, so do not worry about the lenght of the prompt. Batch as many questions you can in a single prompt.
+- _CRITICAL_: Always use Gemini 2.5 Pro as model. Specify this exact model adding this to the command `--model "gemini-2.5-pro"`.
+- _CRITICAL_: Always spawn a subagent to run Gemini cli, since it is slow and requires a lot of context memory.
+- Use `gemini --help` to get the options.
+- Always force the model with the `--model "gemini-2.5-pro"` flag.
+- Always force to include all files in the context with the `--all_files` flag.
+
+### File and Directory Inclusion Syntax
+
+Use the `@` syntax to include files and directories in your Gemini prompts. The paths should be relative to WHERE you run the gemini command:
+
+#### Examples:
+
+**Single file analysis:**
+gemini -p "@src/main.py Explain this file's purpose and structure"
+
+Multiple files:
+gemini -p "@package.json @src/index.js Analyze the dependencies used in the code"
+
+Entire directory:
+gemini -p "@src/ Summarize the architecture of this codebase"
+
+Multiple directories:
+gemini -p "@src/ @tests/ Analyze test coverage for the source code"
+
+Current directory and subdirectories:
+gemini -p "@./ Give me an overview of this entire project"
+
+# Or use --all_files flag:
+
+gemini --all_files -p "Analyze the project structure and dependencies"
+
+Implementation Verification Examples
+
+Check if a feature is implemented:
+gemini -p "@src/ @lib/ Has dark mode been implemented in this codebase? Show me the relevant files and functions"
+
+Verify authentication implementation:
+gemini -p "@src/ @middleware/ Is JWT authentication implemented? List all auth-related endpoints and middleware"
+
+Check for specific patterns:
+gemini -p "@src/ Are there any React hooks that handle WebSocket connections? List them with file paths"
+
+Verify error handling:
+gemini -p "@src/ @api/ Is proper error handling implemented for all API endpoints? Show examples of try-catch blocks"
+
+Check for rate limiting:
+gemini -p "@backend/ @middleware/ Is rate limiting implemented for the API? Show the implementation details"
+
+Verify caching strategy:
+gemini -p "@src/ @lib/ @services/ Is Redis caching implemented? List all cache-related functions and their usage"
+
+Check for specific security measures:
+gemini -p "@src/ @api/ Are SQL injection protections implemented? Show how user inputs are sanitized"
+
+Verify test coverage for features:
+gemini -p "@src/payment/ @tests/ Is the payment processing module fully tested? List all test cases"
+
+When to Use Gemini CLI
+
+Use gemini -p when:
+
+- Analyzing entire codebases or large directories
+- Comparing multiple large files
+- Need to understand project-wide patterns or architecture
+- Current context window is insufficient for the task
+- Working with files totaling more than 100KB
+- Verifying if specific features, patterns, or security measures are implemented
+- Checking for the presence of certain coding patterns across the entire codebase
+
+Important Notes
+
+- Paths in @ syntax are relative to your current working directory when invoking gemini
+- The CLI will include file contents directly in the context
+- No need for --yolo flag for read-only analysis
+- Gemini's context window can handle entire codebases that would overflow Claude's context
+- When checking implementations, be specific about what you're looking for to get accurate results
+- Always REDACT secrets and private informations from the prompt before sending it to Gemini. Never send or give access to secrets or private informations to GEMINI.
 
 ## API Configuration
 
