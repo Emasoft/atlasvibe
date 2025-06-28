@@ -118,10 +118,21 @@ test.describe(`${productName} startup test`, () => {
     // Use the minimal launch strategy that has been proven to work
     const launchStrategies = [
       {
-        name: "Minimal (CI-proven)",
+        name: "Minimal",
         config: {
           executablePath,
           timeout: 60000,
+        },
+      },
+      {
+        name: "Production mode",
+        config: {
+          executablePath,
+          timeout: 60000,
+          env: {
+            ...process.env,
+            NODE_ENV: "production",
+          },
         },
       },
       {
@@ -137,7 +148,7 @@ test.describe(`${productName} startup test`, () => {
         },
       },
       {
-        name: "With all flags",
+        name: "With all CI flags",
         config: {
           executablePath,
           args: [
