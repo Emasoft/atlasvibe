@@ -12,7 +12,6 @@ on:
     - "docs/**"
     - "**.md"
   workflow_dispatch:
-
 concurrency:
   group: docker-e2e-${{ github.ref }}
   cancel-in-progress: true
@@ -119,7 +118,7 @@ jobs:
           "
 
     - name: Parse test results
-      if: always()
+      if: success() || failure()
       run: |
         echo "📊 E2E Test Results"
         echo "=================="
@@ -132,7 +131,7 @@ jobs:
         fi
 
     - name: Upload E2E artifacts
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: e2e-test-artifacts

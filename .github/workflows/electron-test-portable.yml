@@ -29,6 +29,7 @@ env:
 jobs:
   electron_portable:
     if: ${{ (!github.event.pull_request.draft && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    timeout-minutes: 20
     strategy:
       matrix:
         os: [windows-latest]
@@ -127,14 +128,14 @@ jobs:
         echo "Manual testing required for portable builds"
 
     - name: Upload test results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: test-portable-${{ matrix.os }}-output
         path: test-results
 
     - name: Upload portable build
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: portable-build-${{ matrix.os }}

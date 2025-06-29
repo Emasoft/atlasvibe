@@ -1,5 +1,9 @@
 name: Quick Docker Test
 
+concurrency:
+  group: docker-docker-quick-test-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
     inputs:
@@ -12,6 +16,7 @@ on:
         required: false
         type: boolean
         default: false
+
 
 jobs:
   quick-docker-test:
@@ -73,7 +78,7 @@ jobs:
           "
 
     - name: Display quick results
-      if: always()
+      if: success() || failure()
       run: |
         echo "📊 Quick Test Results"
         echo "==================="
@@ -90,7 +95,7 @@ jobs:
         ls -la test-results/ 2>/dev/null || echo "No test results found"
 
     - name: Upload results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: quick-test-results

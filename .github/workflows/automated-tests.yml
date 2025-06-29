@@ -1,5 +1,9 @@
 name: Automated Tests
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, develop]
@@ -17,6 +21,7 @@ on:
         - quick
         - full
         - ui-only
+
 
 env:
   UV_VERSION: "0.7.13"
@@ -101,7 +106,7 @@ jobs:
           .
 
     - name: Upload test results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: python-test-results-${{ matrix.os }}
@@ -180,7 +185,7 @@ jobs:
         ./test-docker-comprehensive.sh ${{ matrix.profile }} --skip-build
 
     - name: Upload test results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: docker-test-results-${{ matrix.profile }}
@@ -237,7 +242,7 @@ jobs:
           --reporter=html
 
     - name: Upload UI test results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: ui-test-results
@@ -248,7 +253,7 @@ jobs:
   test-summary:
     name: Test Summary
     needs: [python-tests, javascript-tests, docker-tests, ui-tests]
-    if: always()
+    if: success() || failure()
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
