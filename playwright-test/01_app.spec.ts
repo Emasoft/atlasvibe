@@ -72,19 +72,23 @@ test.describe(`${productName} startup test`, () => {
             console.error(`Error running --help: ${helpError}`);
           }
 
-          // Check if there's a crash log
-          try {
-            const crashCheck = execSync(
-              `"${executablePath}" --no-sandbox 2>&1 || echo "Exit code: $?"`,
-              {
-                encoding: "utf-8",
-                timeout: 5000,
-                env: { ...process.env, ELECTRON_ENABLE_LOGGING: "1" },
-              },
-            );
-            console.log(`Direct run output: ${crashCheck}`);
-          } catch (runError) {
-            console.error(`Error running directly: ${runError}`);
+          // Skip running the app directly on Windows in CI - it interferes with electron.launch
+          // This was causing the "Process failed to launch!" error
+          if (!(process.platform === "win32" && process.env.CI)) {
+            // Check if there's a crash log
+            try {
+              const crashCheck = execSync(
+                `"${executablePath}" --no-sandbox 2>&1 || echo "Exit code: $?"`,
+                {
+                  encoding: "utf-8",
+                  timeout: 5000,
+                  env: { ...process.env, ELECTRON_ENABLE_LOGGING: "1" },
+                },
+              );
+              console.log(`Direct run output: ${crashCheck}`);
+            } catch (runError) {
+              console.error(`Error running directly: ${runError}`);
+            }
           }
         } catch (e) {
           console.error(`Error during debug checks: ${e}`);
