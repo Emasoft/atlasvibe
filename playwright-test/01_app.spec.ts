@@ -118,6 +118,18 @@ test.describe(`${productName} startup test`, () => {
     // Use the minimal launch strategy that has been proven to work
     const launchStrategies = [
       {
+        name: "CI Simple",
+        config: {
+          executablePath,
+          args: process.platform === "linux" && process.env.CI ? ["--no-sandbox"] : [],
+          timeout: 90000,
+          env: {
+            ...process.env,
+            NODE_ENV: "test",
+          },
+        },
+      },
+      {
         name: "Minimal",
         config: {
           executablePath,
