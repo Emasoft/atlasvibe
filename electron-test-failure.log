@@ -1,0 +1,113 @@
+electron_app (macos-latest)	Run Test	﻿2025-06-29T03:37:43.6625270Z ##[group]Run pnpm run e2e
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.6625600Z [36;1mpnpm run e2e[0m
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9291110Z shell: /bin/bash -e {0}
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9313240Z env:
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9313770Z   CI: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9314330Z   NODE_ENV: dev
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9317180Z   DISPLAY: :0
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9323320Z   GH_TOKEN: ***
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9323680Z   UV_CACHE_DIR: /Users/runner/work/_temp/setup-uv-cache
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9324100Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.11.9/arm64
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9324520Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.11.9/arm64/lib/pkgconfig
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9324930Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.11.9/arm64
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9325430Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.11.9/arm64
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9327970Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.11.9/arm64
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9328400Z   PNPM_HOME: /Users/runner/setup-pnpm/node_modules/.bin
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9328830Z   STORE_PATH: /Users/runner/setup-pnpm/node_modules/.bin/store/v3
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:43.9329170Z ##[endgroup]
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:44.6513910Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:44.6540560Z > atlasvibe@0.1.0 e2e /Users/runner/work/atlasvibe/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:44.6543790Z > npx playwright test
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:44.6547370Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:46.9493960Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:46.9495050Z Running 126 tests using 1 worker
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:46.9499760Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.1192680Z No backend endpoint responding - skipping API tests
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.1410020Z   -  1 00_api_smoke.spec.ts:4:7 › API Smoke Tests › Backend health check should respond
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.4870270Z   -  2 00_api_smoke.spec.ts:35:7 › API Smoke Tests › Backend API can retrieve blocks metadata
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.8236290Z   -  3 00_api_smoke.spec.ts:71:7 › API Smoke Tests › Frontend dev server should respond
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.8495890Z   -  4 00_docker_backend.spec.ts:35:7 › Docker Backend Tests › Backend health check
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.8608140Z   -  5 00_docker_backend.spec.ts:68:7 › Docker Backend Tests › Backend API - get blocks metadata
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.8737300Z   -  6 00_docker_backend.spec.ts:124:7 › Docker Backend Tests › Backend API - project management endpoints
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.8961380Z   -  7 00_docker_backend.spec.ts:147:7 › Docker Backend Tests › Backend WebSocket endpoint exists
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.9027000Z Testing executable: /Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/MacOS/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.9029250Z Platform: darwin
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.9031840Z File exists: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.9080400Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:48.9081570Z Trying launch strategy: Minimal
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.4396270Z ✅ Successfully launched with strategy: Minimal
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.5775560Z   ✓  8 01_app_ci.spec.ts:28:7 › AtlasVibe CI Tests › Electron app can be launched in CI (1.7s)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.5885570Z   -  9 01_app_ci.spec.ts:258:7 › AtlasVibe CI Tests › App window becomes responsive after launch
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.6112740Z Executable path: /Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/MacOS/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.6115180Z File exists: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.6217530Z File size: 83240 bytes
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.6318700Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:50.6420590Z Launching Electron app (portable mode)...
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:51.3682620Z App launched successfully!
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.4183280Z Page title: Atlasvibe Studio
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7229470Z   ✓  10 01_app_portable.spec.ts:133:5 › app should launch successfully (2.1s)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7333050Z Executable path: /Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/MacOS/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7436370Z File exists: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7439320Z File size: 83240 bytes
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7439580Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:52.7619210Z Launching Electron app (portable mode)...
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:53.5554620Z App launched successfully!
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.1993810Z Body element found
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.2489740Z React root element found
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3283690Z   ✓  11 01_app_portable.spec.ts:146:5 › main window should load (1.6s)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3356450Z Executable path: /Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/MacOS/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3358480Z File exists: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3363220Z File size: 83240 bytes
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3364260Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:54.3364650Z Launching Electron app (portable mode)...
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.0705990Z App launched successfully!
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.5426440Z Current URL: file:///Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/Resources/app/out/renderer/index.html
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.5552610Z Viewport size: undefinedxundefined
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.6824480Z   ✓  12 01_app_portable.spec.ts:166:5 › app should be responsive (1.4s)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7087410Z Executable path: /Users/runner/work/atlasvibe/atlasvibe/dist/mac-universal/atlasvibe.app/Contents/MacOS/atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7089140Z File exists: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7090040Z File permissions: 755
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7090720Z Is file: true
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7091500Z File size: 83240 bytes
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7091880Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7092460Z Attempting to launch Electron app...
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:55.7142250Z Trying launch strategy: CI Simple
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.2830970Z ✅ Successfully launched with strategy: CI Simple
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.3041720Z   ✓  13 01_app.spec.ts:254:7 › atlasvibe startup test › Check if app is packaged (12ms)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.3215380Z Log file not found at /Users/runner/Library/Logs/Atlasvibe Studio/main.log for test atlasvibe-startup-test
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4359610Z   ✘  14 01_app.spec.ts:261:7 › atlasvibe startup test › Check if title matches product name: atlasvibe (6ms)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4388920Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4389070Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4390180Z   1) 01_app.spec.ts:261:7 › atlasvibe startup test › Check if title matches product name: atlasvibe
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4390740Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4391180Z     Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4391680Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4392030Z     Expected: [32m"[7ma[27mtlasvibe"[39m
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4396370Z     Received: [31m"[7mA[27mtlasvibe[7m Studio[27m"[39m
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4396780Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4397030Z       263 |       return _app.getName();
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4397420Z       264 |     });
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4397900Z     > 265 |     expect(appName).toBe(productName);
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4398380Z           |                     ^
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4398780Z       266 |   });
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4399210Z       267 |
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4399740Z       268 |   test(`Check if version matches package.json version: ${version}`, async () => {
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4400230Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4400650Z         at /Users/runner/work/atlasvibe/atlasvibe/playwright-test/01_app.spec.ts:265:21
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4401030Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4401590Z     attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4510900Z     test-results/01_app-atlasvibe-startup-t-9bfe0-ches-product-name-atlasvibe/trace.zip
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4520900Z     Usage:
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4521850Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4522680Z         pnpm exec playwright show-trace test-results/01_app-atlasvibe-startup-t-9bfe0-ches-product-name-atlasvibe/trace.zip
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4523150Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4523780Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4524200Z
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4524680Z Testing stopped early after 1 maximum allowed failures.
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4526540Z   1 failed
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4527490Z     01_app.spec.ts:261:7 › atlasvibe startup test › Check if title matches product name: atlasvibe ─
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4529680Z   8 skipped
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4529940Z   112 did not run
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.4532630Z   5 passed (10.4s)
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.5602410Z  ELIFECYCLE  Command failed with exit code 1.
+electron_app (macos-latest)	Run Test	2025-06-29T03:37:56.6000440Z ##[error]Process completed with exit code 1.

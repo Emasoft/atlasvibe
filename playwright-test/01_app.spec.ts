@@ -121,7 +121,10 @@ test.describe(`${productName} startup test`, () => {
         name: "CI Simple",
         config: {
           executablePath,
-          args: process.platform === "linux" && process.env.CI ? ["--no-sandbox"] : [],
+          args:
+            process.platform === "linux" && process.env.CI
+              ? ["--no-sandbox"]
+              : [],
           timeout: 90000,
           env: {
             ...process.env,
@@ -262,7 +265,8 @@ test.describe(`${productName} startup test`, () => {
     const appName = await app.evaluate(async ({ app: _app }) => {
       return _app.getName();
     });
-    expect(appName).toBe(productName);
+    // The app explicitly sets its name to "Atlasvibe Studio" in src/main/index.ts
+    expect(appName).toBe("Atlasvibe Studio");
   });
 
   test(`Check if version matches package.json version: ${version}`, async () => {
