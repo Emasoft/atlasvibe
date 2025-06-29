@@ -84,7 +84,7 @@ test.beforeEach(async () => {
       timeout: 30000,
       env: {
         ...process.env,
-        NODE_ENV: "production",
+        NODE_ENV: process.env.NODE_ENV || "dev",
         PORTABLE_MODE: "true",
       },
     };

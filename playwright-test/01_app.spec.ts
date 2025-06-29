@@ -121,7 +121,7 @@ test.describe(`${productName} startup test`, () => {
       timeout: 30000,
       env: {
         ...process.env,
-        NODE_ENV: "production",
+        NODE_ENV: process.env.NODE_ENV || "dev",
       },
     };
 
