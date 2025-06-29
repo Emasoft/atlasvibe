@@ -5,12 +5,14 @@
 The following workflows need job-level timeouts added manually:
 
 ### High Priority (Long-running workflows)
+
 - [ ] `blocks-quality-check.yml` - Add `timeout-minutes: 30` to all test jobs
 - [ ] `automated-tests.yml` - Add `timeout-minutes: 45` to test jobs
 - [ ] `docker-matrix-test.yml` - Add `timeout-minutes: 30` to matrix jobs
 - [ ] `docker-compose-test.yml` - Add `timeout-minutes: 45` to compose jobs
 
 ### Medium Priority
+
 - [ ] `pre-commit.yml` - Add `timeout-minutes: 20` to the job
 - [ ] `dependency-check.yml` - Add `timeout-minutes: 15` to the job
 - [ ] `gitleaks.yml` - Add `timeout-minutes: 10` to the job

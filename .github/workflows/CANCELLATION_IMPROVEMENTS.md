@@ -3,6 +3,7 @@
 ## Summary of Changes
 
 All GitHub Actions workflows have been updated to be properly cancellable and interruptible. This ensures that:
+
 - Workflows can be cancelled within 10 seconds when requested
 - System resources are freed immediately
 - No stuck or hanging jobs
@@ -11,12 +12,15 @@ All GitHub Actions workflows have been updated to be properly cancellable and in
 ## Key Improvements Made
 
 ### 1. Added Concurrency Groups to All Workflows
+
 Every workflow now has a concurrency configuration that:
+
 - Groups runs by workflow name and git ref
 - Automatically cancels in-progress runs when new commits are pushed
 - Prevents resource waste from redundant runs
 
 Example:
+
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,12 +28,16 @@ concurrency:
 ```
 
 ### 2. Replaced `if: always()` with `if: success() || failure()`
+
 All instances of `if: always()` have been replaced to allow proper cancellation:
+
 - `if: always()` prevents workflows from being cancelled
 - `if: success() || failure()` allows cancellation while still running cleanup
 
 ### 3. Added Job-Level Timeouts
+
 Every job now has an appropriate timeout to prevent infinite runs:
+
 - Test jobs: 30 minutes
 - Build jobs: 45 minutes
 - Lint/check jobs: 10-20 minutes
@@ -38,6 +46,7 @@ Every job now has an appropriate timeout to prevent infinite runs:
 ### 4. Workflows Updated
 
 All 17 workflows have been updated:
+
 - ✅ actionlint.yml
 - ✅ automated-tests.yml
 - ✅ blocks-quality-check.yml
@@ -61,16 +70,19 @@ All 17 workflows have been updated:
 To test that workflows are properly cancellable:
 
 1. Start a workflow run:
+
    ```bash
    gh workflow run ci.yml
    ```
 
 2. List running workflows:
+
    ```bash
    gh run list --status in_progress
    ```
 
 3. Cancel a workflow:
+
    ```bash
    gh run cancel <RUN_ID>
    ```
