@@ -29,7 +29,7 @@ def fix_duplicate_concurrency(filepath: Path) -> None:
         print(f"  ✓ {filepath.name} is OK")
 
 
-def main():
+def main() -> None:
     """Process all workflow files."""
     workflows_dir = Path(".github/workflows")
 

@@ -2,7 +2,6 @@ import { ElectronApplication, _electron as electron } from "playwright";
 import { test, expect } from "@playwright/test";
 import fs from "fs";
 import { join } from "path";
-import { execSync } from "child_process";
 
 /**
  * CI-specific Electron app tests with robust error handling

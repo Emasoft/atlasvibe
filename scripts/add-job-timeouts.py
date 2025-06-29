@@ -113,7 +113,7 @@ def add_timeouts_to_workflow(filepath: Path) -> Tuple[bool, List[str]]:
     return modified, changes
 
 
-def main():
+def main() -> None:
     """Process all workflow files."""
     workflows_dir = Path(".github/workflows")
 

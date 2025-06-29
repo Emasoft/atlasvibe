@@ -52,7 +52,7 @@ def fix_workflow_timeouts(filepath: Path) -> bool:
     return False
 
 
-def main():
+def main() -> None:
     """Process all workflow files."""
     workflows_dir = Path(".github/workflows")
 

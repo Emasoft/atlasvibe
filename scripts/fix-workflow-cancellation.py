@@ -14,10 +14,10 @@ import os
 import re
 import yaml
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 
-def load_workflow(filepath: Path) -> Dict[str, Any]:
+def load_workflow(filepath: Path) -> Tuple[str, Any]:
     """Load a workflow file preserving comments and structure."""
     with open(filepath, "r") as f:
         content = f.read()
@@ -136,7 +136,7 @@ concurrency:
         print(f"  ℹ️  No changes needed for {filepath.name}")
 
 
-def main():
+def main() -> None:
     """Process all workflow files."""
     workflows_dir = Path(".github/workflows")
 

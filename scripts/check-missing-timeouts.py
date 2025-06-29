@@ -12,7 +12,7 @@ def check_workflow_timeouts(filepath: Path) -> List[str]:
     with open(filepath, "r") as f:
         content = f.read()
 
-    missing_timeouts = []
+    missing_timeouts: List[str] = []
 
     # Find the jobs section
     jobs_match = re.search(r"^jobs:\s*$", content, re.MULTILINE)
@@ -42,7 +42,7 @@ def check_workflow_timeouts(filepath: Path) -> List[str]:
     return missing_timeouts
 
 
-def main():
+def main() -> None:
     """Check all workflow files."""
     workflows_dir = Path(".github/workflows")
 
