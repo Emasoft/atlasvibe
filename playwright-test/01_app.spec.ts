@@ -281,7 +281,8 @@ test.describe(`${productName} startup test`, () => {
     const window = await app.firstWindow({ timeout: STARTUP_TIMEOUT / 2 });
     await window.waitForLoadState("domcontentloaded");
     const title = await window.$("title");
-    expect(await title?.innerText()).toContain(productName);
+    // The app uses "Atlasvibe Studio" as its title
+    expect(await title?.innerText()).toContain("Atlasvibe Studio");
     const welcomeText = `Welcome to Atlasvibe Studio V${version}`;
     await window.getByText(welcomeText).innerText({ timeout: STARTUP_TIMEOUT });
   });
