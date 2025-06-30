@@ -54,27 +54,27 @@ test.describe(`${productName} startup test`, () => {
             console.log(`ldd output:\n${lddOutput}`);
           }
 
-          // Try running the app directly to see what happens
-          console.log(
-            "\nTrying to run the app directly to check for errors...",
-          );
-          try {
-            // Run with --version or --help to see if it starts at all
-            const helpOutput = execSync(
-              `"${executablePath}" --help 2>&1 || true`,
-              {
-                encoding: "utf-8",
-                timeout: 5000,
-              },
-            );
-            console.log(`Help output: ${helpOutput}`);
-          } catch (helpError) {
-            console.error(`Error running --help: ${helpError}`);
-          }
-
           // Skip running the app directly on Windows in CI - it interferes with electron.launch
           // This was causing the "Process failed to launch!" error
           if (!(process.platform === "win32" && process.env.CI)) {
+            // Try running the app directly to see what happens
+            console.log(
+              "\nTrying to run the app directly to check for errors...",
+            );
+            try {
+              // Run with --version or --help to see if it starts at all
+              const helpOutput = execSync(
+                `"${executablePath}" --help 2>&1 || true`,
+                {
+                  encoding: "utf-8",
+                  timeout: 5000,
+                },
+              );
+              console.log(`Help output: ${helpOutput}`);
+            } catch (helpError) {
+              console.error(`Error running --help: ${helpError}`);
+            }
+
             // Check if there's a crash log
             try {
               const crashCheck = execSync(
