@@ -1,5 +1,9 @@
 name: Docker Headless Tests
 
+concurrency:
+  group: docker-docker-headless-test-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -7,10 +11,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+
 jobs:
   docker-headless-test:
     name: Run Headless Tests in Docker
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
     - name: Checkout code
@@ -54,7 +60,7 @@ jobs:
           atlasvibe-test-ci
 
     - name: Upload test results
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: test-results
@@ -64,7 +70,7 @@ jobs:
         retention-days: 7
 
     - name: Upload test report
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: playwright-report
@@ -72,7 +78,7 @@ jobs:
         retention-days: 7
 
     - name: Display test summary
-      if: always()
+      if: success() || failure()
       run: |
         echo "📊 Test Results Summary"
         echo "======================"

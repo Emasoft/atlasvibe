@@ -1,5 +1,9 @@
 name: Docker Matrix Tests
 
+concurrency:
+  group: docker-docker-matrix-test-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -7,11 +11,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+
 jobs:
   docker-matrix-test:
     name: Docker Test - ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -80,7 +85,7 @@ jobs:
           atlasvibe-test-${{ matrix.cache-key }}
 
     - name: Rename artifacts for platform
-      if: always()
+      if: success() || failure()
       run: |
         if [ -d "test-results-${{ matrix.cache-key }}" ]; then
           mv test-results-${{ matrix.cache-key }} test-results
@@ -90,7 +95,7 @@ jobs:
         fi
 
     - name: Upload platform-specific artifacts
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.cache-key }}
@@ -100,7 +105,7 @@ jobs:
         retention-days: 7
 
     - name: Display test summary
-      if: always()
+      if: success() || failure()
       run: |
         echo "📊 Test Results for ${{ matrix.platform }}"
         echo "====================================="
@@ -115,7 +120,8 @@ jobs:
     name: Test Summary
     needs: docker-matrix-test
     runs-on: ubuntu-latest
-    if: always()
+    timeout-minutes: 10
+    if: success() || failure()
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4

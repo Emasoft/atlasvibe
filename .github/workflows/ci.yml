@@ -12,9 +12,14 @@ env:
   DISPLAY: :0
   UV_VERSION: "0.7.13"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-code-format:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
       name: Checkout repository
@@ -34,6 +39,7 @@ jobs:
 
   python-code-lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
       name: Checkout repository
@@ -53,6 +59,7 @@ jobs:
 
   ts-code-style:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v4
       with:
@@ -94,6 +101,7 @@ jobs:
 
   python-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v4
       with:
@@ -124,6 +132,7 @@ jobs:
 
   check-lockfile:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
 
@@ -181,7 +190,7 @@ jobs:
           atlasvibe-test-ci
 
     - name: Upload test artifacts
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: docker-test-results

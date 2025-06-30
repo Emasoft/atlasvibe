@@ -60,6 +60,13 @@ win:
   # Signing is currently disabled as it requires Azure credentials and incurs additional costs.
   # sign: ./scripts/winSign.js
   target: nsis
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  # Use faster compression to avoid timeout issues in CI
+  packElevateHelper: false
 extraMetadata:
   main: out/main/index.js
 extends: null

@@ -1,0 +1,156 @@
+electron_app (windows-latest)	Run Test	﻿2025-06-29T10:00:06.0871938Z ##[group]Run pnpm run e2e
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0872256Z [36;1mpnpm run e2e[0m
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0905562Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0905898Z env:
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0906051Z   CI: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0906203Z   NODE_ENV: dev
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0906372Z   DISPLAY: :0
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0906738Z   GH_TOKEN: ***
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0906946Z   UV_TOOL_BIN_DIR: D:\a\_temp\uv-tool-bin-dir
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0907209Z   UV_TOOL_DIR: D:\a\_temp\uv-tool-dir
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0907459Z   UV_CACHE_DIR: D:\a\_temp\setup-uv-cache
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0907782Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.11.9\x64
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0908187Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.11.9\x64/lib/pkgconfig
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0908594Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0908962Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0909321Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.11.9\x64
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0909709Z   PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0910006Z   STORE_PATH: D:\.pnpm-store\v3
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.0910268Z ##[endgroup]
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.8020275Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.8020925Z > atlasvibe@0.1.0 e2e D:\a\atlasvibe\atlasvibe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.8021503Z > npx playwright test
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:06.8021707Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:11.0425971Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:11.0426624Z Running 126 tests using 1 worker
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:11.0429552Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:12.3141581Z No backend endpoint responding - skipping API tests
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:12.3462726Z   -  1 00_api_smoke.spec.ts:4:7 › API Smoke Tests › Backend health check should respond
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:12.6936220Z   -  2 00_api_smoke.spec.ts:35:7 › API Smoke Tests › Backend API can retrieve blocks metadata
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.0284312Z   -  3 00_api_smoke.spec.ts:71:7 › API Smoke Tests › Frontend dev server should respond
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.0632468Z   -  4 00_docker_backend.spec.ts:35:7 › Docker Backend Tests › Backend health check
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.0782657Z   -  5 00_docker_backend.spec.ts:68:7 › Docker Backend Tests › Backend API - get blocks metadata
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.0958653Z   -  6 00_docker_backend.spec.ts:124:7 › Docker Backend Tests › Backend API - project management endpoints
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1091651Z   -  7 00_docker_backend.spec.ts:147:7 › Docker Backend Tests › Backend WebSocket endpoint exists
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1227369Z Testing executable: D:\a\atlasvibe\atlasvibe\dist\win-unpacked\atlasvibe.exe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1228279Z Platform: win32
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1228622Z File exists: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1256948Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.1257314Z Launching Electron app in CI...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:13.8910480Z ✅ Successfully launched Electron app
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3155270Z   ok 8 01_app_ci.spec.ts:28:7 › AtlasVibe CI Tests › Electron app can be launched in CI (1.2s)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3203182Z   -  9 01_app_ci.spec.ts:102:7 › AtlasVibe CI Tests › App window becomes responsive after launch
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3284863Z Executable path: D:\a\atlasvibe\atlasvibe\dist\win-unpacked\atlasvibe.exe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3286938Z File exists: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3288327Z File size: 176293888 bytes
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3289664Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.3290000Z Launching Electron app (portable mode)...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:14.8709063Z App launched successfully!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.5511624Z Page title: Atlasvibe Studio
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6388253Z   ok 10 01_app_portable.spec.ts:133:5 › app should launch successfully (1.3s)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6411846Z Executable path: D:\a\atlasvibe\atlasvibe\dist\win-unpacked\atlasvibe.exe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6412929Z File exists: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6413876Z File size: 176293888 bytes
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6414621Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:15.6414944Z Launching Electron app (portable mode)...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:16.1838348Z App launched successfully!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:16.9510153Z Body element found
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:16.9936102Z React root element found
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0685154Z   ok 11 01_app_portable.spec.ts:146:5 › main window should load (1.4s)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0709882Z Executable path: D:\a\atlasvibe\atlasvibe\dist\win-unpacked\atlasvibe.exe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0710340Z File exists: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0711826Z File size: 176293888 bytes
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0712770Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.0713067Z Launching Electron app (portable mode)...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.6343706Z App launched successfully!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7051966Z Current URL: file:///D:/a/atlasvibe/atlasvibe/dist/win-unpacked/resources/app/out/renderer/index.html
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7053432Z Viewport size: undefinedxundefined
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7747140Z   ok 12 01_app_portable.spec.ts:166:5 › app should be responsive (700ms)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7899721Z Executable path: D:\a\atlasvibe\atlasvibe\dist\win-unpacked\atlasvibe.exe
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7900575Z File exists: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7901742Z File permissions: 666
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7902597Z Is file: true
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7903498Z File size: 176293888 bytes
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7904407Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:17.7904881Z Trying to run the app directly to check for errors...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:22.7976329Z Error running --help: Error: spawnSync C:\Windows\system32\cmd.exe ETIMEDOUT
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.2737553Z Direct run output:
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.2738328Z 10:00:23.250 > Welcome to Atlasvibe Studio!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.2738813Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.2739017Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.2739316Z Launching Electron app...
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7135239Z ❌ Failed to launch Electron app: electron.launch: Process failed to launch!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7136577Z     at [90mD:\a\atlasvibe\atlasvibe\[39mplaywright-test\01_app.spec.ts:135:13 {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7137426Z   name: [32m'Error'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7137998Z   [[32mSymbol(step)[39m]: {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7138601Z     stepId: [32m'pw:api@3'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7139065Z     location: {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7139884Z       file: [32m'D:\\a\\atlasvibe\\atlasvibe\\playwright-test\\01_app.spec.ts'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7140642Z       line: [33m135[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7141153Z       column: [33m13[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7141723Z       function: [90mundefined[39m
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7142189Z     },
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7142674Z     category: [32m'pw:api'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7143287Z     title: [32m'electron.launch'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7144251Z     apiName: [32m'electron.launch'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7147899Z     params: {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7148981Z       executablePath: [32m'D:\\a\\atlasvibe\\atlasvibe\\dist\\win-unpacked\\atlasvibe.exe'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7150037Z       timeout: [33m30000[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7150708Z       env: [36m[Array][39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7151397Z       viewport: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7152187Z       noDefaultViewport: [33mfalse[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7153004Z       extraHTTPHeaders: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7153858Z       storageState: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7154665Z       serviceWorkers: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7155386Z       recordHar: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7156123Z       colorScheme: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7156904Z       reducedMotion: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7157652Z       forcedColors: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7158440Z       acceptDownloads: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7159235Z       tracesDir: [90mundefined[39m
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7159635Z     },
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7160022Z     wallTime: [33m1751191223271[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7160540Z     boxedStack: [90mundefined[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7160913Z     steps: [],
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7161344Z     complete: [36m[Function: complete][39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7161843Z     endWallTime: [33m1751191223703[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7162179Z     error: {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7163887Z       message: [32m'Error: electron.launch: Process failed to launch!'[39m,
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7164434Z       stack: [32m'Error: electron.launch: Process failed to launch!\n'[39m +
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7165004Z         [32m'    at D:\\a\\atlasvibe\\atlasvibe\\playwright-test\\01_app.spec.ts:135:13'[39m
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7165350Z     }
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7165498Z   }
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7165644Z }
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7262849Z   x  13 01_app.spec.ts:151:7 › atlasvibe startup test › Check if app is packaged (0ms)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7293965Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7296354Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7308217Z   1) 01_app.spec.ts:151:7 › atlasvibe startup test › Check if app is packaged ──────────────────────
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7308968Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7309635Z     Error: electron.launch: Process failed to launch!
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7310162Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7310400Z       133 |
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7310832Z       134 |     try {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7311433Z     > 135 |       app = await electron.launch(launchConfig);
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7312087Z           |             ^
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7313942Z       136 |       console.log("✅ Successfully launched Electron app");
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7315358Z       137 |     } catch (error) {
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7316275Z       138 |       console.error("❌ Failed to launch Electron app:", error);
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7316848Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7317606Z         at D:\a\atlasvibe\atlasvibe\playwright-test\01_app.spec.ts:135:13
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7325835Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7327193Z     attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7328507Z     test-results\01_app-atlasvibe-startup-test-Check-if-app-is-packaged\trace.zip
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7329346Z     Usage:
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7329645Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7330483Z         pnpm exec playwright show-trace test-results\01_app-atlasvibe-startup-test-Check-if-app-is-packaged\trace.zip
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7331420Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7332065Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7332611Z
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7333128Z Testing stopped early after 1 maximum allowed failures.
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7333746Z   1 failed
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7334702Z     01_app.spec.ts:151:7 › atlasvibe startup test › Check if app is packaged ───────────────────────
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7335518Z   8 skipped
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7335919Z   113 did not run
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.7336648Z   4 passed (13.8s)
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:23.8221880Z  ELIFECYCLE  Command failed with exit code 1.
+electron_app (windows-latest)	Run Test	2025-06-29T10:00:24.2312469Z ##[error]Process completed with exit code 1.

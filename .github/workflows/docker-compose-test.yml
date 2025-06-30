@@ -1,5 +1,9 @@
 name: Docker Compose Tests
 
+concurrency:
+  group: docker-docker-compose-test-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -12,7 +16,6 @@ on:
     - '**.md'
     - 'docs/**'
   workflow_dispatch:
-
 env:
   # Ensure no display connection to host
   DISPLAY: ""
@@ -67,7 +70,7 @@ jobs:
           || echo "TEST_FAILED=true" >> "$GITHUB_OUTPUT"
 
     - name: Copy test artifacts
-      if: always()
+      if: success() || failure()
       run: |
         # Ensure we have the test results
         if [ -d "test-results" ]; then
@@ -78,7 +81,7 @@ jobs:
         fi
 
     - name: Parse and display results
-      if: always()
+      if: success() || failure()
       run: |
         if [ -f "test-results/results.json" ]; then
           echo "📊 Parsing test results..."
@@ -89,7 +92,7 @@ jobs:
         fi
 
     - name: Upload test artifacts
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: docker-test-artifacts
@@ -113,7 +116,7 @@ jobs:
         retention-days: 7
 
     - name: Cleanup
-      if: always()
+      if: success() || failure()
       run: |
         echo "🧹 Cleaning up Docker resources..."
         docker-compose down -v

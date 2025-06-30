@@ -1,5 +1,9 @@
 name: Gitleaks Security Scan
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, develop]
@@ -9,7 +13,6 @@ on:
   # Run daily at 2 AM UTC
   - cron: "0 2 * * *"
   workflow_dispatch:
-
 permissions:
   contents: read
   security-events: write
@@ -20,6 +23,7 @@ jobs:
   gitleaks:
     name: Gitleaks Secret Detection
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -35,7 +39,7 @@ jobs:
         config-path: .gitleaks.toml
 
     - name: Upload SARIF report
-      if: always()
+      if: success() || failure()
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: results.sarif

@@ -1,5 +1,9 @@
 name: Dependency Analysis
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, develop]
@@ -17,7 +21,6 @@ on:
   # Run weekly on Monday at 9 AM UTC
   - cron: "0 9 * * 1"
   workflow_dispatch:
-
 permissions:
   contents: read
   pull-requests: write
@@ -26,6 +29,7 @@ jobs:
   deptry:
     name: Check Python Dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -67,11 +71,16 @@ jobs:
           --known-first-party cli \
           --ignore DEP003 \
           --per-rule-ignores \
-            "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
+            "DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary| \
+             python-multipart|pathspec|pytest-cov|pytest-mock|ruff|deptry, \
+             DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound| \
+             qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx| \
+             onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert| \
+             pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
           --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> "$GITHUB_ENV"
 
     - name: Upload deptry report
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: deptry-report
