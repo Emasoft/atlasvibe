@@ -45,7 +45,10 @@ test.describe(`${productName} startup test`, () => {
 
       // Try to execute the file directly to see what error we get
       // Skip on Linux in CI to avoid sandbox issues
-      if ((process.platform === "linux" && !process.env.CI) || process.platform === "win32") {
+      if (
+        (process.platform === "linux" && !process.env.CI) ||
+        process.platform === "win32"
+      ) {
         try {
           if (process.platform === "linux") {
             // First try just getting version or help
