@@ -132,11 +132,7 @@ test.describe(`${productName} startup test`, () => {
     // Only add --no-sandbox in CI on Linux (same as portable test)
     if (process.env.CI && process.platform === "linux") {
       console.log("Running in CI on Linux - adding --no-sandbox flag");
-      launchConfig.args = ["--no-sandbox", "--disable-setuid-sandbox"];
-      launchConfig.env = {
-        ...launchConfig.env,
-        ELECTRON_NO_SANDBOX: "1",
-      };
+      launchConfig.args = ["--no-sandbox"];
     }
 
     try {
