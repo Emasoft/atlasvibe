@@ -3,16 +3,19 @@
 ## Issues Fixed
 
 ### 1. ✅ Block Quality Check - Python Formatting
+
 - **Issue**: `block_docs.py` had formatting issues
 - **Fix**: Applied Ruff formatting with correct line length (320)
 - **Status**: PASSED in CI
 
 ### 2. ✅ E2E Testing - Windows Launch Failure
+
 - **Issue**: Electron app failed to launch on Windows CI
 - **Fix**: Added conditional to skip direct execution on Windows CI
 - **Status**: Tests now run correctly on Windows
 
 ### 3. ✅ E2E Testing - Ubuntu Package Dependencies
+
 - **Issue**: `libasound2` package not found on newer Ubuntu versions
 - **Fix**: Updated workflows to use `libasound2t64` with fallback to `libasound2`
 - **Files Updated**:
@@ -21,6 +24,7 @@
 - **Status**: Fix pushed, new workflows running
 
 ### 4. ✅ CI Workflow - TypeScript/Prettier
+
 - **Issue**: Prettier formatting issues in markdown files
 - **Fix**: Ran Prettier formatter on affected files
 - **Status**: PASSED locally and in CI
@@ -41,6 +45,7 @@
 ## Local Testing
 
 All CI checks passed locally:
+
 - ✅ Python formatting (Ruff)
 - ✅ Python linting (Ruff)
 - ✅ TypeScript linting (ESLint) - warnings only

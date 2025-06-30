@@ -59,6 +59,7 @@ jobs:
           --extend-exclude "node_modules" \
           --extend-exclude "playwright-test" \
           --extend-exclude "examples" \
+          --extend-exclude "sample_projects" \
           --extend-exclude "public" \
           --extend-exclude "out" \
           --extend-exclude "dist" \
@@ -76,7 +77,7 @@ jobs:
              DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound| \
              qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx| \
              onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert| \
-             pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield" \
+             pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|prophet" \
           --json-output deptry-report.json || echo "DEPTRY_FAILED=true" >> "$GITHUB_ENV"
 
     - name: Upload deptry report
