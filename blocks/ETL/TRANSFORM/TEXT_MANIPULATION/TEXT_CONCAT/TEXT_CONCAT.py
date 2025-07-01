@@ -15,7 +15,9 @@ from typing import Literal
 def TEXT_CONCAT(
     a: String,
     b: String,
-    delimiter: Literal["space", "comma", "semicolon", "colon", "new line", "none"] = "space",
+    delimiter: Literal[
+        "space", "comma", "semicolon", "colon", "new line", "none"
+    ] = "space",
 ) -> String:
     """Concatenate 2 strings given by 2 String DataContainers.
 

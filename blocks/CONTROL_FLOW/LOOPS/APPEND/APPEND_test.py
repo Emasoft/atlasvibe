@@ -18,7 +18,9 @@ def mock_atlasvibe_decorator(f):
 
 
 # Patch the atlasvibe decorator that handles connecting our node to the App.
-patch("pkgs.atlasvibe.atlasvibe.atlasvibe_python.atlasvibe", mock_atlasvibe_decorator).start()
+patch(
+    "pkgs.atlasvibe.atlasvibe.atlasvibe_python.atlasvibe", mock_atlasvibe_decorator
+).start()
 
 # After Patching the atlasvibe decorator, let's load the node under test.
 

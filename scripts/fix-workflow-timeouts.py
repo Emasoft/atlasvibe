@@ -71,7 +71,9 @@ def main() -> None:
 
     fixed_count = 0
 
-    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(workflows_dir.glob("*.yaml")):
+    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(
+        workflows_dir.glob("*.yaml")
+    ):
         if fix_workflow_timeouts(workflow_file):
             print(f"  ✓ Fixed {workflow_file.name}")
             fixed_count += 1

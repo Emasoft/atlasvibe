@@ -80,7 +80,11 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
             )
 
             # Create metadata files
-            (custom_block_dir / "app.json").write_text(json.dumps({"name": "CUSTOM_BLOCK", "type": "default", "category": "PROJECT"}))
+            (custom_block_dir / "app.json").write_text(
+                json.dumps(
+                    {"name": "CUSTOM_BLOCK", "type": "default", "category": "PROJECT"}
+                )
+            )
 
             (custom_block_dir / "block_data.json").write_text(
                 json.dumps(
@@ -223,7 +227,10 @@ def CUSTOM_BLOCK(x: int = 1) -> int:
         assert response.status_code == 500
         # The actual error message contains the syntax error details
         error_detail = response.json()["detail"]
-        assert "invalid syntax" in error_detail or "Failed to regenerate manifest" in error_detail
+        assert (
+            "invalid syntax" in error_detail
+            or "Failed to regenerate manifest" in error_detail
+        )
 
         # Original content should be restored
         with open(test_project["block_file"], "r") as f:

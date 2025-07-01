@@ -46,7 +46,9 @@ class TestDetector:
                 text=True,
                 check=True,
             )
-            files = {self.root / f.strip() for f in result.stdout.strip().split("\n") if f}
+            files = {
+                self.root / f.strip() for f in result.stdout.strip().split("\n") if f
+            }
 
             # Also get uncommitted changes
             result = subprocess.run(
@@ -55,7 +57,9 @@ class TestDetector:
                 text=True,
                 check=True,
             )
-            files.update(self.root / f.strip() for f in result.stdout.strip().split("\n") if f)
+            files.update(
+                self.root / f.strip() for f in result.stdout.strip().split("\n") if f
+            )
 
             return files
         except subprocess.CalledProcessError:
@@ -131,7 +135,10 @@ class TestDetector:
         # JavaScript tests
         if categories["javascript"]:
             commands.append(("JavaScript Tests", "pnpm test"))
-            if "frontend" in categories["javascript"] or "electron" in categories["javascript"]:
+            if (
+                "frontend" in categories["javascript"]
+                or "electron" in categories["javascript"]
+            ):
                 commands.append(("Lint Check", "pnpm run lint"))
 
         # Docker tests
@@ -149,7 +156,9 @@ class TestDetector:
 
         # Integration tests
         if categories["integration"] and self.environment != "remote":
-            commands.append(("Integration Tests", "./test-docker-comprehensive.sh integration"))
+            commands.append(
+                ("Integration Tests", "./test-docker-comprehensive.sh integration")
+            )
 
         return commands
 

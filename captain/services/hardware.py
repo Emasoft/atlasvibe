@@ -150,12 +150,20 @@ class DefaultDeviceFinder:
                 )
 
             for device in system.devices:
-                devices += [extract_device(chan, device) for chan in device.ai_physical_chans]
-                devices += [extract_device(chan, device) for chan in device.ao_physical_chans]
+                devices += [
+                    extract_device(chan, device) for chan in device.ai_physical_chans
+                ]
+                devices += [
+                    extract_device(chan, device) for chan in device.ao_physical_chans
+                ]
                 devices += [extract_device(line, device) for line in device.di_lines]
                 devices += [extract_device(line, device) for line in device.do_lines]
-                devices += [extract_device(chan, device) for chan in device.ci_physical_chans]
-                devices += [extract_device(chan, device) for chan in device.co_physical_chans]
+                devices += [
+                    extract_device(chan, device) for chan in device.ci_physical_chans
+                ]
+                devices += [
+                    extract_device(chan, device) for chan in device.co_physical_chans
+                ]
                 devices += [extract_device(line, device) for line in device.di_ports]
                 devices += [extract_device(line, device) for line in device.do_ports]
             logging.info(f"Devices found are: {devices}")
@@ -202,14 +210,20 @@ class MacDeviceFinder(DefaultDeviceFinder):
         rm = pyvisa.ResourceManager("@py")
         devices = []
 
-        result = subprocess.run(["arp", "-a"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["arp", "-a"], capture_output=True, text=True, check=False
+        )
         if result.returncode != 0:
             return devices
 
         for device in result.stdout.splitlines():
             try:
                 ip = device.split(maxsplit=4)[1].strip("()").split(".")
-                valid_addr = ip[0] == "169" and ip[1] == "254" and f"{ip[2]}.{ip[3]}" != "255.255"
+                valid_addr = (
+                    ip[0] == "169"
+                    and ip[1] == "254"
+                    and f"{ip[2]}.{ip[3]}" != "255.255"
+                )
                 if not valid_addr:
                     continue
             except (IndexError, ValueError):

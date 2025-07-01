@@ -18,7 +18,9 @@ import signal
 class TestResult:
     """Represents a single test result"""
 
-    def __init__(self, name: str, suite: str, status: str, duration: float, error: str = ""):
+    def __init__(
+        self, name: str, suite: str, status: str, duration: float, error: str = ""
+    ):
         self.name = name
         self.suite = suite
         self.status = status
@@ -90,7 +92,10 @@ class TestReporter:
         check_cmd = ["pnpm", "exec", "playwright", "install", "--dry-run"]
         check_result = subprocess.run(check_cmd, capture_output=True, text=True)
 
-        if "already downloaded" not in check_result.stdout and "already installed" not in check_result.stdout:
+        if (
+            "already downloaded" not in check_result.stdout
+            and "already installed" not in check_result.stdout
+        ):
             print("📥 Installing Playwright browsers...")
             install_cmd = ["pnpm", "exec", "playwright", "install", "chromium"]
             install_result = subprocess.run(install_cmd)
@@ -197,7 +202,9 @@ class TestReporter:
                     if result.get("error"):
                         error = result["error"].get("message", "")
 
-                self.results.append(TestResult(test_name, suite_name, status, duration, error))
+                self.results.append(
+                    TestResult(test_name, suite_name, status, duration, error)
+                )
 
         # Recursively parse sub-suites
         for sub_suite in suite.get("suites", []):
@@ -223,7 +230,9 @@ class TestReporter:
                     test_name = line
 
                 if test_name and not test_name.startswith("["):
-                    self.results.append(TestResult(test_name, current_suite, "PASSED", 0.0))
+                    self.results.append(
+                        TestResult(test_name, current_suite, "PASSED", 0.0)
+                    )
             elif "✗" in line or "✘" in line or "×" in line or "fail" in line.lower():
                 # Failed test
                 parts = line.split("✗") if "✗" in line else line.split("✘")
@@ -233,7 +242,9 @@ class TestReporter:
                     test_name = line
 
                 if test_name and not test_name.startswith("["):
-                    self.results.append(TestResult(test_name, current_suite, "FAILED", 0.0))
+                    self.results.append(
+                        TestResult(test_name, current_suite, "FAILED", 0.0)
+                    )
             elif "●" in line or "○" in line or "skip" in line.lower():
                 # Skipped test
                 parts = line.split("●") if "●" in line else line.split("○")
@@ -243,7 +254,9 @@ class TestReporter:
                     test_name = line
 
                 if test_name and not test_name.startswith("["):
-                    self.results.append(TestResult(test_name, current_suite, "SKIPPED", 0.0))
+                    self.results.append(
+                        TestResult(test_name, current_suite, "SKIPPED", 0.0)
+                    )
             elif "describe" in line.lower() or "suite" in line.lower():
                 # New test suite
                 if ":" in line:
@@ -277,19 +290,33 @@ class TestReporter:
         if self.results:
             print("\n📋 DETAILED TEST RESULTS")
             print("=" * 120)
-            print(f"{'Status':<10} {'Suite':<25} {'Test Name':<40} {'Description':<35} {'Duration':<10}")
+            print(
+                f"{'Status':<10} {'Suite':<25} {'Test Name':<40} {'Description':<35} {'Duration':<10}"
+            )
             print("=" * 120)
 
             for result in self.results:
-                status_emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️"}.get(result.status, "❓")
+                status_emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️"}.get(
+                    result.status, "❓"
+                )
 
                 status_str = f"{status_emoji} {result.status:<7}"
-                suite_str = result.suite[:23] + ".." if len(result.suite) > 25 else result.suite
-                name_str = result.name[:38] + ".." if len(result.name) > 40 else result.name
-                desc_str = result.description[:33] + ".." if len(result.description) > 35 else result.description
+                suite_str = (
+                    result.suite[:23] + ".." if len(result.suite) > 25 else result.suite
+                )
+                name_str = (
+                    result.name[:38] + ".." if len(result.name) > 40 else result.name
+                )
+                desc_str = (
+                    result.description[:33] + ".."
+                    if len(result.description) > 35
+                    else result.description
+                )
                 duration_str = f"{result.duration:.3f}s"
 
-                print(f"{status_str} {suite_str:<25} {name_str:<40} {desc_str:<35} {duration_str:<10}")
+                print(
+                    f"{status_str} {suite_str:<25} {name_str:<40} {desc_str:<35} {duration_str:<10}"
+                )
 
                 if result.status == "FAILED" and result.error:
                     print(f"{'':>10} Error: {result.error[:100]}...")

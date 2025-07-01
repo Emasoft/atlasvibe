@@ -232,7 +232,9 @@ class TestJSONConversion:
 
         # Without empty fields
         json_data = create_docstring_json(parsed, include_empty_fields=False)
-        assert "long_description" not in json_data or json_data["long_description"] == ""
+        assert (
+            "long_description" not in json_data or json_data["long_description"] == ""
+        )
         assert len(json_data["parameters"]) == 0
         assert len(json_data["returns"]) == 0
 
@@ -352,7 +354,9 @@ def MY_BLOCK():
 
             # Test extraction with auto style detection
             # Must specify function name since temp file has random name
-            result = extract_docstring_data(f.name, function_name="MY_BLOCK", style="auto")
+            result = extract_docstring_data(
+                f.name, function_name="MY_BLOCK", style="auto"
+            )
             assert result is not None
 
             assert "docstring" in result
@@ -361,7 +365,9 @@ def MY_BLOCK():
             assert result["docstring"]["parameters"][0]["name"] == "data"
 
             # Test with explicit numpy style
-            result = extract_docstring_data(f.name, function_name="MY_BLOCK", style="numpy")
+            result = extract_docstring_data(
+                f.name, function_name="MY_BLOCK", style="numpy"
+            )
             assert result is not None
 
             # Test with function name inference - skip since temp file has random name

@@ -42,7 +42,9 @@ def SCATTER3D(default: OrderedTriple | DataFrame) -> Plotly:
         case DataFrame():
             df = default.m
             if len(df.columns) < 3:
-                raise ValueError("DataFrame must have at least 3 columns for x, y, and z coordinates.")
+                raise ValueError(
+                    "DataFrame must have at least 3 columns for x, y, and z coordinates."
+                )
 
             x_column = df.columns[0]
             y_column = df.columns[1]

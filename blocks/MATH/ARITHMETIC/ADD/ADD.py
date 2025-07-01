@@ -14,7 +14,9 @@ from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_ope
 
 
 @atlasvibe
-def ADD(a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]) -> OrderedPair | Scalar | Vector:
+def ADD(
+    a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
+) -> OrderedPair | Scalar | Vector:
     """Add two or more numeric arrays, matrices, dataframes, or constants element-wise.
 
     When a constant is added to an array or matrix, each element in the array or matrix will be increased by the constant value.

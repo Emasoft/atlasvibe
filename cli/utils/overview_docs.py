@@ -55,9 +55,13 @@ class BlockInfo:
 CategoryTree = list[BlockInfo] | dict[str, "CategoryTree"]
 
 
-def make_category_content(name: str, contents: CategoryTree, depth: int = BASE_HEADER_LEVEL, path: str = "") -> str:
+def make_category_content(
+    name: str, contents: CategoryTree, depth: int = BASE_HEADER_LEVEL, path: str = ""
+) -> str:
     if not depth <= MAX_HEADER_LEVEL:
-        raise ValueError(f"{path}/{name} category is too nested, the block must placed within {MAX_HEADER_LEVEL} levels deep. In this case, the '{name}' category is already at level {MAX_HEADER_LEVEL}!")
+        raise ValueError(
+            f"{path}/{name} category is too nested, the block must placed within {MAX_HEADER_LEVEL} levels deep. In this case, the '{name}' category is already at level {MAX_HEADER_LEVEL}!"
+        )
     match contents:
         # leaf (bottom level category)
         case list():
@@ -69,7 +73,11 @@ def make_category_content(name: str, contents: CategoryTree, depth: int = BASE_H
             subcontents = []
             for key, val in contents.items():
                 try:
-                    subcontents.append(make_category_content(key, val, depth + 1, path=f"{path}/{name}"))
+                    subcontents.append(
+                        make_category_content(
+                            key, val, depth + 1, path=f"{path}/{name}"
+                        )
+                    )
                 except ValueError as e:
                     errs.append(str(e))
 
@@ -81,7 +89,9 @@ def make_category_content(name: str, contents: CategoryTree, depth: int = BASE_H
     if depth == BASE_HEADER_LEVEL:
         return content
 
-    return CATEGORY_TEMPLATE.format(header_level="#" * depth, title=name, content=content)
+    return CATEGORY_TEMPLATE.format(
+        header_level="#" * depth, title=name, content=content
+    )
 
 
 class CategoryOverviewDocsBuilder:

@@ -33,12 +33,16 @@ class AtlasVibeIntegrationTest:
             try:
                 # Test health check
                 response = await client.get(f"{self.base_url}/log_level")
-                assert response.status_code == 200, f"Health check failed: {response.status_code}"
+                assert response.status_code == 200, (
+                    f"Health check failed: {response.status_code}"
+                )
                 print("  ✅ Health check endpoint")
 
                 # Test blocks metadata
                 response = await client.get(f"{self.base_url}/blocks/metadata/")
-                assert response.status_code == 200, f"Blocks metadata failed: {response.status_code}"
+                assert response.status_code == 200, (
+                    f"Blocks metadata failed: {response.status_code}"
+                )
                 data = response.json()
                 assert isinstance(data, dict), "Blocks metadata should be a dictionary"
                 assert len(data) > 0, "No blocks found in metadata"
@@ -198,7 +202,9 @@ def CUSTOM_ADDITION(a: float = 0, b: float = 0) -> float:
                 }
 
                 # Submit workflow
-                response = await client.post(f"{self.base_url}/blocks/run", json=topology)
+                response = await client.post(
+                    f"{self.base_url}/blocks/run", json=topology
+                )
 
                 if response.status_code != 200:
                     print(f"  ❌ Workflow submission failed: {response.status_code}")
@@ -233,12 +239,16 @@ def CUSTOM_ADDITION(a: float = 0, b: float = 0) -> float:
             print("  ✅ Created virtual environment")
 
             # Test 2: Install a package
-            result = subprocess.run(["uv", "pip", "install", "requests"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["uv", "pip", "install", "requests"], capture_output=True, text=True
+            )
             assert result.returncode == 0, f"uv pip install failed: {result.stderr}"
             print("  ✅ Installed package with uv")
 
             # Test 3: List installed packages
-            result = subprocess.run(["uv", "pip", "list"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["uv", "pip", "list"], capture_output=True, text=True
+            )
             assert result.returncode == 0, f"uv pip list failed: {result.stderr}"
             assert "requests" in result.stdout, "Package not found in list"
             print("  ✅ Listed installed packages")
@@ -267,7 +277,9 @@ build-backend = "hatchling.build"
             if result.returncode == 0:
                 print("  ✅ Built package with uv")
             else:
-                print(f"  ⚠️  Build failed (expected for minimal package): {result.stderr}")
+                print(
+                    f"  ⚠️  Build failed (expected for minimal package): {result.stderr}"
+                )
 
             return True
 
@@ -297,7 +309,9 @@ build-backend = "hatchling.build"
             try:
                 if await test_func():
                     passed += 1
-                    self.results.append({"name": test_name, "status": "PASSED", "error": None})
+                    self.results.append(
+                        {"name": test_name, "status": "PASSED", "error": None}
+                    )
                 else:
                     failed += 1
                     self.results.append(
@@ -309,7 +323,9 @@ build-backend = "hatchling.build"
                     )
             except Exception as e:
                 failed += 1
-                self.results.append({"name": test_name, "status": "ERROR", "error": str(e)})
+                self.results.append(
+                    {"name": test_name, "status": "ERROR", "error": str(e)}
+                )
                 print(f"  ❌ Error: {e}")
 
         # Generate summary

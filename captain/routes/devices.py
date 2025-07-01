@@ -23,6 +23,8 @@ async def get_devices(
         cameras=device_finder.get_cameras(),
         serialDevices=device_finder.get_serial_devices(),
         visaDevices=device_finder.get_visa_devices(),
-        nidaqmxDevices=device_finder.get_nidaqmx_devices() if include_nidaqmx_drivers else [],
+        nidaqmxDevices=device_finder.get_nidaqmx_devices()
+        if include_nidaqmx_drivers
+        else [],
         nidmmDevices=device_finder.get_nidmm_devices() if include_nidmm_drivers else [],
     )

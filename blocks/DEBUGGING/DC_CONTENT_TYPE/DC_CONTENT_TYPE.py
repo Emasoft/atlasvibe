@@ -53,6 +53,8 @@ def DC_CONTENT_TYPE(
         case "String":
             s = f"s: {type(default.s)}"
         case _:
-            raise TypeError(f"Unsupported DC type {dc_type}. Please add it to the node.")
+            raise TypeError(
+                f"Unsupported DC type {dc_type}. Please add it to the node."
+            )
 
     return String(s=s)

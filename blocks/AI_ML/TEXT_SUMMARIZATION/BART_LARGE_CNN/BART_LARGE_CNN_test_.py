@@ -30,7 +30,9 @@ def test_BART_LARGE_CNN(
 ):
     import BART_LARGE_CNN
 
-    output = BART_LARGE_CNN.BART_LARGE_CNN(DataFrame(df=pd.DataFrame({"text": [long_text]})))
+    output = BART_LARGE_CNN.BART_LARGE_CNN(
+        DataFrame(df=pd.DataFrame({"text": [long_text]}))
+    )
     assert isinstance(output, DataFrame)
     assert output.m.shape == (1, 1)
     assert output.m.columns == ["summary_text"]

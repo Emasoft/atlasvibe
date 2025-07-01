@@ -75,7 +75,9 @@ def BIG_NUMBER(
     if dec_places == 0:
         val_format = "%g" if scientific_notation is False else ".4e"
     else:
-        val_format = f".{dec_places}f" if scientific_notation is False else f".{dec_places}e"
+        val_format = (
+            f".{dec_places}f" if scientific_notation is False else f".{dec_places}e"
+        )
 
     fig.add_trace(
         go.Indicator(

@@ -72,7 +72,9 @@ def EXPORT_MATLAB(
         case Matrix():
             np_array_dict = {"matrix": dc.m}
         case _:
-            raise ValueError(f"Invalid DataContainer type: {dc.type} cannot be exported as MAT.")
+            raise ValueError(
+                f"Invalid DataContainer type: {dc.type} cannot be exported as MAT."
+            )
 
     savemat(
         path,

@@ -19,7 +19,11 @@ def run_command(cmd, cwd=None, capture=True):
         if result.returncode != 0:
             print(f"Error: {result.stderr}")
         else:
-            print(f"Success: {result.stdout[:200]}..." if len(result.stdout) > 200 else f"Success: {result.stdout}")
+            print(
+                f"Success: {result.stdout[:200]}..."
+                if len(result.stdout) > 200
+                else f"Success: {result.stdout}"
+            )
         return result
     else:
         result = subprocess.run(cmd, cwd=cwd)

@@ -29,13 +29,21 @@ class TestAppendBlockMetadataGeneration:
     @pytest.fixture
     def append_block_path(self):
         """Path to the APPEND block directory."""
-        return Path(__file__).parent.parent / "blocks" / "CONTROL_FLOW" / "LOOPS" / "APPEND"
+        return (
+            Path(__file__).parent.parent
+            / "blocks"
+            / "CONTROL_FLOW"
+            / "LOOPS"
+            / "APPEND"
+        )
 
     def test_append_block_metadata_generation_exact_match(self, append_block_path):
         """Test that generated metadata for APPEND block matches existing files exactly."""
 
         # Verify the APPEND block exists
-        assert append_block_path.exists(), f"APPEND block not found at {append_block_path}"
+        assert append_block_path.exists(), (
+            f"APPEND block not found at {append_block_path}"
+        )
 
         # Files that should exist
         expected_files = {
@@ -80,7 +88,9 @@ class TestAppendBlockMetadataGeneration:
                 original_json = json.load(f)
 
             # Deep comparison of JSON structure
-            self._compare_json_structures(original_json, generated_json, "block_data.json")
+            self._compare_json_structures(
+                original_json, generated_json, "block_data.json"
+            )
 
             # Also test manifest generation
             manifest = create_manifest(str(temp_py))
@@ -106,13 +116,19 @@ class TestAppendBlockMetadataGeneration:
                 if filename == "app.json":
                     with open(file_path) as f:
                         app_data = json.load(f)
-                    print(f"\n{filename}: Contains workflow with {len(app_data['rfInstance']['nodes'])} nodes")
+                    print(
+                        f"\n{filename}: Contains workflow with {len(app_data['rfInstance']['nodes'])} nodes"
+                    )
                 elif filename == "example.md":
                     content = file_path.read_text()
-                    print(f"\n{filename}: {len(content.splitlines())} lines of documentation")
+                    print(
+                        f"\n{filename}: {len(content.splitlines())} lines of documentation"
+                    )
                 else:
                     content = file_path.read_text()
-                    print(f"\n{filename}: {len(content.splitlines())} lines of test code")
+                    print(
+                        f"\n{filename}: {len(content.splitlines())} lines of test code"
+                    )
 
     def _generate_block_data_for_append(self, py_file: Path):
         """Generate block_data.json for the APPEND block."""
@@ -160,8 +176,12 @@ class TestAppendBlockMetadataGeneration:
                                 else [
                                     {
                                         "name": "",
-                                        "type": parsed.returns.type_name if parsed.returns else "",
-                                        "description": parsed.returns.description if parsed.returns else "",
+                                        "type": parsed.returns.type_name
+                                        if parsed.returns
+                                        else "",
+                                        "description": parsed.returns.description
+                                        if parsed.returns
+                                        else "",
                                     }
                                 ]
                             ),
@@ -230,7 +250,9 @@ class TestAppendBlockMetadataGeneration:
         # Verify __pycache__ exists (created when block is imported)
         pycache_dir = append_block_path / "__pycache__"
         if pycache_dir.exists():
-            print(f"\n✓ __pycache__ directory exists with {len(list(pycache_dir.iterdir()))} files")
+            print(
+                f"\n✓ __pycache__ directory exists with {len(list(pycache_dir.iterdir()))} files"
+            )
         else:
             print("\n✗ __pycache__ directory not found (created on first import)")
 

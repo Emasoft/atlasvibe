@@ -18,7 +18,9 @@ import scipy.stats
 def ANDERSON(
     default: OrderedPair | Matrix,
     dist: str = "norm",
-    select_return: Literal["statistic", "critical_values", "significance_level"] = "statistic",
+    select_return: Literal[
+        "statistic", "critical_values", "significance_level"
+    ] = "statistic",
 ) -> OrderedPair | Matrix | Scalar:
     """The ANDERSON node is based on a numpy or scipy function.
 
@@ -67,7 +69,9 @@ def ANDERSON(
     if isinstance(result, np.ndarray):
         result = OrderedPair(x=default.x, y=result)
     else:
-        assert isinstance(result, np.number | float | int), f"Expected np.number, float or int for result, got {type(result)}"
+        assert isinstance(result, np.number | float | int), (
+            f"Expected np.number, float or int for result, got {type(result)}"
+        )
         result = Scalar(c=float(result))
 
     return result

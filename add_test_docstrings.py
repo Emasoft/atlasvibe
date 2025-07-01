@@ -20,7 +20,9 @@ class DocstringAdder(ast.NodeTransformer):
                 docstring = f'"""Test {test_name.replace("_", " ")} functionality."""'
 
                 # Add docstring as first statement
-                docstring_node = ast.Expr(value=ast.Constant(value=docstring.strip('"""')))
+                docstring_node = ast.Expr(
+                    value=ast.Constant(value=docstring.strip('"""'))
+                )
                 node.body.insert(0, docstring_node)
                 self.modified = True
 

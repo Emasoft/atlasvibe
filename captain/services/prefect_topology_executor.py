@@ -139,7 +139,9 @@ class PrefectTopologyExecutor:
             outputs = await self._execute_prefect_flow(observe_blocks, max_workers)
 
             if self._cancel_requested:
-                await self._broadcast_status("prefect_flow_cancelled", {"execution_id": self._execution_id})
+                await self._broadcast_status(
+                    "prefect_flow_cancelled", {"execution_id": self._execution_id}
+                )
                 return None
 
             # Store outputs
@@ -186,7 +188,9 @@ class PrefectTopologyExecutor:
             if state.task_future and not state.task_future.done():
                 state.task_future.cancel()
 
-    def compare_outputs(self, outputs1: Dict[str, Any], outputs2: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def compare_outputs(
+        self, outputs1: Dict[str, Any], outputs2: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Compare outputs from two executions."""
         differences = []
 
@@ -231,7 +235,9 @@ class PrefectTopologyExecutor:
         for node_id in self._topology.original_graph.nodes:
             self._node_states[node_id] = NodeExecutionState(node_id=node_id)
 
-    async def _execute_prefect_flow(self, observe_blocks: List[str], max_workers: int) -> Dict[str, Any]:
+    async def _execute_prefect_flow(
+        self, observe_blocks: List[str], max_workers: int
+    ) -> Dict[str, Any]:
         """Execute workflow as a Prefect flow with dynamic task creation."""
 
         # Start workers
@@ -243,7 +249,9 @@ class PrefectTopologyExecutor:
         # Start topology execution
         self._topology.run(self._task_queue)
 
-        logger.info(f"Started topology execution with {len(self._worker_tasks)} workers")
+        logger.info(
+            f"Started topology execution with {len(self._worker_tasks)} workers"
+        )
 
         # Process tasks dynamically
         outputs = {}
@@ -252,7 +260,9 @@ class PrefectTopologyExecutor:
         while not self._topology.is_finished() and not self._cancel_requested:
             try:
                 # Get finished job from worker (non-blocking with timeout)
-                logger.debug(f"Waiting for response, queue size: {self._finish_queue.qsize()}")
+                logger.debug(
+                    f"Waiting for response, queue size: {self._finish_queue.qsize()}"
+                )
                 response = self._finish_queue.get(block=True, timeout=0.1)
                 logger.info(f"Got response: {response}")
 
@@ -309,7 +319,9 @@ class PrefectTopologyExecutor:
     async def _start_workers(self, observe_blocks: List[str], max_workers: int):
         """Start worker tasks."""
         # Determine optimal number of workers
-        optimal_workers = min(max_workers, self._topology.get_maximum_workers(max_workers))
+        optimal_workers = min(
+            max_workers, self._topology.get_maximum_workers(max_workers)
+        )
 
         logger.info(f"Starting {optimal_workers} workers for execution")
 
@@ -398,8 +410,12 @@ class PrefectTopologyExecutor:
             "topology_status": {
                 "finished": self._topology.is_finished() if self._topology else False,
                 "cancelled": self._topology.is_cancelled() if self._topology else False,
-                "finished_jobs": list(self._topology.finished_jobs) if self._topology else [],
-                "queued_jobs": list(self._topology.queued_jobs) if self._topology else [],
+                "finished_jobs": list(self._topology.finished_jobs)
+                if self._topology
+                else [],
+                "queued_jobs": list(self._topology.queued_jobs)
+                if self._topology
+                else [],
                 "loop_nodes": self._topology.loop_nodes if self._topology else [],
             },
         }

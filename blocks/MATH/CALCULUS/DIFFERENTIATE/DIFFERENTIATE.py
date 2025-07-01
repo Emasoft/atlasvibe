@@ -33,7 +33,9 @@ def DIFFERENTIATE(default: OrderedPair | Vector) -> OrderedPair:
             input_y = default.y
 
             if len(input_x) != len(input_y):
-                raise ValueError(f" X and Y keys must have the same length, got x of length {len(input_x)} and y {len(input_y)}")
+                raise ValueError(
+                    f" X and Y keys must have the same length, got x of length {len(input_x)} and y {len(input_y)}"
+                )
 
             differentiate = np.diff(input_y) / np.diff(input_x)
 

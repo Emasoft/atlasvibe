@@ -12,7 +12,9 @@ def test_BUTTER(mock_atlasvibe_decorator):
     assert np.mean(y) > 0.9 and np.mean(y) < 1.1
 
     element = OrderedPair(x=x, y=y)
-    res = BUTTER.BUTTER(element, filter_order=1, critical_frequency=12, btype="highpass", sample_rate=25)
+    res = BUTTER.BUTTER(
+        element, filter_order=1, critical_frequency=12, btype="highpass", sample_rate=25
+    )
 
     # Butter'ed sine mean should be close to zero.
     assert np.isclose(np.mean(res.y), 0, atol=0.01)

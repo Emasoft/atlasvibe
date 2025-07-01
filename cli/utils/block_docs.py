@@ -12,13 +12,17 @@ from typing import List
 
 
 class BlockDocsBuilder:
-    def __init__(self, block_name: str, block_folder_path: str, description: str, thumbnail: str) -> None:
+    def __init__(
+        self, block_name: str, block_folder_path: str, description: str, thumbnail: str
+    ) -> None:
         self.github_base = "https://github.com/Emasoft/atlasvibe/blob/main/blocks/{block_folder_path}/{block_name}.py"
 
         self.block_name = block_name
         self.block_folder_path = block_folder_path
         self.description = description
-        self.github_link = self.github_base.format(block_name=block_name, block_folder_path=block_folder_path)
+        self.github_link = self.github_base.format(
+            block_name=block_name, block_folder_path=block_folder_path
+        )
 
         self.template = """\
 ---

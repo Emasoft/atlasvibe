@@ -86,7 +86,11 @@ concurrency:
             job_start = jobs_match.end() + match.start()
 
             # Check if this job has timeout-minutes
-            next_job_start = jobs_match.end() + (job_matches[job_matches.index(match) + 1].start() if job_matches.index(match) < len(job_matches) - 1 else len(jobs_section))
+            next_job_start = jobs_match.end() + (
+                job_matches[job_matches.index(match) + 1].start()
+                if job_matches.index(match) < len(job_matches) - 1
+                else len(jobs_section)
+            )
             job_content = content[job_start : jobs_match.end() + next_job_start]
 
             if "timeout-minutes:" not in job_content:
@@ -100,21 +104,30 @@ concurrency:
 
                 # Find where to insert timeout (after job name, considering any existing properties)
                 insert_pattern = rf"^  {job_name}:\s*\n(?:    \w+:.*\n)*"
-                insert_match = re.search(insert_pattern, content[job_start:], re.MULTILINE)
+                insert_match = re.search(
+                    insert_pattern, content[job_start:], re.MULTILINE
+                )
 
                 if insert_match:
                     # Check indentation of existing properties
                     indent_match = re.search(
                         r"^(    )(?:if|needs|runs-on|strategy):",
-                        content[job_start + insert_match.start() : job_start + insert_match.end()],
+                        content[
+                            job_start + insert_match.start() : job_start
+                            + insert_match.end()
+                        ],
                         re.MULTILINE,
                     )
                     if indent_match:
                         # Insert after job name but before other properties
                         timeout_line = f"    timeout-minutes: {timeout}\n"
                         insert_pos = job_start + content[job_start:].find(":\n") + 2
-                        content = content[:insert_pos] + timeout_line + content[insert_pos:]
-                        print(f"  ✓ Added timeout-minutes: {timeout} to job '{job_name}'")
+                        content = (
+                            content[:insert_pos] + timeout_line + content[insert_pos:]
+                        )
+                        print(
+                            f"  ✓ Added timeout-minutes: {timeout} to job '{job_name}'"
+                        )
 
     # 4. Add timeouts to long-running steps (those with 'run:' that don't have timeout)
     # This is more complex and would require parsing the YAML structure properly
@@ -148,7 +161,9 @@ def main() -> None:
         print("Error: .github/workflows directory not found!")
         return
 
-    workflow_files = list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
+    workflow_files = list(workflows_dir.glob("*.yml")) + list(
+        workflows_dir.glob("*.yaml")
+    )
 
     print(f"Found {len(workflow_files)} workflow files to process")
     print("=" * 60)

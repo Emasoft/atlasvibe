@@ -71,7 +71,9 @@ def create_test_scalar(value: float = 1.0) -> Scalar:
     return Scalar(c=value)
 
 
-def create_test_vector(size: int = 10, start: float = 0.0, stop: float = 10.0) -> Vector:
+def create_test_vector(
+    size: int = 10, start: float = 0.0, stop: float = 10.0
+) -> Vector:
     """Create a test Vector DataContainer.
 
     Args:
@@ -102,7 +104,9 @@ def create_test_ordered_pair(
     Returns:
         An OrderedPair DataContainer
     """
-    return OrderedPair(x=np.linspace(x_start, x_stop, size), y=np.linspace(y_start, y_stop, size))
+    return OrderedPair(
+        x=np.linspace(x_start, x_stop, size), y=np.linspace(y_start, y_stop, size)
+    )
 
 
 def create_test_matrix(rows: int = 10, cols: int = 10, value: float = 1.0) -> Matrix:
@@ -119,7 +123,9 @@ def create_test_matrix(rows: int = 10, cols: int = 10, value: float = 1.0) -> Ma
     return Matrix(m=np.full((rows, cols), value))
 
 
-def create_test_dataframe(rows: int = 10, cols: int = 3, seed: Optional[int] = None) -> DataFrame:
+def create_test_dataframe(
+    rows: int = 10, cols: int = 3, seed: Optional[int] = None
+) -> DataFrame:
     """Create a test DataFrame DataContainer.
 
     Args:
@@ -150,7 +156,9 @@ def create_test_grayscale(width: int = 100, height: int = 100) -> Grayscale:
     return Grayscale(img=np.random.rand(height, width))
 
 
-def create_test_image(width: int = 100, height: int = 100, has_alpha: bool = False) -> Image:
+def create_test_image(
+    width: int = 100, height: int = 100, has_alpha: bool = False
+) -> Image:
     """Create a test Image DataContainer.
 
     Args:
@@ -164,7 +172,11 @@ def create_test_image(width: int = 100, height: int = 100, has_alpha: bool = Fal
     r = np.random.randint(0, 256, (height, width), dtype=np.uint8)
     g = np.random.randint(0, 256, (height, width), dtype=np.uint8)
     b = np.random.randint(0, 256, (height, width), dtype=np.uint8)
-    a = np.random.randint(0, 256, (height, width), dtype=np.uint8) if has_alpha else None
+    a = (
+        np.random.randint(0, 256, (height, width), dtype=np.uint8)
+        if has_alpha
+        else None
+    )
 
     return Image(r=r, g=g, b=b, a=a)
 
@@ -203,7 +215,9 @@ def create_test_ordered_triple(size: int = 10) -> OrderedTriple:
     )
 
 
-def assert_datacontainer_equal(dc1: DataContainer, dc2: DataContainer, rtol: float = 1e-5):
+def assert_datacontainer_equal(
+    dc1: DataContainer, dc2: DataContainer, rtol: float = 1e-5
+):
     """Assert that two DataContainers are equal.
 
     Args:

@@ -77,7 +77,9 @@ class ManifestGenerationTest(unittest.TestCase):
                     "desc": None,
                 },
             ],
-            "outputs": [{"name": "default", "id": "default", "type": "Image", "desc": None}],
+            "outputs": [
+                {"name": "default", "id": "default", "type": "Image", "desc": None}
+            ],
             "pip_dependencies": [
                 {"name": "tensorflow", "v": "2.12.0"},
                 {"name": "torch", "v": "2.0.1"},
@@ -103,7 +105,9 @@ class ManifestGenerationTest(unittest.TestCase):
                     "overload": None,
                 },
             },
-            "outputs": [{"name": "default", "id": "default", "type": "Any", "desc": None}],
+            "outputs": [
+                {"name": "default", "id": "default", "type": "Any", "desc": None}
+            ],
         }
 
     def test_manifest_with_node_type(self):
@@ -122,7 +126,9 @@ class ManifestGenerationTest(unittest.TestCase):
                     "desc": None,
                 }
             ],
-            "outputs": [{"name": "default", "id": "default", "type": "Any", "desc": None}],
+            "outputs": [
+                {"name": "default", "id": "default", "type": "Any", "desc": None}
+            ],
         }
 
     def test_manifest_with_default_param_values(self):
@@ -304,7 +310,9 @@ class ManifestGenerationTest(unittest.TestCase):
                     "overload": None,
                 },
             },
-            "outputs": [{"name": "default", "id": "default", "type": "Any", "desc": None}],
+            "outputs": [
+                {"name": "default", "id": "default", "type": "Any", "desc": None}
+            ],
         }
 
     def test_manifest_with_multi_inputs(self):
@@ -344,7 +352,9 @@ class ManifestGenerationTest(unittest.TestCase):
                     "overload": None,
                 },
             },
-            "outputs": [{"name": "default", "id": "default", "type": "Matrix", "desc": None}],
+            "outputs": [
+                {"name": "default", "id": "default", "type": "Matrix", "desc": None}
+            ],
         }
 
     def test_end(self):

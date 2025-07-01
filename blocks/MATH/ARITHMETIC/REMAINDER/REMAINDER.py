@@ -13,7 +13,9 @@ from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_ope
 
 
 @atlasvibe
-def REMAINDER(a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]) -> OrderedPair | Scalar | Vector:
+def REMAINDER(
+    a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
+) -> OrderedPair | Scalar | Vector:
     """Find the remainder (division) of two numeric arrays, matrices, dataframes, or constants element-wise.
 
     When a constant is divided into an array or matrix, each element in the array or matrix will be divided by the constant value.

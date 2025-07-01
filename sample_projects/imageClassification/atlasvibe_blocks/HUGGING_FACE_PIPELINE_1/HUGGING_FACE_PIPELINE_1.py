@@ -68,12 +68,16 @@ def HUGGING_FACE_PIPELINE_1(
     # Convert input image
     input_image = default
     r, g, b, a = input_image.r, input_image.g, input_image.b, input_image.a
-    image_as_nparray = np.stack((r, g, b, a), axis=2) if a is not None else np.stack((r, g, b), axis=2)
+    image_as_nparray = (
+        np.stack((r, g, b, a), axis=2) if a is not None else np.stack((r, g, b), axis=2)
+    )
     input_image = PILImage.fromarray(image_as_nparray)
 
     # List of dict of classification labels and confidence scores
     # See: https://huggingface.co/docs/transformers/main_classes/pipelines#transformers.ImageClassificationPipeline.example
     classification_confidence_scores: List[Dict[str, float]] = pipeline(input_image)
 
-    df_classification_confidence_scores = DataFrame(pd.DataFrame(classification_confidence_scores, columns=["label", "score"]))
+    df_classification_confidence_scores = DataFrame(
+        pd.DataFrame(classification_confidence_scores, columns=["label", "score"])
+    )
     return df_classification_confidence_scores

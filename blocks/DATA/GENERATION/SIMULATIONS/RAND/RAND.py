@@ -73,7 +73,9 @@ def RAND(
         case "uniform":
             y = my_generator.uniform(low=lower_bound, high=upper_bound, size=size)
         case "normal":
-            y = my_generator.normal(loc=normal_mean, scale=normal_standard_deviation, size=size)
+            y = my_generator.normal(
+                loc=normal_mean, scale=normal_standard_deviation, size=size
+            )
         case "poisson":
             y = my_generator.poisson(lam=poisson_events, size=size)
 
@@ -89,7 +91,9 @@ def OVERLOAD(size, lower_bound, upper_bound, distribution="uniform") -> None:
 
 
 # @display
-def OVERLOAD(size, normal_mean, normal_standard_deviation, distribution="normal") -> None:  # noqa: F811
+def OVERLOAD(
+    size, normal_mean, normal_standard_deviation, distribution="normal"
+) -> None:  # noqa: F811
     return None
 
 

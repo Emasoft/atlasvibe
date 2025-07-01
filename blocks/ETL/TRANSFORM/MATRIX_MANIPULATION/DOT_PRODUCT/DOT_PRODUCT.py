@@ -34,11 +34,17 @@ def DOT_PRODUCT(a: Matrix | Vector, b: Matrix | Vector) -> Matrix | Vector | Sca
         assert a.v.shape == b.v.shape, "Vector sizes must be equal."
         return Scalar(c=np.dot(a.v, b.v))
     elif isinstance(a, Matrix) and isinstance(b, Vector):
-        assert a.m.shape[0] == b.v.shape[0], "Vector size must be equal to Matrix column size."
+        assert a.m.shape[0] == b.v.shape[0], (
+            "Vector size must be equal to Matrix column size."
+        )
         return Vector(v=np.dot(a.m, b.v))
     elif isinstance(a, Vector) and isinstance(b, Matrix):
-        assert a.v.shape[0] == b.m.shape[0], "Vector size must be equal to Matrix column size."
+        assert a.v.shape[0] == b.m.shape[0], (
+            "Vector size must be equal to Matrix column size."
+        )
         return Vector(v=np.dot(a.v, b.m))
     elif isinstance(a, Matrix) and isinstance(b, Matrix):
-        assert a.m.shape[1] == b.m.shape[0], "Matrix 1 row length must be equal to Matrix 2 column length."
+        assert a.m.shape[1] == b.m.shape[0], (
+            "Matrix 1 row length must be equal to Matrix 2 column length."
+        )
         return Matrix(m=np.dot(a.m, b.m))

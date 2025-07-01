@@ -38,7 +38,10 @@ class NodeInit:
     def run(self, node_id: str, ctrls: dict[str, Any]):
         daemon_container = NodeInitService().create_init_store(node_id)
 
-        args = {name: format_param_value(ctrl["value"], ctrl["type"]) for name, ctrl in ctrls.items()}
+        args = {
+            name: format_param_value(ctrl["value"], ctrl["type"])
+            for name, ctrl in ctrls.items()
+        }
         res = self.func(**args)
         if res is not None:
             daemon_container.set(res)
@@ -71,7 +74,9 @@ class NodeInitService:
     def get_init_store(self, node_id) -> NodeInitContainer:
         store = Dao.get_instance().get_init_container(node_id)
         if store is None:
-            raise ValueError(f"Storage for {node_id} init object has not been initialized!")
+            raise ValueError(
+                f"Storage for {node_id} init object has not been initialized!"
+            )
         return store
 
     # this method will check if a node has an init store already created.
@@ -88,7 +93,9 @@ class NodeInitService:
     def get_node_init_function(self, node_func) -> NodeInit:
         res = Dao.get_instance().get_init_function(node_func)
         if res is None:
-            raise NoInitFunctionError(f"Node {node_func.__name__} does not have an init function!")
+            raise NoInitFunctionError(
+                f"Node {node_func.__name__} does not have an init function!"
+            )
         return res
 
 

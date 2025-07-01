@@ -13,7 +13,9 @@ from typing import Literal
 
 
 @atlasvibe
-def VECTOR(elements: str = "", elements_type: Literal["boolean", "numeric"] = "boolean") -> Vector:
+def VECTOR(
+    elements: str = "", elements_type: Literal["boolean", "numeric"] = "boolean"
+) -> Vector:
     """Creates a vector type data given the elements
 
     Parameters
@@ -35,7 +37,9 @@ def VECTOR(elements: str = "", elements_type: Literal["boolean", "numeric"] = "b
         if all(isinstance(element, bool) for element in all_bool):
             return Vector(v=array(all_bool))
 
-        raise ValueError(f"all elements of the vector must be in boolean type: {all_bool}")
+        raise ValueError(
+            f"all elements of the vector must be in boolean type: {all_bool}"
+        )
 
     elif elements_type == "numeric":
         all_numeric = []
@@ -50,7 +54,9 @@ def VECTOR(elements: str = "", elements_type: Literal["boolean", "numeric"] = "b
                     all_numeric.append(float_element)
 
             except ValueError:
-                raise ValueError(f"all elements of the vector must be numeric: {element}")
+                raise ValueError(
+                    f"all elements of the vector must be numeric: {element}"
+                )
 
         return Vector(v=array(all_numeric))
 

@@ -16,4 +16,6 @@ def test_change_queue_manager_basic():
     # This test was causing hangs in CI due to ChangeQueueManager initialization
     # The ChangeQueueManager uses threading and singleton patterns that don't work well in tests
     # The functionality is tested indirectly through API tests with proper mocking
-    pytest.skip("Skipping direct ChangeQueueManager test - covered by API tests with mocks")
+    pytest.skip(
+        "Skipping direct ChangeQueueManager test - covered by API tests with mocks"
+    )

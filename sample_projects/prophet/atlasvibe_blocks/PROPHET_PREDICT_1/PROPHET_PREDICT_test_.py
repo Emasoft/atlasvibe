@@ -31,6 +31,10 @@ def test_PROPHET_PREDICT(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_dir
     assert extra["run_forecast"] is True
     assert isinstance(extra["original"], pd.DataFrame)
     # This should be identical to the original df, all columns, all rows
-    assert (extra["original"] == df.rename(columns={"Timestamp": "ds", "Data": "y"})).all().all()
+    assert (
+        (extra["original"] == df.rename(columns={"Timestamp": "ds", "Data": "y"}))
+        .all()
+        .all()
+    )
     assert extra["prophet"] is not None
     assert isinstance(extra["prophet"], str)

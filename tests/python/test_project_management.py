@@ -35,7 +35,9 @@ def block_service_instance(
 # --- Test Cases ---
 
 
-def test_create_new_project_creates_folder_structure(project_service_instance, temp_project_base_dir):
+def test_create_new_project_creates_folder_structure(
+    project_service_instance, temp_project_base_dir
+):
     """
     Test Requirement 1: creating a new project will also create a new folder
     with the name of the project and a subfolder for custom blocks.
@@ -43,14 +45,20 @@ def test_create_new_project_creates_folder_structure(project_service_instance, t
     project_name = "MyNewTestProject"
     base_path_str = str(temp_project_base_dir)
 
-    created_project_path = project_service_instance.create_new_project(project_name, base_path_str)
+    created_project_path = project_service_instance.create_new_project(
+        project_name, base_path_str
+    )
 
     expected_project_path = os.path.join(base_path_str, project_name)
-    expected_custom_blocks_path = os.path.join(expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME)
+    expected_custom_blocks_path = os.path.join(
+        expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME
+    )
 
     assert created_project_path == expected_project_path
     assert os.path.isdir(expected_project_path), "Project directory was not created."
-    assert os.path.isdir(expected_custom_blocks_path), f"'{constants.CUSTOM_BLOCKS_DIR_NAME}' subdirectory was not created."
+    assert os.path.isdir(expected_custom_blocks_path), (
+        f"'{constants.CUSTOM_BLOCKS_DIR_NAME}' subdirectory was not created."
+    )
 
 
 def test_project_template_creates_custom_blocks(
@@ -70,16 +78,24 @@ def test_project_template_creates_custom_blocks(
 
     # Spy on the add_block_to_project method of the already instantiated mock service
     # to verify it's called correctly, while still executing its actual (mocked) logic.
-    block_service_instance.add_block_to_project = MagicMock(wraps=block_service_instance.add_block_to_project)
+    block_service_instance.add_block_to_project = MagicMock(
+        wraps=block_service_instance.add_block_to_project
+    )
 
     # Action
-    project_path, created_blocks_details = project_service_instance.create_project_from_template(template_name, new_project_name, base_path_str, block_service_instance)
+    project_path, created_blocks_details = (
+        project_service_instance.create_project_from_template(
+            template_name, new_project_name, base_path_str, block_service_instance
+        )
+    )
 
     expected_project_path = os.path.join(base_path_str, new_project_name)
     # These assertions rely on the MockProjectService and MockBlockService actually creating directories
     # within the tmp_path provided by pytest fixtures.
     assert os.path.isdir(expected_project_path)
-    assert os.path.isdir(os.path.join(expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME))
+    assert os.path.isdir(
+        os.path.join(expected_project_path, constants.CUSTOM_BLOCKS_DIR_NAME)
+    )
 
     expected_blueprint_keys = [
         constants.BLUEPRINT_INPUT_NODE,
@@ -87,7 +103,9 @@ def test_project_template_creates_custom_blocks(
         constants.BLUEPRINT_OUTPUT_NODE,
     ]
 
-    assert block_service_instance.add_block_to_project.call_count == len(expected_blueprint_keys)
+    assert block_service_instance.add_block_to_project.call_count == len(
+        expected_blueprint_keys
+    )
 
     created_block_names = [details["name"] for details in created_blocks_details]
 
@@ -103,7 +121,9 @@ def test_project_template_creates_custom_blocks(
         )
         assert os.path.isdir(custom_block_folder)
 
-        py_file = os.path.join(custom_block_folder, expected_custom_name + constants.PYTHON_FILE_EXT)
+        py_file = os.path.join(
+            custom_block_folder, expected_custom_name + constants.PYTHON_FILE_EXT
+        )
         assert os.path.exists(py_file)
 
         app_json_path = os.path.join(custom_block_folder, constants.METADATA_APP_JSON)

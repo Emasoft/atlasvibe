@@ -56,7 +56,9 @@ class TestCustomBlockAutoGeneration:
 
             # Set up custom blocks path
             blocks_dir = get_project_blocks_dir(str(project_file))
-            custom_blocks_path_file = Path.home() / ".atlasvibe" / "custom_blocks_path.txt"
+            custom_blocks_path_file = (
+                Path.home() / ".atlasvibe" / "custom_blocks_path.txt"
+            )
             custom_blocks_path_file.parent.mkdir(exist_ok=True)
             custom_blocks_path_file.write_text(str(blocks_dir))
 
@@ -156,8 +158,12 @@ def {block_name}(data: Vector, threshold: float = 0.5) -> Scalar:
                             "returns": [
                                 {
                                     "name": None,
-                                    "type": parsed.returns.type_name if parsed.returns else None,
-                                    "description": parsed.returns.description if parsed.returns else None,
+                                    "type": parsed.returns.type_name
+                                    if parsed.returns
+                                    else None,
+                                    "description": parsed.returns.description
+                                    if parsed.returns
+                                    else None,
                                 }
                             ],
                         }

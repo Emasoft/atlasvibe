@@ -32,7 +32,9 @@ def _handle_run(data: TestSequenceRun, ts_manager: TSManager):
     ts_manager.cleanup()
 
 
-event_to_handle: dict[TestSequenceEvents, Callable[[TestSequenceRun, TSManager], None]] = {
+event_to_handle: dict[
+    TestSequenceEvents, Callable[[TestSequenceRun, TSManager], None]
+] = {
     "subscribe": _handle_subscribe,
     "run": _handle_run,
 }

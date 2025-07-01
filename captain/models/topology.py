@@ -44,9 +44,13 @@ class Topology:
         self.cancelled: bool = False
         self.time_start: float = 0.0
         self.finished: bool = False
-        self.loop_nodes: list[str] = list()  # using list instead of set as we need to maintain order
+        self.loop_nodes: list[str] = (
+            list()
+        )  # using list instead of set as we need to maintain order
 
-    def process_worker_response(self, finished_job_fetch: JobSuccess | JobFailure) -> list[str] | None:
+    def process_worker_response(
+        self, finished_job_fetch: JobSuccess | JobFailure
+    ) -> list[str] | None:
         """
         Handle when producer receives the consumer's response (worker response).
         Returns potential new tasks (jobs) to be run.
@@ -57,12 +61,16 @@ class Topology:
 
         # handle failed job
         if isinstance(finished_job_fetch, JobFailure):
-            self.process_job_result(job_id=finished_job_fetch.node_id, job_result=None, success=False)
+            self.process_job_result(
+                job_id=finished_job_fetch.node_id, job_result=None, success=False
+            )
 
         # handle successful job
         elif isinstance(finished_job_fetch, JobSuccess):
             logger.debug(f"{finished_job_fetch.node_id} finished at {time.time()}")
-            return self.handle_finished_job(finished_job_fetch, return_new_jobs=True)  # return new jobs
+            return self.handle_finished_job(
+                finished_job_fetch, return_new_jobs=True
+            )  # return new jobs
 
     def run(self, task_queue: Queue[Any]):
         """
@@ -76,7 +84,10 @@ class Topology:
     def collect_ready_jobs(self):
         next_jobs: list[str] = []
         for job_id in cast(list[str], self.working_graph.nodes):
-            if job_id not in self.finished_jobs and self.original_graph.in_degree(job_id) == 0:
+            if (
+                job_id not in self.finished_jobs
+                and self.original_graph.in_degree(job_id) == 0
+            ):
                 next_jobs.append(job_id)
         return next_jobs
 
@@ -89,7 +100,9 @@ class Topology:
 
         previous_jobs = self.get_job_dependencies_with_label(job_id, original=True)
 
-        logger.debug(f" enqueue job: {self.get_label(job_id)}, dependencies: {[self.get_label(dep_id.get('job_id', ''), original=True) for dep_id in previous_jobs]}")
+        logger.debug(
+            f" enqueue job: {self.get_label(job_id)}, dependencies: {[self.get_label(dep_id.get('job_id', ''), original=True) for dep_id in previous_jobs]}"
+        )
 
         logger.debug(f"{job_id} queued at {time.time()}")
 
@@ -141,7 +154,9 @@ class Topology:
         if job_id in self.queued_jobs:
             self.queued_jobs.remove(job_id)
         if job_id in self.finished_jobs:
-            logging.warning(f"{job_id} HAS ALREADY BEEN PROCESSED, NOT SUPPOSED TO HAPPEN")
+            logging.warning(
+                f"{job_id} HAS ALREADY BEEN PROCESSED, NOT SUPPOSED TO HAPPEN"
+            )
             return
         self.finished_jobs.add(job_id)
 
@@ -153,7 +168,9 @@ class Topology:
         if return_new_jobs:
             return next_jobs
 
-    def process_job_result(self, job_id: str, job_result: dict[str, Any] | None, success: bool):
+    def process_job_result(
+        self, job_id: str, job_result: dict[str, Any] | None, success: bool
+    ):
         """
         process special instructions to scheduler
         """
@@ -183,17 +200,27 @@ class Topology:
             if direction == "end" and self.loop_nodes:
                 self.loop_nodes.pop()
             next_nodes = self.remove_edges_and_get_next(job_id, direction)
-            next_nodes_from_dependencies = next_nodes_from_dependencies.union(next_nodes)
+            next_nodes_from_dependencies = next_nodes_from_dependencies.union(
+                next_nodes
+            )
 
-        logger.debug("After removing edges of node, next nodes are: " + str(next_nodes_from_dependencies))
+        logger.debug(
+            "After removing edges of node, next nodes are: "
+            + str(next_nodes_from_dependencies)
+        )
 
         nodes_to_add: list[str] = []
 
         # -- verify if the flowchart is done running --
-        if self.queued_jobs.__len__() == 0 and next_nodes_from_dependencies.__len__() == 0:
+        if (
+            self.queued_jobs.__len__() == 0
+            and next_nodes_from_dependencies.__len__() == 0
+        ):
             if not self.loop_nodes:
                 self.finished = True
-                logger.info(f"FLOWCHART TOOK {time.perf_counter() - self.time_start} SECONDS TO COMPLETE")
+                logger.info(
+                    f"FLOWCHART TOOK {time.perf_counter() - self.time_start} SECONDS TO COMPLETE"
+                )
                 self.cancel()
                 return
             else:
@@ -208,7 +235,9 @@ class Topology:
             self.restart(node_id)
 
         for node_id in nodes_to_add:
-            if self.working_graph.in_degree(node_id) == 0:  # check if no dependencies left for node
+            if (
+                self.working_graph.in_degree(node_id) == 0
+            ):  # check if no dependencies left for node
                 next_nodes_from_dependencies.add(node_id)
 
         return list(next_nodes_from_dependencies)
@@ -235,7 +264,9 @@ class Topology:
         if self.loop_nodes:
             self.loop_nodes.pop()
         graph = self.original_graph
-        sub_graph: nx.MultiDiGraph = graph.subgraph([job_id] + list(nx.descendants(graph, job_id)))
+        sub_graph: nx.MultiDiGraph = graph.subgraph(
+            [job_id] + list(nx.descendants(graph, job_id))
+        )
         original_edges = sub_graph.edges(data=True)
         self.working_graph.add_edges_from(original_edges)
         self.finished_jobs.remove(job_id)
@@ -257,7 +288,9 @@ class Topology:
         if graph.has_node(job_id):
             return graph.nodes[job_id].get("cmd", job_id)
         else:
-            logger.debug(f"get_label: job_id {job_id} not found in original: {original}")
+            logger.debug(
+                f"get_label: job_id {job_id} not found in original: {original}"
+            )
         return job_id
 
     def remove_dependencies(self, job_id: str, label: str = "default"):
@@ -267,10 +300,14 @@ class Topology:
 
     def get_edges_by_label(self, job_id: str, label: str) -> list[tuple[str, Any, Any]]:
         edges = self.working_graph.edges(job_id, data=True)
-        edges = [(s, t, data) for (s, t, data) in edges if data.get("label", "") == label]
+        edges = [
+            (s, t, data) for (s, t, data) in edges if data.get("label", "") == label
+        ]
         return edges
 
-    def get_job_dependencies_with_label(self, job_id: str, original: bool = True) -> list[dict[str, str]]:
+    def get_job_dependencies_with_label(
+        self, job_id: str, original: bool = True
+    ) -> list[dict[str, str]]:
         graph = self.get_graph(original)
         try:
             deps = []
@@ -291,7 +328,9 @@ class Topology:
         except Exception:
             return []
 
-    def get_input_info(self, source_job_id: str, target_job_id: str, original: bool = False) -> list[tuple[str, bool]]:
+    def get_input_info(
+        self, source_job_id: str, target_job_id: str, original: bool = False
+    ) -> list[tuple[str, bool]]:
         graph = self.get_graph(original)
         edge_data = graph.get_edge_data(source_job_id, target_job_id)
         target_label = ""
@@ -306,7 +345,9 @@ class Topology:
 
     def remove_dependency(self, job_id: str, succ_id: str):
         if self.working_graph.has_edge(job_id, succ_id):
-            logger.debug(f"  - remove dependency: {self.get_edge_label_string(job_id, succ_id)}")
+            logger.debug(
+                f"  - remove dependency: {self.get_edge_label_string(job_id, succ_id)}"
+            )
             while self.working_graph.has_edge(job_id, succ_id):
                 self.working_graph.remove_edge(job_id, succ_id)
 
@@ -337,7 +378,9 @@ class Topology:
         if graph.has_node(job_id):
             return graph.nodes[job_id].get("label", job_id)
         else:
-            logger.debug(f"get_label: job_id {job_id} not found in original: {original}")
+            logger.debug(
+                f"get_label: job_id {job_id} not found in original: {original}"
+            )
         return job_id
 
     def get_graph(self, original: bool):
@@ -375,10 +418,18 @@ class Topology:
 
     def get_outputs(self, job_id: str):
         out = self.working_graph.out_edges(job_id)
-        return list(set(edge["label"] for (u, v) in out for edge in self.working_graph.get_edge_data(u, v).values()))
+        return list(
+            set(
+                edge["label"]
+                for (u, v) in out
+                for edge in self.working_graph.get_edge_data(u, v).values()
+            )
+        )
 
     def is_loop_node(self, job_id: str):
-        node = cast(dict[str, Any], self.original_graph.nodes[job_id])  # working graph is modified after each node run so it's safe to use original graph to retrieve the node
+        node = cast(
+            dict[str, Any], self.original_graph.nodes[job_id]
+        )  # working graph is modified after each node run so it's safe to use original graph to retrieve the node
         return bool(node and node["cmd"] == "LOOP")
 
     def cleanup(self):

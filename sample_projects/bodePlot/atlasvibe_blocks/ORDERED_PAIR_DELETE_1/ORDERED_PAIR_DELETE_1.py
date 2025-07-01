@@ -40,11 +40,15 @@ def ORDERED_PAIR_DELETE_1(
     # unwrap the indices first
     indices = array(indices.unwrap(), dtype=int)
 
-    assert len(default.x) > len(indices), "The length of indices parameter must be less than the length of the OrderedPair."
+    assert len(default.x) > len(indices), (
+        "The length of indices parameter must be less than the length of the OrderedPair."
+    )
     assert any(indices >= 0), "The indices must be greater than zero."
 
     if len(indices) == 1:
-        assert (indices[0] + (length - 1)) < len(default.x), "The length of items to delete starting from index parameter must not exceed the length of the OrderedPair."
+        assert (indices[0] + (length - 1)) < len(default.x), (
+            "The length of items to delete starting from index parameter must not exceed the length of the OrderedPair."
+        )
 
     if len(indices) > 1:
         x = delete(default.x, indices, None)

@@ -34,17 +34,23 @@ def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
 
     input_df = default.m
 
-    assert len(input_df.columns.tolist()) == 1, "Can only take a single-column dataframe as input"
+    assert len(input_df.columns.tolist()) == 1, (
+        "Can only take a single-column dataframe as input"
+    )
 
     # Load the repo from either the local cache or from the web, and get the local path
-    local_path = snapshot_download(repo_id="facebook/bart-large-cnn", revision="3d22493")
+    local_path = snapshot_download(
+        repo_id="facebook/bart-large-cnn", revision="3d22493"
+    )
 
     # Load the pre-trained BART model
     model = BartForConditionalGeneration.from_pretrained(local_path)
     tokenizer = BartTokenizer.from_pretrained(local_path)
 
     def _chunk_text(text):
-        inputs_no_trunc = tokenizer(text, max_length=None, return_tensors="pt", truncation=False)
+        inputs_no_trunc = tokenizer(
+            text, max_length=None, return_tensors="pt", truncation=False
+        )
         chunks = []
         step = 1024
         # step = tokenizer.model_max_length - 1
@@ -64,11 +70,23 @@ def BART_LARGE_CNN(default: DataFrame) -> DataFrame:
             )
             for chunk in chunks
         ]
-        summaries = ["\n".join([tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in id]) for id in summary_ids]
+        summaries = [
+            "\n".join(
+                [
+                    tokenizer.decode(
+                        g, skip_special_tokens=True, clean_up_tokenization_spaces=False
+                    )
+                    for g in id
+                ]
+            )
+            for id in summary_ids
+        ]
         return "\n".join(summaries)
 
     column = input_df.columns[0]
 
     with torch.inference_mode():
-        output_df = pd.DataFrame(input_df[column].apply(_summarize_text).rename("summary_text"))
+        output_df = pd.DataFrame(
+            input_df[column].apply(_summarize_text).rename("summary_text")
+        )
     return DataFrame(df=output_df)

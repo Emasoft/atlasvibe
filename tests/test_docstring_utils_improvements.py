@@ -53,7 +53,9 @@ class TestImprovedErrorHandling:
         """Test handling of encoding errors."""
         # Create a file with invalid UTF-8
         with tempfile.NamedTemporaryFile(mode="wb", suffix=".py", delete=False) as f:
-            f.write(b'def func():\n    """test"""\n    # \xff\xfe invalid utf-8\n    pass')
+            f.write(
+                b'def func():\n    """test"""\n    # \xff\xfe invalid utf-8\n    pass'
+            )
             f.flush()
 
             # Should handle encoding error gracefully

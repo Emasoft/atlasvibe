@@ -29,7 +29,9 @@ async def set_log_level(log_level: LogLevel):
     logging.getLogger().setLevel(level)
     logging.getLogger("uvicorn").setLevel(level)
 
-    atlasvibe_config_path = os.path.join(get_atlasvibe_dir(), "atlasvibe.yaml")  # CHANGED
+    atlasvibe_config_path = os.path.join(
+        get_atlasvibe_dir(), "atlasvibe.yaml"
+    )  # CHANGED
     # Persist log level to disk
     with open(atlasvibe_config_path) as f:
         data = yaml.safe_load(f)

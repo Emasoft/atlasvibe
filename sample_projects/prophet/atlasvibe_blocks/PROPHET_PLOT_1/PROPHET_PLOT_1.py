@@ -61,7 +61,9 @@ def PROPHET_PLOT_1(default: DataFrame, periods: int = 365) -> Plotly:
         timestamps = pd.date_range(start=start_date, end=end_date, freq="D")
         data = np.random.randn(num_days)  # Random data points
         df = pd.DataFrame({"ds": timestamps, "ys": data})
-        df.rename(columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True)  # PROPHET model expects first column to be `ds` and second to be `y`
+        df.rename(
+            columns={df.columns[0]: "ds", df.columns[1]: "y"}, inplace=True
+        )  # PROPHET model expects first column to be `ds` and second to be `y`
         return df
 
     def _apply_macos_prophet_hotfix():
@@ -99,7 +101,9 @@ def PROPHET_PLOT_1(default: DataFrame, periods: int = 365) -> Plotly:
 
     extra = default.extra
     if not extra or "prophet" not in extra:
-        raise ValueError("Prophet model must be available in DataContainer 'extra' key to plot")
+        raise ValueError(
+            "Prophet model must be available in DataContainer 'extra' key to plot"
+        )
 
     node_name = __name__.split(".")[-1]
 
