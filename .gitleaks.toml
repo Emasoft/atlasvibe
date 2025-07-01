@@ -72,6 +72,11 @@ regexes = [
 # Commits to allowlist (by exact match)
 commits = [
     '''713559\+Emasoft@users\.noreply\.github\.com''',
+    # Historical commits with removed secrets (files no longer exist)
+    '''b8830172c73b4b602ffa99eac34f3361ac9986f8''',  # src/renderer/services/MixpanelServices.ts removed
+    '''7e9e8b0536970e824601bfaa2eac09d323143326''',  # docs/astro.config.mjs removed
+    '''05c76f7d2cac9eb44f4559b9b2bd5fc8b79dead9''',  # docs/astro.config.mjs removed
+    '''ec652c74822c643c679f3fefec05d88b3b1b9803''',  # src/services/MixpanelServices.ts removed
 ]
 
 # Enhanced custom rules for maximum security
