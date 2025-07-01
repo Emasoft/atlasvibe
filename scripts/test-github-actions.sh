@@ -45,9 +45,6 @@ case "$1" in
     "dependency-check")
         run_workflow "dependency-check.yml" "$2"
         ;;
-    "gitleaks")
-        run_workflow "gitleaks.yml" "$2"
-        ;;
     "cd")
         echo "⚠️  Warning: CD workflow requires secrets. Use --secret-file .env.secrets"
         run_workflow "cd.yaml" "$2"
@@ -63,7 +60,6 @@ case "$1" in
         echo "  ci              - Main CI pipeline"
         echo "  pre-commit      - Pre-commit checks"
         echo "  dependency-check - Dependency analysis"
-        echo "  gitleaks        - Secret scanning"
         echo "  cd              - Continuous deployment (requires secrets)"
         echo "  list            - List all available workflows and jobs"
         echo ""

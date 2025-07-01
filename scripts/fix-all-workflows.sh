@@ -115,7 +115,6 @@ The following workflows need job-level timeouts added manually:
 ### Medium Priority
 - [ ] `pre-commit.yml` - Add `timeout-minutes: 20` to the job
 - [ ] `dependency-check.yml` - Add `timeout-minutes: 15` to the job
-- [ ] `gitleaks.yml` - Add `timeout-minutes: 10` to the job
 
 ### Step-Level Timeouts Needed
 

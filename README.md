@@ -6,7 +6,6 @@
 
 [![CI Status](https://github.com/Emasoft/atlasvibe/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/ci.yml)
 [![CD Status](https://github.com/Emasoft/atlasvibe/actions/workflows/cd.yaml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/cd.yaml)
-[![Security Scan](https://github.com/Emasoft/atlasvibe/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/gitleaks.yml)
 [![Pre-commit](https://github.com/Emasoft/atlasvibe/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/pre-commit.yml)
 [![Dependency Check](https://github.com/Emasoft/atlasvibe/actions/workflows/dependency-check.yml/badge.svg)](https://github.com/Emasoft/atlasvibe/actions/workflows/dependency-check.yml)
 

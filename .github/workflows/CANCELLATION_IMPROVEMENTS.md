@@ -45,7 +45,7 @@ Every job now has an appropriate timeout to prevent infinite runs:
 
 ### 4. Workflows Updated
 
-All 17 workflows have been updated:
+All 16 workflows have been updated:
 
 - ✅ actionlint.yml
 - ✅ automated-tests.yml
@@ -61,7 +61,6 @@ All 17 workflows have been updated:
 - ✅ docker-quick-test.yml
 - ✅ electron-test-portable.yml
 - ✅ electron-test.yml
-- ✅ gitleaks.yml
 - ✅ pre-commit.yml
 - ✅ cd.yaml
 

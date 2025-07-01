@@ -89,7 +89,6 @@ jobs:
           **Hooks run:**
           - ✅ uv-lock: Ensures lockfile is up-to-date
           - ✅ ruff: Python linting and formatting
-          - ✅ gitleaks: Secret detection
           - ✅ deptry: Dependency analysis
           - ✅ Various file checks (YAML, JSON, TOML, etc.)
 

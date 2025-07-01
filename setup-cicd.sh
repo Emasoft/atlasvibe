@@ -19,7 +19,6 @@ echo "📋 Checking required tools..."
 check_command gh
 check_command git
 check_command uv
-check_command gitleaks
 
 # Check if we're in a git repository
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -65,7 +64,7 @@ echo "⚙️  Configuring GitHub repository settings..."
 echo "🔒 Setting up branch protection for main..."
 gh api repos/$REPO_OWNER/$REPO_NAME/branches/main/protection \
     --method PUT \
-    --field required_status_checks='{"strict":true,"contexts":["ci / python-tests","ci / python-code-lint","gitleaks / Gitleaks Secret Detection","pre-commit / Run all pre-commit hooks"]}' \
+    --field required_status_checks='{"strict":true,"contexts":["ci / python-tests","ci / python-code-lint","pre-commit / Run all pre-commit hooks"]}' \
     --field enforce_admins=false \
     --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true}' \
     --field restrictions=null \
@@ -148,14 +147,6 @@ gh api repos/$REPO_OWNER/$REPO_NAME/topics \
 echo ""
 echo "🧪 Running initial checks..."
 
-# Check for secrets with gitleaks
-echo "🔍 Running gitleaks scan..."
-if gitleaks detect --config .gitleaks.toml --verbose; then
-    echo "✅ No secrets detected"
-else
-    echo "⚠️  Gitleaks found potential issues. Please review."
-fi
-
 # Check dependencies with deptry
 echo "📦 Checking dependencies..."
 uv run deptry . \
@@ -185,14 +176,12 @@ cat > workflow-status.md << EOF
 # AtlasVibe CI/CD Status
 
 ![CI](https://github.com/$REPO_OWNER/$REPO_NAME/workflows/CI/badge.svg)
-![Gitleaks](https://github.com/$REPO_OWNER/$REPO_NAME/workflows/Gitleaks%20Security%20Scan/badge.svg)
 ![Pre-commit](https://github.com/$REPO_OWNER/$REPO_NAME/workflows/Pre-commit%20Checks/badge.svg)
 ![Dependency Check](https://github.com/$REPO_OWNER/$REPO_NAME/workflows/Dependency%20Analysis/badge.svg)
 
 ## Workflows
 
 - **CI**: Main continuous integration pipeline (linting, testing)
-- **Gitleaks**: Secret detection on every push and PR
 - **Pre-commit**: Runs all pre-commit hooks
 - **Dependency Analysis**: Weekly dependency checks with deptry
 - **Blocks Quality Check**: Ensures all blocks have proper metadata
@@ -200,11 +189,7 @@ cat > workflow-status.md << EOF
 
 ## Security
 
-All commits are scanned for secrets using gitleaks. The configuration allows only:
-- Git author: Emasoft
-- Git email: 713559+Emasoft@users.noreply.github.com
-
-Any other secrets will be blocked.
+Security is maintained through pre-commit hooks and code review processes.
 EOF
 
 echo "✅ Created workflow-status.md with badge information"

@@ -26,7 +26,6 @@ AtlasVibe uses GitHub Actions for continuous integration and deployment with uv 
      - `buildElectron`: Multi-platform Electron builds
 
 3. **Security Workflows**
-   - **Gitleaks** (`.github/workflows/gitleaks.yml`): Secret scanning
    - **Dependency Check** (`.github/workflows/dependency-check.yml`): Weekly vulnerability scans
    - **Pre-commit** (`.github/workflows/pre-commit.yml`): Comprehensive checks
 
@@ -46,9 +45,6 @@ uv run mypy .
 
 # Check uv.lock
 uv lock --check
-
-# Run gitleaks
-gitleaks detect --config .gitleaks.toml
 ```
 
 #### Working with uv
@@ -148,7 +144,6 @@ gh workflow view ci.yml
 
 ## Security
 
-- All commits are scanned for secrets
 - Dependencies are checked weekly
 - Only approved values in git config:
   - Author: Emasoft

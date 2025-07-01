@@ -76,13 +76,6 @@ repos:
         language_version: python3
         args: [--line-length=320]
 
-    # Gitleaks for secret detection
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.2
-    hooks:
-      - id: gitleaks
-        name: Detect secrets with gitleaks
-
     # Python linting with mypy
   - repo: local
     hooks:

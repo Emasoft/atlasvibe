@@ -21,7 +21,6 @@ TIMEOUT_RULES = {
     "security": 15,
     "dependency": 20,
     "actionlint": 10,
-    "gitleaks": 10,
     "pre-commit": 20,
     "summary": 10,
 }

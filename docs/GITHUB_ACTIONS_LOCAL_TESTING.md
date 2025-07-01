@@ -43,7 +43,6 @@ Use the provided script `scripts/test-github-actions.sh`:
 ./scripts/test-github-actions.sh ci python-tests   # Run only python-tests job
 ./scripts/test-github-actions.sh pre-commit        # Run pre-commit checks
 ./scripts/test-github-actions.sh dependency-check  # Run dependency analysis
-./scripts/test-github-actions.sh gitleaks          # Run secret scanning
 ```
 
 ## Direct act Usage

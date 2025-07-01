@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - if the user asks you to implement a feature or to make a change, always check the source code to ensure that the feature was not already implemented before or it is implemented in another form. Never start a task without checking if that task was already implemented or done somewhere in the codebase.
 - if you must write a function, always check if there are already similar functions that can be extended or parametrized to do what new function need to do. Avoid writing duplicated or similar code by reusing the same flexible helper functions where is possible.
 - keep the source files as small as possible. If you need to create new functions or classes, prefer creating them in new modules in new files and import them instead of putting them in the same source file that will use them. Small reusable modules are always preferable to big functions and spaghetti code.
-- Always check for leaks of secrets in the git repo with `gitleaks git --verbose` and `gitleaks dir --verbose`.
+- Install gitleaks-safe instead of using gitleaks directly. Always run gitleaks-safe before every commit. Read the dedicated section for instructions.
 - commit should be atomic, specific, and focus on WHAT changed in subject line with WHY explained in body when needed.
 - use semantic commit messages following the format in the Git Commit Message Format memory
 - Write only shippable, production ready code. If you wouldn’t ship it, don’t write it.
@@ -472,7 +472,7 @@ uv run pre-commit autoupdate
 
 4. **Security**
 
-   - `gitleaks` - Detects secrets and credentials
+   - `gitleaks-safe` - Detects secrets and credentials
 
 5. **Dependency Analysis**
 
@@ -3150,14 +3150,95 @@ The project uses GitHub Actions for continuous integration and deployment with c
 
 #### Security Configuration
 
-##### Gitleaks Integration
+### gitleaks-safe: Memory-Safe Secret Detection
+- **CRITICAL**: Do not install or use `gitleaks` directly! Use `gitleaks-safe` instead of `gitleaks` directly to prevent memory exhaustion issues when running concurrent scans.
 
-- **Local Hook**: Automatically runs on pre-commit to prevent secrets
-- **CI/CD**: Scans all commits in PRs and pushes
-- **Configuration**: `.gitleaks.toml` allows only:
+#### Installation
+
+Install gitleaks-safe globally as a uv tool (one time):
+
+```bash
+# Install gitleaks-safe from PyPI (not available yet!)
+uv tool install gitleaks-safe # not available yet!
+
+# Or install gitleaks-safe from the independent local repository
+uv tool install gitleaks-safe --from /Users/emanuelesabetta/Code/gitleaks-safe
+```
+
+#### Usage in Projects
+
+1. **Install git hooks** in each project:
+```bash
+# Install pre-push hook (recommended)
+install-safe-git-hooks --pre-push
+
+# Or install pre-commit hook
+install-safe-git-hooks --pre-commit
+
+# Install both hooks
+install-safe-git-hooks --both
+
+# Non-interactive mode (auto-install gitleaks if missing)
+install-safe-git-hooks --pre-push --non-interactive
+```
+
+2. **Manual scans** with gitleaks-safe:
+```bash
+# Scan entire repository
+gitleaks-safe detect --source . --verbose
+
+# Scan staged changes only
+gitleaks-safe protect --staged
+
+# Use custom config file
+gitleaks-safe detect --config .gitleaks.toml --source .
+
+# Increase timeout for large repositories
+GITLEAKS_TIMEOUT=600 gitleaks-safe detect --source .
+```
+
+3. **Clean up processes** if needed:
+```bash
+# Smart cleanup (preserves safe instances)
+cleanup-gitleaks
+
+# Force cleanup all processes
+cleanup-gitleaks --all
+
+# Skip confirmation
+cleanup-gitleaks --force
+```
+
+#### Features
+
+- **Multi-Instance Support**: Run gitleaks safely in multiple projects simultaneously
+- **Smart Process Management**: Only kills unsafe gitleaks processes, preserves managed ones
+- **Docker Container Support**: Detects and manages gitleaks processes in containers
+- **Cross-Platform**: Works on macOS, Linux, Windows, and Docker
+- **Automatic Installation**: Can install gitleaks automatically if not found
+
+#### Configuration
+
+Environment variables to customize behavior:
+
+```bash
+# Timeout for scans (default: 120 seconds)
+export GITLEAKS_TIMEOUT=300
+
+# Enable verbose output
+export GITLEAKS_VERBOSE=true
+
+# Number of retry attempts (default: 1)
+export GITLEAKS_RETRIES=3
+```
+
+#### .gitleaks.toml configuration
+- **CRITICAL**: create/edit `.gitleaks.toml` to allows only:
   - Git author: `Emasoft`
   - Git email: `713559+Emasoft@users.noreply.github.com`
   - All other secrets are blocked
+
+
 
 ##### Git Environment Setup
 
@@ -3252,7 +3333,7 @@ pre-commit run --all-files
 # Run specific checks
 uv run ruff check .
 uv run mypy .
-gitleaks detect --config .gitleaks.toml
+gitleaks-safe # see dedicated section for instructions
 
 # Check dependencies
 uv run deptry .

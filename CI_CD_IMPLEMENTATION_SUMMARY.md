@@ -23,7 +23,6 @@
   - `uv-export` (dev): Generates requirements-dev.txt with all extras
 - Updated hooks to latest versions:
   - ruff-pre-commit: v0.9.3 → v0.12.0
-  - gitleaks: v8.21.3 → v8.27.2
 
 ### 3. Documentation Created/Updated
 
@@ -76,7 +75,6 @@
 4. **Block Quality Check** - Block system validation
 5. **Dependency Analysis** - Weekly vulnerability scans
 6. **Pre-commit Checks** - Comprehensive code checks
-7. **Gitleaks** - Secret scanning
 
 ### Key Features
 
@@ -85,7 +83,6 @@
 - ✅ Lockfile validation
 - ✅ Requirements.txt generation for compatibility
 - ✅ Comprehensive pre-commit hooks
-- ✅ Security scanning with gitleaks
 - ✅ Dependency analysis with deptry
 - ✅ Branch protection rules (when admin access available)
 

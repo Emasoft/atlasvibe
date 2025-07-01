@@ -189,8 +189,7 @@ A significant portion of the codebase lacks test coverage:
 
 - 3 files contain patterns matching API keys or tokens
 - 158 files reference password/token/secret strings
-- No pre-commit hooks for secret scanning
-- No `.gitleaks.toml` configuration
+- No dedicated secret scanning configuration
 
 ### Hardcoded Values
 
@@ -331,8 +330,7 @@ The entire Phase 3 of the development plan is unimplemented:
 
 1. **Create .env.example**: Document all required environment variables
 2. **Fix Copyright Headers**: Update pyproject.toml to properly acknowledge Flojoy
-3. **Security Scan**: Implement gitleaks pre-commit hooks
-4. **Fix PingTab Security**: Sanitize user input to prevent command injection
+3. **Fix PingTab Security**: Sanitize user input to prevent command injection
 
 ### MEDIUM - Next 2 Weeks
 

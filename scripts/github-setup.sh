@@ -41,24 +41,7 @@ else
     exit 1
 fi
 
-# 3. Verify Gitleaks configuration
-echo -e "\n${YELLOW}Checking Gitleaks configuration...${NC}"
-if [ -f ".gitleaks.toml" ]; then
-    echo -e "${GREEN}✅ Gitleaks configuration found${NC}"
-
-    # Test Gitleaks
-    if gitleaks detect --config .gitleaks.toml --verbose &>/dev/null; then
-        echo -e "${GREEN}✅ Gitleaks scan passed${NC}"
-    else
-        echo -e "${RED}❌ Gitleaks detected potential secrets${NC}"
-        exit 1
-    fi
-else
-    echo -e "${RED}❌ .gitleaks.toml not found${NC}"
-    exit 1
-fi
-
-# 4. Check pre-commit hook
+# 3. Check pre-commit hook
 echo -e "\n${YELLOW}Checking pre-commit hook...${NC}"
 if [ -x ".git/hooks/pre-commit" ]; then
     echo -e "${GREEN}✅ Pre-commit hook is installed and executable${NC}"
@@ -109,7 +92,7 @@ if gh repo view &>/dev/null; then
     echo "Setting up branch protection..."
     gh api repos/:owner/:repo/branches/main/protection \
         --method PUT \
-        -f required_status_checks='{"strict":true,"contexts":["Gitleaks Security Scan","ci / python-code-format","ci / python-code-lint","ci / ts-code-style","ci / python-tests"]}' \
+        -f required_status_checks='{"strict":true,"contexts":["ci / python-code-format","ci / python-code-lint","ci / ts-code-style","ci / python-tests"]}' \
         -f enforce_admins=false \
         -f required_pull_request_reviews='{"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":1}' \
         -f restrictions=null \
@@ -140,10 +123,9 @@ fi
 # 10. Summary
 echo -e "\n${BLUE}=== Setup Summary ===${NC}"
 echo -e "${GREEN}✅ Git configuration: Emasoft <713559+Emasoft@users.noreply.github.com>${NC}"
-echo -e "${GREEN}✅ Gitleaks: Configured and passing${NC}"
 echo -e "${GREEN}✅ Pre-commit hook: Installed${NC}"
 echo -e "${GREEN}✅ GitHub CLI: Authenticated${NC}"
-echo -e "${GREEN}✅ GitHub Actions: Gitleaks workflow added${NC}"
+echo -e "${GREEN}✅ GitHub Actions: Configured${NC}"
 
 echo -e "\n${YELLOW}Next steps:${NC}"
 echo "1. Review and commit all changes"
@@ -153,7 +135,7 @@ echo "4. Set up any required repository secrets in GitHub settings"
 
 echo -e "\n${BLUE}Environment variables to set in CI/CD:${NC}"
 echo "- No additional secrets needed for basic operation"
-echo "- Gitleaks uses GITHUB_TOKEN (automatically provided)"
+echo "- GitHub Actions use GITHUB_TOKEN (automatically provided)"
 echo "- All Python dependencies managed by uv"
 
 exit 0

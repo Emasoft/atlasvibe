@@ -117,7 +117,6 @@ Instead of trying to run full Electron tests in Docker, we now:
 - `.github/scripts/parse_platform_results.py` - Fixed result parsing
 - `.github/scripts/parse_summary_results.py` - Fixed summary generation
 - `.github/workflows/docker-matrix-test.yml` - Disabled ARM64
-- `.gitleaks.toml` - Added WebSocket test keys to allowlist
 - `playwright-test/00_docker_backend.spec.ts` - New backend tests
 - `playwright-test/01_app.spec.ts` - Simplified launch strategy
 - `playwright-test/01_app_ci.spec.ts` - New CI-specific tests

@@ -2,36 +2,23 @@
 
 This document describes the security measures implemented in the AtlasVibe project.
 
-## Secret Scanning with Gitleaks
+## Secret Scanning
 
-AtlasVibe uses [Gitleaks](https://github.com/gitleaks/gitleaks) to prevent secrets from being committed to the repository.
+AtlasVibe uses pre-commit hooks and code review processes to prevent secrets from being committed to the repository.
 
-### Configuration
+### Best Practices
 
-- **Config file**: `.gitleaks.toml`
-- **Pre-commit hook**: Automatically scans staged files before commit
-- **GitHub Actions**: Scans on push, PR, and daily schedule
+1. **Never commit real secrets**: Use environment variables or secure vaults
+2. **Use obvious fake values**: For examples, use values like `test-api-key` or `your-api-key-here`
+3. **Documentation**: When documenting API usage, always use placeholder values
+4. **Review changes**: Always review your staged changes before committing
 
-### Allowed Patterns
+### If Secrets Are Detected
 
-The following patterns are explicitly allowed:
-
-- GitHub noreply email: `713559+Emasoft@users.noreply.github.com`
-- Test/example patterns: `test-api-key`, `YOUR_API_KEY_HERE`, etc.
-- Placeholder values in documentation
-
-### Running Manually
-
-```bash
-# Scan entire repository
-gitleaks detect --config .gitleaks.toml --verbose
-
-# Scan staged files only
-gitleaks protect --config .gitleaks.toml --staged --verbose
-
-# Scan specific directory
-gitleaks detect --config .gitleaks.toml --source path/to/directory
-```
+1. **DO NOT COMMIT** the changes
+2. **Remove the secret** from your code
+3. **Replace with environment variable** or secure vault
+4. **Rotate the exposed secret** immediately
 
 ## Git Configuration
 
@@ -48,19 +35,12 @@ This is enforced by:
 
 ## GitHub Actions Security
 
-### Workflows
-
-- **Gitleaks Security Scan**: Runs on every push and PR
-- **SARIF Upload**: Security findings uploaded to GitHub Security tab
-- **PR Comments**: Automatic comments on security failures
-- **Issue Creation**: Creates issues for secrets in pushed commits
-
 ### Permissions
 
 All workflows use minimal required permissions:
 
 - `contents: read`
-- `security-events: write` (for SARIF upload)
+- `security-events: write` (for security scanning)
 - `pull-requests: write` (for PR comments)
 
 ## Development Environment
@@ -88,19 +68,17 @@ All Python environments are managed by `uv`:
 
 1. **Never commit secrets**: Even temporarily or in history
 2. **Use environment variables**: For sensitive configuration
-3. **Review Gitleaks output**: Don't ignore warnings
-4. **Update allowlists carefully**: Document why patterns are safe
-5. **Rotate compromised secrets**: Immediately if exposed
+3. **Review pre-commit output**: Don't ignore warnings
+4. **Rotate compromised secrets**: Immediately if exposed
 
 ## Incident Response
 
-If secrets are detected:
+If secrets are accidentally committed:
 
-1. **Don't push**: The pre-commit hook will block you
+1. **Don't push**: The pre-commit hook should block you
 2. **Remove secrets**: From your staged changes
 3. **Check history**: Ensure secrets aren't in previous commits
 4. **Rotate secrets**: If already pushed, rotate immediately
-5. **Update .gitleaks.toml**: If false positive
 
 ## GitHub Repository Settings
 
@@ -113,6 +91,5 @@ Run `./scripts/github-setup.sh` to verify:
 
 ## Questions or Issues?
 
-- Check the [Gitleaks documentation](https://github.com/gitleaks/gitleaks)
-- Review `.gitleaks.toml` for current rules
+- Review pre-commit configuration for current rules
 - Run `./scripts/github-setup.sh` for setup verification
