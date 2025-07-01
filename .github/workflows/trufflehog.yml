@@ -10,8 +10,8 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    # Run daily at 2 AM UTC
-    - cron: "0 2 * * *"
+  # Run daily at 2 AM UTC
+  - cron: "0 2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -26,116 +26,116 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for all branches
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for all branches
 
-      - name: Run TruffleHog
-        id: trufflehog
-        uses: trufflesecurity/trufflehog@v3
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
+    - name: Run TruffleHog
+      id: trufflehog
+      uses: trufflesecurity/trufflehog@v3
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
 
-      - name: Upload SARIF report
-        if: success() || failure()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
-          category: trufflehog
+    - name: Upload SARIF report
+      if: success() || failure()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: results.sarif
+        category: trufflehog
 
-      - name: Comment PR
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `
-            ### ❌ TruffleHog Security Scan Failed
-            
-            Potential secrets were detected in your code. Please review the findings and:
-            1. Remove any actual secrets from the code
-            2. If it's a false positive, update the \`.trufflehog-exclude\` file
-            
-            Check the Security tab for detailed findings.
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+    - name: Comment PR
+      if: failure() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `
+          ### ❌ TruffleHog Security Scan Failed
+
+          Potential secrets were detected in your code. Please review the findings and:
+          1. Remove any actual secrets from the code
+          2. If it's a false positive, update the \`.trufflehog-exclude\` file
+
+          Check the Security tab for detailed findings.
+          `;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
 
   trufflehog-manual:
     name: TruffleHog Manual Scan
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Need full history to check commit ranges
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Need full history to check commit ranges
 
-      - name: Install TruffleHog
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin v3.89.0
+    - name: Install TruffleHog
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin v3.89.0
 
-      - name: Run TruffleHog on latest commits
-        run: |
-          # For push events, check recent commits
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # Try to check if this is the first commit
-            if git rev-list --count HEAD >/dev/null 2>&1 && [ "$(git rev-list --count HEAD)" -eq 1 ]; then
-              echo "First commit detected, scanning entire repository"
-              trufflehog filesystem . --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
-            elif git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
-              echo "Running TruffleHog on commit range: ${{ github.event.before }}..${{ github.sha }}"
-              trufflehog git file://. --since-commit=${{ github.event.before }} --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
-            else
-              echo "Cannot determine commit range, scanning last commit only"
-              trufflehog git file://. --since-commit=HEAD~1 --exclude-paths .trufflehog-exclude --no-update --fail --only-verified 2>/dev/null || \
-              trufflehog filesystem . --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
-            fi
+    - name: Run TruffleHog on latest commits
+      run: |
+        # For push events, check recent commits
+        if [ "${{ github.event_name }}" = "push" ]; then
+          # Try to check if this is the first commit
+          if git rev-list --count HEAD >/dev/null 2>&1 && [ "$(git rev-list --count HEAD)" -eq 1 ]; then
+            echo "First commit detected, scanning entire repository"
+            trufflehog filesystem . --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
+          elif git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
+            echo "Running TruffleHog on commit range: ${{ github.event.before }}..${{ github.sha }}"
+            trufflehog git file://. --since-commit=${{ github.event.before }} --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
           else
-            echo "Not a push event, skipping"
-            exit 0
+            echo "Cannot determine commit range, scanning last commit only"
+            trufflehog git file://. --since-commit=HEAD~1 --exclude-paths .trufflehog-exclude --no-update --fail --only-verified 2>/dev/null || \
+            trufflehog filesystem . --exclude-paths .trufflehog-exclude --no-update --fail --only-verified
           fi
+        else
+          echo "Not a push event, skipping"
+          exit 0
+        fi
 
-      - name: Create Issue on Failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |-
-            const title = '🚨 Security: Potential secrets detected in commit ${{ github.sha }}';
-            const body = `
-            ## Security Alert
-            
-            TruffleHog detected potential secrets in commit ${{ github.sha }}.
-            
-            **Commit**: ${{ github.sha }}
-            **Author**: ${{ github.actor }}
-            **Branch**: ${{ github.ref_name }}
-            
-            ### Action Required:
-            1. Review the commit for any secrets
-            2. If secrets were committed:
-               - Revoke the exposed secrets immediately
-               - Remove them from the git history
-               - Generate new secrets
-            3. If false positive, update \`.trufflehog-exclude\`
-            
-            See the [Actions log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
-            `;
-            
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: body,
-              labels: ['security', 'urgent']
-            });
+    - name: Create Issue on Failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |-
+          const title = '🚨 Security: Potential secrets detected in commit ${{ github.sha }}';
+          const body = `
+          ## Security Alert
+
+          TruffleHog detected potential secrets in commit ${{ github.sha }}.
+
+          **Commit**: ${{ github.sha }}
+          **Author**: ${{ github.actor }}
+          **Branch**: ${{ github.ref_name }}
+
+          ### Action Required:
+          1. Review the commit for any secrets
+          2. If secrets were committed:
+             - Revoke the exposed secrets immediately
+             - Remove them from the git history
+             - Generate new secrets
+          3. If false positive, update \`.trufflehog-exclude\`
+
+          See the [Actions log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+          `;
+
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['security', 'urgent']
+          });

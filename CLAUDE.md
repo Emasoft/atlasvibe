@@ -3165,6 +3165,7 @@ brew install trufflehog
 #### Configuration
 
 The project includes a `.trufflehog.yaml` configuration file that:
+
 - Allows only specific patterns (Git author info, test values, placeholders)
 - Excludes common directories (.git, node_modules, build, etc.)
 - Scans both filesystem and git history
@@ -3172,6 +3173,7 @@ The project includes a `.trufflehog.yaml` configuration file that:
 #### Allowed Patterns
 
 The following are explicitly allowed and won't trigger alerts:
+
 - Git author: `Emasoft`
 - Git email: `713559+Emasoft@users.noreply.github.com`
 - Test/example values: `test-api-key`, `YOUR_API_KEY_HERE`, etc.
@@ -3181,11 +3183,13 @@ The following are explicitly allowed and won't trigger alerts:
 #### Usage
 
 TruffleHog runs automatically:
+
 1. **Pre-commit hook**: Scans staged files before commit
 2. **Pre-push hook**: Scans commits before pushing
 3. **GitHub Actions**: On every push, PR, and daily schedule
 
 Manual scanning:
+
 ```bash
 # Scan entire repository
 trufflehog filesystem . --config .trufflehog.yaml --no-update --fail
@@ -3325,7 +3329,6 @@ gh issue create --title "Security Alert" --label urgent,security
 
 7. **Space efficient**: Global cache with hard links
 
-
 ## TruffleHog Secret Detection
 
 AtlasVibe uses TruffleHog v3 for secret detection to prevent sensitive information from being committed to the repository.
@@ -3353,6 +3356,7 @@ trufflehog git file://. --exclude-paths .trufflehog-exclude --no-update --fail -
 ### Excluded Paths
 
 The `.trufflehog-exclude` file contains patterns for commonly excluded paths:
+
 - Version control: `.git/`
 - Dependencies: `node_modules/`, `.venv/`, `venv/`
 - Build outputs: `dist/`, `build/`, `out/`

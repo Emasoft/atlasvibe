@@ -86,7 +86,14 @@ repos:
         language: system
         stages: [pre-commit, pre-push]
         pass_filenames: false
-        args: ['--exclude-paths', '.trufflehog-exclude', '--no-update', '--fail', '--only-verified']
+        args:
+          [
+            "--exclude-paths",
+            ".trufflehog-exclude",
+            "--no-update",
+            "--fail",
+            "--only-verified",
+          ]
 
     # Python linting with mypy
   - repo: local
