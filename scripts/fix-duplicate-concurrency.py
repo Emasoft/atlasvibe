@@ -21,9 +21,7 @@ def fix_duplicate_concurrency(filepath: Path) -> None:
     )
 
     if len(concurrency_matches) > 1:
-        print(
-            f"  Found {len(concurrency_matches)} concurrency blocks in {filepath.name}, removing duplicates..."
-        )
+        print(f"  Found {len(concurrency_matches)} concurrency blocks in {filepath.name}, removing duplicates...")
 
         # Keep only the first concurrency block
         # Remove all but the first occurrence
@@ -44,9 +42,7 @@ def main() -> None:
     print("🔧 Fixing duplicate concurrency blocks...")
     print("=" * 40)
 
-    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(
-        workflows_dir.glob("*.yaml")
-    ):
+    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(workflows_dir.glob("*.yaml")):
         fix_duplicate_concurrency(workflow_file)
 
     print("\n✅ Done!")

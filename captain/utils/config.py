@@ -42,9 +42,7 @@ default_origins = [
 # Allow additional origins from environment variable
 env_origins = os.environ.get("CORS_ORIGINS", "")
 if env_origins:
-    additional_origins = [
-        origin.strip() for origin in env_origins.split(",") if origin.strip()
-    ]
+    additional_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
     origins = default_origins + additional_origins
 else:
     origins = default_origins

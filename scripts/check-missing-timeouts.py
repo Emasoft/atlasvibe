@@ -21,9 +21,7 @@ def check_workflow_timeouts(filepath: Path) -> List[str]:
 
     # Find all job definitions
     job_pattern = r"^  (\w+):\s*$"
-    job_matches = list(
-        re.finditer(job_pattern, content[jobs_match.end() :], re.MULTILINE)
-    )
+    job_matches = list(re.finditer(job_pattern, content[jobs_match.end() :], re.MULTILINE))
 
     for i, match in enumerate(job_matches):
         job_name = match.group(1)
@@ -53,9 +51,7 @@ def main() -> None:
 
     total_missing = 0
 
-    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(
-        workflows_dir.glob("*.yaml")
-    ):
+    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(workflows_dir.glob("*.yaml")):
         missing = check_workflow_timeouts(workflow_file)
 
         if missing:

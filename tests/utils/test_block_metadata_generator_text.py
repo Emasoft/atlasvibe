@@ -35,9 +35,7 @@ def TEST_BLOCK():
         )
 
         # Mock save_text_file to verify it's called
-        with patch(
-            "captain.utils.block_metadata_generator.save_text_file"
-        ) as mock_save:
+        with patch("captain.utils.block_metadata_generator.save_text_file") as mock_save:
             mock_save.return_value = True
 
             result = generate_example_md(str(block_dir), "TEST_BLOCK")
@@ -73,9 +71,7 @@ def TEST_BLOCK(param1: int, param2: str):
         )
 
         # Mock save_text_file to verify it's called
-        with patch(
-            "captain.utils.block_metadata_generator.save_text_file"
-        ) as mock_save:
+        with patch("captain.utils.block_metadata_generator.save_text_file") as mock_save:
             mock_save.return_value = True
 
             result = generate_test_file(str(block_dir), "TEST_BLOCK")

@@ -33,9 +33,7 @@ def ORDERED_PAIR_INDEXING(
         The scalar index of the input OrderedPair.
     """
 
-    assert len(default.x) > index, (
-        "The index parameter must be less than the length of the OrderedPair."
-    )
+    assert len(default.x) > index, "The index parameter must be less than the length of the OrderedPair."
     assert index >= 0, "The index parameter must be greater than zero."
 
     if x_axis:

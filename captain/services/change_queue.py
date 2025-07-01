@@ -151,9 +151,7 @@ class ChangeQueueManager:
             self._stop_event.clear()
 
             # Start change processor thread
-            self._processor_thread = Thread(
-                target=self._process_changes, daemon=True, name="ChangeQueueProcessor"
-            )
+            self._processor_thread = Thread(target=self._process_changes, daemon=True, name="ChangeQueueProcessor")
             self._processor_thread.start()
 
             # Start broadcast thread
@@ -309,9 +307,7 @@ class ChangeQueueManager:
                 if self.ws_manager:
                     # Simply log the message instead of creating event loops
                     # The WebSocket manager will handle broadcasts in its own async context
-                    logger.debug(
-                        f"Change queue broadcast: {message.get('type', 'unknown')}"
-                    )
+                    logger.debug(f"Change queue broadcast: {message.get('type', 'unknown')}")
                     # TODO: Implement proper async message passing to main event loop
 
             except Empty:
@@ -328,9 +324,7 @@ class ChangeQueueManager:
 
     def _apply_transaction(self, transaction: ChangeTransaction):
         """Apply all changes in a transaction."""
-        logger.info(
-            f"Applying transaction {transaction.id} with {len(transaction.changes)} changes"
-        )
+        logger.info(f"Applying transaction {transaction.id} with {len(transaction.changes)} changes")
 
         try:
             # Apply each change
@@ -369,9 +363,7 @@ class ChangeQueueManager:
             # Check if block is executing
             if self.is_block_executing(change.block_id):
                 # Defer the change
-                logger.debug(
-                    f"Deferring change {change.id} - block {change.block_id} is executing"
-                )
+                logger.debug(f"Deferring change {change.id} - block {change.block_id} is executing")
                 return
 
             if change.change_type == ChangeType.CODE_UPDATE:
@@ -395,9 +387,7 @@ class ChangeQueueManager:
                 if change in self.pending_changes[change.block_id]:
                     self.pending_changes[change.block_id].remove(change)
 
-            logger.info(
-                f"Applied {change.change_type.value} to block {change.block_id}"
-            )
+            logger.info(f"Applied {change.change_type.value} to block {change.block_id}")
 
         except Exception as e:
             change.error = str(e)
@@ -588,9 +578,7 @@ class ChangeQueueManager:
             # Submit transaction to Prefect
             flow_run_id = await self._prefect_executor.submit_transaction(transaction)
 
-            logger.info(
-                f"Submitted transaction {transaction.id} to Prefect (flow_run_id: {flow_run_id})"
-            )
+            logger.info(f"Submitted transaction {transaction.id} to Prefect (flow_run_id: {flow_run_id})")
 
             return flow_run_id
 

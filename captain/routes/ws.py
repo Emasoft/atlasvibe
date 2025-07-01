@@ -23,11 +23,7 @@ async def websocket_endpoint_test(websocket: WebSocket):
     await websocket.accept()
     try:
         # Send a test message
-        await websocket.send_text(
-            json.dumps(
-                {"type": "test_connection", "msg": "WebSocket test endpoint connected"}
-            )
-        )
+        await websocket.send_text(json.dumps({"type": "test_connection", "msg": "WebSocket test endpoint connected"}))
         # Keep connection alive
         while True:
             data = await websocket.receive_text()
@@ -56,9 +52,7 @@ async def websocket_endpoint(websocket: WebSocket, socket_id: str):
                 }
             )
         )
-        logger.info(
-            "AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help."
-        )
+        logger.info("AtlasVibe Studio is running! Visit https://github.com/Emasoft/atlasvibe for help.")
 
         # await for messages and send messages (no need to read from frontend, this is used to keep connection alive)
         while True:

@@ -9,9 +9,7 @@
 # Directory and File Structure Constants
 CUSTOM_BLOCKS_DIR_NAME = "atlasvibe_custom_blocks"
 PYTHON_FILE_EXT = ".py"
-TEST_FILE_SUFFIX = (
-    "_test_.py"  # Note: current mocks don't fully utilize this for file creation/rename
-)
+TEST_FILE_SUFFIX = "_test_.py"  # Note: current mocks don't fully utilize this for file creation/rename
 
 # Metadata File Names
 METADATA_APP_JSON = "app.json"

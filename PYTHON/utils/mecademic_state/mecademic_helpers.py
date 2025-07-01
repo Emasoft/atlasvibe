@@ -39,9 +39,7 @@ def safe_robot_operation(func):
                 wrt_pose = X, Y, Z
                 wrt_twist = alpha, beta, gamma
 
-                logger.info(
-                    f"Robot poses:\n\t{wrt_pose = }\n\t{wrt_twist = }\n\t{joint_pose = }"
-                )
+                logger.info(f"Robot poses:\n\t{wrt_pose = }\n\t{wrt_twist = }\n\t{joint_pose = }")
             elif isinstance(output, JobFailure):
                 pass
 

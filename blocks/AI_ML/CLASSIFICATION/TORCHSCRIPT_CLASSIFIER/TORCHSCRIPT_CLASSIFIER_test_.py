@@ -18,9 +18,7 @@ except ImportError:
 
 
 @pytest.fixture
-def torchscript_model_path(
-    mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory
-):
+def torchscript_model_path(mock_atlasvibe_decorator, mock_atlasvibe_venv_cache_directory):
     """Create or download a TorchScript model for testing."""
     with tempfile.TemporaryDirectory() as tempdir:
         model_path = os.path.join(tempdir, "model.torchscript")
@@ -55,9 +53,7 @@ def torchscript_model_path(
                             nn.BatchNorm2d(16),
                             nn.ReLU(inplace=True),
                             # Depthwise separable convolutions
-                            nn.Conv2d(
-                                16, 16, kernel_size=3, stride=1, padding=1, groups=16
-                            ),
+                            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1, groups=16),
                             nn.BatchNorm2d(16),
                             nn.ReLU(inplace=True),
                             nn.Conv2d(16, 32, kernel_size=1, stride=1),
@@ -66,9 +62,7 @@ def torchscript_model_path(
                             # Global average pooling
                             nn.AdaptiveAvgPool2d(1),
                         )
-                        self.classifier = nn.Sequential(
-                            nn.Dropout(0.2), nn.Linear(32, num_classes)
-                        )
+                        self.classifier = nn.Sequential(nn.Dropout(0.2), nn.Linear(32, num_classes))
 
                     def forward(self, x):
                         # Handle both CHW and HWC input formats
@@ -111,9 +105,7 @@ def torchscript_model_path(
 
 @pytest.fixture
 def class_names():
-    csv_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "assets", "class_names.csv"
-    )
+    csv_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets", "class_names.csv")
     return DataFrame(df=pd.read_csv(csv_path))
 
 

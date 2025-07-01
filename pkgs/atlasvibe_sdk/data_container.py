@@ -158,11 +158,7 @@ class DataContainer(Box):
         copied_instance = DataContainer(**self)
         return copied_instance
 
-    def _ndarrayify(
-        self, value: DCKwargsValue
-    ) -> Union[
-        DCNpArrayType, PandasDataFrame, dict[str, DCNpArrayType], go.Figure, None
-    ]:
+    def _ndarrayify(self, value: DCKwargsValue) -> Union[DCNpArrayType, PandasDataFrame, dict[str, DCNpArrayType], go.Figure, None]:
         if isinstance(value, int) or isinstance(value, float):
             return np.array([value])
         elif isinstance(value, dict):
@@ -180,9 +176,7 @@ class DataContainer(Box):
         elif value is None:
             return value
         else:
-            raise ValueError(
-                f"DataContainer keys must be any of following types: {get_args(DCKwargsValue)}"
-            )
+            raise ValueError(f"DataContainer keys must be any of following types: {get_args(DCKwargsValue)}")
 
     def __init__(  # type:ignore
         self, type: DCType = "OrderedPair", **kwargs: DCKwargsValue
@@ -206,23 +200,16 @@ class DataContainer(Box):
         return super().__getitem__(key, _ignore_default)  # type:ignore
 
     def __setitem__(self, key: str, value: DCKwargsValue) -> None:
-        if (
-            key not in ["type", "extra", "c", "obj"]
-            and type(value) not in self.SKIP_ARRAYIEFY_TYPES
-        ):
+        if key not in ["type", "extra", "c", "obj"] and type(value) not in self.SKIP_ARRAYIEFY_TYPES:
             formatted_value = self._ndarrayify(value)
             super().__setitem__(key, formatted_value)
         else:
             super().__setitem__(key, value)
 
-    def __check_combination(
-        self, key: str, keys: list[str], allowed_keys_for_key: list[str]
-    ):
+    def __check_combination(self, key: str, keys: list[str], allowed_keys_for_key: list[str]):
         for i in keys:
             if i not in allowed_keys_for_key:
-                raise ValueError(
-                    f"You can't have '{key}' and '{i}' keys together for '{self.type}' type!"
-                )
+                raise ValueError(f"You can't have '{key}' and '{i}' keys together for '{self.type}' type!")
 
     def __validate_key_for_type(self, data_type: DCType, key: str):
         base_type_str = data_type
@@ -255,9 +242,7 @@ class DataContainer(Box):
             pass
 
     def __check_for_missing_keys(self, dc_type: DCType, keys: list[str]):
-        is_parametric = dc_type.startswith(
-            "Parametric"
-        )  # Updated to check "Parametric"
+        is_parametric = dc_type.startswith("Parametric")  # Updated to check "Parametric"
         base_type_str = dc_type.replace("Parametric", "") if is_parametric else dc_type
 
         base_type_dc_literal: Optional[DCType] = None
@@ -268,28 +253,16 @@ class DataContainer(Box):
 
         if is_parametric:
             if "t" not in keys:
-                raise KeyError(
-                    f'"t" key must be provided for parametric type "{dc_type}"'
-                )
-            t_val = self.get(
-                "t"
-            )  # Use get to avoid direct access error if 't' somehow missing after check
-            if (
-                t_val is not None
-                and isinstance(t_val, np.ndarray)
-                and not all(t_val[i] <= t_val[i + 1] for i in range(len(t_val) - 1))
-            ):
-                raise ValueError(
-                    '"t" key must be in ascending order for parametric types'
-                )
+                raise KeyError(f'"t" key must be provided for parametric type "{dc_type}"')
+            t_val = self.get("t")  # Use get to avoid direct access error if 't' somehow missing after check
+            if t_val is not None and isinstance(t_val, np.ndarray) and not all(t_val[i] <= t_val[i + 1] for i in range(len(t_val) - 1)):
+                raise ValueError('"t" key must be in ascending order for parametric types')
 
         if base_type_dc_literal and base_type_dc_literal in self.type_keys_map:
             required_keys_for_type = self.type_keys_map[base_type_dc_literal]
             for k in required_keys_for_type:
                 if k not in keys:
-                    raise KeyError(
-                        f'"{k}" key must be provided for type "{dc_type}" (checking base type "{base_type_dc_literal}")'
-                    )
+                    raise KeyError(f'"{k}" key must be provided for type "{dc_type}" (checking base type "{base_type_dc_literal}")')
 
     def __build_error_text(self, key: str, data_type: str, available_keys: list[str]):
         return f'Invalid key "{key}" provided for data type "{data_type}", supported keys: {", ".join(available_keys)}'
@@ -299,21 +272,13 @@ class DataContainer(Box):
 
         if dc_type not in self.allowed_types:
             closest_type = find_closest_match(dc_type, self.allowed_types)
-            helper_text = (
-                f'Did you mean: "{closest_type}" ?'
-                if closest_type
-                else f'allowed types: "{", ".join(self.allowed_types)}"'
-            )
-            raise ValueError(
-                f'Unsupported type "{dc_type}" passed to DataContainer class, {helper_text}'
-            )
+            helper_text = f'Did you mean: "{closest_type}" ?' if closest_type else f'allowed types: "{", ".join(self.allowed_types)}"'
+            raise ValueError(f'Unsupported type "{dc_type}" passed to DataContainer class, {helper_text}')
 
         dc_instance_keys = [k for k in self.keys() if k != "type"]
 
         for k in dc_instance_keys:
-            other_keys_in_instance = [
-                other_k for other_k in dc_instance_keys if other_k != k
-            ]
+            other_keys_in_instance = [other_k for other_k in dc_instance_keys if other_k != k]
             if k in self.combinations:
                 self.__check_combination(
                     k,
@@ -380,9 +345,7 @@ class ParametricOrderedTriple(DataContainer):
         t: DCKwargsValue,
         extra: ExtraType = None,
     ):
-        super().__init__(
-            type="ParametricOrderedTriple", x=x, y=y, z=z, t=t, extra=extra
-        )
+        super().__init__(type="ParametricOrderedTriple", x=x, y=y, z=z, t=t, extra=extra)
 
 
 class Surface(DataContainer):
@@ -426,9 +389,7 @@ class ParametricSurface(DataContainer):
         super().validate()
         z_val = self.get("z")
         if not isinstance(z_val, np.ndarray) or z_val.ndim < 2:
-            raise ValueError(
-                '"z" key must be at least a 2D array for ParametricSurface type!'
-            )
+            raise ValueError('"z" key must be at least a 2D array for ParametricSurface type!')
 
 
 class Scalar(DataContainer):

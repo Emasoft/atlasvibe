@@ -18,9 +18,7 @@ class TrainTestSplitOutput(TypedDict):
 
 
 @atlasvibe(deps={"scikit-learn": "1.2.2"})
-def TRAIN_TEST_SPLIT(
-    default: DataFrame, test_size: float = 0.2
-) -> TrainTestSplitOutput:
+def TRAIN_TEST_SPLIT(default: DataFrame, test_size: float = 0.2) -> TrainTestSplitOutput:
     """Split an input dataframe into test and training dataframes according to a size parameter.
 
     Parameters

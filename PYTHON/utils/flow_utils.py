@@ -29,9 +29,7 @@ from captain.utils.logger import logger
 DEBUG = False
 
 
-def find_flows(
-    graph: Graph, node_by_serial: Dict[int, Dict[str, Any]], cmds: List[str]
-) -> Flows:
+def find_flows(graph: Graph, node_by_serial: Dict[int, Dict[str, Any]], cmds: List[str]) -> Flows:
     """
     Given a list of commands it returns a dictionary with their flows
 
@@ -144,9 +142,7 @@ def gather_all_flow_nodes(flows: Flows) -> List[int]:
 
 
 @with_error_handling(default=False, logger=logger)
-def save_flows_to_file(
-    flows: Flows, file_path: Path | str, metadata: Optional[Dict[str, Any]] = None
-) -> bool:
+def save_flows_to_file(flows: Flows, file_path: Path | str, metadata: Optional[Dict[str, Any]] = None) -> bool:
     """
     Save flows to a JSON file using atomic operations.
 

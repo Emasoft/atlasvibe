@@ -32,9 +32,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
     """
     f_path = file_path if file_path != "" else default_path
     if not f_path:
-        raise ValueError(
-            "The file path of the input file is missing. Please provide an input String or provide `file_path` with a value!"
-        )
+        raise ValueError("The file path of the input file is missing. Please provide an input String or provide `file_path` with a value!")
 
     # If already absolute, validate and return
     if os.path.isabs(f_path):
@@ -55,9 +53,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
         from pathlib import Path
 
         current_file = Path(__file__).resolve()
-        blocks_dir = (
-            current_file.parent.parent.parent.parent.parent
-        )  # Navigate up to blocks/
+        blocks_dir = current_file.parent.parent.parent.parent.parent  # Navigate up to blocks/
         blocks_path = blocks_dir / f_path
         blocks_path_str = str(blocks_path)
         if blocks_path.exists():
@@ -75,9 +71,7 @@ def get_file_path(file_path: str, default_path: str | None = None):
         return block_path
 
     # If none of the strategies work, raise an error with helpful message
-    raise FileNotFoundError(
-        f"File not found: {f_path}\nTried paths:\n  - {cwd_path} (relative to current directory)\n  - {blocks_path_str} (relative to blocks directory)\n  - {block_path} (relative to current block)\nPlease provide an absolute path or ensure the file exists in one of these locations."
-    )
+    raise FileNotFoundError(f"File not found: {f_path}\nTried paths:\n  - {cwd_path} (relative to current directory)\n  - {blocks_path_str} (relative to blocks directory)\n  - {block_path} (relative to current block)\nPlease provide an absolute path or ensure the file exists in one of these locations.")
 
 
 @atlasvibe(

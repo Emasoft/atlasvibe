@@ -94,9 +94,7 @@ def add_timeouts_to_workflow(filepath: Path) -> Tuple[bool, List[str]]:
                         break
                     elif re.match(r"^    name:", lines[j]):
                         continue  # Keep looking
-                    elif re.match(r"^    strategy:", lines[j]) or re.match(
-                        r"^    steps:", lines[j]
-                    ):
+                    elif re.match(r"^    strategy:", lines[j]) or re.match(r"^    steps:", lines[j]):
                         best_insert_idx = j
                         break
 
@@ -123,9 +121,7 @@ def main() -> None:
 
     total_changes = 0
 
-    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(
-        workflows_dir.glob("*.yaml")
-    ):
+    for workflow_file in sorted(workflows_dir.glob("*.yml")) + sorted(workflows_dir.glob("*.yaml")):
         modified, changes = add_timeouts_to_workflow(workflow_file)
 
         if modified:

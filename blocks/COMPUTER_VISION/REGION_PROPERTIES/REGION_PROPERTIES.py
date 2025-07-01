@@ -73,9 +73,7 @@ def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> P
             else:
                 image = np.stack((r, g, b, a), axis=2)
             image = PILImage.fromarray(image)
-            image = np.array(
-                image.convert("L"), dtype=np.uint8
-            )  # a greyscale image that can be processed
+            image = np.array(image.convert("L"), dtype=np.uint8)  # a greyscale image that can be processed
         elif isinstance(default, Grayscale) or isinstance(default, Matrix):
             image = np.array(default.m)  # explicit typing just to be extra safe
 
@@ -104,15 +102,11 @@ def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> P
         nbits = int(re.search(r"\d+", str(original_dtype)).group())
         image = image.astype(getattr(np, f"int{nbits}"))
     else:
-        raise TypeError(
-            "Input array of insufficient data type to pass to the region analysis routines."
-        )
+        raise TypeError("Input array of insufficient data type to pass to the region analysis routines.")
     labels = label(image)
     rprops = regionprops(label_image=labels, intensity_image=image)
 
-    rgb_image = np.zeros(
-        (*image.shape, 3), dtype=np.uint8
-    )  # only generated for plotting
+    rgb_image = np.zeros((*image.shape, 3), dtype=np.uint8)  # only generated for plotting
     rgb_image[..., 0] = image * 255  # Red channel
     rgb_image[..., 1] = image * 255  # Green channel
     rgb_image[..., 2] = image * 255  # Blue channel
@@ -168,9 +162,7 @@ def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> P
         bx = [minc, maxc, maxc, minc, minc]
         by = [minr, minr, maxr, maxr, minr]
 
-        bounding_box_trace = go.Scatter(
-            x=bx, y=by, mode="lines", line=dict(color="blue", width=2), showlegend=False
-        )
+        bounding_box_trace = go.Scatter(x=bx, y=by, mode="lines", line=dict(color="blue", width=2), showlegend=False)
         fig.add_trace(bounding_box_trace)
 
     for index in range(labels.max()):
@@ -181,9 +173,7 @@ def REGION_PROPERTIES(default: Optional[Image | Grayscale | Matrix] = None) -> P
         for prop_name in properties:
             val = getattr(rprops[index], prop_name)
             if isinstance(val, tuple):
-                line = [
-                    f" <b>{prop_name}_{idv}: {v:.2f}</b>" for idv, v in enumerate(val)
-                ]
+                line = [f" <b>{prop_name}_{idv}: {v:.2f}</b>" for idv, v in enumerate(val)]
                 hoverinfo += ",".join(line) + "<br>"
             else:
                 hoverinfo += f"<b>{prop_name}: {val:.2f}</b><br>"

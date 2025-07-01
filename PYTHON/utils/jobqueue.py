@@ -10,9 +10,7 @@ import json
 
 
 class Job:
-    def __init__(
-        self, iteration_id, dependency_iteration_ids, signals, job_id, iteration_count
-    ) -> None:
+    def __init__(self, iteration_id, dependency_iteration_ids, signals, job_id, iteration_count) -> None:
         self.iteration_id: str = iteration_id
         self.dependency_iteration_ids: list[str] = dependency_iteration_ids
         self.signals: list[str] = signals
@@ -35,15 +33,11 @@ class JobQueue:
 
     def update_signal(self, job_id, old_signal, new_signal):
         job: Job = self.job_id_to_job[job_id]
-        job.signals = [signal for signal in job.signals if signal != old_signal] + [
-            new_signal
-        ]
+        job.signals = [signal for signal in job.signals if signal != old_signal] + [new_signal]
 
     def add_job(self, job_id, dependency_job_ids, signal_ids):
         next_iteration_id = self._get_next_iteration_id(job_id)
-        dependency_iteration_ids = [
-            self._build_iteration_id(pid) for pid in dependency_job_ids
-        ]
+        dependency_iteration_ids = [self._build_iteration_id(pid) for pid in dependency_job_ids]
 
         job = Job(
             iteration_id=next_iteration_id,

@@ -29,9 +29,7 @@ class Reconciler:
     def __init__(self, pad: float = 0):
         self.pad = pad
 
-    def reconcile(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
+    def reconcile(self, lhs: DataContainer, rhs: DataContainer) -> Tuple[DataContainer, DataContainer]:
         types_to_reconcile = set([lhs.type, rhs.type])
         if types_to_reconcile == set(["Matrix"]):
             return self.reconcile_matrix(lhs, rhs)
@@ -40,14 +38,9 @@ class Reconciler:
         elif types_to_reconcile == set(["Scalar", "DataFrame"]):
             return self.reconcile_dataframe_scalar(lhs, rhs)
         else:
-            raise IrreconcilableContainersException(
-                "AtlasVibe doesn't know how to reconcile data containers of type %s and %s"
-                % (lhs.type, rhs.type)
-            )
+            raise IrreconcilableContainersException("AtlasVibe doesn't know how to reconcile data containers of type %s and %s" % (lhs.type, rhs.type))
 
-    def reconcile_matrix(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
+    def reconcile_matrix(self, lhs: DataContainer, rhs: DataContainer) -> Tuple[DataContainer, DataContainer]:
         # make the matrices equal sizes, by padding
         final_r = max(lhs.m.shape[0], rhs.m.shape[0])
         final_c = max(lhs.m.shape[1], rhs.m.shape[1])
@@ -70,16 +63,12 @@ class Reconciler:
             DataContainer(type="Matrix", m=new_rhs),
         )
 
-    def reconcile_dataframe(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
+    def reconcile_dataframe(self, lhs: DataContainer, rhs: DataContainer) -> Tuple[DataContainer, DataContainer]:
         # pandas' handling for DataFrames is actually pretty permissive. Let's just
         #  return both types as normal
         return (lhs, rhs)
 
-    def reconcile_dataframe_scalar(
-        self, lhs: DataContainer, rhs: DataContainer
-    ) -> Tuple[DataContainer, DataContainer]:
+    def reconcile_dataframe_scalar(self, lhs: DataContainer, rhs: DataContainer) -> Tuple[DataContainer, DataContainer]:
         # let's expand the scalar to be a DataFrame the same size as the other DataFrame
         if lhs.type == "DataFrame":
             new_m = lhs.m.copy()

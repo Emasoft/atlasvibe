@@ -61,9 +61,7 @@ async def lifespan(app: FastAPI):
         watch_manager = WatchManager.get_instance()
         watch_manager.start_thread()
     else:
-        logger.info(
-            "File watcher disabled by DISABLE_FILE_WATCHER environment variable"
-        )
+        logger.info("File watcher disabled by DISABLE_FILE_WATCHER environment variable")
 
     # Get WebSocket manager instance
     ws_manager = ConnectionManager.get_instance()
@@ -79,9 +77,7 @@ async def lifespan(app: FastAPI):
         change_queue_manager.start()
         logger.info("ChangeQueueManager started")
     else:
-        logger.info(
-            "ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable"
-        )
+        logger.info("ChangeQueueManager disabled by DISABLE_CHANGE_QUEUE environment variable")
         change_queue_manager = None
 
     # Store references for shutdown

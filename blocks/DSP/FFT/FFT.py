@@ -80,11 +80,7 @@ def FFT(
     x = default.x
     sample_spacing = 1.0 / sample_rate
     # x-axis
-    frequency = (
-        fft.rfftfreq(x.shape[-1], sample_spacing)
-        if real_signal and display
-        else fft.fftfreq(x.shape[-1], sample_spacing)
-    )
+    frequency = fft.rfftfreq(x.shape[-1], sample_spacing) if real_signal and display else fft.fftfreq(x.shape[-1], sample_spacing)
     frequency = fft.fftshift(frequency)
     if display:
         # y-axis
@@ -92,11 +88,7 @@ def FFT(
             fourier = fft.rfft(signal_value) if real_signal else fft.fft(signal_value)
         else:
             window = signal.get_window(window, len(signal_value))
-            fourier = (
-                fft.rfft(signal_value * window)
-                if real_signal
-                else fft.fft(signal_value * window)
-            )
+            fourier = fft.rfft(signal_value * window) if real_signal else fft.fft(signal_value * window)
         fourier = fft.fftshift(fourier)
         fourier = abs(fourier)
         return OrderedPair(x=frequency, y=fourier)

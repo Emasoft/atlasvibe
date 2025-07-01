@@ -67,9 +67,7 @@ def BAR(default: OrderedPair | DataFrame | Matrix | Vector) -> Plotly:
                 for col in df.columns:
                     if df[col].dtype == "object":
                         counts = df[col].value_counts()
-                        fig.add_trace(
-                            go.Bar(x=counts.index.tolist(), y=counts.tolist(), name=col)
-                        )
+                        fig.add_trace(go.Bar(x=counts.index.tolist(), y=counts.tolist(), name=col))
                     else:
                         fig.add_trace(go.Bar(x=df.index, y=df[col], name=col))
                 fig.update_layout(xaxis_title="DF index", yaxis_title="Y Axis")

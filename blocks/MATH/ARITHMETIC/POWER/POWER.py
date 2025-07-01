@@ -13,9 +13,7 @@ from blocks.MATH.ARITHMETIC.utils.arithmetic_utils import perform_arithmetic_ope
 
 
 @atlasvibe
-def POWER(
-    a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]
-) -> OrderedPair | Scalar | Vector:
+def POWER(a: OrderedPair | Scalar | Vector, b: list[OrderedPair | Scalar | Vector]) -> OrderedPair | Scalar | Vector:
     """Calculate the power of two numeric arrays, vectors, matrices, or constants element-wise.
 
     Parameters

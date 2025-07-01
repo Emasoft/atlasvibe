@@ -11,9 +11,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, OrderedTriple
 
 
 @atlasvibe
-def DF_2_ORDERED_TRIPLE(
-    default: DataFrame, x: int = 0, y: int = 1, z: int = 2
-) -> OrderedTriple:
+def DF_2_ORDERED_TRIPLE(default: DataFrame, x: int = 0, y: int = 1, z: int = 2) -> OrderedTriple:
     """Convert a DataFrame DataContainer to an OrderedTriple DataContainer.
 
     It takes one dataframe type data and selects 3 different columns to generate the OrderedTriple type.
@@ -37,9 +35,7 @@ def DF_2_ORDERED_TRIPLE(
 
     df = default.m
     if df.shape[1] < 3:
-        raise AssertionError(
-            f"The DataFrame needs to have a shape greater than 2 in order to be converted to the OrderedTriple type, got: {df.shape[1]}"
-        )
+        raise AssertionError(f"The DataFrame needs to have a shape greater than 2 in order to be converted to the OrderedTriple type, got: {df.shape[1]}")
 
     x_list = df.iloc[:, x]
     y_list = df.iloc[:, y]

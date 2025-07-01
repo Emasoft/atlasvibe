@@ -93,10 +93,7 @@ def SAMPLE_BLOCK(
             data = json.load(f)
 
         assert "docstring" in data
-        assert (
-            data["docstring"]["short_description"]
-            == "Sample block for testing metadata generation."
-        )
+        assert data["docstring"]["short_description"] == "Sample block for testing metadata generation."
         assert len(data["docstring"]["parameters"]) == 3
         assert data["docstring"]["parameters"][0]["name"] == "text"
         assert data["docstring"]["parameters"][0]["type"] == "String"
@@ -186,9 +183,7 @@ def SAMPLE_BLOCK(
         assert (block_dir / "example.md").exists()
         assert (block_dir / "COMPLETE_BLOCK_test_.py").exists()
 
-    def test_blocks_watcher_generates_metadata(
-        self, temp_blocks_dir, sample_block_code
-    ):
+    def test_blocks_watcher_generates_metadata(self, temp_blocks_dir, sample_block_code):
         """Test that BlocksWatcher generates metadata for new blocks."""
         # This test simulates what happens when the file watcher detects a new block
 
@@ -278,7 +273,4 @@ def MODIFIED_BLOCK():
         # Verify block_data.json was updated
         with open(block_dir / "block_data.json") as f:
             updated_data = json.load(f)
-        assert (
-            updated_data["docstring"]["short_description"]
-            == "Updated description with more details."
-        )
+        assert updated_data["docstring"]["short_description"] == "Updated description with more details."

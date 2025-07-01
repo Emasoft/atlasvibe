@@ -74,20 +74,12 @@ async def install(url: Annotated[str, Header()]):
                 logger.error(f"Error while cloning url: {stdout} - {stderr}")
 
                 # Check for common error patterns
-                if (
-                    "unable to connect" in stderr.lower()
-                    or "could not resolve" in stderr.lower()
-                ):
+                if "unable to connect" in stderr.lower() or "could not resolve" in stderr.lower():
                     raise ConnectionError("Unable to connect to repository")
-                elif (
-                    "repository not found" in stderr.lower()
-                    or "not found" in stderr.lower()
-                ):
+                elif "repository not found" in stderr.lower() or "not found" in stderr.lower():
                     raise GitError("Repository not found or access denied")
                 else:
-                    raise GitError(
-                        f"Failed to clone repository (code: {res.returncode})"
-                    )
+                    raise GitError(f"Failed to clone repository (code: {res.returncode})")
     else:
         with error_context("updating to origin main", logger):
             update_to_origin_main(profile_path)
@@ -129,10 +121,7 @@ async def checkout(url: Annotated[str, Header()], commit_hash: str):
             res = subprocess.run(cmd, capture_output=True)
             if res.returncode != 0:
                 stderr = res.stderr.decode("utf-8").strip()
-                if (
-                    "unable to access" in stderr.lower()
-                    or "could not resolve" in stderr.lower()
-                ):
+                if "unable to access" in stderr.lower() or "could not resolve" in stderr.lower():
                     raise ConnectionError("Unable to connect to repository")
                 raise GitError(f"Failed to fetch repository (code: {res.returncode})")
 
@@ -206,10 +195,7 @@ def update_to_origin_main(profile_path: str):
     res = subprocess.run(cmd, capture_output=True)
     if res.returncode != 0:
         stderr = res.stderr.decode("utf-8").strip()
-        if (
-            "unable to access" in stderr.lower()
-            or "could not resolve" in stderr.lower()
-        ):
+        if "unable to access" in stderr.lower() or "could not resolve" in stderr.lower():
             raise ConnectionError("Unable to connect to repository")
         raise GitError(f"Failed to fetch repository (code: {res.returncode})")
 

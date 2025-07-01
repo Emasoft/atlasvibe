@@ -83,11 +83,7 @@ async def check_project_migration(request: CheckMigrationRequest) -> MigrationRe
 
     return MigrationResponse(
         needs_migration=needs_migration_flag,
-        message=(
-            "Project is in old blueprint format and needs migration"
-            if needs_migration_flag
-            else "Project is already in new custom block format"
-        ),
+        message=("Project is in old blueprint format and needs migration" if needs_migration_flag else "Project is already in new custom block format"),
     )
 
 
@@ -168,11 +164,7 @@ async def migrate_project(request: MigrateProjectRequest) -> MigrationResponse:
             migrated=True,
             created_blocks=created_blocks,
             project_data=migrated_data,
-            message=(
-                f"Successfully migrated project. Created {len(created_blocks)} custom blocks."
-                if not request.dry_run
-                else f"Dry run complete. Would create {len(created_blocks)} custom blocks."
-            ),
+            message=(f"Successfully migrated project. Created {len(created_blocks)} custom blocks." if not request.dry_run else f"Dry run complete. Would create {len(created_blocks)} custom blocks."),
         )
 
     except ProjectMigrationError as e:

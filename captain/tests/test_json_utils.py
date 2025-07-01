@@ -85,9 +85,7 @@ class TestLoadJsonFile:
 
     def test_load_with_different_encoding(self):
         """Test loading JSON with UTF-8 encoding."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
             test_data = {"message": "Hello 世界 🌍"}
             json.dump(test_data, f, ensure_ascii=False)
             temp_path = Path(f.name)

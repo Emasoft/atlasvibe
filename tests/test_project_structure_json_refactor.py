@@ -94,9 +94,7 @@ def BLUEPRINT_BLOCK(x: int = 10):
 
         # Create block_data.json
         block_data = blueprint_dir / "block_data.json"
-        block_data.write_text(
-            json.dumps({"docstring": {"short_description": "Blueprint block"}})
-        )
+        block_data.write_text(json.dumps({"docstring": {"short_description": "Blueprint block"}}))
 
         yield str(blueprint_dir)
 
@@ -107,18 +105,10 @@ class TestProjectStructureJSONRefactoring:
     @patch("json.dumps")
     @patch("pathlib.Path.write_text")
     @patch("pathlib.Path.read_text")
-    def test_update_block_metadata_uses_json_dumps(
-        self, mock_read, mock_write, mock_dumps
-    ):
+    def test_update_block_metadata_uses_json_dumps(self, mock_read, mock_write, mock_dumps):
         """Test that update_block_metadata uses json.dumps (to be refactored)."""
         # Setup
-        mock_read.return_value = json.dumps(
-            {
-                "rfInstance": {
-                    "nodes": [{"data": {"func": "OLD_NAME", "label": "OLD_NAME"}}]
-                }
-            }
-        )
+        mock_read.return_value = json.dumps({"rfInstance": {"nodes": [{"data": {"func": "OLD_NAME", "label": "OLD_NAME"}}]}})
         mock_dumps.return_value = "{}"
 
         block_dir = Path("/test/block")
@@ -134,11 +124,7 @@ class TestProjectStructureJSONRefactoring:
     def test_update_block_metadata_refactored(self, mock_load, mock_save):
         """Test refactored update_block_metadata using shared utilities."""
         # This test demonstrates the expected behavior after refactoring
-        mock_load.return_value = {
-            "rfInstance": {
-                "nodes": [{"data": {"func": "OLD_NAME", "label": "OLD_NAME"}}]
-            }
-        }
+        mock_load.return_value = {"rfInstance": {"nodes": [{"data": {"func": "OLD_NAME", "label": "OLD_NAME"}}]}}
         mock_save.return_value = True
 
         Path("/test/block")
@@ -231,9 +217,7 @@ class TestProjectStructureIntegration:
         # Test actual copy operation
 
         try:
-            new_block_path = copy_blueprint_to_project(
-                blueprint_path, project_path, "CUSTOM_BLOCK_1"
-            )
+            new_block_path = copy_blueprint_to_project(blueprint_path, project_path, "CUSTOM_BLOCK_1")
 
             # Verify files were created
             new_block_dir = Path(new_block_path)

@@ -32,11 +32,7 @@ def main():
                             print(f"✅ PASSED: {suite_name} > {test_name}")
                         elif status == "failed":
                             failed += 1
-                            error = (
-                                results[0]
-                                .get("error", {})
-                                .get("message", "Unknown error")
-                            )
+                            error = results[0].get("error", {}).get("message", "Unknown error")
                             print(f"❌ FAILED: {suite_name} > {test_name}")
                             print(f"   Error: {error[:100]}...")
                         elif status == "skipped":

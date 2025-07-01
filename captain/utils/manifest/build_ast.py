@@ -19,50 +19,21 @@ SELECTED_IMPORTS = [
 NO_OUTPUT_NODES = ["GOTO", "END"]
 
 
-class AtlasvibeNodeTransformer(
-    ast.NodeTransformer
-):  # Consider renaming this class to AtlasVibeNodeTransformer if it becomes confusing
-    def get_atlasvibe_decorator(
-        self, node: ast.FunctionDef
-    ):  # Name implies old decorator
+class AtlasvibeNodeTransformer(ast.NodeTransformer):  # Consider renaming this class to AtlasVibeNodeTransformer if it becomes confusing
+    def get_atlasvibe_decorator(self, node: ast.FunctionDef):  # Name implies old decorator
         return [
-            decorator
-            for decorator in node.decorator_list
-            if isinstance(decorator, ast.Name)
-            and (decorator.id == "atlasvibe_node" or decorator.id == "atlasvibe")
-            or isinstance(decorator, ast.Call)
-            and isinstance(decorator.func, ast.Name)
-            and (
-                decorator.func.id == "atlasvibe_node"
-                or decorator.func.id == "atlasvibe"
-            )
+            decorator for decorator in node.decorator_list if isinstance(decorator, ast.Name) and (decorator.id == "atlasvibe_node" or decorator.id == "atlasvibe") or isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and (decorator.func.id == "atlasvibe_node" or decorator.func.id == "atlasvibe")
         ]
 
     def get_display_decorator(self, node: ast.FunctionDef):
-        return [
-            decorator
-            for decorator in node.decorator_list
-            if isinstance(decorator, ast.Name)
-            and decorator.id == "display"
-            or isinstance(decorator, ast.Call)
-            and isinstance(decorator.func, ast.Name)
-            and decorator.func.id == "display"
-        ]
+        return [decorator for decorator in node.decorator_list if isinstance(decorator, ast.Name) and decorator.id == "display" or isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id == "display"]
 
     def get_decorator(
         self,
         node: ast.FunctionDef,
         decorator_name: Literal["display", "atlasvibe_node", "atlasvibe"],
     ):
-        return [
-            decorator
-            for decorator in node.decorator_list
-            if isinstance(decorator, ast.Name)
-            and decorator.id == decorator_name
-            or isinstance(decorator, ast.Call)
-            and isinstance(decorator.func, ast.Name)
-            and decorator.func.id == decorator_name
-        ]
+        return [decorator for decorator in node.decorator_list if isinstance(decorator, ast.Name) and decorator.id == decorator_name or isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id == decorator_name]
 
     def visit_Module(self, node: ast.Module):
         node.body = [self.visit(n) for n in node.body]
@@ -84,33 +55,21 @@ class AtlasvibeNodeTransformer(
     def visit_FunctionDef(self, node: ast.FunctionDef):
         # The case where the node is used for overloading, will ignore all other decorators
         if has_decorator(node, "display"):
-            node.decorator_list = cast(
-                list[ast.expr], self.get_decorator(node, "display")
-            )
-        elif (
-            not has_decorator(node, "atlasvibe_node")
-            and not has_decorator(node, "atlasvibe")
-            and not has_decorator(node, "node_initialization")
-        ):
+            node.decorator_list = cast(list[ast.expr], self.get_decorator(node, "display"))
+        elif not has_decorator(node, "atlasvibe_node") and not has_decorator(node, "atlasvibe") and not has_decorator(node, "node_initialization"):
             return None
 
         # TODO: make an error comment when a display decorator have another decorator
         # Keep only the '@atlasvibe_node' if there are multiple decorators.
 
-        if (
-            has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")
-        ) and len(node.decorator_list) > 1:
+        if (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")) and len(node.decorator_list) > 1:
             # Keep only the '@atlasvibe_node' or '@atlasvibe' decorator if there are multiple decorators.
             # Some decorators, like '@run_in_venv', create virtual environments, which we
             # don't want to generate when creating the manifest.
             if has_decorator(node, "atlasvibe_node"):
-                node.decorator_list = cast(
-                    list[ast.expr], self.get_decorator(node, "atlasvibe_node")
-                )
+                node.decorator_list = cast(list[ast.expr], self.get_decorator(node, "atlasvibe_node"))
             else:
-                node.decorator_list = cast(
-                    list[ast.expr], self.get_decorator(node, "atlasvibe")
-                )
+                node.decorator_list = cast(list[ast.expr], self.get_decorator(node, "atlasvibe"))
 
         if node.body:
             new_body = (
@@ -131,9 +90,7 @@ class AtlasvibeNodeTransformer(
         else:
             new_body = [
                 ast.Expr(
-                    value=ast.Constant(
-                        value=None, lineno=node.lineno, col_offset=node.col_offset
-                    ),
+                    value=ast.Constant(value=None, lineno=node.lineno, col_offset=node.col_offset),
                     lineno=node.lineno,
                     col_offset=node.col_offset,
                 )
@@ -155,9 +112,7 @@ def make_manifest_ast(
 
     # Do an initial pass to remove everything that isn't an
     # import, dataclass or atlasvibe_node node
-    transformer = (
-        AtlasvibeNodeTransformer()
-    )  # Name of class can remain for now, or be changed too
+    transformer = AtlasvibeNodeTransformer()  # Name of class can remain for now, or be changed too
     transformed_tree: ast.Module = transformer.visit(tree)
 
     overload: dict[Any, Any] | None = dict()
@@ -171,20 +126,16 @@ def make_manifest_ast(
 
     atlasvibe_node = find(
         transformed_tree.body,
-        lambda node: isinstance(node, ast.FunctionDef)
-        and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
+        lambda node: isinstance(node, ast.FunctionDef) and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
     )
 
     init_func = find(
         transformed_tree.body,
-        lambda node: isinstance(node, ast.FunctionDef)
-        and has_decorator(node, "node_initialization"),
+        lambda node: isinstance(node, ast.FunctionDef) and has_decorator(node, "node_initialization"),
     )
 
     if not atlasvibe_node:
-        raise ValueError(
-            "No @atlasvibe_node or @atlasvibe decorated function found in file"
-        )
+        raise ValueError("No @atlasvibe_node or @atlasvibe decorated function found in file")
 
     node_name = atlasvibe_node.name
     init_func_name = init_func.name if init_func else None
@@ -192,30 +143,19 @@ def make_manifest_ast(
 
     if not atlasvibe_node.returns and node_name not in NO_OUTPUT_NODES:
         logger.warning(f"{node_name} has no return type hint, will have no output!")
-    elif (
-        isinstance(atlasvibe_node.returns, ast.Constant)
-        and atlasvibe_node.returns.value is None
-    ):
+    elif isinstance(atlasvibe_node.returns, ast.Constant) and atlasvibe_node.returns.value is None:
         pass
     else:
         # This handles the case where the return type is a union, we can ignore
         # all of the class defs in this case
-        if (
-            atlasvibe_node.returns
-            and not isinstance(atlasvibe_node.returns, ast.BinOp)
-            and not isinstance(atlasvibe_node.returns, ast.Subscript)
-        ):
+        if atlasvibe_node.returns and not isinstance(atlasvibe_node.returns, ast.BinOp) and not isinstance(atlasvibe_node.returns, ast.Subscript):
             return_type = atlasvibe_node.returns.id
 
     # Then get rid of all the other classes
     # that aren't the return type of the atlasvibe_node node
     # This also filters out all of the None values
 
-    transformed_tree.body = [
-        node
-        for node in transformed_tree.body
-        if node and (not isinstance(node, ast.ClassDef) or node.name == return_type)
-    ]
+    transformed_tree.body = [node for node in transformed_tree.body if node and (not isinstance(node, ast.ClassDef) or node.name == return_type)]
 
     return (node_name, init_func_name, transformed_tree, overload)
 
@@ -225,26 +165,19 @@ def get_atlasvibe_decorator(
 ) -> Optional[ast.Call]:  # Name implies old decorator
     atlasvibe_node = find(
         tree.body,
-        lambda node: isinstance(node, ast.FunctionDef)
-        and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
+        lambda node: isinstance(node, ast.FunctionDef) and (has_decorator(node, "atlasvibe_node") or has_decorator(node, "atlasvibe")),
     )
     if not atlasvibe_node:
-        raise ValueError(
-            "No @atlasvibe_node or @atlasvibe decorated function found in file"
-        )
+        raise ValueError("No @atlasvibe_node or @atlasvibe decorated function found in file")
 
     # Differentiates between @atlasvibe_node/@atlasvibe and @atlasvibe_node(deps={...})/@atlasvibe(deps={...})
     return find(
         atlasvibe_node.decorator_list,
-        lambda d: isinstance(d, ast.Call)
-        and isinstance(d.func, ast.Name)
-        and (d.func.id == "atlasvibe_node" or d.func.id == "atlasvibe"),
+        lambda d: isinstance(d, ast.Call) and isinstance(d.func, ast.Name) and (d.func.id == "atlasvibe_node" or d.func.id == "atlasvibe"),
     )
 
 
-def get_atlasvibe_decorator_param(
-    tree: ast.Module, name: str
-) -> Optional[ast.keyword]:  # Name implies old decorator
+def get_atlasvibe_decorator_param(tree: ast.Module, name: str) -> Optional[ast.keyword]:  # Name implies old decorator
     decorator = get_atlasvibe_decorator(tree)
 
     if not decorator:
@@ -283,11 +216,7 @@ def has_decorator(node: ast.FunctionDef | ast.ClassDef, decorator_name: str) -> 
     for decorator in node.decorator_list:
         if isinstance(decorator, ast.Name) and decorator.id == decorator_name:
             return True
-        elif (
-            isinstance(decorator, ast.Call)
-            and isinstance(decorator.func, ast.Name)
-            and decorator.func.id == decorator_name
-        ):
+        elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id == decorator_name:
             return True
 
     return False

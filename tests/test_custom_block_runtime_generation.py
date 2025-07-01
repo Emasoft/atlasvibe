@@ -118,11 +118,7 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
         for filename in expected_files:
             exists = filename in actual_files
             status = "✓" if exists else "✗"
-            file_type = (
-                "user"
-                if filename.endswith(".py") and not filename.endswith("_test.py")
-                else "generated"
-            )
+            file_type = "user" if filename.endswith(".py") and not filename.endswith("_test.py") else "generated"
             print(f"{status} {filename} ({file_type})")
 
         # Check if block_data.json was generated
@@ -144,9 +140,7 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
             with open(app_json_file) as f:
                 app_data = json.load(f)
             print("\n=== Generated app.json content ===")
-            print(
-                f"Contains workflow with {len(app_data.get('rfInstance', {}).get('nodes', []))} nodes"
-            )
+            print(f"Contains workflow with {len(app_data.get('rfInstance', {}).get('nodes', []))} nodes")
 
         # Check if example.md was generated
         example_file = custom_block_dir / "example.md"
@@ -168,9 +162,7 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
 
     @patch("captain.routes.blocks.create_manifest")
     @patch("cli.utils.generate_docstring_json.generate_docstring_json")
-    def test_metadata_generation_workflow(
-        self, mock_docstring_gen, mock_manifest, temp_project
-    ):
+    def test_metadata_generation_workflow(self, mock_docstring_gen, mock_manifest, temp_project):
         """Test the complete workflow of metadata generation."""
 
         blocks_dir = get_project_blocks_dir(temp_project)

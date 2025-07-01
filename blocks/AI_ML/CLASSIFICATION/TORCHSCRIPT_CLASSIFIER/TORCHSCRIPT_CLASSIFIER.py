@@ -16,9 +16,7 @@ from pkgs.atlasvibe.atlasvibe.data_container import DataFrame, Image
         "torchvision": "0.15.2",
     }
 )
-def TORCHSCRIPT_CLASSIFIER(
-    input_image: Image, class_names: DataFrame, model_path: str
-) -> DataFrame:
+def TORCHSCRIPT_CLASSIFIER(input_image: Image, class_names: DataFrame, model_path: str) -> DataFrame:
     """Execute a TorchScript classifier against an input image.
 
     Parameters
@@ -51,12 +49,8 @@ def TORCHSCRIPT_CLASSIFIER(
         channels.append(input_image.a)
         mode += "A"
 
-    input_image_pil = PIL.Image.fromarray(
-        np.stack(channels).transpose(1, 2, 0), mode=mode
-    ).convert("RGB")
-    input_tensor = torchvision.transforms.functional.to_tensor(
-        input_image_pil
-    ).unsqueeze(0)
+    input_image_pil = PIL.Image.fromarray(np.stack(channels).transpose(1, 2, 0), mode=mode).convert("RGB")
+    input_tensor = torchvision.transforms.functional.to_tensor(input_image_pil).unsqueeze(0)
 
     # Run model
     with torch.inference_mode():
@@ -67,6 +61,4 @@ def TORCHSCRIPT_CLASSIFIER(
     class_name = class_names.m.iloc[pred.item()].item()
     confidence = torch.nn.functional.softmax(output, dim=1)[0][pred.item()].item()
 
-    return DataFrame(
-        df=pd.DataFrame({"class_name": [class_name], "confidence": [confidence]})
-    )
+    return DataFrame(df=pd.DataFrame({"class_name": [class_name], "confidence": [confidence]}))

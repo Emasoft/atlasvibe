@@ -52,8 +52,6 @@ def DOUBLE_DEFINITE_INTEGRAL(
 
     f = lambdify(symbols, func)
 
-    result = integrate.nquad(
-        f, [(lower_bound_x, upper_bound_x), (lower_bound_y, upper_bound_y)]
-    )[0]
+    result = integrate.nquad(f, [(lower_bound_x, upper_bound_x), (lower_bound_y, upper_bound_y)])[0]
 
     return Scalar(c=result)

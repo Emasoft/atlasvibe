@@ -37,17 +37,11 @@ def parse_test_results(results_dir: Path) -> Dict[str, Any]:
             # Extract summary statistics
             if "stats" in data:
                 stats = data["stats"]
-                report["summary"]["total"] = (
-                    stats.get("expected", 0)
-                    + stats.get("unexpected", 0)
-                    + stats.get("skipped", 0)
-                )
+                report["summary"]["total"] = stats.get("expected", 0) + stats.get("unexpected", 0) + stats.get("skipped", 0)
                 report["summary"]["passed"] = stats.get("expected", 0)
                 report["summary"]["failed"] = stats.get("unexpected", 0)
                 report["summary"]["skipped"] = stats.get("skipped", 0)
-                report["summary"]["duration"] = (
-                    stats.get("duration", 0) / 1000
-                )  # Convert to seconds
+                report["summary"]["duration"] = stats.get("duration", 0) / 1000  # Convert to seconds
 
     # Find screenshot files
     screenshots_dir = results_dir / "screenshots"

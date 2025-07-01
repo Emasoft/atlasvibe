@@ -16,9 +16,7 @@ from typing import List, Dict, Any
 class TestResult:
     """Represents a single test result"""
 
-    def __init__(
-        self, name: str, suite: str, status: str, duration: float, error: str = ""
-    ):
+    def __init__(self, name: str, suite: str, status: str, duration: float, error: str = ""):
         self.name = name
         self.suite = suite
         self.status = status
@@ -143,9 +141,7 @@ class TestReporter:
                     if result.get("error"):
                         error = result["error"].get("message", "")
 
-                self.results.append(
-                    TestResult(name, suite_name, status, duration, error)
-                )
+                self.results.append(TestResult(name, suite_name, status, duration, error))
 
         # Recursively parse sub-suites
         for sub_suite in suite.get("suites", []):
@@ -164,39 +160,21 @@ class TestReporter:
             # Look for test results patterns
             if "✓" in line or "✔" in line:
                 # Passed test
-                test_name = (
-                    line.split("✓")[-1].strip()
-                    if "✓" in line
-                    else line.split("✔")[-1].strip()
-                )
+                test_name = line.split("✓")[-1].strip() if "✓" in line else line.split("✔")[-1].strip()
                 if test_name:
-                    self.results.append(
-                        TestResult(test_name, current_suite, "PASSED", 0.0)
-                    )
+                    self.results.append(TestResult(test_name, current_suite, "PASSED", 0.0))
             elif "✗" in line or "✘" in line or "×" in line:
                 # Failed test
-                test_name = (
-                    line.split("✗")[-1].strip()
-                    if "✗" in line
-                    else line.split("✘")[-1].strip()
-                )
+                test_name = line.split("✗")[-1].strip() if "✗" in line else line.split("✘")[-1].strip()
                 if not test_name and "×" in line:
                     test_name = line.split("×")[-1].strip()
                 if test_name:
-                    self.results.append(
-                        TestResult(test_name, current_suite, "FAILED", 0.0)
-                    )
+                    self.results.append(TestResult(test_name, current_suite, "FAILED", 0.0))
             elif "●" in line or "○" in line:
                 # Skipped test
-                test_name = (
-                    line.split("●")[-1].strip()
-                    if "●" in line
-                    else line.split("○")[-1].strip()
-                )
+                test_name = line.split("●")[-1].strip() if "●" in line else line.split("○")[-1].strip()
                 if test_name:
-                    self.results.append(
-                        TestResult(test_name, current_suite, "SKIPPED", 0.0)
-                    )
+                    self.results.append(TestResult(test_name, current_suite, "SKIPPED", 0.0))
 
     def _display_results(self) -> None:
         """Display test results in a formatted table"""
@@ -224,33 +202,19 @@ class TestReporter:
         if self.results:
             print("\n📋 DETAILED TEST RESULTS")
             print("=" * 120)
-            print(
-                f"{'Status':<10} {'Suite':<25} {'Test Name':<40} {'Description':<35} {'Duration':<10}"
-            )
+            print(f"{'Status':<10} {'Suite':<25} {'Test Name':<40} {'Description':<35} {'Duration':<10}")
             print("=" * 120)
 
             for result in self.results:
-                status_emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️"}.get(
-                    result.status, "❓"
-                )
+                status_emoji = {"PASSED": "✅", "FAILED": "❌", "SKIPPED": "⏭️"}.get(result.status, "❓")
 
                 status_str = f"{status_emoji} {result.status:<7}"
-                suite_str = (
-                    result.suite[:23] + ".." if len(result.suite) > 25 else result.suite
-                )
-                name_str = (
-                    result.name[:38] + ".." if len(result.name) > 40 else result.name
-                )
-                desc_str = (
-                    result.description[:33] + ".."
-                    if len(result.description) > 35
-                    else result.description
-                )
+                suite_str = result.suite[:23] + ".." if len(result.suite) > 25 else result.suite
+                name_str = result.name[:38] + ".." if len(result.name) > 40 else result.name
+                desc_str = result.description[:33] + ".." if len(result.description) > 35 else result.description
                 duration_str = f"{result.duration:.3f}s"
 
-                print(
-                    f"{status_str} {suite_str:<25} {name_str:<40} {desc_str:<35} {duration_str:<10}"
-                )
+                print(f"{status_str} {suite_str:<25} {name_str:<40} {desc_str:<35} {duration_str:<10}")
 
                 if result.status == "FAILED" and result.error:
                     print(f"{'':>10} Error: {result.error[:100]}...")
@@ -284,9 +248,7 @@ def main():
         passed = sum(1 for r in reporter.results if r.status == "PASSED")
         failed = sum(1 for r in reporter.results if r.status == "FAILED")
         if reporter.results and failed == 0 and passed > 0:
-            print(
-                "\n⚠️  Playwright exited with non-zero code but all tests passed. Overriding to success."
-            )
+            print("\n⚠️  Playwright exited with non-zero code but all tests passed. Overriding to success.")
             sys.exit(0)
 
     sys.exit(exit_code)

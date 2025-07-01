@@ -116,9 +116,7 @@ def DEMO_CUSTOM_BLOCK(
             print(f"   - Short description: {data['docstring']['short_description']}")
             print(f"   - Parameters: {len(data['docstring']['parameters'])} defined")
             for param in data["docstring"]["parameters"]:
-                print(
-                    f"     • {param['name']} ({param['type']}): {param['description']}"
-                )
+                print(f"     • {param['name']} ({param['type']}): {param['description']}")
 
         # Show app.json
         if (block_dir / "app.json").exists():
@@ -126,9 +124,7 @@ def DEMO_CUSTOM_BLOCK(
                 app_data = json.load(f)
             print("\n   app.json (default workflow template):")
             print(f"   - Contains {len(app_data['rfInstance']['nodes'])} node(s)")
-            print(
-                f"   - Block function: {app_data['rfInstance']['nodes'][0]['data']['func']}"
-            )
+            print(f"   - Block function: {app_data['rfInstance']['nodes'][0]['data']['func']}")
 
         # Show example.md
         if (block_dir / "example.md").exists():
@@ -163,9 +159,7 @@ def DEMO_CUSTOM_BLOCK(
         # Show the updated description
         with open(block_dir / "block_data.json") as f:
             updated_data = json.load(f)
-        print(
-            f"   - Updated description: {updated_data['docstring']['short_description']}"
-        )
+        print(f"   - Updated description: {updated_data['docstring']['short_description']}")
 
         # Verify other files were NOT modified
         print("\n8. Verification:")
@@ -174,9 +168,7 @@ def DEMO_CUSTOM_BLOCK(
         print("   ✓ All files required for a custom block are present")
 
         print("\n=== Demo Complete ===")
-        print(
-            "\nSummary: When you create a custom block in AtlasVibe, you only need to"
-        )
+        print("\nSummary: When you create a custom block in AtlasVibe, you only need to")
         print("create the Python file. All metadata files are generated automatically!")
 
         # Assert all files exist for test validation
@@ -184,10 +176,7 @@ def DEMO_CUSTOM_BLOCK(
         assert (block_dir / "app.json").exists()
         assert (block_dir / "example.md").exists()
         assert (block_dir / f"{block_name}_test_.py").exists()
-        assert (
-            updated_data["docstring"]["short_description"]
-            == "UPDATED: This description has been changed!"
-        )
+        assert updated_data["docstring"]["short_description"] == "UPDATED: This description has been changed!"
 
 
 if __name__ == "__main__":

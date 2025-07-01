@@ -59,9 +59,7 @@ def validate_block_metadata(block_path: Path) -> Tuple[bool, List[str]]:
                     decorator_name = ""
                     if isinstance(decorator, ast.Name):
                         decorator_name = decorator.id
-                    elif isinstance(decorator, ast.Call) and isinstance(
-                        decorator.func, ast.Name
-                    ):
+                    elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name):
                         decorator_name = decorator.func.id
 
                     if decorator_name in ["atlasvibe", "atlasvibe_node"]:
@@ -124,9 +122,7 @@ def validate_block_metadata(block_path: Path) -> Tuple[bool, List[str]]:
             json_params = {p["name"]: p for p in json_doc.get("parameters", [])}
             for param in parsed_doc.params:
                 if param.arg_name not in json_params:
-                    errors.append(
-                        f"Parameter '{param.arg_name}' in docstring not found in JSON"
-                    )
+                    errors.append(f"Parameter '{param.arg_name}' in docstring not found in JSON")
 
         except Exception as e:
             errors.append(f"Error comparing docstring with JSON: {e}")
