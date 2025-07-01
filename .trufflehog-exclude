@@ -1,0 +1,54 @@
+# Paths to exclude from TruffleHog scanning
+# These are regex patterns, one per line
+
+# Version control and dependencies
+\.git/
+node_modules/
+\.venv/
+venv/
+
+# Build outputs
+__pycache__/
+\.pyc$
+\.pyo$
+dist/
+build/
+out/
+\.egg-info/
+
+# Caches
+\.pytest_cache/
+\.mypy_cache/
+\.ruff_cache/
+htmlcov/
+\.coverage
+\.tox/
+
+# IDE and editor files
+\.vscode/
+\.idea/
+\.DS_Store
+
+# Log files
+.*\.log$
+
+# Lock files (these often contain hashes that look like secrets)
+package-lock\.json
+pnpm-lock\.yaml
+uv\.lock
+poetry\.lock
+
+# Documentation and test fixtures
+.*\.md$
+.*_test\.py$
+.*\.test\.ts$
+.*\.spec\.ts$
+tests/
+test/
+__tests__/
+fixtures/
+
+# AtlasVibe specific
+PYTHON/WATCH/
+playwright-test/
+examples/

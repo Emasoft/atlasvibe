@@ -100,7 +100,6 @@ When you commit code, pre-commit will now:
 5. **Verify Integrity**:
    - Block metadata synchronization
    - TypeScript type safety
-   - No secrets with gitleaks
 
 ## Expected Behavior
 

@@ -26,6 +26,7 @@ AtlasVibe uses GitHub Actions for continuous integration and deployment with uv 
      - `buildElectron`: Multi-platform Electron builds
 
 3. **Security Workflows**
+   - **TruffleHog** (`.github/workflows/trufflehog.yml`): Secret scanning
    - **Dependency Check** (`.github/workflows/dependency-check.yml`): Weekly vulnerability scans
    - **Pre-commit** (`.github/workflows/pre-commit.yml`): Comprehensive checks
 
