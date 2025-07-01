@@ -213,7 +213,13 @@ def CUSTOM_TEST(input_value: float = 0) -> float:
         print("✅ Created custom block: CUSTOM_TEST")
 
         # Test that the block can be imported
-        test_import_cmd = ["uv", "run", "python", "-c", "import sys; sys.path.insert(0, 'atlasvibe_blocks'); from CUSTOM_TEST.CUSTOM_TEST import CUSTOM_TEST; result = CUSTOM_TEST(21); print(f'Test result: {result}'); assert result == 42, 'Test failed!'"]
+        test_import_cmd = [
+            "uv",
+            "run",
+            "python",
+            "-c",
+            "import sys; sys.path.insert(0, 'atlasvibe_blocks'); from CUSTOM_TEST.CUSTOM_TEST import CUSTOM_TEST; result = CUSTOM_TEST(21); print(f'Test result: {result}'); assert result == 42, 'Test failed!'",
+        ]
 
         result = run_command(test_import_cmd, cwd=project_dir)
 

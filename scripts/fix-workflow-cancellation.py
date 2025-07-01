@@ -104,7 +104,11 @@ concurrency:
 
                 if insert_match:
                     # Check indentation of existing properties
-                    indent_match = re.search(r"^(    )(?:if|needs|runs-on|strategy):", content[job_start + insert_match.start() : job_start + insert_match.end()], re.MULTILINE)
+                    indent_match = re.search(
+                        r"^(    )(?:if|needs|runs-on|strategy):",
+                        content[job_start + insert_match.start() : job_start + insert_match.end()],
+                        re.MULTILINE,
+                    )
                     if indent_match:
                         # Insert after job name but before other properties
                         timeout_line = f"    timeout-minutes: {timeout}\n"

@@ -20,7 +20,13 @@ from typing import Dict, Any
 
 def parse_test_results(results_dir: Path) -> Dict[str, Any]:
     """Parse UI test results from various sources."""
-    report = {"summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "duration": 0}, "tests": [], "screenshots": [], "accessibility": [], "performance": {}}
+    report = {
+        "summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "duration": 0},
+        "tests": [],
+        "screenshots": [],
+        "accessibility": [],
+        "performance": {},
+    }
 
     # Parse main test results
     results_json = results_dir / "results.json"
@@ -41,13 +47,25 @@ def parse_test_results(results_dir: Path) -> Dict[str, Any]:
     screenshots_dir = results_dir / "screenshots"
     if screenshots_dir.exists():
         for screenshot in screenshots_dir.glob("*.png"):
-            report["screenshots"].append({"name": screenshot.name, "path": str(screenshot), "size": screenshot.stat().st_size})
+            report["screenshots"].append(
+                {
+                    "name": screenshot.name,
+                    "path": str(screenshot),
+                    "size": screenshot.stat().st_size,
+                }
+            )
 
     # Find final screenshots
     final_screenshots = results_dir / "final-screenshots"
     if final_screenshots.exists():
         for screenshot in final_screenshots.glob("*.png"):
-            report["screenshots"].append({"name": f"final/{screenshot.name}", "path": str(screenshot), "size": screenshot.stat().st_size})
+            report["screenshots"].append(
+                {
+                    "name": f"final/{screenshot.name}",
+                    "path": str(screenshot),
+                    "size": screenshot.stat().st_size,
+                }
+            )
 
     return report
 

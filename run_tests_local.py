@@ -51,7 +51,12 @@ class TestReporter:
 
         # Start the services using pnpm
         try:
-            self.server_process = subprocess.Popen(["pnpm", "run", "start-project:ci"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            self.server_process = subprocess.Popen(
+                ["pnpm", "run", "start-project:ci"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
 
             print("⏳ Waiting for services to be ready...")
             # Wait for services to start (checking if ports are open would be better)
@@ -112,7 +117,14 @@ class TestReporter:
         Path("test-results").mkdir(exist_ok=True)
 
         # Run API smoke tests that don't require browser
-        cmd = ["pnpm", "exec", "playwright", "test", "00_api_smoke.spec.ts", "--reporter=json"]
+        cmd = [
+            "pnpm",
+            "exec",
+            "playwright",
+            "test",
+            "00_api_smoke.spec.ts",
+            "--reporter=json",
+        ]
 
         print("\n📋 Running Playwright tests...")
         process = subprocess.run(cmd, capture_output=True, text=True)

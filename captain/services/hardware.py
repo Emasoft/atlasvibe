@@ -240,7 +240,13 @@ class LinuxDeviceFinder(DefaultDeviceFinder):
         # Use subprocess without shell=True for security
         try:
             # First run v4l2-ctl --list-devices
-            v4l2_result = subprocess.run(["v4l2-ctl", "--list-devices"], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            v4l2_result = subprocess.run(
+                ["v4l2-ctl", "--list-devices"],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
 
             if v4l2_result.returncode != 0:
                 return super().get_cameras()

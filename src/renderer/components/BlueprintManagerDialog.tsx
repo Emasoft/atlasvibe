@@ -15,7 +15,7 @@
 // - Handles name collision detection
 //
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -59,35 +59,35 @@ export function BlueprintManagerDialog({
   const manifest = useManifest();
 
   // Helper function to extract blueprints from manifest tree
-  const extractBlueprints = (
-    node: TreeNode,
-    category: string = "",
-  ): BlueprintItem[] => {
-    const items: BlueprintItem[] = [];
+  const extractBlueprints = useCallback(
+    (node: TreeNode, category: string = ""): BlueprintItem[] => {
+      const items: BlueprintItem[] = [];
 
-    if ("children" in node && node.children) {
-      // This is a section node
-      node.children.forEach((child) => {
-        const childCategory = category
-          ? `${category}/${child.name}`
-          : child.name;
-        items.push(...extractBlueprints(child, childCategory));
-      });
-    } else if (
-      "key" in node &&
-      node.key &&
-      (node as BlockDefinition).isBlueprint
-    ) {
-      // This is a leaf node (block definition)
-      items.push({
-        key: node.key,
-        name: node.name,
-        category: category,
-      });
-    }
+      if ("children" in node && node.children) {
+        // This is a section node
+        node.children.forEach((child) => {
+          const childCategory = category
+            ? `${category}/${child.name}`
+            : child.name;
+          items.push(...extractBlueprints(child, childCategory));
+        });
+      } else if (
+        "key" in node &&
+        node.key &&
+        (node as BlockDefinition).isBlueprint
+      ) {
+        // This is a leaf node (block definition)
+        items.push({
+          key: node.key,
+          name: node.name,
+          category: category,
+        });
+      }
 
-    return items;
-  };
+      return items;
+    },
+    [],
+  );
 
   // Load blueprints from manifest
   useEffect(() => {

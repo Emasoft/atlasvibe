@@ -112,8 +112,42 @@ def CUSTOM_ADDITION(a: float = 0, b: float = 0) -> float:
 
             # Test workflow creation
             workflow = {
-                "nodes": [{"id": "1", "type": "CONSTANT", "position": {"x": 100, "y": 100}, "data": {"value": 5}}, {"id": "2", "type": "CONSTANT", "position": {"x": 100, "y": 200}, "data": {"value": 3}}, {"id": "3", "type": "CUSTOM_ADDITION", "position": {"x": 300, "y": 150}, "data": {}}],
-                "edges": [{"id": "e1", "source": "1", "target": "3", "sourceHandle": "out", "targetHandle": "a"}, {"id": "e2", "source": "2", "target": "3", "sourceHandle": "out", "targetHandle": "b"}],
+                "nodes": [
+                    {
+                        "id": "1",
+                        "type": "CONSTANT",
+                        "position": {"x": 100, "y": 100},
+                        "data": {"value": 5},
+                    },
+                    {
+                        "id": "2",
+                        "type": "CONSTANT",
+                        "position": {"x": 100, "y": 200},
+                        "data": {"value": 3},
+                    },
+                    {
+                        "id": "3",
+                        "type": "CUSTOM_ADDITION",
+                        "position": {"x": 300, "y": 150},
+                        "data": {},
+                    },
+                ],
+                "edges": [
+                    {
+                        "id": "e1",
+                        "source": "1",
+                        "target": "3",
+                        "sourceHandle": "out",
+                        "targetHandle": "a",
+                    },
+                    {
+                        "id": "e2",
+                        "source": "2",
+                        "target": "3",
+                        "sourceHandle": "out",
+                        "targetHandle": "b",
+                    },
+                ],
             }
 
             with open(project_dir / "test_workflow.json", "w") as f:
@@ -136,9 +170,30 @@ def CUSTOM_ADDITION(a: float = 0, b: float = 0) -> float:
                 # Create a simple workflow
                 topology = {
                     "nodes": [
-                        {"id": "const1", "block_id": "CONSTANT", "label": "Constant 1", "inputs": {}, "extras": {"value": 10}},
-                        {"id": "const2", "block_id": "CONSTANT", "label": "Constant 2", "inputs": {}, "extras": {"value": 20}},
-                        {"id": "add1", "block_id": "ADDITION", "label": "Add", "inputs": {"a": {"from_node": "const1", "from_output": "default"}, "b": {"from_node": "const2", "from_output": "default"}}, "extras": {}},
+                        {
+                            "id": "const1",
+                            "block_id": "CONSTANT",
+                            "label": "Constant 1",
+                            "inputs": {},
+                            "extras": {"value": 10},
+                        },
+                        {
+                            "id": "const2",
+                            "block_id": "CONSTANT",
+                            "label": "Constant 2",
+                            "inputs": {},
+                            "extras": {"value": 20},
+                        },
+                        {
+                            "id": "add1",
+                            "block_id": "ADDITION",
+                            "label": "Add",
+                            "inputs": {
+                                "a": {"from_node": "const1", "from_output": "default"},
+                                "b": {"from_node": "const2", "from_output": "default"},
+                            },
+                            "extras": {},
+                        },
                     ]
                 }
 
@@ -245,7 +300,13 @@ build-backend = "hatchling.build"
                     self.results.append({"name": test_name, "status": "PASSED", "error": None})
                 else:
                     failed += 1
-                    self.results.append({"name": test_name, "status": "FAILED", "error": "Test returned False"})
+                    self.results.append(
+                        {
+                            "name": test_name,
+                            "status": "FAILED",
+                            "error": "Test returned False",
+                        }
+                    )
             except Exception as e:
                 failed += 1
                 self.results.append({"name": test_name, "status": "ERROR", "error": str(e)})
@@ -264,7 +325,19 @@ build-backend = "hatchling.build"
         results_file.parent.mkdir(exist_ok=True)
 
         with open(results_file, "w") as f:
-            json.dump({"summary": {"total": len(tests), "passed": passed, "failed": failed}, "tests": self.results, "timestamp": time.time()}, f, indent=2)
+            json.dump(
+                {
+                    "summary": {
+                        "total": len(tests),
+                        "passed": passed,
+                        "failed": failed,
+                    },
+                    "tests": self.results,
+                    "timestamp": time.time(),
+                },
+                f,
+                indent=2,
+            )
 
         print(f"\n💾 Results saved to: {results_file}")
 

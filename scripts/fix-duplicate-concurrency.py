@@ -12,7 +12,13 @@ def fix_duplicate_concurrency(filepath: Path) -> None:
         content = f.read()
 
     # Count occurrences of concurrency blocks
-    concurrency_matches = list(re.finditer(r"^concurrency:\n  group:.*\n  cancel-in-progress:.*\n", content, re.MULTILINE))
+    concurrency_matches = list(
+        re.finditer(
+            r"^concurrency:\n  group:.*\n  cancel-in-progress:.*\n",
+            content,
+            re.MULTILINE,
+        )
+    )
 
     if len(concurrency_matches) > 1:
         print(f"  Found {len(concurrency_matches)} concurrency blocks in {filepath.name}, removing duplicates...")

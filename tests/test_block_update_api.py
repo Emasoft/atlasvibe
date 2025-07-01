@@ -39,7 +39,10 @@ class TestBlockUpdateAPI:
         mock_manager.has_pending_changes.return_value = False
         mock_manager.is_block_executing.return_value = False
 
-        with patch("captain.routes.blocks.ChangeQueueManager.get_instance", return_value=mock_manager):
+        with patch(
+            "captain.routes.blocks.ChangeQueueManager.get_instance",
+            return_value=mock_manager,
+        ):
             yield mock_manager
 
     @pytest.fixture

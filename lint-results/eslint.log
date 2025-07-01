@@ -1,0 +1,23 @@
+
+> atlasvibe@0.1.0 lint /app
+> eslint --ext .ts,.tsx .
+
+
+/app/src/renderer/components/blocks/VenvStatusDialog.tsx
+  95:6  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/src/renderer/context/auth.context.tsx
+  41:9  warning  The 'defaultUser' object makes the dependencies of useCallback Hook (at line 53) change on every render. To fix this, wrap the initialization of 'defaultUser' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  41:9  warning  The 'defaultUser' object makes the dependencies of useCallback Hook (at line 58) change on every render. To fix this, wrap the initialization of 'defaultUser' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+/app/src/renderer/routes/editor/EnhancedEditorView.tsx
+  114:6  warning  React Hook useCallback has missing dependencies: 'loadVenvStatus' and 'validateCurrentCode'. Either include them or remove the dependency array                                                                                   react-hooks/exhaustive-deps
+  236:9  warning  The 'handleChange' function makes the dependencies of useMemo Hook (at line 344) change on every render. Move it inside the useMemo callback. Alternatively, wrap the definition of 'handleChange' in its own useCallback() Hook  react-hooks/exhaustive-deps
+
+/app/src/renderer/routes/flow_chart/views/ControlBar/FlowControlButtons.tsx
+  93:6  warning  React Hook useCallback has a missing dependency: 'edges'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/src/renderer/routes/test_sequencer_panel/components/data-table/TestTable.tsx
+  371:9  warning  The 'handleAddConditionalModal' function makes the dependencies of useEffect Hook (at line 464) change on every render. To fix this, wrap the definition of 'handleAddConditionalModal' in its own useCallback() Hook  react-hooks/exhaustive-deps
+
+✖ 7 problems (0 errors, 7 warnings)

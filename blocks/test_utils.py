@@ -85,7 +85,13 @@ def create_test_vector(size: int = 10, start: float = 0.0, stop: float = 10.0) -
     return Vector(v=np.linspace(start, stop, size))
 
 
-def create_test_ordered_pair(size: int = 10, x_start: float = 0.0, x_stop: float = 10.0, y_start: float = 0.0, y_stop: float = 10.0) -> OrderedPair:
+def create_test_ordered_pair(
+    size: int = 10,
+    x_start: float = 0.0,
+    x_stop: float = 10.0,
+    y_start: float = 0.0,
+    y_stop: float = 10.0,
+) -> OrderedPair:
     """Create a test OrderedPair DataContainer.
 
     Args:
@@ -190,7 +196,11 @@ def create_test_ordered_triple(size: int = 10) -> OrderedTriple:
     Returns:
         An OrderedTriple DataContainer
     """
-    return OrderedTriple(x=np.linspace(0, 10, size), y=np.linspace(0, 10, size), z=np.linspace(0, 10, size))
+    return OrderedTriple(
+        x=np.linspace(0, 10, size),
+        y=np.linspace(0, 10, size),
+        z=np.linspace(0, 10, size),
+    )
 
 
 def assert_datacontainer_equal(dc1: DataContainer, dc2: DataContainer, rtol: float = 1e-5):
@@ -260,4 +270,8 @@ def parametrize_datacontainer_types():
         ("ordered_triple", create_test_ordered_triple),
     ]
 
-    return pytest.mark.parametrize("datacontainer_factory", [f[1] for f in factories], ids=[f[0] for f in factories])
+    return pytest.mark.parametrize(
+        "datacontainer_factory",
+        [f[1] for f in factories],
+        ids=[f[0] for f in factories],
+    )

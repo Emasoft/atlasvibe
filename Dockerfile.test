@@ -39,6 +39,9 @@ RUN grep -v "^-e" requirements.txt > requirements-docker.txt
 # Install Python dependencies with uv
 RUN uv venv && . .venv/bin/activate && uv pip install -r requirements-docker.txt
 
+# Install dev tools
+RUN . .venv/bin/activate && uv pip install ruff mypy pytest pytest-asyncio
+
 # Install Node dependencies
 RUN pnpm install --frozen-lockfile
 

@@ -100,7 +100,11 @@ def test_conditional_invalid_operator(mock_atlasvibe_decorator):
     """Test CONDITIONAL block with invalid operator."""
     # Test with invalid operator should raise an error
     with pytest.raises((ValueError, KeyError, AttributeError)):
-        CONDITIONAL.CONDITIONAL(obj1=create_test_scalar(5.0), obj2=create_test_scalar(3.0), operator="invalid")
+        CONDITIONAL.CONDITIONAL(
+            obj1=create_test_scalar(5.0),
+            obj2=create_test_scalar(3.0),
+            operator="invalid",
+        )
 
 
 def test_conditional_same_object_reference(mock_atlasvibe_decorator):

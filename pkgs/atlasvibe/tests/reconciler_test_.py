@@ -4,7 +4,10 @@ import unittest
 
 
 from pkgs.atlasvibe.atlasvibe.data_container import DataContainer
-from pkgs.atlasvibe.atlasvibe.reconciler import Reconciler, IrreconcilableContainersException
+from pkgs.atlasvibe.atlasvibe.reconciler import (
+    Reconciler,
+    IrreconcilableContainersException,
+)
 
 
 class ReconcilerTestCase(unittest.TestCase):

@@ -15,7 +15,12 @@ def fix_workflow_timeouts(filepath: Path) -> bool:
 
     # Remove timeout-minutes from event triggers (they don't belong there)
     # Pattern: event name followed by timeout-minutes on next line
-    content = re.sub(r"(^\s+\w+:\s*\n)\s+timeout-minutes:\s*\d+\s*\n", r"\1", content, flags=re.MULTILINE)
+    content = re.sub(
+        r"(^\s+\w+:\s*\n)\s+timeout-minutes:\s*\d+\s*\n",
+        r"\1",
+        content,
+        flags=re.MULTILINE,
+    )
 
     # Also remove timeout-minutes that appear in the wrong place in the 'on:' section
     # Pattern: under 'on:' section before any job definitions
@@ -42,7 +47,12 @@ def fix_workflow_timeouts(filepath: Path) -> bool:
 
     # Remove duplicate timeout-minutes from jobs
     # Pattern: job with multiple timeout-minutes entries
-    content = re.sub(r"(timeout-minutes:\s*\d+\s*\n)(\s*timeout-minutes:\s*\d+\s*\n)+", r"\1", content, flags=re.MULTILINE)
+    content = re.sub(
+        r"(timeout-minutes:\s*\d+\s*\n)(\s*timeout-minutes:\s*\d+\s*\n)+",
+        r"\1",
+        content,
+        flags=re.MULTILINE,
+    )
 
     if content != original_content:
         with open(filepath, "w") as f:

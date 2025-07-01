@@ -30,7 +30,9 @@ def test_logarithmic_adjustment_basic(mock_atlasvibe_decorator):
     input_image = Image(r=r, g=g, b=b, a=None)
 
     # Import and run the function
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     result = LOGARITHMIC_ADJUSTMENT(input_image)
 
@@ -56,7 +58,9 @@ def test_logarithmic_adjustment_with_gain(mock_atlasvibe_decorator):
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     # Test with different gain values
     result_low_gain = LOGARITHMIC_ADJUSTMENT(input_image, gain=0.5)
@@ -76,7 +80,9 @@ def test_logarithmic_adjustment_inverse(mock_atlasvibe_decorator):
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     # Test normal vs inverse
     result_normal = LOGARITHMIC_ADJUSTMENT(input_image, inv=False)
@@ -97,7 +103,9 @@ def test_logarithmic_adjustment_with_alpha(mock_atlasvibe_decorator):
 
     input_image = Image(r=r, g=g, b=b, a=a)
 
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     result = LOGARITHMIC_ADJUSTMENT(input_image)
 
@@ -116,7 +124,9 @@ def test_logarithmic_adjustment_invalid_dtype(mock_atlasvibe_decorator):
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     # Should raise ValueError
     with pytest.raises(ValueError, match="Image must be in uint8 format"):
@@ -133,7 +143,9 @@ def test_logarithmic_adjustment_edge_values(mock_atlasvibe_decorator):
 
     input_image = Image(r=r, g=g, b=b, a=None)
 
-    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import LOGARITHMIC_ADJUSTMENT
+    from blocks.COMPUTER_VISION.LOGARITHMIC_ADJUSTMENT.LOGARITHMIC_ADJUSTMENT import (
+        LOGARITHMIC_ADJUSTMENT,
+    )
 
     # Should not raise any errors
     result = LOGARITHMIC_ADJUSTMENT(input_image)

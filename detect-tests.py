@@ -40,11 +40,21 @@ class TestDetector:
         """Get list of changed files from git."""
         try:
             # Get files changed in last commit
-            result = subprocess.run(["git", "diff", "--name-only", "HEAD~1..HEAD"], capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                ["git", "diff", "--name-only", "HEAD~1..HEAD"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             files = {self.root / f.strip() for f in result.stdout.strip().split("\n") if f}
 
             # Also get uncommitted changes
-            result = subprocess.run(["git", "diff", "--name-only"], capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                ["git", "diff", "--name-only"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             files.update(self.root / f.strip() for f in result.stdout.strip().split("\n") if f)
 
             return files
@@ -54,11 +64,23 @@ class TestDetector:
 
     def _get_test_categories(self) -> Dict[str, List[str]]:
         """Determine which test categories to run."""
-        categories = {"python": [], "javascript": [], "docker": [], "ui": [], "integration": []}
+        categories = {
+            "python": [],
+            "javascript": [],
+            "docker": [],
+            "ui": [],
+            "integration": [],
+        }
 
         # If no changes detected, run all tests
         if not self.changed_files:
-            return {"python": ["all"], "javascript": ["all"], "docker": ["all"] if self.environment != "remote" else [], "ui": ["all"] if self.environment == "local" else [], "integration": ["all"] if self.environment != "remote" else []}
+            return {
+                "python": ["all"],
+                "javascript": ["all"],
+                "docker": ["all"] if self.environment != "remote" else [],
+                "ui": ["all"] if self.environment == "local" else [],
+                "integration": ["all"] if self.environment != "remote" else [],
+            }
 
         # Analyze changed files
         for file in self.changed_files:
@@ -118,7 +140,12 @@ class TestDetector:
 
         # UI tests
         if categories["ui"] and self.environment == "local":
-            commands.append(("UI Tests", "pnpm exec playwright test playwright-test/ui-docker-tests.spec.ts"))
+            commands.append(
+                (
+                    "UI Tests",
+                    "pnpm exec playwright test playwright-test/ui-docker-tests.spec.ts",
+                )
+            )
 
         # Integration tests
         if categories["integration"] and self.environment != "remote":
@@ -128,12 +155,27 @@ class TestDetector:
 
     def generate_test_plan(self) -> Dict[str, any]:
         """Generate a test execution plan."""
-        return {"environment": self.environment, "changed_files": len(self.changed_files), "test_commands": self.get_test_commands(), "parallel": self.environment == "local", "estimated_time": self._estimate_time()}
+        return {
+            "environment": self.environment,
+            "changed_files": len(self.changed_files),
+            "test_commands": self.get_test_commands(),
+            "parallel": self.environment == "local",
+            "estimated_time": self._estimate_time(),
+        }
 
     def _estimate_time(self) -> int:
         """Estimate test execution time in seconds."""
         commands = self.get_test_commands()
-        base_times = {"Python Tests": 120, "Block Tests": 60, "Backend Tests": 40, "JavaScript Tests": 30, "Lint Check": 10, "Docker Tests": 300, "UI Tests": 180, "Integration Tests": 240}
+        base_times = {
+            "Python Tests": 120,
+            "Block Tests": 60,
+            "Backend Tests": 40,
+            "JavaScript Tests": 30,
+            "Lint Check": 10,
+            "Docker Tests": 300,
+            "UI Tests": 180,
+            "Integration Tests": 240,
+        }
 
         total = sum(base_times.get(cmd[0], 60) for cmd in commands)
 
