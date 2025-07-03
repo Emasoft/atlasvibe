@@ -12,6 +12,9 @@ on:
     branches:
     - main
 
+env:
+  PRE_COMMIT_MAX_WORKERS: 1
+  CI_SEQUENTIAL_MODE: 1
 
 jobs:
   block-completeness:

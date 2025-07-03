@@ -11,6 +11,8 @@ on:
 env:
   DISPLAY: :0
   UV_VERSION: "0.7.13"
+  PRE_COMMIT_MAX_WORKERS: 1
+  CI_SEQUENTIAL_MODE: 1
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
