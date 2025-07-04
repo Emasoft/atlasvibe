@@ -9,7 +9,7 @@ source "$(pwd)/.sequential-precommit-constants.sh" 2>/dev/null || {
     export GREEN='\033[0;32m'
     export RED='\033[0;31m'
     export NC='\033[0m'
-    
+
     # Define portable_echo function
     portable_echo() {
         if [ "${1:-}" = "-e" ]; then
@@ -19,7 +19,7 @@ source "$(pwd)/.sequential-precommit-constants.sh" 2>/dev/null || {
             printf '%s\n' "$@"
         fi
     }
-    
+
     # Define other required functions
     detect_platform() {
         case "${OSTYPE:-$(uname -s | tr '[:upper:]' '[:lower:]')}" in
@@ -28,7 +28,7 @@ source "$(pwd)/.sequential-precommit-constants.sh" 2>/dev/null || {
             *) echo "unknown" ;;
         esac
     }
-    
+
     calculate_md5() {
         local input="$1"
         if command -v md5sum >/dev/null 2>&1; then
@@ -39,7 +39,7 @@ source "$(pwd)/.sequential-precommit-constants.sh" 2>/dev/null || {
             echo "test-hash"
         fi
     }
-    
+
     is_orphaned() {
         return 1  # Not orphaned for test
     }
@@ -52,7 +52,7 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_cmd="$2"
-    
+
     echo -n "Testing $test_name... "
     if eval "$test_cmd" >/dev/null 2>&1; then
         echo "$(portable_echo -e "${GREEN}✓ PASSED${NC}")"

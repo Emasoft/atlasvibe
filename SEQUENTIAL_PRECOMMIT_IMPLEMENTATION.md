@@ -179,7 +179,7 @@ calculate_md5() {
 kill_process_tree() {
     local pid=$1
     local signal=${2:-TERM}
-    
+
     if [ "$(detect_platform)" = "macos" ]; then
         # macOS: Use process group
         local pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
@@ -199,16 +199,16 @@ kill_process_tree() {
 is_orphaned() {
     local pid=${1:-$$}
     local ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-    
+
     if [ -z "$ppid" ] || [ "$ppid" = "1" ]; then
         return 0  # Process is orphaned
     fi
-    
+
     # Check if parent still exists
     if ! kill -0 "$ppid" 2>/dev/null; then
         return 0  # Parent is dead
     fi
-    
+
     return 1  # Not orphaned
 }
 
@@ -216,7 +216,7 @@ is_orphaned() {
 ensure_directory() {
     local dir="$1"
     local perms="${2:-755}"
-    
+
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir" || return 1
         chmod "$perms" "$dir" || return 1
@@ -227,24 +227,24 @@ ensure_directory() {
 # Validate environment
 validate_environment() {
     local errors=0
-    
+
     # Check Python version
     if ! python3 --version 2>&1 | grep -q "3\.1[1-9]"; then
         portable_echo "ERROR: Python 3.11+ required"
         ((errors++))
     fi
-    
+
     # Check pre-commit installation
     if ! command -v pre-commit >/dev/null 2>&1; then
         portable_echo "ERROR: pre-commit not installed"
         ((errors++))
     fi
-    
+
     # Check bash version
     if [ "${BASH_VERSION%%.*}" -lt 4 ]; then
         portable_echo "WARNING: Bash 4+ recommended (current: $BASH_VERSION)"
     fi
-    
+
     return $errors
 }
 
@@ -340,17 +340,17 @@ log() {
 cleanup() {
     local exit_code=${1:-$?}
     log "=== Cleanup initiated (exit code: $exit_code) ==="
-    
+
     # Kill all child processes
     if [ -n "${PROCESS_GROUP:-}" ]; then
         kill_process_tree "$WRAPPER_PID" TERM
         sleep 2
         kill_process_tree "$WRAPPER_PID" KILL 2>/dev/null || true
     fi
-    
+
     # Remove lock and PID files
     rm -f "${LOCK_FILE:-}" "${PID_FILE:-}"
-    
+
     # Final log
     log "=== Wrapper terminated ==="
     exit "$exit_code"
@@ -382,7 +382,7 @@ while [ $(($(date +%s) - LOCK_START)) -lt "${DEFAULT_LOCK_TIMEOUT}" ]; do
         echo $WRAPPER_PID > "$PID_FILE"
         break
     fi
-    
+
     # Check if lock holder is still alive
     if [ -f "$PID_FILE" ]; then
         LOCK_PID=$(cat "$PID_FILE" 2>/dev/null || echo "")
@@ -392,7 +392,7 @@ while [ $(($(date +%s) - LOCK_START)) -lt "${DEFAULT_LOCK_TIMEOUT}" ]; do
             continue
         fi
     fi
-    
+
     sleep 1
 done
 
@@ -422,7 +422,7 @@ if [ "${ENABLE_ORPHAN_DETECTION}" = "1" ]; then
                 kill_process_tree "$WRAPPER_PID" KILL
                 exit 1
             fi
-            
+
             # Also check if main process still exists
             if ! kill -0 "$WRAPPER_PID" 2>/dev/null; then
                 exit 0
@@ -632,15 +632,15 @@ echo "Scanning for orphaned pre-commit processes..."
 
 while IFS= read -r line; do
     [ -z "$line" ] && continue
-    
+
     pid=$(echo "$line" | awk '{print $2}')
-    
+
     if is_orphaned "$pid"; then
         ((ORPHANED_COUNT++))
         echo "$(portable_echo -e "${RED}Found orphaned process:${NC}")"
         echo "  PID: $pid"
         echo "  Running time: $(ps -o etime= -p "$pid" 2>/dev/null | tr -d ' ' || echo "unknown")"
-        
+
         if kill_process_tree "$pid" TERM; then
             sleep 2
             kill_process_tree "$pid" KILL 2>/dev/null || true
@@ -657,7 +657,7 @@ done < <(pgrep -f "pre-commit-wrapper-robust|\.git/hooks/pre-commit" 2>/dev/null
 echo "Checking for stale PID files..."
 for pidfile in /tmp/pre-commit-*.pid; do
     [ -f "$pidfile" ] || continue
-    
+
     pid=$(cat "$pidfile" 2>/dev/null || echo "")
     if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
         ((STALE_FILES++))
@@ -718,7 +718,7 @@ case "$(uname -s)" in
         # macOS: Use LaunchAgent
         PLIST_FILE="$HOME/Library/LaunchAgents/com.sequential-precommit.cleanup.plist"
         mkdir -p "$(dirname "$PLIST_FILE")"
-        
+
         cat > "$PLIST_FILE" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -741,26 +741,26 @@ case "$(uname -s)" in
 </dict>
 </plist>
 EOF
-        
+
         # Create log directory
         mkdir -p "$HOME/.sequential-precommit"
-        
+
         # Load the agent
         launchctl unload "$PLIST_FILE" 2>/dev/null || true
         launchctl load "$PLIST_FILE"
-        
+
         echo "✓ LaunchAgent installed for macOS"
         echo "  Status: launchctl list | grep sequential-precommit"
         echo "  Logs: $HOME/.sequential-precommit/cleanup.log"
         ;;
-    
+
     Linux*)
         # Linux: Use cron
         CRON_JOB="0 * * * * $CLEANUP_SCRIPT >> $HOME/.sequential-precommit/cleanup.log 2>&1"
-        
+
         # Create log directory
         mkdir -p "$HOME/.sequential-precommit"
-        
+
         # Add to crontab if not already present
         if ! crontab -l 2>/dev/null | grep -q "cleanup-orphaned-processes.sh"; then
             (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
@@ -768,11 +768,11 @@ EOF
         else
             echo "✓ Cron job already exists"
         fi
-        
+
         echo "  Status: crontab -l"
         echo "  Logs: $HOME/.sequential-precommit/cleanup.log"
         ;;
-    
+
     *)
         echo "WARNING: Unsupported platform. Please set up cleanup manually."
         exit 1
@@ -794,7 +794,7 @@ When using AI agents or automation tools with this setup:
    ```bash
    # BAD: Parallel git operations
    git commit & git push & wait
-   
+
    # GOOD: Sequential operations
    git commit && git push
    ```
@@ -887,7 +887,7 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_cmd="$2"
-    
+
     echo -n "Testing $test_name... "
     if eval "$test_cmd" >/dev/null 2>&1; then
         echo "$(portable_echo -e "${GREEN}✓ PASSED${NC}")"

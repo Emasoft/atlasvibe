@@ -137,7 +137,7 @@ calculate_md5() {
 kill_process_tree() {
     local pid=$1
     local signal=${2:-TERM}
-    
+
     if [ "$(detect_platform)" = "macos" ]; then
         local pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
         if [ -n "$pgid" ] && [ "$pgid" != "0" ]; then
@@ -155,15 +155,15 @@ kill_process_tree() {
 is_orphaned() {
     local pid=${1:-$$}
     local ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-    
+
     if [ -z "$ppid" ] || [ "$ppid" = "1" ]; then
         return 0  # Orphaned
     fi
-    
+
     if ! kill -0 "$ppid" 2>/dev/null; then
         return 0  # Parent dead
     fi
-    
+
     return 1  # Not orphaned
 }
 
@@ -233,13 +233,13 @@ log() {
 cleanup() {
     local exit_code=${1:-$?}
     log "=== Cleanup (exit: $exit_code) ==="
-    
+
     if [ -n "${PROCESS_GROUP:-}" ]; then
         kill_process_tree "$WRAPPER_PID" TERM
         sleep 2
         kill_process_tree "$WRAPPER_PID" KILL 2>/dev/null || true
     fi
-    
+
     rm -f "${LOCK_FILE:-}" "${PID_FILE:-}"
     log "=== Terminated ==="
     exit "$exit_code"
@@ -270,7 +270,7 @@ while [ $(($(date +%s) - LOCK_START)) -lt "${DEFAULT_LOCK_TIMEOUT}" ]; do
         echo $WRAPPER_PID > "$PID_FILE"
         break
     fi
-    
+
     if [ -f "$PID_FILE" ]; then
         LOCK_PID=$(cat "$PID_FILE" 2>/dev/null || echo "")
         if [ -n "$LOCK_PID" ] && ! kill -0 "$LOCK_PID" 2>/dev/null; then
@@ -279,7 +279,7 @@ while [ $(($(date +%s) - LOCK_START)) -lt "${DEFAULT_LOCK_TIMEOUT}" ]; do
             continue
         fi
     fi
-    
+
     sleep 1
 done
 
@@ -309,7 +309,7 @@ if [ "${ENABLE_ORPHAN_DETECTION}" = "1" ]; then
                 kill_process_tree "$WRAPPER_PID" KILL
                 exit 1
             fi
-            
+
             if ! kill -0 "$WRAPPER_PID" 2>/dev/null; then
                 exit 0
             fi
@@ -413,13 +413,13 @@ CLEANED_COUNT=0
 # Find orphaned processes
 while IFS= read -r line; do
     [ -z "$line" ] && continue
-    
+
     pid=$(echo "$line" | awk '{print $2}')
-    
+
     if is_orphaned "$pid"; then
         ((ORPHANED_COUNT++))
         echo "$(portable_echo -e "${RED}Found orphaned:${NC}") PID $pid"
-        
+
         if kill_process_tree "$pid" TERM; then
             sleep 2
             kill_process_tree "$pid" KILL 2>/dev/null || true
@@ -461,7 +461,7 @@ case "$(uname -s)" in
         # macOS LaunchAgent
         PLIST="$HOME/Library/LaunchAgents/com.sequential-precommit.cleanup.plist"
         mkdir -p "$(dirname "$PLIST")"
-        
+
         cat > "$PLIST" << PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -482,18 +482,18 @@ case "$(uname -s)" in
 </dict>
 </plist>
 PLIST_EOF
-        
+
         mkdir -p "$HOME/.sequential-precommit"
         launchctl unload "$PLIST" 2>/dev/null || true
         launchctl load "$PLIST"
         echo "✓ macOS LaunchAgent installed"
         ;;
-    
+
     Linux*)
         # Linux cron
         CRON_JOB="0 * * * * $CLEANUP_SCRIPT >> $HOME/.sequential-precommit/cleanup.log 2>&1"
         mkdir -p "$HOME/.sequential-precommit"
-        
+
         if ! crontab -l 2>/dev/null | grep -q "cleanup-orphaned"; then
             (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
             echo "✓ Linux cron job installed"
@@ -527,17 +527,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      
+
       - name: Install dependencies
         run: |
           uv pip install pre-commit
           uv sync --all-extras
-      
+
       - name: Run pre-commit
         run: |
           export PRE_COMMIT_MAX_WORKERS=1
