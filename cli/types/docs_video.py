@@ -12,6 +12,7 @@ try:
     from pydantic import BaseModel
 except ImportError:
     from typing import Any
+
     BaseModel = Any  # type: ignore[misc,assignment]
 
 
