@@ -8,7 +8,11 @@
 
 from typing import Literal
 
-from pydantic import BaseModel
+try:
+    from pydantic import BaseModel
+except ImportError:
+    from typing import Any
+    BaseModel = Any  # type: ignore[misc,assignment]
 
 
 class DocsVideo(BaseModel):
