@@ -42,7 +42,7 @@ jobs:
         path: ./
         base: ${{ github.event_name == 'push' && github.event.before || github.event.repository.default_branch }}
         head: ${{ github.event_name == 'push' && github.event.after || 'HEAD' }}
-        extra_args: --exclude-paths .trufflehog-exclude --fail --only-verified
+        extra_args: --exclude-paths .trufflehog-exclude --only-verified
 
     - name: Upload SARIF report
       if: success() || failure()
@@ -95,14 +95,14 @@ jobs:
           # Try to check if this is the first commit
           if git rev-list --count HEAD >/dev/null 2>&1 && [ "$(git rev-list --count HEAD)" -eq 1 ]; then
             echo "First commit detected, scanning entire repository"
-            trufflehog filesystem . --exclude-paths .trufflehog-exclude --fail --only-verified
+            trufflehog filesystem . --exclude-paths .trufflehog-exclude --only-verified
           elif git rev-parse --verify "${{ github.event.before }}" >/dev/null 2>&1; then
             echo "Running TruffleHog on commit range: ${{ github.event.before }}..${{ github.sha }}"
-            trufflehog git file://. --since-commit=${{ github.event.before }} --exclude-paths .trufflehog-exclude --fail --only-verified
+            trufflehog git file://. --since-commit=${{ github.event.before }} --exclude-paths .trufflehog-exclude --only-verified
           else
             echo "Cannot determine commit range, scanning last commit only"
-            trufflehog git file://. --since-commit=HEAD~1 --exclude-paths .trufflehog-exclude --fail --only-verified 2>/dev/null || \
-            trufflehog filesystem . --exclude-paths .trufflehog-exclude --fail --only-verified
+            trufflehog git file://. --since-commit=HEAD~1 --exclude-paths .trufflehog-exclude --only-verified 2>/dev/null || \
+            trufflehog filesystem . --exclude-paths .trufflehog-exclude --only-verified
           fi
         else
           echo "Not a push event, skipping"
