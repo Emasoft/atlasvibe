@@ -3,6 +3,7 @@
 ## Problem Statement
 
 Pre-commit hooks can sometimes leave orphaned processes when:
+
 - The parent shell is killed unexpectedly
 - The terminal is closed during execution
 - SSH connections are dropped
@@ -22,6 +23,7 @@ The new `pre-commit-wrapper-robust-v3` includes:
 - **Enhanced Cleanup**: Ensures all child processes are terminated
 
 Key features:
+
 ```bash
 # Check if we're orphaned
 check_orphan() {
@@ -52,6 +54,7 @@ done
 - Provides detailed reporting
 
 Usage:
+
 ```bash
 ./scripts/cleanup-orphaned-processes.sh
 ```
@@ -64,6 +67,7 @@ Usage:
 - **Linux**: Cron job that runs hourly
 
 Setup:
+
 ```bash
 ./scripts/setup-orphan-cleanup-cron.sh
 ```
@@ -73,11 +77,13 @@ Setup:
 ### Process Lifecycle
 
 1. **Startup**:
+
    - Check for existing PID files
    - Kill any orphaned processes from previous runs
    - Create new PID file with current process ID
 
 2. **Execution**:
+
    - Orphan watchdog checks parent every 30 seconds
    - Heartbeat monitor detects stalled processes
    - Resource monitor prevents memory exhaustion
@@ -99,11 +105,13 @@ Setup:
 If you notice hung processes:
 
 1. Run the cleanup script:
+
    ```bash
    ./scripts/cleanup-orphaned-processes.sh
    ```
 
 2. Check specific processes:
+
    ```bash
    ps aux | grep pre-commit-wrapper
    ```
@@ -125,6 +133,7 @@ If you notice hung processes:
 ### Why Processes Become Orphaned
 
 When a process's parent dies, the process is "adopted" by init (PID 1). However, the process continues running because:
+
 - It doesn't receive SIGHUP when the terminal closes
 - It's not part of the terminal's process group
 - Background processes aren't automatically killed
@@ -139,18 +148,21 @@ When a process's parent dies, the process is "adopted" by init (PID 1). However,
 ## Troubleshooting
 
 ### Process won't die
+
 ```bash
 # Force kill entire process tree
 pkill -KILL -f "pre-commit-wrapper"
 ```
 
 ### Too many orphaned processes
+
 ```bash
 # Kill all pre-commit processes for current user
 pkill -u $USER -f "pre-commit"
 ```
 
 ### Cleanup script permissions
+
 ```bash
 chmod +x scripts/cleanup-orphaned-processes.sh
 chmod +x scripts/setup-orphan-cleanup-cron.sh

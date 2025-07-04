@@ -11,6 +11,10 @@ on:
     - ".github/workflows/*.yaml"
   workflow_dispatch:
 
+env:
+  PRE_COMMIT_MAX_WORKERS: 1
+  CI_SEQUENTIAL_MODE: 1
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

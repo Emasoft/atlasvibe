@@ -267,7 +267,7 @@ Update your `.pre-commit-config.yaml` to ensure ALL hooks have `require_serial: 
 # Ensure this is at the top
 default_stages: [pre-commit]
 fail_fast: false
-minimum_pre_commit_version: '3.0.0'
+minimum_pre_commit_version: "3.0.0"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -281,7 +281,7 @@ repos:
         require_serial: true
       - id: check-added-large-files
         require_serial: true
-        args: ['--maxkb=5000']
+        args: ["--maxkb=5000"]
       - id: check-merge-conflict
         require_serial: true
 
@@ -302,7 +302,16 @@ repos:
     hooks:
       - id: trufflehog
         require_serial: true
-        args: ['filesystem', '.', '--exclude-paths', '.trufflehog-exclude', '--no-update', '--fail', '--only-verified']
+        args:
+          [
+            "filesystem",
+            ".",
+            "--exclude-paths",
+            ".trufflehog-exclude",
+            "--no-update",
+            "--fail",
+            "--only-verified",
+          ]
 ```
 
 ## Wrapper Scripts
@@ -791,6 +800,7 @@ echo "Cleanup will run hourly to remove orphaned processes"
 When using AI agents or automation tools with this setup:
 
 1. **Never spawn multiple git operations in parallel**
+
    ```bash
    # BAD: Parallel git operations
    git commit & git push & wait
@@ -800,12 +810,14 @@ When using AI agents or automation tools with this setup:
    ```
 
 2. **Always use --no-verify for automated commits**
+
    ```bash
    # Automated commits should bypass hooks
    git commit --no-verify -m "Automated commit"
    ```
 
 3. **Resource limits for subagents**
+
    ```bash
    # Set memory limits for subagent operations
    export MEMORY_LIMIT_MB=1024
@@ -813,6 +825,7 @@ When using AI agents or automation tools with this setup:
    ```
 
 4. **Lock awareness**
+
    ```bash
    # Check for locks before operations
    if [ -d "/tmp/pre-commit-*.lock" ]; then
@@ -1053,12 +1066,14 @@ uv pip install --upgrade pre-commit
 ### Adding New Hooks
 
 1. Always add `require_serial: true`:
+
    ```yaml
    - id: new-hook
      require_serial: true
    ```
 
 2. Test resource usage:
+
    ```bash
    /usr/bin/time -v pre-commit run new-hook --all-files
    ```

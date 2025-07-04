@@ -19,6 +19,8 @@ concurrency:
 env:
   # No display connection to host
   DISPLAY: ""
+  PRE_COMMIT_MAX_WORKERS: 1
+  CI_SEQUENTIAL_MODE: 1
 
 jobs:
   docker-e2e-test:
