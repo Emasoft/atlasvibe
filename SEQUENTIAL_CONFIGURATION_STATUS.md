@@ -1217,13 +1217,13 @@ jobs:
           timeout 30m pre-commit run --all-files --show-diff-on-failure || {
             exit_code=$?
             echo "Pre-commit failed with exit code: $exit_code"
-            
+
             # Upload logs on failure
             if [ -d ".pre-commit-logs" ]; then
               echo "Uploading pre-commit logs..."
               tar -czf pre-commit-logs.tar.gz .pre-commit-logs/
             fi
-            
+
             exit $exit_code
           }
 
