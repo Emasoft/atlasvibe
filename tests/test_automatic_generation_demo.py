@@ -42,7 +42,7 @@ def test_automatic_metadata_generation_demo():
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
-from atlasvibe.parameter_types import String, Number, DataFrame
+from pkgs.atlasvibe.atlasvibe.parameter_types import String, Number, DataFrame
 
 
 @atlasvibe

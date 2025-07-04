@@ -77,7 +77,7 @@ class TestCustomBlockAutoGeneration:
 
         # User creates ONLY the Python file
         py_file = block_dir / f"{block_name}.py"
-        py_content = f"""from atlasvibe import atlasvibe, Vector, Scalar
+        py_content = f"""from pkgs.atlasvibe.atlasvibe import atlasvibe, Vector, Scalar
 
 @atlasvibe
 def {block_name}(data: Vector, threshold: float = 0.5) -> Scalar:
@@ -323,7 +323,7 @@ def test_{block_name}():
 
         py_file = block_dir / f"{block_name}.py"
         py_file.write_text(
-            """from atlasvibe import atlasvibe
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def WATCHED_BLOCK() -> str:

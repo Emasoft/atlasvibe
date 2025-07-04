@@ -57,7 +57,7 @@ def TEST_IMPORT():
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(
                 '''
-from atlasvibe.data_container import OrderedPair, Scalar
+from pkgs.atlasvibe.atlasvibe.data_container import OrderedPair, Scalar
 from pkgs.atlasvibe.atlasvibe import atlasvibe_node
 
 @atlasvibe_node(node_type="MATH")

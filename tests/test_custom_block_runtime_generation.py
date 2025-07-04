@@ -66,7 +66,7 @@ class TestCustomBlockRuntimeGeneration:
         # User writes only the Python file
         py_file = custom_block_dir / "MY_CUSTOM_BLOCK.py"
         py_file.write_text(
-            """from atlasvibe import atlasvibe, Scalar
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe, Scalar
 
 @atlasvibe
 def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
@@ -171,7 +171,7 @@ def MY_CUSTOM_BLOCK(x: float = 1.0, y: float = 2.0) -> float:
 
         py_file = custom_block_dir / "WORKFLOW_BLOCK.py"
         py_file.write_text(
-            """from atlasvibe import atlasvibe
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def WORKFLOW_BLOCK(input_data: str = "hello") -> str:

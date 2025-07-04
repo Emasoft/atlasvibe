@@ -39,7 +39,7 @@ class TestAutomaticMetadataGeneration:
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
-from atlasvibe.parameter_types import String, Number, Matrix
+from pkgs.atlasvibe.atlasvibe.parameter_types import String, Number, Matrix
 
 
 @atlasvibe

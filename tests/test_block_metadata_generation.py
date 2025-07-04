@@ -55,7 +55,7 @@ class TestBlockMetadataGeneration:
         # Step 1: Create the Python source file (this is the only required file)
         py_file = test_block_dir / "TEST_BLOCK.py"
         py_file.write_text(
-            """from atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe, OrderedPair, Matrix, DataFrame, Vector, Scalar
 
 
 @atlasvibe
@@ -319,7 +319,7 @@ def mock_atlasvibe_decorator(f):
 
 
 # Patch the atlasvibe decorator
-patch("atlasvibe.atlasvibe", mock_atlasvibe_decorator).start()
+patch("pkgs.atlasvibe.atlasvibe.atlasvibe", mock_atlasvibe_decorator).start()
 
 
 def test_TEST_BLOCK():
@@ -345,7 +345,7 @@ def test_TEST_BLOCK():
         # Create initial Python file
         py_file = test_block_dir / "CHANGING_BLOCK.py"
         py_file.write_text(
-            """from atlasvibe import atlasvibe
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe
 def CHANGING_BLOCK(x: int = 10) -> int:
@@ -374,7 +374,7 @@ def CHANGING_BLOCK(x: int = 10) -> int:
 
         # Modify the Python file
         py_file.write_text(
-            """from atlasvibe import atlasvibe
+            """from pkgs.atlasvibe.atlasvibe import atlasvibe
 
 @atlasvibe(deps={"numpy": ">=1.20.0"})
 def CHANGING_BLOCK(x: int = 10, multiplier: int = 3, offset: float = 0.5) -> float:

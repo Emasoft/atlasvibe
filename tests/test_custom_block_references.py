@@ -54,7 +54,7 @@ def create_custom_block(project_dir: Path, block_name: str) -> Path:
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
-from atlasvibe.data_container import DataContainer
+from pkgs.atlasvibe.atlasvibe.data_container import DataContainer
 
 @atlasvibe(
     name="{block_name}",

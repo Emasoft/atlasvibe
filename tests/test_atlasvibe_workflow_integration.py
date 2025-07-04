@@ -36,7 +36,7 @@ class TestAtlasVibeWorkflowIntegration:
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
-from atlasvibe.parameter_types import String, Number
+from pkgs.atlasvibe.atlasvibe.parameter_types import String, Number
 
 
 @atlasvibe
@@ -175,7 +175,7 @@ def TEST_BLUEPRINT(
 # -*- coding: utf-8 -*-
 
 from pkgs.atlasvibe.atlasvibe import atlasvibe
-from atlasvibe.parameter_types import String, Number, Matrix
+from pkgs.atlasvibe.atlasvibe.parameter_types import String, Number, Matrix
 
 
 @atlasvibe
