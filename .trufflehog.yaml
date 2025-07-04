@@ -1,0 +1,88 @@
+# TruffleHog Configuration
+# This file configures TruffleHog secret detection for the AtlasVibe project
+
+# Detectors to enable (all by default)
+detectors:
+  - all
+
+# Paths to exclude from scanning
+exclude_paths:
+  - .git/
+  - node_modules/
+  - .venv/
+  - venv/
+  - dist/
+  - build/
+  - out/
+  - __pycache__/
+  - .pytest_cache/
+  - .mypy_cache/
+  - htmlcov/
+  - .tox/
+  - .coverage
+  - package-lock.json
+  - pnpm-lock.yaml
+  - uv.lock
+  - '*.log'
+  - '*.pyc'
+  - '*.pyo'
+  - '*.pyd'
+  - '*.so'
+  - '*.dylib'
+  - '*.dll'
+  - '*.class'
+  - '*.exe'
+  - '*.o'
+  - '*.a'
+
+# Allowed patterns (won't trigger alerts)
+allowed:
+  # Git author information
+  - pattern: 'Emasoft'
+  - pattern: '713559\+Emasoft@users\.noreply\.github\.com'
+  
+  # Test and example values
+  - pattern: 'test-api-key'
+  - pattern: 'YOUR_API_KEY_HERE'
+  - pattern: 'YOUR_.*_HERE'
+  - pattern: 'example-.*'
+  - pattern: 'demo-.*'
+  - pattern: 'test-.*'
+  - pattern: 'dummy-.*'
+  - pattern: 'fake-.*'
+  - pattern: 'sample-.*'
+  
+  # GitHub Actions expressions
+  - pattern: '\$\{\{.*\}\}'
+  - pattern: '\$\{\{ secrets\..*\}\}'
+  
+  # Common placeholders
+  - pattern: 'abc123'
+  - pattern: 'placeholder'
+  - pattern: 'changeme'
+  - pattern: 'xxxxxxxx'
+  - pattern: '\*\*\*\*\*\*\*\*'
+  - pattern: '<.*>'
+  - pattern: '\[.*\]'
+  
+  # Environment variable references
+  - pattern: '\$[A-Z_]+[A-Z0-9_]*'
+  - pattern: 'os\.environ\[.*\]'
+  - pattern: 'process\.env\.[A-Z_]+'
+
+# Verification settings
+verification:
+  # Only report verified secrets (reduces false positives)
+  only_verified: true
+  
+  # Skip verification for these detectors
+  skip_verification:
+    - generic
+
+# Output settings
+output:
+  # Format for output (json, github-actions, etc.)
+  format: json
+  
+  # Include additional metadata
+  verbose: false
