@@ -78,7 +78,7 @@ This document confirms the synchronization of sequential pre-commit settings bet
 ### 5. **Lock File Security and Cleanup**
 - **Problem**: Lock files used predictable names and could persist after crashes
 - **Impact**: Deadlocks and security vulnerabilities
-- **Solution**: 
+- **Solution**:
   - Use `MD5(project_root-PID-RANDOM)` for lock file names
   - Implement automatic cleanup of stale lock files
   - Add timeout to lock acquisition (30 seconds)
@@ -111,7 +111,7 @@ This document confirms the synchronization of sequential pre-commit settings bet
 ### 10. **Cross-Platform Compatibility**
 - **Challenge**: Different stat commands on macOS vs Linux
 - **Solution**: Implement platform detection and use appropriate commands
-- **Example**: 
+- **Example**:
   ```bash
   stat -f %m "$LOG_FILE" 2>/dev/null || stat -c %Y "$LOG_FILE" 2>/dev/null
   ```
@@ -136,10 +136,10 @@ This document confirms the synchronization of sequential pre-commit settings bet
    ```bash
    # Check for orphaned processes
    ./scripts/cleanup-orphaned-processes.sh
-   
+
    # Verify all hooks have require_serial
    grep -c "require_serial: true" .pre-commit-config.yaml
-   
+
    # Check Python version consistency
    find . -name "*.sh" -o -name "*.yml" | xargs grep -h "python.*3\." | sort -u
    ```
