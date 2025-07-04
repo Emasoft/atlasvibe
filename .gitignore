@@ -82,3 +82,4 @@ worker-manager/node_modules
 src/data/*.json
 # Re-add if pythonFunctions.json is truly generated and shouldn't be tracked
 # src/feature/flow_chart_panel/manifest/pythonFunctions.json
+.pre-commit-logs/
