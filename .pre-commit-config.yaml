@@ -1,301 +1,301 @@
 repos:
 - repo: local
   hooks:
-    - id: yamlfmt
-      name: Format GitHub Actions workflow files with yamlfmt
-      entry: yamlfmt
-      language: golang
-      types:
-        - yaml
-      files: ^\.github/workflows/.*\.(yml|yaml)$
-      additional_dependencies:
-        - github.com/google/yamlfmt/cmd/yamlfmt@latest
-      require_serial: true
+  - id: yamlfmt
+    name: Format GitHub Actions workflow files with yamlfmt
+    entry: yamlfmt
+    language: golang
+    types:
+    - yaml
+    files: ^\.github/workflows/.*\.(yml|yaml)$
+    additional_dependencies:
+    - github.com/google/yamlfmt/cmd/yamlfmt@latest
+    require_serial: true
 - repo: https://github.com/rhysd/actionlint
   rev: v1.7.7
   hooks:
-    - id: actionlint
-      name: Lint GitHub Actions workflow files
-      entry: actionlint
-      language: system
-      types:
-        - yaml
-      files: ^\.github/workflows/.*\.(yml|yaml)$
-      require_serial: true
+  - id: actionlint
+    name: Lint GitHub Actions workflow files
+    entry: actionlint
+    language: system
+    types:
+    - yaml
+    files: ^\.github/workflows/.*\.(yml|yaml)$
+    require_serial: true
 - repo: https://github.com/astral-sh/uv-pre-commit
   rev: 0.7.13
   hooks:
-    - id: uv-lock
-      name: Check uv.lock is up-to-date
-      args:
-        - --locked
-      require_serial: true
-    - id: uv-export
-      name: Export requirements.txt from uv.lock
-      args:
-        - --frozen
-        - --no-hashes
-        - -o
-        - requirements.txt
-      files: ^(uv\.lock|pyproject\.toml)$
-      require_serial: true
-    - id: uv-export
-      name: Export dev requirements from uv.lock
-      args:
-        - --frozen
-        - --no-hashes
-        - --all-extras
-        - -o
-        - requirements-dev.txt
-      files: ^(uv\.lock|pyproject\.toml)$
-      require_serial: true
+  - id: uv-lock
+    name: Check uv.lock is up-to-date
+    args:
+    - --locked
+    require_serial: true
+  - id: uv-export
+    name: Export requirements.txt from uv.lock
+    args:
+    - --frozen
+    - --no-hashes
+    - -o
+    - requirements.txt
+    files: ^(uv\.lock|pyproject\.toml)$
+    require_serial: true
+  - id: uv-export
+    name: Export dev requirements from uv.lock
+    args:
+    - --frozen
+    - --no-hashes
+    - --all-extras
+    - -o
+    - requirements-dev.txt
+    files: ^(uv\.lock|pyproject\.toml)$
+    require_serial: true
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.12.0
   hooks:
-    - id: ruff
-      name: Run ruff linter
-      args:
-        - --ignore
-        - E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291
-        - --isolated
-        - --fix
-        - --exit-non-zero-on-fix
-        - --output-format
-        - full
-      require_serial: true
-    - id: ruff-format
-      name: Run ruff formatter
-      args:
-        - --line-length=320
-        - --isolated
-      require_serial: true
+  - id: ruff
+    name: Run ruff linter
+    args:
+    - --ignore
+    - E203,E402,E501,E266,W505,F841,F842,F401,W293,I001,UP015,C901,W291
+    - --isolated
+    - --fix
+    - --exit-non-zero-on-fix
+    - --output-format
+    - full
+    require_serial: true
+  - id: ruff-format
+    name: Run ruff formatter
+    args:
+    - --line-length=320
+    - --isolated
+    require_serial: true
 - repo: https://github.com/psf/black
   rev: 24.8.0
   hooks:
-    - id: black
-      name: Format Python with Black
-      language_version: python3
-      args:
-        - --line-length=320
-      require_serial: true
+  - id: black
+    name: Format Python with Black
+    language_version: python3
+    args:
+    - --line-length=320
+    require_serial: true
 - repo: https://github.com/trufflesecurity/trufflehog
   rev: v3.89.2
   hooks:
-    - id: trufflehog
-      name: Detect secrets with TruffleHog
-      entry: trufflehog filesystem .
-      language: system
-      stages:
-        - pre-commit
-        - pre-push
-      pass_filenames: false
-      args:
-        - --exclude-paths
-        - .trufflehog-exclude
-        - --no-update
-        - --fail
-        - --only-verified
-      require_serial: true
+  - id: trufflehog
+    name: Detect secrets with TruffleHog
+    entry: trufflehog filesystem .
+    language: system
+    stages:
+    - pre-commit
+    - pre-push
+    pass_filenames: false
+    args:
+    - --exclude-paths
+    - .trufflehog-exclude
+    - --no-update
+    - --fail
+    - --only-verified
+    require_serial: true
 - repo: local
   hooks:
-    - id: mypy
-      name: Type check with mypy
-      entry: uv run mypy
-      language: system
-      types:
-        - python
-      require_serial: true
-      args:
-        - --strict
-        - --ignore-missing-imports
-      exclude: ^(tests/|test_|.*_test\.py|.*_test_\.py|sample_projects/)
+  - id: mypy
+    name: Type check with mypy
+    entry: uv run mypy
+    language: system
+    types:
+    - python
+    require_serial: true
+    args:
+    - --strict
+    - --ignore-missing-imports
+    exclude: ^(tests/|test_|.*_test\.py|.*_test_\.py|sample_projects/)
 - repo: local
   hooks:
-    - id: pytest-quick
-      name: Run quick Python tests
-      entry: uv run pytest
-      language: system
-      pass_filenames: false
-      stages:
-        - pre-commit
-      args:
-        - -v
-        - --tb=short
-        - --timeout=60
-        - -m
-        - not slow
-        - --cov
-        - --cov-report=xml
-        - --maxfail=5
-        - tests/
-        - PYTHON/tests/
-        - cli/
-      files: \.py$
-      require_serial: true
+  - id: pytest-quick
+    name: Run quick Python tests
+    entry: uv run pytest
+    language: system
+    pass_filenames: false
+    stages:
+    - pre-commit
+    args:
+    - -v
+    - --tb=short
+    - --timeout=60
+    - -m
+    - not slow
+    - --cov
+    - --cov-report=xml
+    - --maxfail=5
+    - tests/
+    - PYTHON/tests/
+    - cli/
+    files: \.py$
+    require_serial: true
 - repo: local
   hooks:
-    - id: eslint
-      name: ESLint JavaScript/TypeScript
-      entry: pnpm run lint
-      language: system
-      types_or:
-        - javascript
-        - jsx
-        - ts
-        - tsx
-      pass_filenames: false
-      require_serial: true
+  - id: eslint
+    name: ESLint JavaScript/TypeScript
+    entry: pnpm run lint
+    language: system
+    types_or:
+    - javascript
+    - jsx
+    - ts
+    - tsx
+    pass_filenames: false
+    require_serial: true
 - repo: local
   hooks:
-    - id: prettier
-      name: Format JavaScript/TypeScript with Prettier
-      entry: pnpm run format
-      language: system
-      types_or:
-        - javascript
-        - jsx
-        - ts
-        - tsx
-        - json
-        - css
-        - scss
-      pass_filenames: false
-      require_serial: true
+  - id: prettier
+    name: Format JavaScript/TypeScript with Prettier
+    entry: pnpm run format
+    language: system
+    types_or:
+    - javascript
+    - jsx
+    - ts
+    - tsx
+    - json
+    - css
+    - scss
+    pass_filenames: false
+    require_serial: true
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.9.0.6
   hooks:
-    - id: shellcheck
-      name: Lint shell scripts
-      args:
-        - --severity=error
-      require_serial: true
+  - id: shellcheck
+    name: Lint shell scripts
+    args:
+    - --severity=error
+    require_serial: true
 - repo: https://github.com/adrienverge/yamllint
   rev: v1.33.0
   hooks:
-    - id: yamllint
-      name: Lint YAML files
-      args:
-        - -c=.yamllint
-      require_serial: true
+  - id: yamllint
+    name: Lint YAML files
+    args:
+    - -c=.yamllint
+    require_serial: true
 - repo: local
   hooks:
-    - id: deptry
-      name: Check Python dependencies with deptry
-      entry: uv run deptry
-      language: system
-      always_run: true
-      pass_filenames: false
-      args:
-        - .
-        - --extend-exclude
-        - tests
-        - --extend-exclude
-        - .*_test.*\.py
-        - --extend-exclude
-        - node_modules
-        - --extend-exclude
-        - playwright-test
-        - --extend-exclude
-        - examples
-        - --extend-exclude
-        - public
-        - --extend-exclude
-        - out
-        - --extend-exclude
-        - dist
-        - --extend-exclude
-        - PYTHON/tests
-        - --known-first-party
-        - atlasvibe
-        - --known-first-party
-        - atlasvibe_sdk
-        - --known-first-party
-        - atlasvibe_engine
-        - --known-first-party
-        - atlasvibe_cli
-        - --known-first-party
-        - captain
-        - --known-first-party
-        - cli
-        - --ignore
-        - DEP003
-        - --per-rule-ignores
-        - DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|pytest-asyncio|ruff|deptry|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring
-      require_serial: true
+  - id: deptry
+    name: Check Python dependencies with deptry
+    entry: uv run deptry
+    language: system
+    always_run: true
+    pass_filenames: false
+    args:
+    - .
+    - --extend-exclude
+    - tests
+    - --extend-exclude
+    - .*_test.*\.py
+    - --extend-exclude
+    - node_modules
+    - --extend-exclude
+    - playwright-test
+    - --extend-exclude
+    - examples
+    - --extend-exclude
+    - public
+    - --extend-exclude
+    - out
+    - --extend-exclude
+    - dist
+    - --extend-exclude
+    - PYTHON/tests
+    - --known-first-party
+    - atlasvibe
+    - --known-first-party
+    - atlasvibe_sdk
+    - --known-first-party
+    - atlasvibe_engine
+    - --known-first-party
+    - atlasvibe_cli
+    - --known-first-party
+    - captain
+    - --known-first-party
+    - cli
+    - --ignore
+    - DEP003
+    - --per-rule-ignores
+    - DEP002=scipy|scikit-image|Pillow|httpx|python-dotenv|debugpy|chardet|griffe|striprtf|isbinary|python-multipart|pathspec|pytest-cov|pytest-mock|pytest-asyncio|ruff|deptry|pytest-json-report|robotframework|opencv-python,DEP001=transformers|torch|tensorflow|cv2|skimage|PIL|sklearn|mecademicpy|astor|huggingsound|qcodes|tm_devices|portalocker|huggingface_hub|scipy|scikit-learn|keras|jax|flax|onnx|onnxruntime|deeplabcut|ultralytics|speechbrain|lavis|segment_anything|easyocr|keybert|pygments|readability|readability-lxml|matplotlib|bs4|trafilatura|sre_yield|torchvision|prophet|IPython|sympy|hatchling|nidaqmx|nimodinst|pyvisa|serial|keyrings|keyring
+    require_serial: true
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:
-    - id: trailing-whitespace
-      name: Trim trailing whitespace
-      require_serial: true
-    - id: end-of-file-fixer
-      name: Fix end of files
-      require_serial: true
-    - id: check-yaml
-      name: Check YAML syntax
-      exclude: ^\.github/workflows/.*\.(yml|yaml)$
-      require_serial: true
-    - id: check-added-large-files
-      name: Check for large files
-      args:
-        - --maxkb=5000
-      require_serial: true
-    - id: check-merge-conflict
-      name: Check for merge conflicts
-      require_serial: true
-    - id: check-json
-      name: Check JSON syntax
-      require_serial: true
-    - id: check-toml
-      name: Check TOML syntax
-      require_serial: true
-    - id: detect-private-key
-      name: Detect private keys
-      require_serial: true
+  - id: trailing-whitespace
+    name: Trim trailing whitespace
+    require_serial: true
+  - id: end-of-file-fixer
+    name: Fix end of files
+    require_serial: true
+  - id: check-yaml
+    name: Check YAML syntax
+    exclude: ^\.github/workflows/.*\.(yml|yaml)$
+    require_serial: true
+  - id: check-added-large-files
+    name: Check for large files
+    args:
+    - --maxkb=5000
+    require_serial: true
+  - id: check-merge-conflict
+    name: Check for merge conflicts
+    require_serial: true
+  - id: check-json
+    name: Check JSON syntax
+    require_serial: true
+  - id: check-toml
+    name: Check TOML syntax
+    require_serial: true
+  - id: detect-private-key
+    name: Detect private keys
+    require_serial: true
 - repo: local
   hooks:
-    - id: typescript-check
-      name: TypeScript type check
-      entry: pnpm exec tsc --noEmit
-      language: system
-      types_or:
-        - ts
-        - tsx
-      pass_filenames: false
-      require_serial: true
+  - id: typescript-check
+    name: TypeScript type check
+    entry: pnpm exec tsc --noEmit
+    language: system
+    types_or:
+    - ts
+    - tsx
+    pass_filenames: false
+    require_serial: true
 - repo: local
   hooks:
-    - id: uv-pip-check
-      name: Check Python dependencies consistency
-      entry: uv pip check
-      language: system
-      pass_filenames: false
-      always_run: true
-      require_serial: true
+  - id: uv-pip-check
+    name: Check Python dependencies consistency
+    entry: uv pip check
+    language: system
+    pass_filenames: false
+    always_run: true
+    require_serial: true
 - repo: local
   hooks:
-    - id: block-sync-check
-      name: Check block metadata is synced
-      entry: ./scripts/check-block-sync.sh
-      language: system
-      pass_filenames: false
-      files: ^blocks/.*\.py$
-      require_serial: true
+  - id: block-sync-check
+    name: Check block metadata is synced
+    entry: ./scripts/check-block-sync.sh
+    language: system
+    pass_filenames: false
+    files: ^blocks/.*\.py$
+    require_serial: true
 - repo: local
   hooks:
-    - id: block-tests
-      name: Run block tests
-      entry: uv run pytest
-      language: system
-      pass_filenames: false
-      args:
-        - -vv
-        - -m
-        - not slow
-        - --tb=short
-        - blocks/
-      files: ^blocks/.*\.py$
-      require_serial: true
+  - id: block-tests
+    name: Run block tests
+    entry: uv run pytest
+    language: system
+    pass_filenames: false
+    args:
+    - -vv
+    - -m
+    - not slow
+    - --tb=short
+    - blocks/
+    files: ^blocks/.*\.py$
+    require_serial: true
 exclude:
   "(?x)^(\n  \\.git/|\n  \\.venv/|\n  venv/|\n  build/|\n  dist/|\n  node_modules/|\n\
   \  out/|\n  \\.pytest_cache/|\n  \\.mypy_cache/|\n  htmlcov/|\n  \\.tox/|\n  \\\
