@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Sequential Pre-commit Environment Configuration
+# This file is sourced by all pre-commit wrappers
+
+# Version information
+export SEQUENTIAL_PRECOMMIT_VERSION="1.0.0"
+
+# Python configuration
+export PYTHON_VERSION="3.11"
+export UV_PYTHON="python${PYTHON_VERSION}"
+
+# Execution control
+export PRE_COMMIT_MAX_WORKERS=1
+export CI_SEQUENTIAL_MODE=1
+
+# Timeouts (in seconds)
+export DEFAULT_GLOBAL_TIMEOUT=900        # 15 minutes total
+export DEFAULT_HEARTBEAT_TIMEOUT=60      # 60 seconds for stall detection
+export DEFAULT_LOCK_TIMEOUT=30           # 30 seconds to acquire lock
+
+# Resource limits
+export DEFAULT_MEMORY_LIMIT_MB=2048      # 2GB per hook
+export DEFAULT_MEMORY_LIMIT_DOCKER_MB=3072  # 3GB for Docker
+export DEFAULT_MAX_FD=1024               # File descriptor limit
+
+# Logging configuration
+export LOG_DIR=".pre-commit-logs"
+export LOG_RETENTION_DAYS=7
+
+# Process control
+export ENABLE_ORPHAN_DETECTION=1
+export ORPHAN_CHECK_INTERVAL=30          # Check every 30 seconds
+export ENABLE_PROCESS_GROUP_ISOLATION=1
+
+# Platform detection
+export PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')"
+case "${PLATFORM}" in
+    darwin*) export IS_MACOS=1 ;;
+    linux*) export IS_LINUX=1 ;;
+    *) export IS_UNKNOWN=1 ;;
+esac
